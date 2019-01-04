@@ -644,7 +644,7 @@ export default class App extends Component<Props> {
         onCameraReady = {this.onCameraReady}
         onFacesDetected={this.onFacesDetected}
         onFaceDetectionError={this.onFaceDetectionError}  
-        // onMotionDetected={this.onMotionDetected}
+        onMotionDetected={this.onMotionDetected}
         >
 
         {this.renderFaces()}
