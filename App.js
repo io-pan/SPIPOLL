@@ -641,15 +641,10 @@ export default class App extends Component<Props> {
         // autoFocus ={RNCamera.Constants.AutoFocus.off}
         // focusDepth = {1}
 
-
         onCameraReady = {this.onCameraReady}
-        // ratio = {this.state.ratio}
-
         onFacesDetected={this.onFacesDetected}
         onFaceDetectionError={this.onFaceDetectionError}  
-
-        
-        // onMotionDetected={this.onMotionDetected}
+        onMotionDetected={this.onMotionDetected}
         >
 
         {this.renderFaces()}
