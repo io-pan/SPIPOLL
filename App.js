@@ -22,7 +22,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 import { RNCamera } from 'react-native-camera';
 import Svg,{ Rect } from 'react-native-svg';
 import ViewShot from "react-native-view-shot";
-let BluetoothCP = require("react-native-bluetooth-cross-platform")
+import BluetoothCP  from "react-native-bluetooth-cross-platform"
 
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 let source;
@@ -80,13 +80,13 @@ export default class App extends Component<Props> {
   }
  
   componentDidMount() {
-    // this.takePicture();
+    // TODO: store a file or take dummy picture on cam ready
+    // to force authorisisation dialog since motion detctor need it.
+
     KeepScreenOn.setKeepScreenOn(true);
 
-    BluetoothCP.advertise("WIFI-BT");
-      // kind can be one of "WIFI", "BT", and "WIFI-BT"
-
-    BluetoothCP.browse('WIFI-BT');
+    BluetoothCP.advertise("WIFI");   // "WIFI", "BT", and "WIFI-BT"
+    BluetoothCP.browse('WIFI');
     this.listener1 = BluetoothCP.addPeerDetectedListener(this.PeerDetected)
     this.listener2 = BluetoothCP.addPeerLostListener(this.PeerLost)
     this.listener3 = BluetoothCP.addReceivedMessageListener(this.receivedMessage)
@@ -155,6 +155,7 @@ export default class App extends Component<Props> {
     BluetoothCP.inviteUser(id);
   }
   gotInvitation = (user) => {
+    // TODO: confirm dialog and list safe devices.
     // alert(JSON.stringify(user , undefined, 2));
     // if(this.safeIds.indexOf(user.id) >= 0) {
       BluetoothCP.acceptInvitation(user.id);
@@ -229,32 +230,6 @@ export default class App extends Component<Props> {
     });
   }
 
-
-// Encoding UTF8 ⇢ base64
-//
-// function b64EncodeUnicode(str) {
-//     // first we use encodeURIComponent to get percent-encoded UTF-8,
-//     // then we convert the percent encodings into raw bytes which
-//     // can be fed into btoa.
-//     return btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g,
-//         function toSolidBytes(match, p1) {
-//             return String.fromCharCode('0x' + p1);
-//     }));
-// }
-// b64EncodeUnicode('✓ à la mode'); // "4pyTIMOgIGxhIG1vZGU="
-// b64EncodeUnicode('\n'); // "Cg=="
-
-
-// Decoding base64 ⇢ UTF8
-//
-// function b64DecodeUnicode(str) {
-//     // Going backwards: from bytestream, to percent-encoding, to original string.
-//     return decodeURIComponent(atob(str).split('').map(function(c) {
-//         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-//     }).join(''));
-// }
-// b64DecodeUnicode('4pyTIMOgIGxhIG1vZGU='); // "✓ à la mode"
-// b64DecodeUnicode('Cg=='); // "\n"
   motionDetect = async () => {
     console.log('motionDetect()');
     if (this.camera) {
@@ -508,14 +483,7 @@ export default class App extends Component<Props> {
     }
   };
 
-// shouldComponentUpdate(nextProps, nextState) {
-//   console.log(nextState);
-//   if (nextState.imgload == false) {
-//     console.log('ret false');
-//     return false;
-//   }
-//   return true;
-// }
+
 
  onloadimg (id) {
   console.log('onloadimg '+ id);
@@ -579,7 +547,7 @@ export default class App extends Component<Props> {
   }
 
   onCameraReady = async () => {
-      // this.takePicture();
+    // this.takePicture();
     // TEST SNAPVID
     // inter = setInterval(this.takePt, 5000);
 
