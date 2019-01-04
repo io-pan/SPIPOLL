@@ -32,7 +32,7 @@ public class MainApplication extends Application implements ReactApplication {
             new RNFetchBlobPackage(),
             new RNViewShotPackage(),
             new SvgPackage(),
-            new KeepScreenOnPackage(this),
+            new KeepScreenOnPackage(),
             new RNCameraPackage(),
             new NetworkManagerPackage()
       );
