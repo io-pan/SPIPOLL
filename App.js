@@ -16,6 +16,7 @@ import {Platform, StyleSheet, Text, View,
     NativeModules,
     PixelRatio,
     Slider,
+    StatusBar,
 } from 'react-native';
 import KeepScreenOn from 'react-native-keep-screen-on';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -83,6 +84,7 @@ export default class App extends Component<Props> {
     // TODO: store a file or take dummy picture on cam ready
     // to force authorisisation dialog since motion detctor need it.
 
+    StatusBar.setHidden(true);
     KeepScreenOn.setKeepScreenOn(true);
 
     BluetoothCP.advertise("WIFI");   // "WIFI", "BT", and "WIFI-BT"
@@ -559,13 +561,14 @@ export default class App extends Component<Props> {
 
 
 
-                    onMotionDetected = ({ faces }) => {
-                      console.log('MOTION');
-                      if(typeof faces != undefined){
-                        this.setState({ motionSvg:faces });
+                    onMotionDetected = ({ motion }) => {
+                      console.log('MOTION', motion);
+                      if(typeof motion != undefined){
+                        this.setState({ motionSvg:motion });
                       }
                       
                     };
+
                     onFacesDetected = ({ faces }) => {
                       console.log('FACE', faces);
                       this.setState({ faces:faces });
