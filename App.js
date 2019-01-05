@@ -561,15 +561,13 @@ export default class App extends Component<Props> {
 
                     onMotionDetected = ({ faces }) => {
                       console.log('MOTION');
-                      console.log(faces);
                       if(typeof faces != undefined){
                         this.setState({ motionSvg:faces });
                       }
                       
                     };
                     onFacesDetected = ({ faces }) => {
-                       console.log('FACE');
-                      console.log(faces);
+                      console.log('FACE', faces);
                       this.setState({ faces:faces });
                     };
 
