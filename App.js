@@ -22,7 +22,7 @@ import KeepScreenOn from 'react-native-keep-screen-on';
 import RNFetchBlob from 'rn-fetch-blob';
 import { RNCamera } from 'react-native-camera';
 import Svg,{ Rect } from 'react-native-svg';
-import ViewShot from "react-native-view-shot";
+// import ViewShot from "react-native-view-shot";
 import BluetoothCP  from "react-native-bluetooth-cross-platform"
 
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
@@ -96,6 +96,10 @@ export default class App extends Component<Props> {
     this.listener5 = BluetoothCP.addConnectedListener(this.Connected)
   }
 
+  componentDidUpdate(){
+
+  }
+
   componentWillUnmount() {
     this.listener1.remove()
     this.listener2.remove()
@@ -113,9 +117,13 @@ export default class App extends Component<Props> {
     BluetoothCP.stopAdvertising();
   }
 
-  toggleStorage() {
-    this.setState({sdcard:!this.state.sdcard});
-  }
+  //--------------------------------------------------------
+  //            P2P communcation
+  //--------------------------------------------------------
+
+  // toggleStorage() {
+  //   this.setState({sdcard:!this.state.sdcard});
+  // }
   PeerDetected = (user) => {
     // Alert.alert(JSON.stringify({'PeerDetected':user}, undefined, 2));
     let devices = this.state.devices;
@@ -156,6 +164,7 @@ export default class App extends Component<Props> {
   connectToDevice(id){
     BluetoothCP.inviteUser(id);
   }
+
   gotInvitation = (user) => {
     // TODO: confirm dialog and list safe devices.
     // alert(JSON.stringify(user , undefined, 2));
@@ -163,7 +172,6 @@ export default class App extends Component<Props> {
       BluetoothCP.acceptInvitation(user.id);
     // }
   }
-
 
   sendMessage(id, key, value){
     //alert(JSON.stringify({key:key , value:value }));
@@ -219,7 +227,6 @@ export default class App extends Component<Props> {
     }
   }
 
-
   snap(){
     this.sendMessage(this.state.connectedTo, 'cmd', 'takePicture');
   }
@@ -232,131 +239,40 @@ export default class App extends Component<Props> {
     });
   }
 
-  motionDetect = async () => {
-    console.log('motionDetect()');
-    if (this.camera) {
-
-      this.refs.viewShot.capture().then(uri => {
-        // console.log(uri);
-        // const new_uri = RNFetchBlob.fs.dirs.CacheDir+'/snapshot.jpg';
-
-        // Copy snapshot.
-        // RNFetchBlob.fs.cp(uri.replace('file://',''), RNFetchBlob.fs.dirs.DCIMDir+'/' + Date.now()+ '.jpg')
-        // .then(() => {console.log('cop')})
-        // .catch(() => {console.log('cop err')})
-
-        // Snapshot is somtimes bigger than expected. 
-        // NativeModules.Bitmap.getPixels(uri.replace('file://',''), this.sampleSize, previewWidth, previewHeight)
-        NativeModules.Bitmap.getMotion(uri.replace('file://',''), this.sampleSize, this.threshold, previewWidth, previewHeight)
-        .then((image) => {
-          // console.log(' NativeModules.Bitmap' + uri.replace('file://',''));
-          // console.log(this.sampleSize);
-          // console.log(image);
-
-          var motionSvg = [];
-          var previewSvg = [];
-          // loop:
-
-
-// Ca deconne avec threshold 4
-//           {pixels: Array(884), hasAlpha: false, height: 138, width: 105}
-// 
-// height: 138
-// width: 105
-// pixels: (884) 
-
-/*
-          for (let offset = 0; offset < image.pixels.length; offset++) {
-          // for (let x = 0; x < image.width/this.sampleSize; x++) {
-          //   for (let y = 0; y < image.height/this.sampleSize; y++) {
-
-              // const offset = image.height * x + y;
-              const pixel = image.pixels[offset]; //ff 58 4e 45
-              // offset++;
-              // console.log(offset+ ' - ' +pixel)
-              // console.log(pixel);
-              const r = parseInt(pixel.substr(0, 2), 16);
-
-              previewSvg.push({
-                // x:x*previewWidth/image.width,
-                // y:y*previewHeight/image.height, 
-                pixel:'#'+pixel,
-              });
-
-              // first check if it's not the first frame, but 
-               // seeing of when the previous_frame array 
-              // is not we empty, and then only draw something if there's 
-              // a significant colour difference 
-              if( this.previous_frame[offset] 
-              && Math.abs(this.previous_frame[offset] - r) > this.threshold) {
-
-                console.log('! Motion Detected !');
-                // break loop;
-
-                // show on svg
-                motionSvg.push({
-                  //x:x,y:y,
-                  pixel:Math.abs(this.previous_frame[offset] - r)});
-              }
-
-              // store these colour values to compare to the next frame
-              this.previous_frame[offset] = r;    
-          //   }
-          // }
-          }
-         */
-
-
-          this.setState({
-            // imgLocal: uri,
-            motionSvg:image.motionPixels,
-            previewSvg: image.samplePixels,
-          }, function(){
-            this.motionDetect();
-          });
-        
-
-        })
-        .catch((err) => {
-           console.log('NativeModules.Bitmap ERROR');
-          console.error(err);
-        });
-        // end NativeModules.Bitmap.
-
-
-          // Delete privous snap.
-          // if(typeof imgLocal[this.state.imgLocal0] !== undefined){
-          //   RNFetchBlob.fs.unlink(imgLocal[this.state.imgLocal0].replace('file://',''))
-          //   .then(() => {
-          //     // this.refs['LOCALIMG'].setNativeProps({
-          //     //   source:{uri:uri}
-          //     // });
-          //     //    this.setState({imgload:Date.now()});
-          //     imgLocal[this.state.imgLocal0] = uri;
-          //     this.setState({imgLocal: imgLocal}, function(){
-          //       // setTimeout( this.motionDetect, 1);
-          //       // this.motionDetect();
-          //     });
-          //   })
-          //   .catch((err) => {  
-          //     console.log('delete failed ' +  this.state.imgLocal) 
-          //   })
-          // }
-          // else{
-          //   imgLocal[this.state.imgLocal0] = uri;
-          //   this.setState({imgLocal: imgLocal}, function(){
-          //     // setTimeout( this.motionDetect, 1);
-          //     // this.motionDetect();
-          //   });
-          // }
-
-      });
+  toggleRecord(){
+    if(this.state.distantRec){
+      this.sendMessage(this.state.connectedTo, 'cmd', 'stopRecording');
     }
-  };
+    else{
+      this.sendMessage(this.state.connectedTo, 'cmd', 'startRecording');
+    } 
+  }
 
-  componentDidUpdate(){
+
+  // -------------------------------------------------
+  //                    Camera 
+  // -------------------------------------------------
+  onCameraReady = async () => {
+    // this.takePicture();
+    // TEST SNAPVID
+    // inter = setInterval(this.takePt, 5000);
 
   }
+
+  onMotionDetected = ({ motion }) => {
+    console.log('MOTION', motion);
+    if(typeof motion != undefined){
+      this.setState({ motionSvg:motion });
+    }
+    
+  };
+
+  onFacesDetected = ({ faces }) => {
+    console.log('FACE', faces);
+    this.setState({ faces:faces });
+  };
+
+  onFaceDetectionError = state => console.warn('Faces detection error:', state);
 
   takePicture = async () => {
     if (this.camera) {
@@ -427,17 +343,6 @@ export default class App extends Component<Props> {
                     }
                   };
 
-
-
-  toggleRecord(){
-    if(this.state.distantRec){
-      this.sendMessage(this.state.connectedTo, 'cmd', 'stopRecording');
-    }
-    else{
-      this.sendMessage(this.state.connectedTo, 'cmd', 'startRecording');
-    } 
-  }
-
   async recordVideo(){
     if (this.camera) {
       try {
@@ -485,23 +390,99 @@ export default class App extends Component<Props> {
     }
   };
 
+  renderFace({ bounds, faceID, rollAngle, yawAngle }) {
+    return (
+      <View
+        key={faceID}
+        transform={[
+          { perspective: 600 },
+          { rotateZ: `${rollAngle.toFixed(0)}deg` },
+          { rotateY: `${yawAngle.toFixed(0)}deg` },
+        ]}
+        style={[
+          styles.face,
+          {
+            ...bounds.size,
+            left: bounds.origin.x,
+            top: bounds.origin.y,
+          },
+        ]}
+      >
+        {/*
+        <Text style={styles.faceText}>ID: {faceID}</Text>
+        <Text style={styles.faceText}>rollAngle: {rollAngle.toFixed(0)}</Text>
+        <Text style={styles.faceText}>yawAngle: {yawAngle.toFixed(0)}</Text>
+        */}
+      </View>
+    );
+  }
+
+  renderFaces() {
+    return (
+      <View style={styles.facesContainer} pointerEvents="none">
+        {this.state.faces.map(this.renderFace)}
+      </View>
+    );
+  }
+
+  renderCamera() {
+    if(!this.state.cam) {
+      if(this.state.connectedTo && this.camRequested){
+        this.camRequested = false;
+        this.sendMessage(this.state.connectedTo, 'distantcam', false);
+      }
+      return null;     
+    }
+
+    return (
+      <View //ViewShot
+        ref="viewShot"
+        // options={{
+        //   format: "jpg", 
+        //   quality:1 ,
+        // }}
+      >
+      <RNCamera
+        ref={cam => (this.camera = cam)}
+        style = {styles.cam}
+        type={RNCamera.Constants.Type.back}
+        flashMode={RNCamera.Constants.FlashMode.off}
+        permissionDialogTitle={'Permission to use camera'}
+        permissionDialogMessage={'We need your permission to use your camera phone'}
+        ratio="4:3"
+        // autoFocus ={RNCamera.Constants.AutoFocus.off}
+        // focusDepth = {1}
+
+        onCameraReady = {this.onCameraReady}
+        onFacesDetected={this.onFacesDetected}
+        onFaceDetectionError={this.onFaceDetectionError}  
+        onMotionDetected={this.onMotionDetected}
+        >
+
+        {this.renderFaces()}
+
+      </RNCamera>
+      </View>
+    );
+  }
 
 
- onloadimg (id) {
-  console.log('onloadimg '+ id);
-  // setTimeout( 
-  //   () => {
-      this.setState({imgLocal0 : this.state.imgLocal0 ? 0 : 1}, function(){
-        this.motionDetect();
-      })
-    // }
-    // , 1);
-    //this.motionDetect();
+  //---------------------------------------------
+  //                Render
+  //---------------------------------------------
 
+  // onloadimg (id) {
+  //   console.log('onloadimg '+ id);
+  //   // setTimeout( 
+  //   //   () => {
+  //       this.setState({imgLocal0 : this.state.imgLocal0 ? 0 : 1}, function(){
+  //       })
+  //   // }
+  //   // , 1);
+  //   //this.motionDetect();
+  // }
 
-}
-
-  renderImage(){
+  renderImage(){ // distant image
     if (!this.state.img) return null;
     return(
       <Image 
@@ -511,6 +492,7 @@ export default class App extends Component<Props> {
       />
     );
   }
+  
   renderImageLocal(){
     // if (this.state.imgLocal.length==0) return null;
     if (!this.state.imgLocal) return null;
@@ -545,113 +527,6 @@ export default class App extends Component<Props> {
         ) : null}
 */}
       </View>
-    );
-  }
-
-  onCameraReady = async () => {
-    // this.takePicture();
-    // TEST SNAPVID
-    // inter = setInterval(this.takePt, 5000);
-
-    // TEST MOTIOM
-    // setTimeout( this.motionDetect, 1000);
-    // this.motionDetect();
-   
-  }
-
-
-
-                    onMotionDetected = ({ motion }) => {
-                      console.log('MOTION', motion);
-                      if(typeof motion != undefined){
-                        this.setState({ motionSvg:motion });
-                      }
-                      
-                    };
-
-                    onFacesDetected = ({ faces }) => {
-                      console.log('FACE', faces);
-                      this.setState({ faces:faces });
-                    };
-
-                    onFaceDetectionError = state => console.warn('Faces detection error:', state);
-
-                    renderFace({ bounds, faceID, rollAngle, yawAngle }) {
-                      return (
-                        <View
-                          key={faceID}
-                          transform={[
-                            { perspective: 600 },
-                            { rotateZ: `${rollAngle.toFixed(0)}deg` },
-                            { rotateY: `${yawAngle.toFixed(0)}deg` },
-                          ]}
-                          style={[
-                            styles.face,
-                            {
-                              ...bounds.size,
-                              left: bounds.origin.x,
-                              top: bounds.origin.y,
-                            },
-                          ]}
-                        >
-                          {/*
-                          <Text style={styles.faceText}>ID: {faceID}</Text>
-                          <Text style={styles.faceText}>rollAngle: {rollAngle.toFixed(0)}</Text>
-                          <Text style={styles.faceText}>yawAngle: {yawAngle.toFixed(0)}</Text>
-                          */}
-                        </View>
-                      );
-                    }
-
-                    renderFaces() {
-                      return (
-                        <View style={styles.facesContainer} pointerEvents="none">
-                          {this.state.faces.map(this.renderFace)}
-                        </View>
-                      );
-                    }
-
-
-  renderCamera() {
-    if(!this.state.cam) {
-      if(this.state.connectedTo && this.camRequested){
-        this.camRequested = false;
-        this.sendMessage(this.state.connectedTo, 'distantcam', false);
-      }
-      return null;     
-    }
-
-    return (
-      <ViewShot 
-        ref="viewShot"
-        options={{
-          format: "jpg", 
-          quality:1 ,
-          // width: previewWidth/ PixelRatio.get(),
-          // height:previewHeight/ PixelRatio.get(),
-        }}
-      >
-      <RNCamera
-        ref={cam => (this.camera = cam)}
-        style = {styles.cam}
-        type={RNCamera.Constants.Type.back}
-        flashMode={RNCamera.Constants.FlashMode.off}
-        permissionDialogTitle={'Permission to use camera'}
-        permissionDialogMessage={'We need your permission to use your camera phone'}
-        ratio="4:3"
-        // autoFocus ={RNCamera.Constants.AutoFocus.off}
-        // focusDepth = {1}
-
-        onCameraReady = {this.onCameraReady}
-        onFacesDetected={this.onFacesDetected}
-        onFaceDetectionError={this.onFaceDetectionError}  
-        onMotionDetected={this.onMotionDetected}
-        >
-
-        {this.renderFaces()}
-
-      </RNCamera>
-      </ViewShot>
     );
   }
 
