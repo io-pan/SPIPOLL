@@ -53,6 +53,7 @@ export default class App extends Component<Props> {
       connectedTo:false,
       img:false,
       imgLocal: false,
+      imgTest:false,//'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg',
       // cam:false,
       // TEST 
       cam:true,
@@ -62,13 +63,14 @@ export default class App extends Component<Props> {
 
       motionSvg: [],
       previewSvg: [],
+      motionDetectionMode: 0,
 
       faces:[]
     };
 
     
       this.threshold = 50;
-      this.sampleSize = 5;
+      this.sampleSize = 10;
 
     this.previous_frame=[];
 
@@ -253,16 +255,32 @@ export default class App extends Component<Props> {
   //                    Camera 
   // -------------------------------------------------
   onCameraReady = async () => {
+    const granted = await this.camera.getAvailablePictureSizes('4:3');
+    console.log(granted);
+
+    const ss = await this.camera.getSupportedRatiosAsync();
+    console.log(ss);
+
+    const dd = await this.camera.getPreviewSize();
+    console.log(dd);
+
     // this.takePicture();
     // TEST SNAPVID
     // inter = setInterval(this.takePt, 5000);
-
   }
 
   onMotionDetected = ({ motion }) => {
     console.log('MOTION', motion);
+    // console.log(this.state.motionDetectionMode);
+    //  mm = this.state.motionDetectionMode+1;
     if(typeof motion != undefined){
-      this.setState({ motionSvg:motion });
+
+
+      this.setState({
+        // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
+        motionSvg:motion.sampled,
+        // motionDetectionMode:mm 
+      });
     }
     
   };
@@ -445,6 +463,7 @@ export default class App extends Component<Props> {
       <RNCamera
         ref={cam => (this.camera = cam)}
         style = {styles.cam}
+        onCameraReady = {this.onCameraReady}
         type={RNCamera.Constants.Type.back}
         flashMode={RNCamera.Constants.FlashMode.off}
         permissionDialogTitle={'Permission to use camera'}
@@ -452,11 +471,14 @@ export default class App extends Component<Props> {
         ratio="4:3"
         // autoFocus ={RNCamera.Constants.AutoFocus.off}
         // focusDepth = {1}
-
-        onCameraReady = {this.onCameraReady}
         onFacesDetected={this.onFacesDetected}
         onFaceDetectionError={this.onFaceDetectionError}  
+
         onMotionDetected={this.onMotionDetected}
+        motionDetectionMode={this.state.motionDetectionMode}
+        motionDetectionLandmarks={0}
+        motionDetectionThreshold={this.threshold}
+        motionDetectionSampleSize={this.sampleSize}
         >
 
         {this.renderFaces()}
@@ -465,7 +487,6 @@ export default class App extends Component<Props> {
       </View>
     );
   }
-
 
   //---------------------------------------------
   //                Render
@@ -481,6 +502,20 @@ export default class App extends Component<Props> {
   //   // , 1);
   //   //this.motionDetect();
   // }
+
+  renderImageTest(){ // distant image
+    if (!this.state.imgTest) return null;
+    console.log(this.state.imgTest);
+    return(
+      <Image 
+        
+        style={styles.captureLocalView} 
+        source={{uri:this.state.imgTest}} // {uri: 'asset:/scr.png'}
+        // onLoad={this.onloadimg}
+      />
+    );
+  }
+  
 
   renderImage(){ // distant image
     if (!this.state.img) return null;
@@ -676,8 +711,8 @@ export default class App extends Component<Props> {
           { this.state.motionSvg.map((value, index) => 
           <Rect
             key={index}
-            x={ value.x/2.42 }
-            y={ value.y/2.42 }
+            x={ value.x }
+            y={ value.y }
             height= {this.sampleSize}
             width={this.sampleSize}
             strokeWidth={0}
@@ -704,6 +739,7 @@ export default class App extends Component<Props> {
         </Svg>
 
         { this.renderImage() }
+        { this.renderImageTest() }
         { this.renderImageLocal() }
         { this.renderCamera() }
 
