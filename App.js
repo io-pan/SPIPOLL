@@ -270,15 +270,15 @@ export default class App extends Component<Props> {
   }
 
   onMotionDetected = ({ motion }) => {
-    console.log('MOTION', motion);
+    // console.log('MOTION');
+    // console.log(motion.motion);
     // console.log(this.state.motionDetectionMode);
     //  mm = this.state.motionDetectionMode+1;
     if(typeof motion != undefined){
-
-
       this.setState({
         // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
-        motionSvg:motion.sampled,
+        motionSvg:motion.motion,
+        previewSvg:motion.sampled,
         // motionDetectionMode:mm 
       });
     }
@@ -716,13 +716,30 @@ export default class App extends Component<Props> {
             height= {this.sampleSize}
             width={this.sampleSize}
             strokeWidth={0}
+            fill={"rgb("+value.score +","+ value.score +","+ value.score+")"}
+          />
+          )}
+        </Svg>
+
+        <Svg
+         style={styles.motionpreview} 
+        >
+          { this.state.previewSvg.map((value, index) => 
+          <Rect
+            key={index}
+            x={ value.x }
+            y={ value.y }
+            height= {this.sampleSize}
+            width={this.sampleSize}
+            strokeWidth={0}
             // fill={"rgb("+value.score +","+ value.score +","+ value.score+")"}
             fill={'#'+value.color}
           />
           )}
         </Svg>
 
-        <Svg
+
+{/*        <Svg
           style = {styles.motionpreview}
         >
           { this.state.previewSvg.map((value, index) => 
@@ -737,7 +754,7 @@ export default class App extends Component<Props> {
           />
           )}
         </Svg>
-
+*/}
         { this.renderImage() }
         { this.renderImageTest() }
         { this.renderImageLocal() }
