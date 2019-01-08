@@ -44,6 +44,54 @@ const previewWidth = 99;
 const landmarkSize = 2;
 
 type Props = {};
+
+//-----------------------------------------------------------------------------------------
+class FreshImages extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
+    this.imageCount = this.props.imageCount ? imageCount : 4;
+    this.curId = 0;
+    this.source =  new Array(this.imageCount);
+    this.opacity = new Array(this.imageCount);
+  }
+
+  shouldComponentUpdate(nextProps, nextState) {
+    if (this.props.source != nextProps.source) {
+      this.curId = this.curId+1 == this.source.length ? 0:this.curId+1;
+      this.source[this.curId] = nextProps.source;
+    }
+    return true;
+  }
+
+  computeOpacity(index){
+    if(index==this.curId+1){
+      return 1;
+    }
+    if(index==0 && this.curId==this.source.length-1){
+      return 1;
+    }
+    return 0;
+  }
+
+  render(){
+    return(
+      <View style={styles.FreshImagesContainer} >
+        { this.source.map((value, index) =>
+          <Image 
+            key={index}
+            style={[styles.motionpreview,{position:'absolute', left:0, opacity:this.computeOpacity(index)}]}
+            source={ this.source[index] }
+            resizeMode="cover"
+          />
+        )}
+      </View>
+    );
+  }
+}
+
+
+
 export default class App extends Component<Props> {
   constructor(props) {
     super(props);
@@ -63,6 +111,7 @@ export default class App extends Component<Props> {
 
       motionSvg: [],
       previewSvg: [],
+      sampledBase64:false,
       motionDetectionMode: 0,
 
       faces:[]
@@ -270,8 +319,8 @@ export default class App extends Component<Props> {
   }
 
   onMotionDetected = ({ motion }) => {
-    // console.log('MOTION');
-    // console.log(motion.motion);
+    console.log('MOTION');
+    console.log(motion);
     // console.log(this.state.motionDetectionMode);
     //  mm = this.state.motionDetectionMode+1;
     if(typeof motion != undefined){
@@ -279,6 +328,7 @@ export default class App extends Component<Props> {
         // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
         motionSvg:motion.motion,
         previewSvg:motion.sampled,
+        sampledBase64:motion.sampledBase64,
         // motionDetectionMode:mm 
       });
     }
@@ -476,6 +526,7 @@ export default class App extends Component<Props> {
 
         onMotionDetected={this.onMotionDetected}
         motionDetectionMode={this.state.motionDetectionMode}
+
         motionDetectionLandmarks={0}
         motionDetectionThreshold={this.threshold}
         motionDetectionSampleSize={this.sampleSize}
@@ -738,7 +789,16 @@ export default class App extends Component<Props> {
           )}
         </Svg>
 
+        <FreshImages
+         style={styles.motionpreview}
+         source={{uri: 'data:image/png;base64,' + this.state.sampledBase64 }}
+        />
+          
 
+        <Image
+         style={styles.motionpreview} 
+         source={{uri: 'data:image/png;base64,' + this.state.sampledBase64 }}
+        />
 {/*        <Svg
           style = {styles.motionpreview}
         >
@@ -789,7 +849,24 @@ export default class App extends Component<Props> {
   }
 }
 
-const styles = StyleSheet.create({
+
+const styles = StyleSheet.create({ 
+
+  FreshImagesContainer:{
+    position:'relative',
+    borderWidth: 1,
+    borderColor: 'blue',
+    width: previewWidth, 
+    height: previewHeight, 
+  },
+  FreshImage:{
+    // position:'absolute',
+    top:0, bottom:0, left:0, right:0,
+
+    width: previewWidth, 
+    height: previewHeight, 
+  },
+
   container: {
     flex: 1,
     // justifyContent: 'flex-end',
