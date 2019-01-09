@@ -50,10 +50,10 @@ class FreshImages extends Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.imageCount = this.props.imageCount ? imageCount : 4;
+    this.count = this.props.count ? this.props.count : 4;
     this.curId = 0;
-    this.source =  new Array(this.imageCount);
-    this.opacity = new Array(this.imageCount);
+    this.source =  new Array(this.count);
+    this.opacity = new Array(this.count);
   }
 
   shouldComponentUpdate(nextProps, nextState) {
@@ -66,21 +66,21 @@ class FreshImages extends Component {
 
   computeOpacity(index){
     if(index==this.curId+1){
-      return 1;
+      return 'flex';
     }
     if(index==0 && this.curId==this.source.length-1){
-      return 1;
+      return 'flex';
     }
-    return 0;
+    return 'none';
   }
 
   render(){
     return(
-      <View style={styles.FreshImagesContainer} >
+      <View>
         { this.source.map((value, index) =>
           <Image 
             key={index}
-            style={[styles.motionpreview,{position:'absolute', left:0, opacity:this.computeOpacity(index)}]}
+            style={[this.props.style, { display:this.computeOpacity(index) }]}
             source={ this.source[index] }
             resizeMode="cover"
           />
@@ -91,7 +91,7 @@ class FreshImages extends Component {
 }
 
 
-
+//-----------------------------------------------------------------------------------------
 export default class App extends Component<Props> {
   constructor(props) {
     super(props);
@@ -113,6 +113,9 @@ export default class App extends Component<Props> {
       previewSvg: [],
       sampledBase64:false,
       motionDetectionMode: 0,
+
+camW:previewWidth/PixelRatio.get(),
+camH:previewHeight/PixelRatio.get(),
 
       faces:[]
     };
@@ -533,7 +536,7 @@ export default class App extends Component<Props> {
         >
 
         {this.renderFaces()}
-
+        
       </RNCamera>
       </View>
     );
@@ -793,12 +796,8 @@ export default class App extends Component<Props> {
          style={styles.motionpreview}
          source={{uri: 'data:image/png;base64,' + this.state.sampledBase64 }}
         />
-          
 
-        <Image
-         style={styles.motionpreview} 
-         source={{uri: 'data:image/png;base64,' + this.state.sampledBase64 }}
-        />
+
 {/*        <Svg
           style = {styles.motionpreview}
         >
@@ -852,21 +851,6 @@ export default class App extends Component<Props> {
 
 const styles = StyleSheet.create({ 
 
-  FreshImagesContainer:{
-    position:'relative',
-    borderWidth: 1,
-    borderColor: 'blue',
-    width: previewWidth, 
-    height: previewHeight, 
-  },
-  FreshImage:{
-    // position:'absolute',
-    top:0, bottom:0, left:0, right:0,
-
-    width: previewWidth, 
-    height: previewHeight, 
-  },
-
   container: {
     flex: 1,
     // justifyContent: 'flex-end',
@@ -896,10 +880,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
   },
   cam: {
-    width:previewWidth/PixelRatio.get(), 
-    height:previewHeight/PixelRatio.get(),   
-    // width: previewWidth, 
-    // height: previewHeight, 
+    width: previewWidth, 
+    height: previewHeight, 
     margin:1,
     borderWidth: 1,
     borderColor: 'red',
