@@ -39,8 +39,10 @@ else {
 }
 
 
-const previewHeight = 132;
-const previewWidth = 99;
+// const previewHeight = 132;
+// const previewWidth = 99;
+const previewHeight = 480;
+const previewWidth = 360;
 const landmarkSize = 2;
 
 type Props = {};
@@ -111,18 +113,17 @@ export default class App extends Component<Props> {
 
       motionSvg: [],
       previewSvg: [],
-      sampledBase64:false,
+      motionArea:[],
+      motionBase64:false,
+      // sampledBase64:false,
       motionDetectionMode: 0,
-
-camW:previewWidth/PixelRatio.get(),
-camH:previewHeight/PixelRatio.get(),
 
       faces:[]
     };
 
     
       this.threshold = 50;
-      this.sampleSize = 10;
+      this.sampleSize = 50;
 
     this.previous_frame=[];
 
@@ -306,15 +307,14 @@ camH:previewHeight/PixelRatio.get(),
   // -------------------------------------------------
   //                    Camera 
   // -------------------------------------------------
+
   onCameraReady = async () => {
-    const granted = await this.camera.getAvailablePictureSizes('4:3');
-    console.log(granted);
-
-    const ss = await this.camera.getSupportedRatiosAsync();
-    console.log(ss);
-
-    const dd = await this.camera.getPreviewSize();
-    console.log(dd);
+    // const getAvailablePictureSizes = await this.camera.getAvailablePictureSizes('4:3');
+    // console.log(getAvailablePictureSizes);
+    // const getSupportedRatiosAsync = await this.camera.getSupportedRatiosAsync();
+    // console.log(getSupportedRatiosAsync);
+    // const getPreviewSize = await this.camera.getPreviewSize();
+    // console.log(getPreviewSize);
 
     // this.takePicture();
     // TEST SNAPVID
@@ -322,28 +322,26 @@ camH:previewHeight/PixelRatio.get(),
   }
 
   onMotionDetected = ({ motion }) => {
-    console.log('MOTION');
-    console.log(motion);
-    // console.log(this.state.motionDetectionMode);
-    //  mm = this.state.motionDetectionMode+1;
-    if(typeof motion != undefined){
-      this.setState({
-        // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
-        motionSvg:motion.motion,
-        previewSvg:motion.sampled,
-        sampledBase64:motion.sampledBase64,
-        // motionDetectionMode:mm 
-      });
-    }
-    
-  };
+     // mm = this.state.motionDetectionMode+1;
+     // if (mm>5) return;
+    console.log('MOTION', motion);
+    this.setState({
+      // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
+      // motionSvg:motion.motionPixels,
+      motionBase64: motion.motionBase64,
+      motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
+      // previewSvg:motion.sampled,
+      // sampledBase64:motion.sampledBase64,
+      // motionDetectionMode:mm,
+    }, function(){console.log('set',this.state.motionArea)});    
+  }
 
   onFacesDetected = ({ faces }) => {
     console.log('FACE', faces);
     this.setState({ faces:faces });
-  };
+  }
 
-  onFaceDetectionError = state => console.warn('Faces detection error:', state);
+  onFaceDetectionError = state => console.warn('Faces detection error:', state)
 
   takePicture = async () => {
     if (this.camera) {
@@ -376,7 +374,7 @@ camH:previewHeight/PixelRatio.get(),
         // console.warn(err)
       }
     }
-  };
+  }
                   // Test local snapshot while video recording.
                   takePt = async () => {
                     if (this.camera) {
@@ -496,6 +494,59 @@ camH:previewHeight/PixelRatio.get(),
     );
   }
 
+
+  renderMotion(){
+    if(!this.state.motionArea) return null;
+    console.log(this.state.motionArea);
+    return (
+      <View>
+        <Svg
+         style={styles.motionpreview} 
+        >
+          { /*
+            this.state.motionSvg.map((value, index) => 
+          <Rect
+            key={index}
+            x={ value.x }
+            y={ value.y }
+            height= {this.sampleSize}
+            width={this.sampleSize}
+            strokeWidth={0}
+            fill={"rgb("+value.score +","+ value.score +","+ value.score+")"}
+          />
+          )
+*/        }
+        </Svg>
+        
+        <View style={styles.facesContainer} pointerEvents="none">
+        <View 
+          style={[
+            styles.motionArea,
+            {
+              left: this.state.motionArea.x,
+              top: this.state.motionArea.y,
+              width: this.state.motionArea.w,
+              height: this.state.motionArea.h,
+            },
+          ]}
+        ></View>
+        </View>
+
+        <View style={styles.facesContainer} pointerEvents="none">
+        {
+          this.state.motionBase64 ? (
+        <Image 
+          style = {[styles.motionpreview,{position:'absolute'}]}
+          source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
+        />
+        ):null
+        }
+        </View>
+
+      </View>
+    );
+  }
+
   renderCamera() {
     if(!this.state.cam) {
       if(this.state.connectedTo && this.camRequested){
@@ -535,8 +586,8 @@ camH:previewHeight/PixelRatio.get(),
         motionDetectionSampleSize={this.sampleSize}
         >
 
-        {this.renderFaces()}
-        
+        {/*this.renderFaces()*/}
+        {this.renderMotion()}
       </RNCamera>
       </View>
     );
@@ -562,10 +613,8 @@ camH:previewHeight/PixelRatio.get(),
     console.log(this.state.imgTest);
     return(
       <Image 
-        
         style={styles.captureLocalView} 
-        source={{uri:this.state.imgTest}} // {uri: 'asset:/scr.png'}
-        // onLoad={this.onloadimg}
+        source={{uri:this.state.imgTest}}
       />
     );
   }
@@ -707,8 +756,8 @@ camH:previewHeight/PixelRatio.get(),
               thumbTintColor = '#000' 
               minimumTrackTintColor='#ff0000' 
               maximumTrackTintColor='#0000ff' 
-              minimumValue={parseInt(previewWidth/20,10)}
-              maximumValue={parseInt(previewWidth/8,10)}
+              minimumValue={PixelRatio.get()}
+              maximumValue={parseInt(previewHeight/10,10)}
               step={1}
               value={this.sampleSize}
               onValueChange={
@@ -730,93 +779,29 @@ camH:previewHeight/PixelRatio.get(),
               } 
             />
         </View>
-{/*      
-      <Image
-          style={{
-            backgroundColor: '#ccc',
-            flex:0.5,
-            resizeMode:'stretch',
-            position: 'absolute',
-            width: '100%',
-            height: '100%',
-            justifyContent: 'center',
-          }}
-          source={source}  //{uri: 'asset:/scr.png'}
-        />
-*/}
-{/*
-        <Button 
-          style={{ 
-            margin:1, 
-            height:40,
-            marginBottom:2,
-          }}
-          title = {this.state.sdcard ? 'CARD' : 'PHONE'}
-          color = 'grey'
-          onPress = {() => this.toggleStorage()}
-        />
-*/}
         <View style={styles.containerPreview}>
 
 
-        <Svg
-         style={styles.motionpreview} 
-        >
-          { this.state.motionSvg.map((value, index) => 
-          <Rect
-            key={index}
-            x={ value.x }
-            y={ value.y }
-            height= {this.sampleSize}
-            width={this.sampleSize}
-            strokeWidth={0}
-            fill={"rgb("+value.score +","+ value.score +","+ value.score+")"}
-          />
-          )}
-        </Svg>
+                {/*        <Svg
+                          style = {styles.motionpreview}
+                        >
+                          { this.state.previewSvg.map((value, index) => 
+                          <Rect
+                            key={index}
+                            x={ this.sampleSize * ( Math.trunc(index/Math.trunc(previewHeight/this.sampleSize)) % Math.trunc(previewWidth/this.sampleSize))}
+                            y={this.sampleSize * (index%(Math.trunc(previewHeight/this.sampleSize))) }
+                            height= {this.sampleSize}
+                            width={this.sampleSize}
+                            strokeWidth={0}
+                            fill={'#'+value}
+                          />
+                          )}
+                        </Svg>
+                
 
-        <Svg
-         style={styles.motionpreview} 
-        >
-          { this.state.previewSvg.map((value, index) => 
-          <Rect
-            key={index}
-            x={ value.x }
-            y={ value.y }
-            height= {this.sampleSize}
-            width={this.sampleSize}
-            strokeWidth={0}
-            // fill={"rgb("+value.score +","+ value.score +","+ value.score+")"}
-            fill={'#'+value.color}
-          />
-          )}
-        </Svg>
-
-        <FreshImages
-         style={styles.motionpreview}
-         source={{uri: 'data:image/png;base64,' + this.state.sampledBase64 }}
-        />
-
-
-{/*        <Svg
-          style = {styles.motionpreview}
-        >
-          { this.state.previewSvg.map((value, index) => 
-          <Rect
-            key={index}
-            x={ this.sampleSize * ( Math.trunc(index/Math.trunc(previewHeight/this.sampleSize)) % Math.trunc(previewWidth/this.sampleSize))}
-            y={this.sampleSize * (index%(Math.trunc(previewHeight/this.sampleSize))) }
-            height= {this.sampleSize}
-            width={this.sampleSize}
-            strokeWidth={0}
-            fill={'#'+value}
-          />
-          )}
-        </Svg>
-*/}
         { this.renderImage() }
         { this.renderImageTest() }
-        { this.renderImageLocal() }
+        { this.renderImageLocal() */}
         { this.renderCamera() }
 
         </View>
@@ -850,7 +835,6 @@ camH:previewHeight/PixelRatio.get(),
 
 
 const styles = StyleSheet.create({ 
-
   container: {
     flex: 1,
     // justifyContent: 'flex-end',
@@ -880,17 +864,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#F5FCFF',
   },
   cam: {
+    position: 'relative',
     width: previewWidth, 
     height: previewHeight, 
     margin:1,
-    borderWidth: 1,
-    borderColor: 'red',
   },
   captureLocalView:{
     width: previewWidth, 
-    height: previewHeight, 
-  
-    borderColor: 'red',
+    height: previewHeight,
     position:'relative',
     // opacity:0,
   },
@@ -908,11 +889,8 @@ const styles = StyleSheet.create({
 
   },
   motionpreview:{
-    // flexDirection:'column',
-
     width: previewWidth, 
     height: previewHeight, 
-    // transform: [{ rotate: '90deg'}],
     resizeMode: 'contain', //enum('cover', 'contain', 'stretch', 'repeat', 'center')
     backgroundColor: 'transparent',
     borderWidth: 1,
@@ -942,6 +920,15 @@ const styles = StyleSheet.create({
     borderColor: '#FFD700',
     justifyContent: 'center',
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  motionArea: {
+    padding: 1,
+    borderWidth: 2,
+    borderRadius: 2,
+    position: 'absolute',
+    borderColor: '#00D7FF',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   landmark: {
     width: landmarkSize,
