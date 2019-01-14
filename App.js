@@ -627,8 +627,9 @@ export default class App extends Component<Props> {
         zoom={this.state.zoom}
         >
 
-        {this.renderFaces()}
-       <Text >cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv </Text>
+        {/*this.renderFaces()*/}
+       <Text >cvxcvxcvxcv 
+       cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv </Text>
       </RNCamera>
        {this.renderMotion()}
       {/*
