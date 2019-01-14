@@ -24,7 +24,7 @@ import { RNCamera } from 'react-native-camera';
 import Svg,{ Rect } from 'react-native-svg';
 // import ViewShot from "react-native-view-shot";
 import BluetoothCP  from "react-native-bluetooth-cross-platform"
-// import OpenCV from './src/OpenCV';
+
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 let source;
 const _source = resolveAssetSource(require('./img/scr.png'));
@@ -43,7 +43,7 @@ else {
 // const previewWidth = 99;
 const previewHeight = 480;
 const previewWidth = 360;
-
+const landmarkSize = 2;
 
 type Props = {};
 
@@ -66,39 +66,25 @@ class FreshImages extends Component {
     return true;
   }
 
-  // computeOpacity(index){
-  //   if(index==this.curId+1){
-  //     return 'flex';
-  //   }
-  //   if(index==0 && this.curId==this.source.length-1){
-  //     return 'flex';
-  //   }
-  //   return 'none';
-  // }
-
-
   computeOpacity(index){
     if(index==this.curId+1){
-      return 1; petit
+      return 'flex';
     }
     if(index==0 && this.curId==this.source.length-1){
-      return 1;
+      return 'flex';
     }
-
-    this.source.length/index;
-
-    return 0;
+    return 'none';
   }
+
   render(){
     return(
       <View>
         { this.source.map((value, index) =>
           <Image 
             key={index}
-            // style={[this.props.style, { display:this.computeOpacity(index) }]}
-            style={[this.props.style, { opacity:this.computeOpacity(index) }]}
+            style={[this.props.style, { display:this.computeOpacity(index) }]}
             source={ this.source[index] }
-            resizeMode="stretch"
+            resizeMode="cover"
           />
         )}
       </View>
@@ -132,13 +118,12 @@ export default class App extends Component<Props> {
       // sampledBase64:false,
       motionDetectionMode: 0,
 
-      zoom:0,
       faces:[]
     };
 
     
       this.threshold = 50;
-      this.sampleSize = 10;
+      this.sampleSize = 50;
 
     this.previous_frame=[];
 
@@ -331,7 +316,7 @@ export default class App extends Component<Props> {
     // const getPreviewSize = await this.camera.getPreviewSize();
     // console.log(getPreviewSize);
 
-    this.takePicture();
+    // this.takePicture();
     // TEST SNAPVID
     // inter = setInterval(this.takePt, 5000);
   }
@@ -344,7 +329,6 @@ export default class App extends Component<Props> {
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
       // motionSvg:motion.motionPixels,
       motionBase64: motion.motionBase64,
-      motionBase64clean:motion.motionBase64clean,
       motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
       // previewSvg:motion.sampled,
       // sampledBase64:motion.sampledBase64,
@@ -374,22 +358,11 @@ export default class App extends Component<Props> {
             var picture = await this.camera.takePictureAsync({ 
               width:400,
               quality: 0.7, 
-              // base64: true, 
+              base64: true, 
               fixOrientation: true,
             });
             console.log(picture);
-            
-            var filename = picture.uri.split('/');
-
-            filename = filename[filename.length-1];
-            RNFetchBlob.fs.mv(
-              picture.uri.replace('file://',''),
-              RNFetchBlob.fs.dirs.DCIMDir+'/splipoll_'+filename
-            );
-
-
-
-            // this.sendMessage(this.state.connectedTo, 'img', picture.base64);
+            this.sendMessage(this.state.connectedTo, 'img', picture.base64);
           } 
           catch (err) {
             // console.log('takePictureAsync ERROR: ', err);
@@ -523,7 +496,6 @@ export default class App extends Component<Props> {
 
 
   renderMotion(){
-    console.log('renderMotion');
     if(!this.state.motionArea) return null;
     console.log(this.state.motionArea);
     return (
@@ -545,7 +517,7 @@ export default class App extends Component<Props> {
           )
 */        }
         </Svg>
-
+        
         <View style={styles.facesContainer} pointerEvents="none">
         <View 
           style={[
@@ -563,20 +535,9 @@ export default class App extends Component<Props> {
         <View style={styles.facesContainer} pointerEvents="none">
         {
           this.state.motionBase64 ? (
-        <FreshImages 
+        <Image 
           style = {[styles.motionpreview,{position:'absolute'}]}
           source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
-        />
-        ):null
-        }
-        </View>
-
-        <View style={styles.facesContainer} pointerEvents="none">
-        {
-          this.state.motionBase64 ? (
-        <FreshImages 
-          style = {[styles.motionpreview,{position:'absolute'}]}
-          source={{uri: 'data:image/png;base64,' + this.state.motionBase64clean}}
         />
         ):null
         }
@@ -612,8 +573,8 @@ export default class App extends Component<Props> {
         permissionDialogTitle={'Permission to use camera'}
         permissionDialogMessage={'We need your permission to use your camera phone'}
         ratio="4:3"
-        autoFocus ={RNCamera.Constants.AutoFocus.on}
-        // focusDepth = {0}
+        // autoFocus ={RNCamera.Constants.AutoFocus.off}
+        // focusDepth = {1}
         onFacesDetected={this.onFacesDetected}
         onFaceDetectionError={this.onFaceDetectionError}  
 
@@ -623,19 +584,11 @@ export default class App extends Component<Props> {
         motionDetectionLandmarks={0}
         motionDetectionThreshold={this.threshold}
         motionDetectionSampleSize={this.sampleSize}
-
-        zoom={this.state.zoom}
         >
 
-        {this.renderFaces()}
-       <Text >cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv </Text>
+        {/*this.renderFaces()*/}
+        {this.renderMotion()}
       </RNCamera>
-       {this.renderMotion()}
-      {/*
-      <View ref="black_mask_to_save_battery"
-        style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0}}
-      />
-      */}
       </View>
     );
   }
@@ -789,9 +742,6 @@ export default class App extends Component<Props> {
   onSampleSize(value) {
     this.sampleSize = value;
   }
-  onZoom(value) {
-    this.setState({zoom:value});
-  }
 
   render() {
     console.log('render');
@@ -799,40 +749,14 @@ export default class App extends Component<Props> {
       <View style={styles.container}>
       <ScrollView style={styles.scroll}>
 
-        <Button 
-          style={{ 
-            margin:1, 
-            height:40 ,
-            marginBottom:2,
-          }}
-          color={ this.state.previewing ? '#338433' : 'grey'}
-          title = 'TAKE'
-          onPress = {() => this.takePicture()}
-        />
-
         <View style={styles.header} >
-            <Slider  
-              ref="zoom"
-              style={styles.slider} 
-              thumbTintColor = '#000' 
-              minimumTrackTintColor='#ff0000' 
-              maximumTrackTintColor='#0000ff' 
-              minimumValue={0}
-              maximumValue={1}
-              step={0.1}
-              value={0}
-              onValueChange={
-                (value) => this.onZoom(value)
-              } 
-            />
-
             <Slider  
               ref="sampleSize"
               style={styles.slider} 
               thumbTintColor = '#000' 
               minimumTrackTintColor='#ff0000' 
               maximumTrackTintColor='#0000ff' 
-              minimumValue={3}
+              minimumValue={PixelRatio.get()}
               maximumValue={parseInt(previewHeight/10,10)}
               step={1}
               value={this.sampleSize}
@@ -924,7 +848,7 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     left:0,
     right:0,
-    
+    height:80,
     backgroundColor:'#808088',
   },
   slider:{
@@ -1007,8 +931,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   landmark: {
-    width: 2,
-    height: 2,
+    width: landmarkSize,
+    height: landmarkSize,
     position: 'absolute',
     backgroundColor: 'red',
   },
