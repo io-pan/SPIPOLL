@@ -127,7 +127,7 @@ export default class App extends Component<Props> {
 
       motionSvg: [],
       previewSvg: [],
-      motionArea:[],
+      motionAreas:[],
       motionBase64:false,
       // sampledBase64:false,
       motionDetectionMode: 0,
@@ -138,7 +138,7 @@ export default class App extends Component<Props> {
 
     
       this.threshold = 50;
-      this.sampleSize = 10;
+      this.sampleSize = 30;
 
     this.previous_frame=[];
 
@@ -340,16 +340,24 @@ export default class App extends Component<Props> {
      // mm = this.state.motionDetectionMode+1;
      // if (mm>5) return;
     console.log('MOTION', motion);
+
+ 
     this.setState({
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
-      // motionSvg:motion.motionPixels,
+      motionSvg:motion.motionPixels,
       motionBase64: motion.motionBase64,
       motionBase64clean:motion.motionBase64clean,
-      motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
+      // motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
+      motionAreas:motion.motionAreas,
+
       // previewSvg:motion.sampled,
       // sampledBase64:motion.sampledBase64,
       // motionDetectionMode:mm,
-    }, function(){console.log('set',this.state.motionArea)});    
+    }, function(){
+      console.log('motionBase64 length',this.state.motionBase64.length);
+
+      console.log('motionPixels length',this.state.motionSvg.length);
+    });    
   }
 
   onFacesDetected = ({ faces }) => {
@@ -521,13 +529,29 @@ export default class App extends Component<Props> {
     );
   }
 
+  renderMotionArea(motionArea) {
+    return (
+        <View 
+          style={[
+            styles.motionArea,
+            {
+              left: motionArea.x,
+              top: motionArea.y,
+              width: motionArea.w,
+              height: motionArea.h,
+            },
+          ]}
+        ></View>
+    );
+  }
+
 
   renderMotion(){
     console.log('renderMotion');
-    if(!this.state.motionArea) return null;
+    if(!this.state.motionAreas) return null;
     console.log(this.state.motionArea);
     return (
-      <View>
+      <View pointerEvents="none">
         <Svg
          style={styles.motionpreview} 
         >
@@ -547,6 +571,10 @@ export default class App extends Component<Props> {
         </Svg>
 
         <View style={styles.facesContainer} pointerEvents="none">
+
+        {this.state.motionAreas.map(this.renderMotionArea)}
+      
+{/*
         <View 
           style={[
             styles.motionArea,
@@ -558,6 +586,7 @@ export default class App extends Component<Props> {
             },
           ]}
         ></View>
+        */}
         </View>
 
         <View style={styles.facesContainer} pointerEvents="none">
@@ -628,10 +657,9 @@ export default class App extends Component<Props> {
         >
 
         {/*this.renderFaces()*/}
-       <Text >cvxcvxcvxcv 
-       cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv cvxcvxcvxcv </Text>
-      </RNCamera>
-       {this.renderMotion()}
+
+        {this.renderMotion()}
+       </RNCamera>
       {/*
       <View ref="black_mask_to_save_battery"
         style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0}}
