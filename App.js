@@ -131,13 +131,13 @@ export default class App extends Component<Props> {
       motionBase64:false,
       // sampledBase64:false,
       motionDetectionMode: 0,
-
+threshold : 0,
       zoom:0,
       faces:[]
     };
 
     
-      this.threshold = 0;  // consider 0 = inactive.
+      
       this.sampleSize = 30;
       this.minimumPixels = 3;
 
@@ -549,7 +549,7 @@ export default class App extends Component<Props> {
 
   renderMotion(){
     console.log('renderMotion');
-    if(!this.state.motionAreas) return null;
+    if(this.state.motionAreas.length == 0) return null;
     console.log(this.state.motionArea);
     return (
       <View pointerEvents="none">
@@ -648,8 +648,8 @@ export default class App extends Component<Props> {
         onFaceDetectionError={this.onFaceDetectionError}  
 
 
-        onMotionDetected={this.onMotionDetected}
-        motionDetectionMode={this.state.motionDetectionMode}
+        // onMotionDetected={this.onMotionDetected}
+        // motionDetectionMode={this.state.motionDetectionMode}
 
         // default out BOOLEAN  0
         // in MULTI_THRESHOLD   1
@@ -665,7 +665,7 @@ export default class App extends Component<Props> {
         // GROUPED_PIXELS       1024
         
         motionDetectionMinimumPixels={3}
-        motionDetectionThreshold={this.threshold}
+        motionDetectionThreshold={this.state.threshold}
         motionDetectionSampleSize={this.sampleSize}
 
         zoom={this.state.zoom}
@@ -827,13 +827,22 @@ export default class App extends Component<Props> {
     );
   }
 
-  onThreshold(mask, color) {
-    this.threshold = this.threshold & ~mask | color;
+  onThreshold0( color) {
+   
+
+    this.setState({threshold: color });
+
+
     console.log();
-    console.log(this.threshold  >>> 16 );
-    console.log((this.threshold & 0x00ff00) >>> 8  );
-    console.log(this.threshold & 0x0000ff);
- console.log();
+    console.log(this.state.threshold  >>> 16 );
+    console.log((this.state.threshold & 0x00ff00) >>> 8  );
+    console.log(this.state.threshold & 0x0000ff);
+    console.log();
+  }
+
+  onThreshold(mask, color) {
+    const threshold = this.state.threshold & ~mask | color;
+    this.setState({threshold:threshold});
   }
   onMinimumPixels(value) {
     this.minimumPixels = value;
@@ -847,11 +856,14 @@ export default class App extends Component<Props> {
 
   render() {
     console.log('render');
-
-    console.log(this.threshold  >>> 16 );
-    console.log((this.threshold & 0x00ff00) >>> 8  );
-    console.log(this.threshold & 0x0000ff);
-
+    console.log(this.state.threshold.toString(16));
+console.log(
+    (
+      (this.state.threshold>>>16) 
+    + ((this.state.threshold&0x00ff00)>>>8)
+    + (this.state.threshold&0x0000ff)
+    )/3
+);
     return (
       <View style={styles.container}>
       <ScrollView style={styles.scroll}>
@@ -905,12 +917,17 @@ export default class App extends Component<Props> {
               minimumTrackTintColor='#ff0000' 
               maximumTrackTintColor='#0000ff' 
               minimumValue={0}
-              maximumValue={0xffffff}
+              maximumValue={255}
               step={1}
-              value={this.threshold}
-              onValueChange={
-                (value) => this.onThreshold(0xffffff, (value<<16 | value<<8 | value))
-              } 
+              // value={this.state.threshold}
+              value={
+                (
+                  (this.state.threshold>>>16) 
+                + ((this.state.threshold&0x00ff00)>>>8)
+                + (this.state.threshold&0x0000ff)
+                )/3
+              }
+              onValueChange={(value) => this.onThreshold(0xffffff, (value<<16)|(value<<8)|value)  } 
             />
               <Slider  
                 ref="threshold_red"
@@ -921,10 +938,8 @@ export default class App extends Component<Props> {
                 minimumValue={0}
                 maximumValue={255}
                 step={1}
-                value={this.threshold & 0xff0000 >>> 16}
-                onValueChange={
-                  (value) => this.onThreshold(0xff0000, value<<16)
-                } 
+                value={this.state.threshold>>>16}
+                onValueChange={(value) => this.onThreshold(0xff0000, value<<16)} 
               />
               <Slider  
                 ref="threshold_green"
@@ -935,10 +950,8 @@ export default class App extends Component<Props> {
                 minimumValue={0}
                 maximumValue={255}
                 step={1}
-                value={ (this.threshold & 0x00ff00) >>> 8 }
-                onValueChange={
-                  (value) => this.onThreshold(0x00ff00,value<<8)
-                } 
+                value={(this.state.threshold & 0x00ff00) >>> 8}
+                onValueChange={(value) => this.onThreshold(0x00ff00,value<<8)} 
               />
               <Slider  
                 ref="threshold_blue"
@@ -949,10 +962,8 @@ export default class App extends Component<Props> {
                 minimumValue={0}
                 maximumValue={255}
                 step={1}
-                value={(this.threshold & 0x0000ff)}
-                onValueChange={
-                  (value) => this.onThreshold(0x0000ff,value)
-                } 
+                value={(this.state.threshold & 0x0000ff)}
+                onValueChange={(value) => this.onThreshold(0x0000ff,value)} 
               />
 
             <Slider  
@@ -964,7 +975,7 @@ export default class App extends Component<Props> {
               minimumValue={1}
               maximumValue={200}
               step={1}
-              value={this.minimumPixels}
+              // value={this.minimumPixels}
               onValueChange={
                 (value) => this.onMinimumPixels(value)
               } 
