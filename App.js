@@ -137,8 +137,9 @@ export default class App extends Component<Props> {
     };
 
     
-      this.threshold = 50;
+      this.threshold = 0;  // consider 0 = inactive.
       this.sampleSize = 30;
+      this.minimumPixels = 3;
 
     this.previous_frame=[];
 
@@ -344,11 +345,11 @@ export default class App extends Component<Props> {
  
     this.setState({
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
-      motionSvg:motion.motionPixels,
+      // motionSvg:motion.motionPixels,
       motionBase64: motion.motionBase64,
       motionBase64clean:motion.motionBase64clean,
       // motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
-      motionAreas:motion.motionAreas,
+      // motionAreas:motion.motionAreas,
 
       // previewSvg:motion.sampled,
       // sampledBase64:motion.sampledBase64,
@@ -602,7 +603,7 @@ export default class App extends Component<Props> {
 
         <View style={styles.facesContainer} pointerEvents="none">
         {
-          this.state.motionBase64 ? (
+          this.state.motionBase64clean ? (
         <FreshImages 
           style = {[styles.motionpreview,{position:'absolute'}]}
           source={{uri: 'data:image/png;base64,' + this.state.motionBase64clean}}
@@ -646,10 +647,24 @@ export default class App extends Component<Props> {
         onFacesDetected={this.onFacesDetected}
         onFaceDetectionError={this.onFaceDetectionError}  
 
+
         onMotionDetected={this.onMotionDetected}
         motionDetectionMode={this.state.motionDetectionMode}
 
-        motionDetectionLandmarks={0}
+        // default out BOOLEAN  0
+        // in MULTI_THRESHOLD   1
+        // out MOTION_AREAS     2
+        // ... MOTION_PIXELS    4
+        // MOTION_BASE64        8
+        // MOTION_PATH          16
+        // SAMPLED_PIXELS       32
+        // SAMPLED_BASE64       64
+        // SAMPLED_PATH         128
+        // GROUP_COUNT          256
+        // GROUP_SIZES          512
+        // GROUPED_PIXELS       1024
+        
+        motionDetectionMinimumPixels={3}
         motionDetectionThreshold={this.threshold}
         motionDetectionSampleSize={this.sampleSize}
 
@@ -812,8 +827,16 @@ export default class App extends Component<Props> {
     );
   }
 
-  onThreshold(value) {
-    this.threshold = value;
+  onThreshold(mask, color) {
+    this.threshold = this.threshold & ~mask | color;
+    console.log();
+    console.log(this.threshold  >>> 16 );
+    console.log((this.threshold & 0x00ff00) >>> 8  );
+    console.log(this.threshold & 0x0000ff);
+ console.log();
+  }
+  onMinimumPixels(value) {
+    this.minimumPixels = value;
   }
   onSampleSize(value) {
     this.sampleSize = value;
@@ -824,6 +847,11 @@ export default class App extends Component<Props> {
 
   render() {
     console.log('render');
+
+    console.log(this.threshold  >>> 16 );
+    console.log((this.threshold & 0x00ff00) >>> 8  );
+    console.log(this.threshold & 0x0000ff);
+
     return (
       <View style={styles.container}>
       <ScrollView style={styles.scroll}>
@@ -869,6 +897,7 @@ export default class App extends Component<Props> {
                 (value) => this.onSampleSize(value)
               } 
             />
+
             <Slider  
               ref="threshold"
               style={styles.slider} 
@@ -876,11 +905,68 @@ export default class App extends Component<Props> {
               minimumTrackTintColor='#ff0000' 
               maximumTrackTintColor='#0000ff' 
               minimumValue={0}
-              maximumValue={200}
+              maximumValue={0xffffff}
               step={1}
               value={this.threshold}
               onValueChange={
-                (value) => this.onThreshold(value)
+                (value) => this.onThreshold(0xffffff, (value<<16 | value<<8 | value))
+              } 
+            />
+              <Slider  
+                ref="threshold_red"
+                style={styles.slider} 
+                thumbTintColor = '#f00' 
+                minimumTrackTintColor='#ff0000' 
+                maximumTrackTintColor='#0000ff' 
+                minimumValue={0}
+                maximumValue={255}
+                step={1}
+                value={this.threshold & 0xff0000 >>> 16}
+                onValueChange={
+                  (value) => this.onThreshold(0xff0000, value<<16)
+                } 
+              />
+              <Slider  
+                ref="threshold_green"
+                style={styles.slider} 
+                thumbTintColor = '#0f0' 
+                minimumTrackTintColor='#ff0000' 
+                maximumTrackTintColor='#0000ff' 
+                minimumValue={0}
+                maximumValue={255}
+                step={1}
+                value={ (this.threshold & 0x00ff00) >>> 8 }
+                onValueChange={
+                  (value) => this.onThreshold(0x00ff00,value<<8)
+                } 
+              />
+              <Slider  
+                ref="threshold_blue"
+                style={styles.slider} 
+                thumbTintColor = '#00f' 
+                minimumTrackTintColor='#ff0000' 
+                maximumTrackTintColor='#0000ff' 
+                minimumValue={0}
+                maximumValue={255}
+                step={1}
+                value={(this.threshold & 0x0000ff)}
+                onValueChange={
+                  (value) => this.onThreshold(0x0000ff,value)
+                } 
+              />
+
+            <Slider  
+              ref="minimum_pixels"
+              style={styles.slider} 
+              thumbTintColor = '#000' 
+              minimumTrackTintColor='#ff0000' 
+              maximumTrackTintColor='#0000ff' 
+              minimumValue={1}
+              maximumValue={200}
+              step={1}
+              value={this.minimumPixels}
+              onValueChange={
+                (value) => this.onMinimumPixels(value)
               } 
             />
         </View>
