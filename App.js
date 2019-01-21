@@ -79,7 +79,7 @@ class FreshImages extends Component {
 
   computeOpacity(index){
     if(index==this.curId+1){
-      return 1; petit
+      return 1; //petit
     }
     if(index==0 && this.curId==this.source.length-1){
       return 1;
@@ -128,20 +128,16 @@ export default class App extends Component<Props> {
       motionSvg: [],
       previewSvg: [],
       motionAreas:[],
-      motionBase64:false,
+      motionBase64:'',
       // sampledBase64:false,
       motionDetectionMode: 0,
-threshold : 0,
+      threshold : 50,
+      sampleSize : 5,
+      minimumPixels: 3,
       zoom:0,
-      faces:[]
+      faces:[],
+      motionDetected:false,
     };
-
-    
-      
-      this.sampleSize = 30;
-      this.minimumPixels = 3;
-
-    this.previous_frame=[];
 
     this.camRequested = false;
     this.stopRecordRequested = false;
@@ -344,6 +340,7 @@ threshold : 0,
 
  
     this.setState({
+      motionDetected:motion.motionDetected,
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
       // motionSvg:motion.motionPixels,
       motionBase64: motion.motionBase64,
@@ -355,9 +352,8 @@ threshold : 0,
       // sampledBase64:motion.sampledBase64,
       // motionDetectionMode:mm,
     }, function(){
-      console.log('motionBase64 length',this.state.motionBase64.length);
-
-      console.log('motionPixels length',this.state.motionSvg.length);
+      // console.log('motionBase64 length',this.state.motionBase64.length);
+      // console.log('motionPixels length',this.state.motionSvg.length);
     });    
   }
 
@@ -548,72 +544,39 @@ threshold : 0,
 
 
   renderMotion(){
-    console.log('renderMotion');
-    if(this.state.motionAreas.length == 0) return null;
-    console.log(this.state.motionArea);
+    // console.log(this.state.motionDetected);
+
     return (
-      <View pointerEvents="none">
-        <Svg
-         style={styles.motionpreview} 
-        >
-          { /*
-            this.state.motionSvg.map((value, index) => 
-          <Rect
-            key={index}
-            x={ value.x }
-            y={ value.y }
-            height= {this.sampleSize}
-            width={this.sampleSize}
-            strokeWidth={0}
-            fill={"rgb("+value.score +","+ value.score +","+ value.score+")"}
-          />
-          )
-*/        }
-        </Svg>
-
         <View style={styles.facesContainer} pointerEvents="none">
-
-        {this.state.motionAreas.map(this.renderMotionArea)}
-      
+     
 {/*
-        <View 
-          style={[
-            styles.motionArea,
-            {
-              left: this.state.motionArea.x,
-              top: this.state.motionArea.y,
-              width: this.state.motionArea.w,
-              height: this.state.motionArea.h,
-            },
-          ]}
-        ></View>
-        */}
-        </View>
-
         <View style={styles.facesContainer} pointerEvents="none">
+          {this.state.motionAreas.map(this.renderMotionArea)}
+        </View>
+*/}
+
         {
           this.state.motionBase64 ? (
-        <FreshImages 
-          style = {[styles.motionpreview,{position:'absolute'}]}
-          source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
-        />
-        ):null
+          <FreshImages 
+            style = {[styles.motionpreview,{position:'absolute'}]}
+            source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
+          />
+          ):null
         }
-        </View>
 
-        <View style={styles.facesContainer} pointerEvents="none">
+
         {
           this.state.motionBase64clean ? (
-        <FreshImages 
-          style = {[styles.motionpreview,{position:'absolute'}]}
-          source={{uri: 'data:image/png;base64,' + this.state.motionBase64clean}}
-        />
-        ):null
+            <FreshImages 
+              style = {[styles.motionpreview,{position:'absolute'}]}
+              source={{uri: 'data:image/png;base64,' + this.state.motionBase64clean}}
+            />
+          ):null
         }
-        </View>
-
+        
       </View>
     );
+
   }
 
   renderCamera() {
@@ -643,36 +606,31 @@ threshold : 0,
         permissionDialogMessage={'We need your permission to use your camera phone'}
         ratio="4:3"
         autoFocus ={RNCamera.Constants.AutoFocus.on}
-        // focusDepth = {0}
-        onFacesDetected={this.onFacesDetected}
-        onFaceDetectionError={this.onFaceDetectionError}  
+        // onFacesDetected={this.onFacesDetected}
+        // onFaceDetectionError={this.onFaceDetectionError}  
 
+        motionDetectionMode={this.state.motionDetectionMode}
+          // always return BOOLEAN  
 
-        // onMotionDetected={this.onMotionDetected}
-        // motionDetectionMode={this.state.motionDetectionMode}
-
-        // default out BOOLEAN  0
-        // in MULTI_THRESHOLD   1
-        // out MOTION_AREAS     2
-        // ... MOTION_PIXELS    4
-        // MOTION_BASE64        8
-        // MOTION_PATH          16
-        // SAMPLED_PIXELS       32
-        // SAMPLED_BASE64       64
-        // SAMPLED_PATH         128
-        // GROUP_COUNT          256
-        // GROUP_SIZES          512
-        // GROUPED_PIXELS       1024
-        
-        motionDetectionMinimumPixels={3}
+          // out MOTION_AREAS     2
+          // ... MOTION_PIXELS    4
+          // MOTION_BASE64        8
+          // MOTION_PATH          16
+          // SAMPLED_PIXELS       32
+          // SAMPLED_BASE64       64
+          // SAMPLED_PATH         128
+          // GROUP_COUNT          256
+          // GROUP_SIZES          512
+          // GROUPED_PIXELS       1024
+        onMotionDetected={this.onMotionDetected}
+        motionDetectionMinimumPixels={this.state.minimumPixels}
         motionDetectionThreshold={this.state.threshold}
-        motionDetectionSampleSize={this.sampleSize}
+        motionDetectionSampleSize={this.state.sampleSize}
 
         zoom={this.state.zoom}
         >
 
         {/*this.renderFaces()*/}
-
         {this.renderMotion()}
        </RNCamera>
       {/*
@@ -845,10 +803,10 @@ threshold : 0,
     this.setState({threshold:threshold});
   }
   onMinimumPixels(value) {
-    this.minimumPixels = value;
+    this.setState({minimumPixels : value});
   }
   onSampleSize(value) {
-    this.sampleSize = value;
+    this.setState({sampleSize : value});
   }
   onZoom(value) {
     this.setState({zoom:value});
@@ -856,14 +814,7 @@ threshold : 0,
 
   render() {
     console.log('render');
-    console.log(this.state.threshold.toString(16));
-console.log(
-    (
-      (this.state.threshold>>>16) 
-    + ((this.state.threshold&0x00ff00)>>>8)
-    + (this.state.threshold&0x0000ff)
-    )/3
-);
+
     return (
       <View style={styles.container}>
       <ScrollView style={styles.scroll}>
@@ -899,12 +850,12 @@ console.log(
               ref="sampleSize"
               style={styles.slider} 
               thumbTintColor = '#000' 
-              minimumTrackTintColor='#ff0000' 
-              maximumTrackTintColor='#0000ff' 
+              minimumTrackTintColor='#ffffff' 
+              maximumTrackTintColor='#ffffff' 
               minimumValue={3}
-              maximumValue={parseInt(previewHeight/10,10)}
+              maximumValue={parseInt(previewHeight/20,10)}
               step={1}
-              value={this.sampleSize}
+              value={this.state.sampleSize}
               onValueChange={
                 (value) => this.onSampleSize(value)
               } 
@@ -913,9 +864,9 @@ console.log(
             <Slider  
               ref="threshold"
               style={styles.slider} 
-              thumbTintColor = '#000' 
-              minimumTrackTintColor='#ff0000' 
-              maximumTrackTintColor='#0000ff' 
+              thumbTintColor = '#fff' 
+              minimumTrackTintColor='#ffffff' 
+              maximumTrackTintColor='#ffffff' 
               minimumValue={0}
               maximumValue={255}
               step={1}
@@ -934,7 +885,7 @@ console.log(
                 style={styles.slider} 
                 thumbTintColor = '#f00' 
                 minimumTrackTintColor='#ff0000' 
-                maximumTrackTintColor='#0000ff' 
+                maximumTrackTintColor='#ff0000' 
                 minimumValue={0}
                 maximumValue={255}
                 step={1}
@@ -945,8 +896,8 @@ console.log(
                 ref="threshold_green"
                 style={styles.slider} 
                 thumbTintColor = '#0f0' 
-                minimumTrackTintColor='#ff0000' 
-                maximumTrackTintColor='#0000ff' 
+                minimumTrackTintColor='#00ff00' 
+                maximumTrackTintColor='#00ff00' 
                 minimumValue={0}
                 maximumValue={255}
                 step={1}
@@ -957,7 +908,7 @@ console.log(
                 ref="threshold_blue"
                 style={styles.slider} 
                 thumbTintColor = '#00f' 
-                minimumTrackTintColor='#ff0000' 
+                minimumTrackTintColor='#0000ff' 
                 maximumTrackTintColor='#0000ff' 
                 minimumValue={0}
                 maximumValue={255}
@@ -975,7 +926,7 @@ console.log(
               minimumValue={1}
               maximumValue={200}
               step={1}
-              // value={this.minimumPixels}
+              value={this.state.minimumPixels}
               onValueChange={
                 (value) => this.onMinimumPixels(value)
               } 
