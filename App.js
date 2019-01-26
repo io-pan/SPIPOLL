@@ -7,6 +7,7 @@
  */
 
 import React, {Component} from 'react';
+
 import {Platform, StyleSheet, Text, View,
     ScrollView,
     Button,
@@ -130,13 +131,15 @@ export default class App extends Component<Props> {
       motionAreas:[],
       motionBase64:'',
       // sampledBase64:false,
-      motionDetectionMode: 0,
-      threshold : 50,
+      motionDetectionMode: 513,
+      threshold : 0xffffff,
       sampleSize : 5,
-      minimumPixels: 3,
+      minimumPixels: 1,
       zoom:0,
       faces:[],
       motionDetected:false,
+
+      previewingMotion:true,
     };
 
     this.camRequested = false;
@@ -333,9 +336,10 @@ export default class App extends Component<Props> {
     // inter = setInterval(this.takePt, 5000);
   }
 
+  
   onMotionDetected = ({ motion }) => {
-     // mm = this.state.motionDetectionMode+1;
-     // if (mm>5) return;
+    if(!this.state.previewingMotion) return;
+    
     console.log('MOTION', motion);
 
  
@@ -344,7 +348,7 @@ export default class App extends Component<Props> {
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
       // motionSvg:motion.motionPixels,
       motionBase64: motion.motionBase64,
-      motionBase64clean:motion.motionBase64clean,
+      motionBase64clean:motion.motionBase64clean ? motion.motionBase64clean : [],
       // motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
       // motionAreas:motion.motionAreas,
 
@@ -557,7 +561,7 @@ export default class App extends Component<Props> {
 
         {
           this.state.motionBase64 ? (
-          <FreshImages 
+          <Image
             style = {[styles.motionpreview,{position:'absolute'}]}
             source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
           />
@@ -567,13 +571,13 @@ export default class App extends Component<Props> {
 
         {
           this.state.motionBase64clean ? (
-            <FreshImages 
+            <Image
               style = {[styles.motionpreview,{position:'absolute'}]}
               source={{uri: 'data:image/png;base64,' + this.state.motionBase64clean}}
             />
           ):null
         }
-        
+
       </View>
     );
 
@@ -622,6 +626,7 @@ export default class App extends Component<Props> {
           // GROUP_COUNT          256
           // GROUP_SIZES          512
           // GROUPED_PIXELS       1024
+
         onMotionDetected={this.onMotionDetected}
         motionDetectionMinimumPixels={this.state.minimumPixels}
         motionDetectionThreshold={this.state.threshold}
@@ -811,6 +816,10 @@ export default class App extends Component<Props> {
   onZoom(value) {
     this.setState({zoom:value});
   }
+ togglePreviewMotion() {
+    var value = !this.state.previewingMotion;
+    this.setState({previewingMotion:value});
+  }
 
   render() {
     console.log('render');
@@ -831,6 +840,17 @@ export default class App extends Component<Props> {
         />
 
         <View style={styles.header} >
+              <Button 
+                style={{ 
+                  margin:1, 
+                  height:40 ,
+                  marginBottom:2,
+                }}
+                color={ this.state.previewing ? '#338433' : 'grey'}
+                title = 'Pause motion'
+                onPress = {() => this.togglePreviewMotion()}
+              />
+
             <Slider  
               ref="zoom"
               style={styles.slider} 
@@ -852,8 +872,8 @@ export default class App extends Component<Props> {
               thumbTintColor = '#000' 
               minimumTrackTintColor='#ffffff' 
               maximumTrackTintColor='#ffffff' 
-              minimumValue={3}
-              maximumValue={parseInt(previewHeight/20,10)}
+              minimumValue={5}
+              maximumValue={parseInt(previewHeight/10,10)}
               step={1}
               value={this.state.sampleSize}
               onValueChange={
@@ -924,7 +944,7 @@ export default class App extends Component<Props> {
               minimumTrackTintColor='#ff0000' 
               maximumTrackTintColor='#0000ff' 
               minimumValue={1}
-              maximumValue={200}
+              maximumValue={10}
               step={1}
               value={this.state.minimumPixels}
               onValueChange={
