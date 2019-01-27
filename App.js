@@ -53,7 +53,7 @@ class FreshImages extends Component {
   constructor(props) {
     super(props);
     this.state = {};
-    this.count = this.props.count ? this.props.count : 4;
+    this.count = this.props.count ? this.props.count : 2;
     this.curId = 0;
     this.source =  new Array(this.count);
     this.opacity = new Array(this.count);
@@ -346,15 +346,16 @@ export default class App extends Component<Props> {
     this.setState({
       motionDetected:motion.motionDetected,
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
-      // motionSvg:motion.motionPixels,
+      motionSvg:motion.motionPixels,
       motionBase64: motion.motionBase64,
-      motionBase64clean:motion.motionBase64clean ? motion.motionBase64clean : [],
+      // motionBase64clean:motion.motionBase64clean ? motion.motionBase64clean : [],
+      
       // motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
       // motionAreas:motion.motionAreas,
 
       // previewSvg:motion.sampled,
       // sampledBase64:motion.sampledBase64,
-      // motionDetectionMode:mm,
+
     }, function(){
       // console.log('motionBase64 length',this.state.motionBase64.length);
       // console.log('motionPixels length',this.state.motionSvg.length);
@@ -559,9 +560,39 @@ export default class App extends Component<Props> {
         </View>
 */}
 
+          {/* Way too slow
+            this.state.motionSvg ? (
+            <Svg
+              style =  {[styles.motionpreview,{position:'absolute'}]}
+            >
+              { this.state.motionSvg.map((value, index) => 
+                <Rect
+                  key={index}
+                  x={ value.x*this.state.sampleSize }
+                  y={ value.y*this.state.sampleSize }
+                  height= {this.state.sampleSize}
+                  width={this.state.sampleSize}
+                  strokeWidth={0}
+                  fill={'#'+value.colorHex}
+                  opacity={(255-valuescore)/255}
+                />
+              <Rect
+                key={index}
+                x={ this.sampleSize * ( Math.trunc(index/Math.trunc(previewHeight/this.sampleSize)) % Math.trunc(previewWidth/this.sampleSize))}
+                y={this.sampleSize * (index%(Math.trunc(previewHeight/this.sampleSize))) }
+                height= {this.sampleSize}
+                width={this.sampleSize}
+                strokeWidth={0}
+                fill={'#'+value}
+              />
+            )}
+          </Svg>
+          ):null
+        */}
+
         {
           this.state.motionBase64 ? (
-          <Image
+          <FreshImages
             style = {[styles.motionpreview,{position:'absolute'}]}
             source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
           />
@@ -569,14 +600,16 @@ export default class App extends Component<Props> {
         }
 
 
-        {
+        {/*
           this.state.motionBase64clean ? (
             <Image
+           resizeMethod="scale"
+  resizeMode="cover"
               style = {[styles.motionpreview,{position:'absolute'}]}
               source={{uri: 'data:image/png;base64,' + this.state.motionBase64clean}}
             />
           ):null
-        }
+        */}
 
       </View>
     );
@@ -620,9 +653,11 @@ export default class App extends Component<Props> {
           // ... MOTION_PIXELS    4
           // MOTION_BASE64        8
           // MOTION_PATH          16
+
           // SAMPLED_PIXELS       32
           // SAMPLED_BASE64       64
           // SAMPLED_PATH         128
+
           // GROUP_COUNT          256
           // GROUP_SIZES          512
           // GROUPED_PIXELS       1024
@@ -808,10 +843,17 @@ export default class App extends Component<Props> {
     this.setState({threshold:threshold});
   }
   onMinimumPixels(value) {
-    this.setState({minimumPixels : value});
+    this.setState({minimumPixels:value});
   }
   onSampleSize(value) {
-    this.setState({sampleSize : value});
+    let minimumPixels = this.state.minimumPixels;
+    if(minimumPixels > previewHeight/value){
+      minimumPixels = previewHeight/value;
+    }
+    this.setState({
+      sampleSize:value,
+      minimumPixels:minimumPixels,
+    });
   }
   onZoom(value) {
     this.setState({zoom:value});
@@ -944,7 +986,7 @@ export default class App extends Component<Props> {
               minimumTrackTintColor='#ff0000' 
               maximumTrackTintColor='#0000ff' 
               minimumValue={1}
-              maximumValue={10}
+              maximumValue={previewHeight/this.state.sampleSize}
               step={1}
               value={this.state.minimumPixels}
               onValueChange={
@@ -952,31 +994,31 @@ export default class App extends Component<Props> {
               } 
             />
         </View>
+
         <View style={styles.containerPreview}>
-
-
-                {/*        <Svg
-                          style = {styles.motionpreview}
-                        >
-                          { this.state.previewSvg.map((value, index) => 
-                          <Rect
-                            key={index}
-                            x={ this.sampleSize * ( Math.trunc(index/Math.trunc(previewHeight/this.sampleSize)) % Math.trunc(previewWidth/this.sampleSize))}
-                            y={this.sampleSize * (index%(Math.trunc(previewHeight/this.sampleSize))) }
-                            height= {this.sampleSize}
-                            width={this.sampleSize}
-                            strokeWidth={0}
-                            fill={'#'+value}
-                          />
-                          )}
-                        </Svg>
+          {/*        
+            <Svg
+              style = {styles.motionpreview}
+            >
+              { this.state.previewSvg.map((value, index) => 
+              <Rect
+                key={index}
+                x={ this.sampleSize * ( Math.trunc(index/Math.trunc(previewHeight/this.sampleSize)) % Math.trunc(previewWidth/this.sampleSize))}
+                y={this.sampleSize * (index%(Math.trunc(previewHeight/this.sampleSize))) }
+                height= {this.sampleSize}
+                width={this.sampleSize}
+                strokeWidth={0}
+                fill={'#'+value}
+              />
+              )}
+            </Svg>
                 
+            { this.renderImage() }
+            { this.renderImageTest() }
+            { this.renderImageLocal()}
+          */}
 
-        { this.renderImage() }
-        { this.renderImageTest() }
-        { this.renderImageLocal() */}
-        { this.renderCamera() }
-
+          { this.renderCamera() }
         </View>
         
         { this.state.devices.map((value, index) => 
