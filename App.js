@@ -126,9 +126,6 @@ export default class App extends Component<Props> {
       previewing:false,
       distantRec:false,
 
-      motionSvg: [],
-      previewSvg: [],
-      motionAreas:[],
       motionBase64:'',
       // sampledBase64:false,
       motionDetectionMode: 513,
@@ -136,7 +133,6 @@ export default class App extends Component<Props> {
       sampleSize : 5,
       minimumPixels: 1,
       zoom:0,
-      faces:[],
       motionDetected:false,
 
       previewingMotion:true,
@@ -338,7 +334,7 @@ export default class App extends Component<Props> {
 
   
   onMotionDetected = ({ motion }) => {
-    if(!this.state.previewingMotion) return;
+    if (!this.state.previewingMotion) return;
     
     console.log('MOTION', motion);
 
@@ -346,7 +342,6 @@ export default class App extends Component<Props> {
     this.setState({
       motionDetected:motion.motionDetected,
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
-      motionSvg:motion.motionPixels,
       motionBase64: motion.motionBase64,
       // motionBase64clean:motion.motionBase64clean ? motion.motionBase64clean : [],
       
@@ -357,17 +352,11 @@ export default class App extends Component<Props> {
       // sampledBase64:motion.sampledBase64,
 
     }, function(){
-      // console.log('motionBase64 length',this.state.motionBase64.length);
-      // console.log('motionPixels length',this.state.motionSvg.length);
+      //
     });    
   }
 
-  onFacesDetected = ({ faces }) => {
-    console.log('FACE', faces);
-    this.setState({ faces:faces });
-  }
 
-  onFaceDetectionError = state => console.warn('Faces detection error:', state)
 
   takePicture = async () => {
     if (this.camera) {
@@ -496,100 +485,10 @@ export default class App extends Component<Props> {
     }
   };
 
-  renderFace({ bounds, faceID, rollAngle, yawAngle }) {
-    return (
-      <View
-        key={faceID}
-        transform={[
-          { perspective: 600 },
-          { rotateZ: `${rollAngle.toFixed(0)}deg` },
-          { rotateY: `${yawAngle.toFixed(0)}deg` },
-        ]}
-        style={[
-          styles.face,
-          {
-            ...bounds.size,
-            left: bounds.origin.x,
-            top: bounds.origin.y,
-          },
-        ]}
-      >
-        {/*
-        <Text style={styles.faceText}>ID: {faceID}</Text>
-        <Text style={styles.faceText}>rollAngle: {rollAngle.toFixed(0)}</Text>
-        <Text style={styles.faceText}>yawAngle: {yawAngle.toFixed(0)}</Text>
-        */}
-      </View>
-    );
-  }
-
-  renderFaces() {
-    return (
-      <View style={styles.facesContainer} pointerEvents="none">
-        {this.state.faces.map(this.renderFace)}
-      </View>
-    );
-  }
-
-  renderMotionArea(motionArea) {
-    return (
-        <View 
-          style={[
-            styles.motionArea,
-            {
-              left: motionArea.x,
-              top: motionArea.y,
-              width: motionArea.w,
-              height: motionArea.h,
-            },
-          ]}
-        ></View>
-    );
-  }
-
 
   renderMotion(){
-    // console.log(this.state.motionDetected);
-
     return (
-        <View style={styles.facesContainer} pointerEvents="none">
-     
-{/*
-        <View style={styles.facesContainer} pointerEvents="none">
-          {this.state.motionAreas.map(this.renderMotionArea)}
-        </View>
-*/}
-
-          {/* Way too slow
-            this.state.motionSvg ? (
-            <Svg
-              style =  {[styles.motionpreview,{position:'absolute'}]}
-            >
-              { this.state.motionSvg.map((value, index) => 
-                <Rect
-                  key={index}
-                  x={ value.x*this.state.sampleSize }
-                  y={ value.y*this.state.sampleSize }
-                  height= {this.state.sampleSize}
-                  width={this.state.sampleSize}
-                  strokeWidth={0}
-                  fill={'#'+value.colorHex}
-                  opacity={(255-valuescore)/255}
-                />
-              <Rect
-                key={index}
-                x={ this.sampleSize * ( Math.trunc(index/Math.trunc(previewHeight/this.sampleSize)) % Math.trunc(previewWidth/this.sampleSize))}
-                y={this.sampleSize * (index%(Math.trunc(previewHeight/this.sampleSize))) }
-                height= {this.sampleSize}
-                width={this.sampleSize}
-                strokeWidth={0}
-                fill={'#'+value}
-              />
-            )}
-          </Svg>
-          ):null
-        */}
-
+        <View style={styles.MotionContainer} pointerEvents="none">
         {
           this.state.motionBase64 ? (
           <FreshImages
@@ -598,22 +497,8 @@ export default class App extends Component<Props> {
           />
           ):null
         }
-
-
-        {/*
-          this.state.motionBase64clean ? (
-            <Image
-           resizeMethod="scale"
-  resizeMode="cover"
-              style = {[styles.motionpreview,{position:'absolute'}]}
-              source={{uri: 'data:image/png;base64,' + this.state.motionBase64clean}}
-            />
-          ):null
-        */}
-
       </View>
     );
-
   }
 
   renderCamera() {
@@ -643,24 +528,12 @@ export default class App extends Component<Props> {
         permissionDialogMessage={'We need your permission to use your camera phone'}
         ratio="4:3"
         autoFocus ={RNCamera.Constants.AutoFocus.on}
-        // onFacesDetected={this.onFacesDetected}
-        // onFaceDetectionError={this.onFaceDetectionError}  
 
         motionDetectionMode={this.state.motionDetectionMode}
           // always return BOOLEAN  
 
-          // out MOTION_AREAS     2
-          // ... MOTION_PIXELS    4
-          // MOTION_BASE64        8
-          // MOTION_PATH          16
-
-          // SAMPLED_PIXELS       32
-          // SAMPLED_BASE64       64
-          // SAMPLED_PATH         128
-
-          // GROUP_COUNT          256
-          // GROUP_SIZES          512
-          // GROUPED_PIXELS       1024
+          // MOTION_BASE64    
+          
 
         onMotionDetected={this.onMotionDetected}
         motionDetectionMinimumPixels={this.state.minimumPixels}
@@ -670,7 +543,6 @@ export default class App extends Component<Props> {
         zoom={this.state.zoom}
         >
 
-        {/*this.renderFaces()*/}
         {this.renderMotion()}
        </RNCamera>
       {/*
@@ -1119,45 +991,14 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'red'
   },
 
-
-  facesContainer: {
+  MotionContainer: {
     position: 'absolute',
     bottom: 0,
     right: 0,
     left: 0,
     top: 0,
   },
-  face: {
-    padding: 10,
-    borderWidth: 2,
-    borderRadius: 2,
-    position: 'absolute',
-    borderColor: '#FFD700',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  motionArea: {
-    padding: 1,
-    borderWidth: 2,
-    borderRadius: 2,
-    position: 'absolute',
-    borderColor: '#00D7FF',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
-  },
-  landmark: {
-    width: 2,
-    height: 2,
-    position: 'absolute',
-    backgroundColor: 'red',
-  },
-  faceText: {
-    color: '#FFD700',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    margin: 10,
-    backgroundColor: 'transparent',
-  },
+
   row: {
     flexDirection: 'row',
   },
