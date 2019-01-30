@@ -19,13 +19,15 @@ import {Platform, StyleSheet, Text, View,
     Slider,
     StatusBar,
 } from 'react-native';
+import SplashScreen from "rn-splash-screen";
 import KeepScreenOn from 'react-native-keep-screen-on';
 import RNFetchBlob from 'rn-fetch-blob';
 import { RNCamera } from 'react-native-camera';
-import Svg,{ Rect } from 'react-native-svg';
 // import ViewShot from "react-native-view-shot";
 import BluetoothCP  from "react-native-bluetooth-cross-platform"
-// import OpenCV from './src/OpenCV';
+import Icon from 'react-native-vector-icons/FontAwesome';             // http://fontawesome.io/icons/          
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';  // https://material.io/icons/
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 let source;
 const _source = resolveAssetSource(require('./img/scr.png'));
@@ -44,7 +46,10 @@ else {
 // const previewWidth = 99;
 const previewHeight = 480;
 const previewWidth = 360;
-
+const greenDark = "#bad80a";
+const green = "#d5e768";
+const greenLight = "#e2ee96";
+const greenSuperLight ="#e9f2ae"
 
 type Props = {};
 
@@ -325,6 +330,8 @@ export default class App extends Component<Props> {
 
     // TEST SNAPVID
     // inter = setInterval(this.takePt, 5000);
+
+    SplashScreen.hide();
   }
 
   
@@ -740,6 +747,30 @@ export default class App extends Component<Props> {
           onPress = {() => this.takePicture()}
         />
 
+
+        <MaterialCommunityIcons.Button   
+          name='camera'
+          // underlayColor="rgba(255,255,255,0.5)"
+          size={24}
+          height={40}
+          width={40}
+          style={styles.iconButton}
+          borderRadius={0}
+          padding={0}
+          paddingLeft={0}
+          margin={0}
+          marginLeft={2}
+          // color="#ffffff"
+          // backgroundColor ='transparent'
+          onPress = {() => this.takePicture()}
+
+          // on motion detected take
+          //    1. photo every X sec.   for X sec.   /  until no motion
+          //    2. video                for X sec.   /  until no motion
+
+        />  
+
+
         <View style={styles.header} >
               <Button 
                 style={{ 
@@ -856,22 +887,7 @@ export default class App extends Component<Props> {
 
         <View style={styles.containerPreview}>
           {/*        
-            <Svg
-              style = {styles.motionpreview}
-            >
-              { this.state.previewSvg.map((value, index) => 
-              <Rect
-                key={index}
-                x={ this.sampleSize * ( Math.trunc(index/Math.trunc(previewHeight/this.sampleSize)) % Math.trunc(previewWidth/this.sampleSize))}
-                y={this.sampleSize * (index%(Math.trunc(previewHeight/this.sampleSize))) }
-                height= {this.sampleSize}
-                width={this.sampleSize}
-                strokeWidth={0}
-                fill={'#'+value}
-              />
-              )}
-            </Svg>
-                
+           
             { this.renderImage() }
             { this.renderImageTest() }
             { this.renderImageLocal()}
