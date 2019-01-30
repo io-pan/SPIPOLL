@@ -126,16 +126,15 @@ export default class App extends Component<Props> {
       previewing:false,
       distantRec:false,
 
+      motionDetected:false,
       motionBase64:'',
-      // sampledBase64:false,
-      motionDetectionMode: 513,
+      motionDetectionMode: 0,
       threshold : 0xffffff,
       sampleSize : 5,
       minimumPixels: 1,
-      zoom:0,
-      motionDetected:false,
+      motionPreviewPaused:false,
 
-      previewingMotion:true,
+      zoom:0,
     };
 
     this.camRequested = false;
@@ -147,9 +146,6 @@ export default class App extends Component<Props> {
   }
  
   componentDidMount() {
-    // TODO: store a file or take dummy picture on cam ready
-    // to force authorisisation dialog since motion detctor need it.
-
     StatusBar.setHidden(true);
     KeepScreenOn.setKeepScreenOn(true);
 
@@ -327,29 +323,20 @@ export default class App extends Component<Props> {
     // const getPreviewSize = await this.camera.getPreviewSize();
     // console.log(getPreviewSize);
 
-    this.takePicture();
     // TEST SNAPVID
     // inter = setInterval(this.takePt, 5000);
   }
 
   
   onMotionDetected = ({ motion }) => {
-    if (!this.state.previewingMotion) return;
+    if (this.state.motionPreviewPaused) return;
     
     console.log('MOTION', motion);
 
- 
     this.setState({
       motionDetected:motion.motionDetected,
       // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
       motionBase64: motion.motionBase64,
-      // motionBase64clean:motion.motionBase64clean ? motion.motionBase64clean : [],
-      
-      // motionArea:{x:motion.motionArea[0],y:motion.motionArea[1],w:motion.motionArea[2],h:motion.motionArea[3]},
-      // motionAreas:motion.motionAreas,
-
-      // previewSvg:motion.sampled,
-      // sampledBase64:motion.sampledBase64,
 
     }, function(){
       //
@@ -731,8 +718,8 @@ export default class App extends Component<Props> {
     this.setState({zoom:value});
   }
  togglePreviewMotion() {
-    var value = !this.state.previewingMotion;
-    this.setState({previewingMotion:value});
+    var value = !this.state.motionPreviewPaused;
+    this.setState({motionPreviewPaused:value});
   }
 
   render() {
