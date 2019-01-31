@@ -33,28 +33,40 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 let source;
 // const _source = resolveAssetSource(require('./img/scr.png'));
-const _source = resolveAssetSource(require('./img/photo.png'));
+// const _source = resolveAssetSource(require('./img/photo.png'));
 
-if (__DEV__) {
-  source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
-}
-else {
-  const sourceAndroid = {uri: 'asset:/scr.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
-  const sourceIOS = { uri: 'file://${_source.uri}' };
-  source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
-}
+// if (__DEV__) {
+//   source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
+// }
+// else {
+//   const sourceAndroid = {uri: 'asset:/scr.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
+//   const sourceIOS = { uri: 'file://${_source.uri}' };
+//   source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
+// }
 
+// <Image
+//        style={{width:50, height:50,}} 
+//        source={source}
+//  />
 
-// const previewHeight = 132;
-// const previewWidth = 99;
-const previewHeight = 480;
-const previewWidth = 360;
-const greenDark = "#bad80a";
+// Spipoll greens
+const greenDark = "#bad80a";  // logo
 const green = "#d5e768";
 const greenLight = "#e2ee96";
 const greenSuperLight ="#e9f2ae"
 
-type Props = {};
+const greenFlash ="#a4e000";  // website
+const greenFlashLight ="#d1ef7d";
+
+// TODO: 
+//  screen W x H ..
+//  let user choose 1:1 3:4 16:9
+//  resize cam preview (on motion-run) based on sampleSize to save battery life.
+//  let screen sleep + option to force seep (absolute black layer)
+
+
+const previewHeight = 480;
+const previewWidth = 360;
 
 //-----------------------------------------------------------------------------------------
 class FreshImages extends Component {
@@ -75,7 +87,7 @@ class FreshImages extends Component {
     return true;
   }
 
-  // computeOpacity(index){
+  // computeDisplay(index){
   //   if(index==this.curId+1){
   //     return 'flex';
   //   }
@@ -93,18 +105,16 @@ class FreshImages extends Component {
     if(index==0 && this.curId==this.source.length-1){
       return 1;
     }
-
-    this.source.length/index;
-
     return 0;
   }
+
   render(){
     return(
       <View>
         { this.source.map((value, index) =>
           <Image 
             key={index}
-            // style={[this.props.style, { display:this.computeOpacity(index) }]}
+            // style={[this.props.style, { display:this.computeDisplay(index) }]}
             style={[this.props.style, { opacity:this.computeOpacity(index) }]}
             source={ this.source[index] }
             resizeMode="stretch"
@@ -153,9 +163,49 @@ export default class App extends Component<Props> {
     ]
   }
  
+  requestForPermission = async () => {
+    try{
+      const granted = await PermissionsAndroid.requestMultiple([
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+      ])
+      SplashScreen.hide();
+
+      if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+      &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
+      ){
+        // Create splipoll folder.
+        RNFetchBlob.fs.isDir( RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll')
+        .then((isDir) => {
+          if(!isDir){
+            RNFetchBlob.fs.mkdir(RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll')
+            .then(() => { console.log(RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll' ) })
+            .catch((err) => { console.log(err) })
+          }
+        })
+      }
+      else {
+        // Exit app.
+      }
+
+    } catch (err) {
+      console.warn(err)
+    }
+  }
+
   componentDidMount() {
     StatusBar.setHidden(true);
     KeepScreenOn.setKeepScreenOn(true);
+
+    this.requestForPermission();
 
     BluetoothCP.advertise("WIFI");   // "WIFI", "BT", and "WIFI-BT"
     BluetoothCP.browse('WIFI');
@@ -188,7 +238,7 @@ export default class App extends Component<Props> {
   }
 
   //--------------------------------------------------------
-  //            P2P communcation
+  //            P2P communication
   //--------------------------------------------------------
 
   // toggleStorage() {
@@ -369,14 +419,13 @@ export default class App extends Component<Props> {
           try {
             var picture = await this.camera.takePictureAsync({ 
               width:400,
-              quality: 0.7, 
-              // base64: true, 
+              quality: 0.9, 
+              skipProcessing :true,
               fixOrientation: true,
             });
-            console.log(picture);
+            // console.log(picture);
             
             var filename = picture.uri.split('/');
-
             filename = filename[filename.length-1];
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
@@ -521,33 +570,24 @@ export default class App extends Component<Props> {
         onCameraReady = {this.onCameraReady}
         type={RNCamera.Constants.Type.back}
         flashMode={RNCamera.Constants.FlashMode.off}
-        permissionDialogTitle={'Permission to use camera'}
-        permissionDialogMessage={'We need your permission to use your camera phone'}
         ratio="4:3"
         autoFocus ={RNCamera.Constants.AutoFocus.on}
+        zoom={this.state.zoom}
 
         motionDetectionMode={this.state.motionDetectionMode}
-          // always return BOOLEAN  
-
-          // MOTION_BASE64    
-          
-
         onMotionDetected={this.onMotionDetected}
         motionDetectionMinimumPixels={this.state.minimumPixels}
         motionDetectionThreshold={this.state.threshold}
         motionDetectionSampleSize={this.state.sampleSize}
-
-        zoom={this.state.zoom}
         >
 
         {this.renderMotion()}
 
-       
         <View style={styles.iconButtonContainer} >
-          <View style={styles.iconButton}>
+          <View style={styles.iconButton2}>
           <MaterialCommunityIcons.Button   
             name='camera'
-            underlayColor={greenLight}
+            underlayColor={greenSuperLight}
             size={36}
             width={100}
             margin={0}
@@ -555,7 +595,7 @@ export default class App extends Component<Props> {
             color= {greenDark}
             backgroundColor ={'transparent'}
             onPress = {() =>{}}
-            // onPress = {() => this.takePicture()}
+            onPress = {() => this.takePicture()}
           /></View>
 
           <View style={styles.iconButton2}>
@@ -572,10 +612,10 @@ export default class App extends Component<Props> {
             // onPress = {() => this.takeVideo()}
           /></View>
 
-          <View style={styles.iconButton3}>
+          <View style={styles.iconButton2}>
           <MaterialCommunityIcons.Button   
             name='cctv'
-            underlayColor={green}
+            underlayColor={greenSuperLight}
             size={38}
             width={100}
             margin={0}
@@ -840,7 +880,7 @@ export default class App extends Component<Props> {
               thumbTintColor = '#000' 
               minimumTrackTintColor='#ffffff' 
               maximumTrackTintColor='#ffffff' 
-              minimumValue={2}
+              minimumValue={4}
               maximumValue={parseInt(previewHeight/10,10)}
               step={1}
               value={this.state.sampleSize}
@@ -1051,19 +1091,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  iconButton:{
-    marginLeft:20,
-    marginRight:20,
-    borderRadius:50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow:'hidden',
-    width:60,
-    height:60,
-    backgroundColor:'white',
-    borderWidth:3,
-    borderColor:greenDark,
-  },
+  // iconButton:{
+  //   marginLeft:20,
+  //   marginRight:20,
+  //   borderRadius:50,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   overflow:'hidden',
+  //   width:60,
+  //   height:60,
+  //   backgroundColor:'white',
+  //   borderWidth:3,
+  //   borderColor:greenDark,
+  // },
 
   iconButton2:{
     marginLeft:20,
@@ -1078,19 +1118,19 @@ const styles = StyleSheet.create({
     borderWidth:2,
     borderColor:greenDark,
   },
-  iconButton3:{
-    marginLeft:20,
-    marginRight:20,
-    borderRadius:50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow:'hidden',
-    width:60,
-    height:60,
-    backgroundColor:greenSuperLight,
-    borderWidth:4,
-    borderColor:greenDark,
-  },
+  // iconButton3:{
+  //   marginLeft:20,
+  //   marginRight:20,
+  //   borderRadius:50,
+  //   justifyContent: 'center',
+  //   alignItems: 'center',
+  //   overflow:'hidden',
+  //   width:60,
+  //   height:60,
+  //   backgroundColor:greenSuperLight,
+  //   borderWidth:4,
+  //   borderColor:greenDark,
+  // },
   row: {
     flexDirection: 'row',
   },
