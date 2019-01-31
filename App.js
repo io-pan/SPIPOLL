@@ -11,6 +11,8 @@ import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View,
     ScrollView,
     Button,
+    // TouchableHighlight ,
+    // TouchableOpacity ,
     Alert,
     Image,
     PermissionsAndroid,
@@ -30,7 +32,8 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';  // https:/
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 let source;
-const _source = resolveAssetSource(require('./img/scr.png'));
+// const _source = resolveAssetSource(require('./img/scr.png'));
+const _source = resolveAssetSource(require('./img/photo.png'));
 
 if (__DEV__) {
   source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
@@ -133,7 +136,7 @@ export default class App extends Component<Props> {
 
       motionDetected:false,
       motionBase64:'',
-      motionDetectionMode: 0,
+      motionDetectionMode: 1,
       threshold : 0xffffff,
       sampleSize : 5,
       minimumPixels: 1,
@@ -538,6 +541,53 @@ export default class App extends Component<Props> {
         >
 
         {this.renderMotion()}
+
+       
+        <View style={styles.iconButtonContainer} >
+          <View style={styles.iconButton}>
+          <MaterialCommunityIcons.Button   
+            name='camera'
+            underlayColor={greenLight}
+            size={36}
+            width={100}
+            margin={0}
+            paddingLeft={32}
+            color= {greenDark}
+            backgroundColor ={'transparent'}
+            onPress = {() =>{}}
+            // onPress = {() => this.takePicture()}
+          /></View>
+
+          <View style={styles.iconButton2}>
+          <MaterialCommunityIcons.Button   
+            name='video'
+            underlayColor={greenSuperLight}
+            size={38}
+            width={100}
+            margin={0}
+            paddingLeft={32}
+            color= {greenDark}
+            backgroundColor ={'transparent'}
+            onPress = {() =>{}}
+            // onPress = {() => this.takeVideo()}
+          /></View>
+
+          <View style={styles.iconButton3}>
+          <MaterialCommunityIcons.Button   
+            name='cctv'
+            underlayColor={green}
+            size={38}
+            width={100}
+            margin={0}
+            paddingLeft={30}
+            paddingBottom={12}
+            color= {greenDark}
+            backgroundColor ={'transparent'}
+            onPress = {() =>{}}
+            // onPress = {() => this.takeMotion()}
+          /></View>
+        </View>
+
        </RNCamera>
       {/*
       <View ref="black_mask_to_save_battery"
@@ -748,30 +798,16 @@ export default class App extends Component<Props> {
         />
 
 
-        <MaterialCommunityIcons.Button   
-          name='camera'
-          // underlayColor="rgba(255,255,255,0.5)"
-          size={24}
-          height={40}
-          width={40}
-          style={styles.iconButton}
-          borderRadius={0}
-          padding={0}
-          paddingLeft={0}
-          margin={0}
-          marginLeft={2}
-          // color="#ffffff"
-          // backgroundColor ='transparent'
-          onPress = {() => this.takePicture()}
 
-          // on motion detected take
-          //    1. photo every X sec.   for X sec.   /  until no motion
-          //    2. video                for X sec.   /  until no motion
-
-        />  
-
+        {/*
+          on motion detected take
+             1. photo every X sec.   for X sec.   /  until no motion
+             2. video                for X sec.   /  until no motion
+      */}
 
         <View style={styles.header} >
+
+
               <Button 
                 style={{ 
                   margin:1, 
@@ -804,7 +840,7 @@ export default class App extends Component<Props> {
               thumbTintColor = '#000' 
               minimumTrackTintColor='#ffffff' 
               maximumTrackTintColor='#ffffff' 
-              minimumValue={5}
+              minimumValue={2}
               maximumValue={parseInt(previewHeight/10,10)}
               step={1}
               value={this.state.sampleSize}
@@ -1002,6 +1038,59 @@ const styles = StyleSheet.create({
     top: 0,
   },
 
+  iconButtonContainer:{
+    // backgroundColor:'rgba(100,100,100,0.5)',
+    position:'absolute',
+    bottom:20,
+    left:0,
+    right:0,
+    padding:5,
+    flexDirection:'row',
+    // justifyContent: 'space-between',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  iconButton:{
+    marginLeft:20,
+    marginRight:20,
+    borderRadius:50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow:'hidden',
+    width:60,
+    height:60,
+    backgroundColor:'white',
+    borderWidth:3,
+    borderColor:greenDark,
+  },
+
+  iconButton2:{
+    marginLeft:20,
+    marginRight:20,
+    borderRadius:50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow:'hidden',
+    width:60,
+    height:60,
+    backgroundColor:'transparent',
+    borderWidth:2,
+    borderColor:greenDark,
+  },
+  iconButton3:{
+    marginLeft:20,
+    marginRight:20,
+    borderRadius:50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow:'hidden',
+    width:60,
+    height:60,
+    backgroundColor:greenSuperLight,
+    borderWidth:4,
+    borderColor:greenDark,
+  },
   row: {
     flexDirection: 'row',
   },
