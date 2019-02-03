@@ -33,40 +33,161 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 let source;
 // const _source = resolveAssetSource(require('./img/scr.png'));
-// const _source = resolveAssetSource(require('./img/photo.png'));
+const _source = resolveAssetSource(require('./img/bug.png'));
 
-// if (__DEV__) {
-//   source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
-// }
-// else {
-//   const sourceAndroid = {uri: 'asset:/scr.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
-//   const sourceIOS = { uri: 'file://${_source.uri}' };
-//   source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
-// }
+if (__DEV__) {
+  source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
+}
+else {
+  const sourceAndroid = {uri: 'asset:/scr.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
+  const sourceIOS = { uri: 'file://${_source.uri}' };
+  source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
+}
 
-// <Image
-//        style={{width:50, height:50,}} 
-//        source={source}
-//  />
+
 
 // Spipoll greens
-const greenDark = "#bad80a";  // logo
-const green = "#d5e768";
-const greenLight = "#e2ee96";
-const greenSuperLight ="#e9f2ae"
-
-const greenFlash ="#a4e000";  // website
-const greenFlashLight ="#d1ef7d";
+const greenDark = "#b7d432";
+const green = "#d2e284";
+const greenLight = "#e0ecb2";
+const greenSuperLight ="#ecf3cd"
+const greenFlash ="#92c83e";
 
 // TODO: 
 //  screen W x H ..
-//  let user choose 1:1 3:4 16:9
 //  resize cam preview (on motion-run) based on sampleSize to save battery life.
 //  let screen sleep + option to force seep (absolute black layer)
 
 
 const previewHeight = 480;
 const previewWidth = 360;
+
+/*
+  CRÉER UNE COLLECTION
+
+  1° la phase "terrain"
+
+    Connection à www.spipoll.org
+
+    Nom de la collection
+
+    PROTOCOLE
+      Flash (une seule session photographique de 20mn.)
+      Long (un ou plusieurs sessions photographiques de plus de 20mn sur 3 jour max.)
+
+      Dans les deux cas, 
+      l’objectif est d’avoir une photo par ce que vous considérez comme "espèce" d'insecte, 
+      de qualité suffisante pour certifier que ce spécimen 
+      diffère des autres spécimens de votre collection.
+
+      Pour chacune des espèces photographiées, 
+      vous aurez la possibilité de nous communiquer une information sur son abondance : 
+      y-a-t-il 1 seul individu ? Entre 2 et 5 ? Plus de 5 ?
+
+    STATION FLORALE
+      FLEUR
+        Photo un gros plan de la fleur ;
+        Nom fleur
+          idenifier plus tard
+          inconnu
+          taxon (liste)
+          dénomination plus précise
+        Commentaire
+        
+      ENVIRONEMENT
+        Photo l’environnement proche de la plante (à 2-3 mètres de celle-ci).  
+
+        Plante est :
+          spontanée   
+          plantée   
+          ne se prononce pas
+
+        Type d'habitat :
+          urbain   
+          péri-urbain   
+          rural   
+          grande(s) culture(s)   
+          forêt   
+          prairie   
+          littoral   
+          parc ou jardin public   
+          jardin privé   
+          rochers   
+          bord de route   
+          bord de l'eau
+
+        Localiser 
+          par  nom d'une commune, d'une région, d'un département ou d'un code postal
+          No INSEE.
+          GPS
+
+    SESSIONS
+      1
+        Date 
+        Heure 
+          debut 
+          fin   check > 20min
+        Ciel (couverture nuageuse) 
+          0-25%   
+          25-50%   
+          50-75%   
+          75-100%  
+        Température :
+          < 10ºC   
+          10-20ºC   
+          20-30ºC   
+          >30ºC  
+        Vent :
+          nul   
+          faible, irrégulier 
+          faible, continu
+          fort, irrégulier
+          fort, continu  
+        Fleur à l'ombre :
+          Non   
+          Oui
+
+      2 (si protocole long)
+
+
+    INSECTES
+      1
+        Photo
+        Taxon
+        dénomination + précise    UNIQUE
+        Commentaire
+        SESSION
+          ID
+          Commentaire
+          Nombre maximum d'individus de cette espèce vus simultanément
+            1   
+            entre 2 et 5   
+            plus de 5   
+            je nai pas linformation
+          Avez-vous photographié cet insecte ailleurs que sur la fleur de votre station florale:
+            Non   
+            Oui  
+      2 ...
+
+    min 2 INSECTES pour cloturer la collection.
+
+
+2° la phase "préparation des données"
+   ... trier et mettre en forme les photos
+  Triez vos photos et sélectionnez-en une par espèce ; 
+  puis recadrez les insectes au format 4:3 
+  (ils doivent être conservés dans leur globalité). 
+  Faites alors pivoter les images de manière à ce que vos insectes se retrouvent la tête "en haut" (dans la mesure du possible). 
+
+  De même, recadrez la photo de la fleur.
+
+
+3° la phase "identification et envoi des données"
+  ... charger les photos dans la partie "Mon spipoll",
+  identifier la plante et les insectes à l'aide des clés disponibles en ligne, 
+  puis envoyer les données
+
+*/
 
 //-----------------------------------------------------------------------------------------
 class FreshImages extends Component {
@@ -144,13 +265,20 @@ export default class App extends Component<Props> {
       previewing:false,
       distantRec:false,
 
+      isRecording:false,
       motionDetected:false,
       motionBase64:'',
       motionDetectionMode: 1,
-      threshold : 0xffffff,
-      sampleSize : 5,
+      threshold : 0xa0a0a0,
+      sampleSize : 30,
       minimumPixels: 1,
       motionPreviewPaused:false,
+
+  recordOptions: {
+      mute: false,
+      maxDuration: 5,
+      quality: RNCamera.Constants.VideoQuality['288p'],
+    },
 
       zoom:0,
     };
@@ -174,7 +302,14 @@ export default class App extends Component<Props> {
         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
       ])
       SplashScreen.hide();
-
+/*
+  LDPI: Portrait: 200x320px. 
+  MDPI: Portrait: 320x480px.
+  HDPI: Portrait: 480x800px. 
+  XHDPI: Portrait: 720px1280px. 
+  XXHDPI: Portrait: 960px1600px.
+  XXXHDPI: Portrait: 1280px1920px
+*/
       if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
       &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
       // &&  granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
@@ -368,7 +503,16 @@ export default class App extends Component<Props> {
     } 
   }
 
-
+  formatedDate(){
+    now = new Date();
+    year = "" + now.getFullYear();
+    month = "" + (now.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
+    day = "" + now.getDate(); if (day.length == 1) { day = "0" + day; }
+    hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
+    minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
+    second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
+    return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
+  }
   // -------------------------------------------------
   //                    Camera 
   // -------------------------------------------------
@@ -425,64 +569,85 @@ export default class App extends Component<Props> {
             });
             // console.log(picture);
             
-            var filename = picture.uri.split('/');
-            filename = filename[filename.length-1];
+            const filename = this.formatedDate()  + '.jpg';
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
-              RNFetchBlob.fs.dirs.DCIMDir+'/splipoll_'+filename
+              RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename
             );
-
-
 
             // this.sendMessage(this.state.connectedTo, 'img', picture.base64);
           } 
           catch (err) {
-            // console.log('takePictureAsync ERROR: ', err);
+            console.log('takePictureAsync ERROR: ', err);
           }
         } else {
-         // console.log('REFUSED');
+         alert('REFUSED');
         }
       } catch (err) {
         // console.warn(err)
       }
     }
   }
-                  // Test local snapshot while video recording.
-                  takePt = async () => {
-                    if (this.camera) {
-                      try {
-                        const granted = await PermissionsAndroid.requestMultiple([
-                          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-                          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]);
-                          // console.log(granted);
+            // Test local snapshot while video recording.
+            // takePt = async () => {
+            //   if (this.camera) {
+            //     try {
+            //       const granted = await PermissionsAndroid.requestMultiple([
+            //         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+            //         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]);
+            //         // console.log(granted);
 
-                        if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-                        &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
+            //       if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+            //       &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
 
-                          try {
-                            var picture = await this.camera.takePictureAsync({ 
-                              width:400,
-                              quality: 0.7, 
-                              // base64: true, 
-                              fixOrientation: true,
-                            });
-                            // alert(JSON.stringify(picture, undefined, 2));
+            //         try {
+            //           var picture = await this.camera.takePictureAsync({ 
+            //             width:400,
+            //             quality: 0.7, 
+            //             // base64: true, 
+            //             fixOrientation: true,
+            //           });
+            //           // alert(JSON.stringify(picture, undefined, 2));
 
 
-                            this.setState({img:picture.uri});
+            //           this.setState({img:picture.uri});
 
-                          } 
-                          catch (err) {
-                            // console.log('takePictureAsync ERROR: ', err);
-                          }
-                        } else {
-                         // console.log('REFUSED');
-                        }
-                      } catch (err) {
-                        // console.warn(err)
-                      }
-                    }
-                  };
+            //         } 
+            //         catch (err) {
+            //           // console.log('takePictureAsync ERROR: ', err);
+            //         }
+            //       } else {
+            //        // console.log('REFUSED');
+            //       }
+            //     } catch (err) {
+            //       // console.warn(err)
+            //     }
+            //   }
+            // };
+
+ async takeVideo() {
+    if (this.camera) {
+      try {
+
+
+// const {uri} = await this.camera.recordAsync();
+
+        const promise = this.camera.recordAsync(
+          { path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' }
+          // this.state.recordOptions
+          );
+
+        if (promise) {
+          this.setState({ isRecording: true });
+          const data = await promise;
+          this.setState({ isRecording: false });
+          console.warn('takeVideo', data);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
   async recordVideo(){
     if (this.camera) {
@@ -492,7 +657,7 @@ export default class App extends Component<Props> {
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
         ]);
-          // console.log(grantedA);
+        // console.log(grantedA);
 
         if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
         &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
@@ -500,30 +665,38 @@ export default class App extends Component<Props> {
         ){
    
           try {
+  
+            // const path = this.state.sdcard
+            //   ? RNFetchBlob.fs.dirs.SDCardDir+'/p2p_' +  Date.now() + '.mp4'
+            //   : RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/p2p_' +  Date.now() + '.mp4';
+//             const path =  
+//               RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/' + this.formatedDate() + '.mp4'
+// console.log(path);
+//             this.setState({isRecording:true});
+            // this.sendMessage(this.state.connectedTo, 'distantRec', true);
 
-            this.sendMessage(this.state.connectedTo, 'distantRec', true);
-            const path = this.state.sdcard
-              ? RNFetchBlob.fs.dirs.SDCardDir+'/p2p_' +  Date.now() + '.mp4'
-              : RNFetchBlob.fs.dirs.DCIMDir+'/p2p_' +  Date.now() + '.mp4';
+const {uri} = await this.camera.recordAsync({ path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' });
 
-            const {uri} = await this.camera.recordAsync({
-              path: path,
-              maxDuration: 180,
-            });
+            // const {uri} = await this.camera.recordAsync({
+            //   path: path,
+            //   maxDuration: 180,
+            // });
 
-            if (this.stopRecordRequested) {
-              //alert('record uri:'+uri); // file:///data/user/0/com.btcontrol/cache/Camera/***.mp4
-              this.sendMessage(this.state.connectedTo, 'distantRec', false);
-            }
-            else {
-              this.recordVideo();
-            }
+            // if (this.stopRecordRequested) {
+              this.setState({isRecording:false});
+            //   //alert('record uri:'+uri); // file:///data/user/0/com.btcontrol/cache/Camera/***.mp4
+            //   this.sendMessage(this.state.connectedTo, 'distantRec', false);
+            // }
+            // else {
+            //   this.recordVideo();
+            // }
           } 
           catch (err) {
             alert(JSON.stringify({'recording error':err}, undefined, 2));
+            this.setState({isRecording:false});
           }
         } else {
-           alert('REFUSED');
+           alert('PERMISSIONS REFUSED');
         }
       } catch (err) {
         // console.warn(err)
@@ -588,13 +761,13 @@ export default class App extends Component<Props> {
           <MaterialCommunityIcons.Button   
             name='camera'
             underlayColor={greenSuperLight}
-            size={36}
+            size={40}
             width={100}
             margin={0}
-            paddingLeft={32}
-            color= {greenDark}
+            paddingLeft={30}
+            color= {greenFlash}
             backgroundColor ={'transparent'}
-            onPress = {() =>{}}
+            // onPress = {() =>{}}
             onPress = {() => this.takePicture()}
           /></View>
 
@@ -602,31 +775,70 @@ export default class App extends Component<Props> {
           <MaterialCommunityIcons.Button   
             name='video'
             underlayColor={greenSuperLight}
-            size={38}
+            size={40}
             width={100}
             margin={0}
-            paddingLeft={32}
-            color= {greenDark}
+            paddingLeft={30}
+            color= { this.state.isRecording ? 'red' : greenFlash}
             backgroundColor ={'transparent'}
-            onPress = {() =>{}}
-            // onPress = {() => this.takeVideo()}
+
+// onPress={
+//   this.state.isRecording 
+//   ? () => {} 
+//   : () => this.takeVideo()
+// }
+onPress={
+  this.state.isRecording 
+  ? () => {} 
+  : () => this.recordVideo()
+}
+          //   onPress = {
+          //     () => {
+          //       console.log(this.state.isRecording);
+          //       console.log( this.stopRecordRequested );
+
+          //       if (this.state.isRecording) {
+          //         this.stopRecordRequested = true;
+          //         this.camera.stopRecording();
+          //       }
+          //       else {
+          //          this.recordVideo();
+          //       }
+          //     }
+          // }
           /></View>
 
           <View style={styles.iconButton2}>
           <MaterialCommunityIcons.Button   
             name='cctv'
             underlayColor={greenSuperLight}
-            size={38}
+            size={40}
             width={100}
             margin={0}
             paddingLeft={30}
             paddingBottom={12}
-            color= {greenDark}
+            color= {greenFlash}
             backgroundColor ={'transparent'}
             onPress = {() =>{}}
             // onPress = {() => this.takeMotion()}
           /></View>
+
+ 
         </View>
+           <Slider  
+              ref="zoom"
+              style={styles.sliderZoom} 
+              thumbTintColor = {greenFlash} 
+              minimumTrackTintColor={greenFlash} 
+              maximumTrackTintColor={greenFlash}
+              minimumValue={0}
+              maximumValue={1}
+              step={0.1}
+              value={0}
+              onValueChange={
+                (value) => this.onZoom(value)
+              } 
+            />
 
        </RNCamera>
       {/*
@@ -781,19 +993,6 @@ export default class App extends Component<Props> {
     );
   }
 
-  onThreshold0( color) {
-   
-
-    this.setState({threshold: color });
-
-
-    console.log();
-    console.log(this.state.threshold  >>> 16 );
-    console.log((this.state.threshold & 0x00ff00) >>> 8  );
-    console.log(this.state.threshold & 0x0000ff);
-    console.log();
-  }
-
   onThreshold(mask, color) {
     const threshold = this.state.threshold & ~mask | color;
     this.setState({threshold:threshold});
@@ -814,10 +1013,10 @@ export default class App extends Component<Props> {
   onZoom(value) {
     this.setState({zoom:value});
   }
- togglePreviewMotion() {
-    var value = !this.state.motionPreviewPaused;
-    this.setState({motionPreviewPaused:value});
-  }
+  //  togglePreviewMotion() {
+  //    var value = !this.state.motionPreviewPaused;
+  //    this.setState({motionPreviewPaused:value});
+  //  }
 
   render() {
     console.log('render');
@@ -826,66 +1025,46 @@ export default class App extends Component<Props> {
       <View style={styles.container}>
       <ScrollView style={styles.scroll}>
 
-        <Button 
-          style={{ 
-            margin:1, 
-            height:40 ,
-            marginBottom:2,
-          }}
-          color={ this.state.previewing ? '#338433' : 'grey'}
-          title = 'TAKE'
-          onPress = {() => this.takePicture()}
-        />
-
-
-
         {/*
           on motion detected take
              1. photo every X sec.   for X sec.   /  until no motion
              2. video                for X sec.   /  until no motion
       */}
 
+        <Image
+          ref="bug"
+          style={{width:50, height:50,}} 
+          source={source}
+        />
+
         <View style={styles.header} >
 
 
-              <Button 
-                style={{ 
-                  margin:1, 
-                  height:40 ,
-                  marginBottom:2,
-                }}
-                color={ this.state.previewing ? '#338433' : 'grey'}
-                title = 'Pause motion'
-                onPress = {() => this.togglePreviewMotion()}
-              />
-
-            <Slider  
-              ref="zoom"
-              style={styles.slider} 
-              thumbTintColor = '#000' 
-              minimumTrackTintColor='#ff0000' 
-              maximumTrackTintColor='#0000ff' 
-              minimumValue={0}
-              maximumValue={1}
-              step={0.1}
-              value={0}
-              onValueChange={
-                (value) => this.onZoom(value)
-              } 
+            {/*
+            <Button 
+              style={{ 
+                margin:1, 
+                height:40 ,
+                marginBottom:2,
+              }}
+              color={ this.state.previewing ? '#338433' : 'grey'}
+              title = 'Pause motion'
+              onPress = {() => this.togglePreviewMotion()}
             />
+            */}
 
             <Slider  
               ref="sampleSize"
               style={styles.slider} 
               thumbTintColor = '#000' 
-              minimumTrackTintColor='#ffffff' 
+              minimumTrackTintColor='#cccccc' 
               maximumTrackTintColor='#ffffff' 
-              minimumValue={4}
-              maximumValue={parseInt(previewHeight/10,10)}
+              minimumValue={-parseInt(previewHeight/10,10)}
+              maximumValue={-1}
               step={1}
-              value={this.state.sampleSize}
+              value={-this.state.sampleSize}
               onValueChange={
-                (value) => this.onSampleSize(value)
+                (value) => this.onSampleSize(-value)
               } 
             />
 
@@ -893,61 +1072,61 @@ export default class App extends Component<Props> {
               ref="threshold"
               style={styles.slider} 
               thumbTintColor = '#fff' 
-              minimumTrackTintColor='#ffffff' 
+              minimumTrackTintColor='#dddddd' 
               maximumTrackTintColor='#ffffff' 
-              minimumValue={0}
-              maximumValue={255}
+              minimumValue={-255}
+              maximumValue={0}
               step={1}
               // value={this.state.threshold}
               value={
-                (
+                -(
                   (this.state.threshold>>>16) 
                 + ((this.state.threshold&0x00ff00)>>>8)
                 + (this.state.threshold&0x0000ff)
                 )/3
               }
-              onValueChange={(value) => this.onThreshold(0xffffff, (value<<16)|(value<<8)|value)  } 
+              onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)  } 
             />
               <Slider  
                 ref="threshold_red"
                 style={styles.slider} 
-                thumbTintColor = '#f00' 
-                minimumTrackTintColor='#ff0000' 
-                maximumTrackTintColor='#ff0000' 
-                minimumValue={0}
-                maximumValue={255}
+                thumbTintColor = '#d00' 
+                minimumTrackTintColor='#dd0000' 
+                maximumTrackTintColor='#dd0000' 
+                minimumValue={-255}
+                maximumValue={0}
                 step={1}
-                value={this.state.threshold>>>16}
-                onValueChange={(value) => this.onThreshold(0xff0000, value<<16)} 
+                value={-(this.state.threshold>>>16)}
+                onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
               />
               <Slider  
                 ref="threshold_green"
                 style={styles.slider} 
-                thumbTintColor = '#0f0' 
-                minimumTrackTintColor='#00ff00' 
-                maximumTrackTintColor='#00ff00' 
-                minimumValue={0}
-                maximumValue={255}
+                thumbTintColor = {greenFlash}
+                minimumTrackTintColor={greenFlash}
+                maximumTrackTintColor={greenFlash}
+                minimumValue={-255}
+                maximumValue={0}
                 step={1}
-                value={(this.state.threshold & 0x00ff00) >>> 8}
-                onValueChange={(value) => this.onThreshold(0x00ff00,value<<8)} 
+                value={-((this.state.threshold & 0x00ff00) >>> 8)}
+                onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
               />
               <Slider  
                 ref="threshold_blue"
                 style={styles.slider} 
-                thumbTintColor = '#00f' 
-                minimumTrackTintColor='#0000ff' 
-                maximumTrackTintColor='#0000ff' 
-                minimumValue={0}
-                maximumValue={255}
+                thumbTintColor = '#0000dd' 
+                minimumTrackTintColor='#0000dd' 
+                maximumTrackTintColor='#0000dd' 
+                minimumValue={-255}
+                maximumValue={0}
                 step={1}
-                value={(this.state.threshold & 0x0000ff)}
-                onValueChange={(value) => this.onThreshold(0x0000ff,value)} 
+                value={-(this.state.threshold & 0x0000ff)}
+                onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
               />
 
             <Slider  
               ref="minimum_pixels"
-              style={styles.slider} 
+              style={styles.sliderDenoise} 
               thumbTintColor = '#000' 
               minimumTrackTintColor='#ff0000' 
               maximumTrackTintColor='#0000ff' 
@@ -1019,6 +1198,13 @@ const styles = StyleSheet.create({
   },
   slider:{
     padding:10,
+    // transform: [{ rotate: '180deg'}],
+  },
+  sliderDenoise:{
+    padding:10,
+  },
+  sliderZoom:{
+    padding:15,
   },
   containerPreview: {
     flex: 1,
@@ -1091,20 +1277,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // iconButton:{
-  //   marginLeft:20,
-  //   marginRight:20,
-  //   borderRadius:50,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   overflow:'hidden',
-  //   width:60,
-  //   height:60,
-  //   backgroundColor:'white',
-  //   borderWidth:3,
-  //   borderColor:greenDark,
-  // },
-
   iconButton2:{
     marginLeft:20,
     marginRight:20,
@@ -1116,21 +1288,9 @@ const styles = StyleSheet.create({
     height:60,
     backgroundColor:'transparent',
     borderWidth:2,
-    borderColor:greenDark,
+    borderColor:greenFlash,
   },
-  // iconButton3:{
-  //   marginLeft:20,
-  //   marginRight:20,
-  //   borderRadius:50,
-  //   justifyContent: 'center',
-  //   alignItems: 'center',
-  //   overflow:'hidden',
-  //   width:60,
-  //   height:60,
-  //   backgroundColor:greenSuperLight,
-  //   borderWidth:4,
-  //   borderColor:greenDark,
-  // },
+
   row: {
     flexDirection: 'row',
   },
