@@ -633,8 +633,8 @@ export default class App extends Component<Props> {
 // const {uri} = await this.camera.recordAsync();
 
         const promise = this.camera.recordAsync(
-          { path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' }
-          // this.state.recordOptions
+          // {  path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' }
+          this.state.recordOptions
           );
 
         if (promise) {
@@ -649,7 +649,29 @@ export default class App extends Component<Props> {
     }
   };
 
-  async recordVideo(){
+  async recordVideo0(){
+    if (this.camera) {
+      try {
+          try {
+  
+const {uri} = await this.camera.recordAsync(
+  // { path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' }
+  );
+
+       
+          } 
+          catch (err) {
+            alert(JSON.stringify({'recording error':err}, undefined, 2));
+            this.setState({isRecording:false});
+          }
+
+      } catch (err) {
+        // console.warn(err)
+      }
+    }
+  };
+
+  async recordVideo0(){
     if (this.camera) {
       try {
         const granted = await PermissionsAndroid.requestMultiple([
@@ -782,16 +804,16 @@ const {uri} = await this.camera.recordAsync({ path: RNFetchBlob.fs.dirs.DCIMDir+
             color= { this.state.isRecording ? 'red' : greenFlash}
             backgroundColor ={'transparent'}
 
-// onPress={
-//   this.state.isRecording 
-//   ? () => {} 
-//   : () => this.takeVideo()
-// }
 onPress={
   this.state.isRecording 
-  ? () => {} 
-  : () => this.recordVideo()
+  ? () => this.camera.stopRecording()
+  : () => this.takeVideo()
 }
+// onPress={
+//   this.state.isRecording 
+//   ? () => this.camera.stopRecording()
+//   : () => this.recordVideo()
+// }
           //   onPress = {
           //     () => {
           //       console.log(this.state.isRecording);
@@ -1031,12 +1053,12 @@ onPress={
              2. video                for X sec.   /  until no motion
       */}
 
-        <Image
+{/*        <Image
           ref="bug"
           style={{width:50, height:50,}} 
           source={source}
         />
-
+*/}
         <View style={styles.header} >
 
 
