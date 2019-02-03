@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -164,7 +164,6 @@ class Switch extends React.Component<Props> {
       <SwitchNativeComponent
         {...props}
         {...platformProps}
-        accessibilityRole={props.accessibilityRole ?? 'button'}
         onChange={this._handleChange}
         onResponderTerminationRequest={returnsFalse}
         onStartShouldSetResponder={returnsTrue}

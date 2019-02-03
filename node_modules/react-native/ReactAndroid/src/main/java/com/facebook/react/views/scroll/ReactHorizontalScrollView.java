@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -70,6 +70,8 @@ public class ReactHorizontalScrollView extends HorizontalScrollView implements
   private int mSnapInterval = 0;
   private float mDecelerationRate = 0.985f;
   private @Nullable List<Integer> mSnapOffsets;
+  private boolean mSnapToStart = true;
+  private boolean mSnapToEnd = true;
   private ReactViewBackgroundManager mReactBackgroundManager;
 
   public ReactHorizontalScrollView(Context context) {
@@ -167,6 +169,14 @@ public class ReactHorizontalScrollView extends HorizontalScrollView implements
 
   public void setSnapOffsets(List<Integer> snapOffsets) {
     mSnapOffsets = snapOffsets;
+  }
+
+  public void setSnapToStart(boolean snapToStart) {
+    mSnapToStart = snapToStart;
+  }
+
+  public void setSnapToEnd(boolean snapToEnd) {
+    mSnapToEnd = snapToEnd;
   }
 
   public void flashScrollIndicators() {
@@ -576,6 +586,9 @@ public class ReactHorizontalScrollView extends HorizontalScrollView implements
 
     // get the nearest snap points to the target offset
     if (mSnapOffsets != null) {
+      firstOffset = mSnapOffsets.get(0);
+      lastOffset = mSnapOffsets.get(mSnapOffsets.size() - 1);
+
       for (int i = 0; i < mSnapOffsets.size(); i ++) {
         int offset = mSnapOffsets.get(i);
 
@@ -603,10 +616,35 @@ public class ReactHorizontalScrollView extends HorizontalScrollView implements
       ? smallerOffset
       : largerOffset;
 
-    // Chose the correct snap offset based on velocity
-    if (velocityX > 0) {
+    // if scrolling after the last snap offset and snapping to the
+    // end of the list is disabled, then we allow free scrolling
+    int currentOffset = getScrollX();
+    if (isRTL) {
+      currentOffset = maximumOffset - currentOffset;
+    }
+    if (!mSnapToEnd && targetOffset >= lastOffset) {
+      if (currentOffset >= lastOffset) {
+        // free scrolling
+      } else {
+        // snap to end
+        targetOffset = lastOffset;
+      }
+    } else if (!mSnapToStart && targetOffset <= firstOffset) {
+      if (currentOffset <= firstOffset) {
+        // free scrolling
+      } else {
+        // snap to beginning
+        targetOffset = firstOffset;
+      }
+    } else if (velocityX > 0) {
+      // when snapping velocity can feel sluggish for slow swipes
+      velocityX += (int) ((largerOffset - targetOffset) * 10.0);
+
       targetOffset = largerOffset;
     } else if (velocityX < 0) {
+      // when snapping velocity can feel sluggish for slow swipes
+      velocityX -= (int) ((targetOffset - smallerOffset) * 10.0);
+
       targetOffset = smallerOffset;
     } else {
       targetOffset = nearestOffset;

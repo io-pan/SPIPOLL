@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -15,19 +15,21 @@ const React = require('React');
 const {NativeComponent} = require('ReactNative');
 
 const requireNativeComponent = require('requireNativeComponent');
-const nullthrows = require('fbjs/lib/nullthrows');
+const nullthrows = require('nullthrows');
 
 import type {ColorValue} from 'StyleSheetTypes';
 import type {ViewProps} from 'ViewPropTypes';
 
+let RefreshLayoutConsts;
 if (Platform.OS === 'android') {
-  const AndroidSwipeRefreshLayout = require('UIManager')
-    .AndroidSwipeRefreshLayout;
-  var RefreshLayoutConsts = AndroidSwipeRefreshLayout
+  const AndroidSwipeRefreshLayout = require('UIManager').getViewManagerConfig(
+    'AndroidSwipeRefreshLayout',
+  );
+  RefreshLayoutConsts = AndroidSwipeRefreshLayout
     ? AndroidSwipeRefreshLayout.Constants
     : {SIZE: {}};
 } else {
-  var RefreshLayoutConsts = {SIZE: {}};
+  RefreshLayoutConsts = {SIZE: {}};
 }
 type NativeRefreshControlType = Class<NativeComponent<RefreshControlProps>>;
 
@@ -85,7 +87,7 @@ export type RefreshControlProps = $ReadOnly<{|
   /**
    * Called when the view starts refreshing.
    */
-  onRefresh?: ?Function,
+  onRefresh?: ?() => void,
 
   /**
    * Whether the view should be indicating an active refresh.

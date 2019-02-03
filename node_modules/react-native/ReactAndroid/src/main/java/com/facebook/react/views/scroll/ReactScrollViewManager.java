@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -43,7 +43,7 @@ public class ReactScrollViewManager
     extends ViewGroupManager<ReactScrollView>
     implements ReactScrollViewCommandHelper.ScrollCommandHandler<ReactScrollView> {
 
-  protected static final String REACT_CLASS = "RCTScrollView";
+  public static final String REACT_CLASS = "RCTScrollView";
 
   private static final int[] SPACING_TYPES = {
       Spacing.ALL, Spacing.LEFT, Spacing.RIGHT, Spacing.TOP, Spacing.BOTTOM,
@@ -99,6 +99,16 @@ public class ReactScrollViewManager
       offsets.add((int) (snapToOffsets.getDouble(i) * screenDisplayMetrics.density));
     }
     view.setSnapOffsets(offsets);
+  }
+
+  @ReactProp(name = "snapToStart")
+  public void setSnapToStart(ReactScrollView view, boolean snapToStart) {
+    view.setSnapToStart(snapToStart);
+  }
+
+  @ReactProp(name = "snapToEnd")
+  public void setSnapToEnd(ReactScrollView view, boolean snapToEnd) {
+    view.setSnapToEnd(snapToEnd);
   }
 
   @ReactProp(name = ReactClippingViewGroupHelper.PROP_REMOVE_CLIPPED_SUBVIEWS)

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,9 +14,10 @@ const invariant = require('fbjs/lib/invariant');
 
 let showedListViewDeprecation = false;
 let showedSwipeableListViewDeprecation = false;
+let showedWebWiewDeprecation = false;
 
 // Export React, plus some native additions.
-const ReactNative = {
+module.exports = {
   // Components
   get AccessibilityInfo() {
     return require('AccessibilityInfo');
@@ -76,9 +77,6 @@ const ReactNative = {
   },
   get Modal() {
     return require('Modal');
-  },
-  get NavigatorIOS() {
-    return require('NavigatorIOS');
   },
   get Picker() {
     return require('Picker');
@@ -173,6 +171,15 @@ const ReactNative = {
     return require('VirtualizedList');
   },
   get WebView() {
+    if (!showedWebWiewDeprecation) {
+      console.warn(
+        'WebView has been extracted from react-native core and will be removed in a future release. ' +
+          "It can now be installed and imported from 'react-native-webview' instead of 'react-native'. " +
+          'See https://github.com/react-native-community/react-native-webview for more informations.',
+      );
+
+      showedWebWiewDeprecation = true;
+    }
     return require('WebView');
   },
 
@@ -198,9 +205,6 @@ const ReactNative = {
   get AsyncStorage() {
     return require('AsyncStorage');
   },
-  get BackAndroid() {
-    return require('BackAndroid');
-  }, // deprecated: use BackHandler instead
   get BackHandler() {
     return require('BackHandler');
   },
@@ -323,19 +327,27 @@ const ReactNative = {
 
   // Prop Types
   get ColorPropType() {
-    return require('ColorPropType');
+    return require('DeprecatedColorPropType');
   },
   get EdgeInsetsPropType() {
-    return require('EdgeInsetsPropType');
+    return require('DeprecatedEdgeInsetsPropType');
   },
   get PointPropType() {
-    return require('PointPropType');
+    return require('DeprecatedPointPropType');
   },
   get ViewPropTypes() {
-    return require('ViewPropTypes');
+    return require('DeprecatedViewPropTypes');
   },
 
   // Deprecated
+  get BackAndroid() {
+    invariant(
+      false,
+      'BackAndroid is deprecated and has been removed from this package. ' +
+        'Use BackHandler instead',
+    );
+  },
+
   get Navigator() {
     invariant(
       false,
@@ -344,6 +356,11 @@ const ReactNative = {
         'Learn about alternative navigation solutions at http://facebook.github.io/react-native/docs/navigation.html',
     );
   },
+  get NavigatorIOS() {
+    invariant(
+      false,
+      'NavigatorIOS is deprecated and has been removed from this package. ' +
+        'Learn about alternative navigation solutions at http://facebook.github.io/react-native/docs/navigation.html',
+    );
+  },
 };
-
-module.exports = ReactNative;

@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -86,7 +86,7 @@ import org.json.JSONObject;
 @ReactModule(name = ReactWebViewManager.REACT_CLASS)
 public class ReactWebViewManager extends SimpleViewManager<WebView> {
 
-  protected static final String REACT_CLASS = "RCTWebView";
+  public static final String REACT_CLASS = "RCTWebView";
 
   protected static final String HTML_ENCODING = "UTF-8";
   protected static final String HTML_MIME_TYPE = "text/html";
@@ -517,7 +517,7 @@ public class ReactWebViewManager extends SimpleViewManager<WebView> {
         }
         if (source.hasKey("method")) {
           String method = source.getString("method");
-          if (method.equals(HTTP_METHOD_POST)) {
+          if (method.equalsIgnoreCase(HTTP_METHOD_POST)) {
             byte[] postData = null;
             if (source.hasKey("body")) {
               String body = source.getString("body");

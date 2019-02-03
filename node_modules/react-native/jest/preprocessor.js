@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,7 +23,7 @@ const babelRegisterOnly = require('metro-babel-register');
 const createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 const generate = require('@babel/generator').default;
 
-const nodeFiles = RegExp(
+const nodeFiles = new RegExp(
   [
     '/local-cli/',
     '/metro(?:-[^/]*)?/', // metro, metro-core, metro-source-map, metro-etc
@@ -59,6 +59,7 @@ module.exports = {
         minify: false,
         platform: '',
         projectRoot: '',
+        publicPath: '/assets',
         retainLines: true,
         sourceType: 'unambiguous', // b7 required. detects module vs script mode
       },

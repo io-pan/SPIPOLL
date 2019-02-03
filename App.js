@@ -274,11 +274,12 @@ export default class App extends Component<Props> {
       minimumPixels: 1,
       motionPreviewPaused:false,
 
-  recordOptions: {
-      mute: false,
-      maxDuration: 5,
-      quality: RNCamera.Constants.VideoQuality['288p'],
-    },
+      recordOptions: {
+        path: RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/record.mp4',
+        mute: false,
+        maxDuration: 5,
+        quality: RNCamera.Constants.VideoQuality['288p'],
+      },
 
       zoom:0,
     };
@@ -633,7 +634,7 @@ export default class App extends Component<Props> {
 // const {uri} = await this.camera.recordAsync();
 
         const promise = this.camera.recordAsync(
-          // {  path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' }
+          // {  path: RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/record.mp4:' }
           this.state.recordOptions
           );
 

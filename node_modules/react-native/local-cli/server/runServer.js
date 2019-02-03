@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -22,7 +22,6 @@ const path = require('path');
 const webSocketProxy = require('./util/webSocketProxy');
 const MiddlewareManager = require('./middleware/MiddlewareManager');
 
-/* $FlowFixMe(site=react_native_oss) */
 import type {ConfigT} from 'metro-config/src/configTypes.flow';
 
 export type Args = {|
@@ -71,6 +70,13 @@ async function runServer(args: Args, config: ConfigT) {
   config.server.enhanceMiddleware = middleware =>
     middlewareManager.getConnectInstance().use(middleware);
 
+  if (args.sourceExts !== config.resolver.sourceExts) {
+    // $FlowFixMe Metro configuration is immutable.
+    config.resolver.sourceExts = args.sourceExts.concat(
+      config.resolver.sourceExts,
+    );
+  }
+
   const serverInstance = await Metro.runServer(config, {
     host: args.host,
     secure: args.https,
@@ -97,7 +103,6 @@ async function runServer(args: Args, config: ConfigT) {
   //
   // For more info: https://github.com/nodejs/node/issues/13391
   //
-  // $FlowFixMe (site=react_native_fb)
   serverInstance.keepAliveTimeout = 30000;
 }
 

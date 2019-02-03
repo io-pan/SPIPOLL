@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -29,7 +29,6 @@ const minimist = require('minimist');
 const path = require('path');
 
 import type {CommandT} from '../commands';
-/* $FlowFixMe(site=react_native_oss) */
 import type {ConfigT} from 'metro-config/src/configTypes.flow';
 
 export type RNConfig = {
@@ -134,14 +133,11 @@ async function getCliConfig(): Promise<RNConfig> {
 
   // $FlowFixMe Metro configuration is immutable.
   config.transformer.assetRegistryPath = ASSET_REGISTRY_PATH;
-  // $FlowFixMe Metro configuration is immutable.
   config.resolver.hasteImplModulePath =
     config.resolver.hasteImplModulePath || defaultConfig.hasteImplModulePath;
-  // $FlowFixMe Metro configuration is immutable.
   config.resolver.platforms = config.resolver.platforms
     ? config.resolver.platforms.concat(defaultConfig.getPlatforms())
     : defaultConfig.getPlatforms();
-  // $FlowFixMe Metro configuration is immutable.
   config.resolver.providesModuleNodeModules = config.resolver
     .providesModuleNodeModules
     ? config.resolver.providesModuleNodeModules.concat(

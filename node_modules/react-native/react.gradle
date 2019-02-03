@@ -1,3 +1,8 @@
+// Copyright (c) Facebook, Inc. and its affiliates.
+
+// This source code is licensed under the MIT license found in the
+// LICENSE file in the root directory of this source tree.
+
 import org.apache.tools.ant.taskdefs.condition.Os
 
 def config = project.hasProperty("react") ? project.react : [];
@@ -92,6 +97,9 @@ afterEvaluate {
             ? variant.packageApplication
             : tasks.findByName("package${targetName}")
 
+        // pre bundle build task for Android plugin 3.2+
+        def buildPreBundleTask = tasks.findByName("build${targetName}PreBundle")
+
         def resourcesDirConfigValue = config."resourcesDir${targetName}"
         if (resourcesDirConfigValue) {
             def currentCopyResTask = tasks.create(
@@ -109,6 +117,9 @@ afterEvaluate {
             }
 
             packageTask.dependsOn(currentCopyResTask)
+            if (buildPreBundleTask != null) {
+                buildPreBundleTask.dependsOn(currentCopyResTask)
+            }
         }
 
         def currentAssetsCopyTask = tasks.create(
@@ -139,5 +150,8 @@ afterEvaluate {
         }
 
         packageTask.dependsOn(currentAssetsCopyTask)
+        if (buildPreBundleTask != null) {
+            buildPreBundleTask.dependsOn(currentAssetsCopyTask)
+        }
     }
 }

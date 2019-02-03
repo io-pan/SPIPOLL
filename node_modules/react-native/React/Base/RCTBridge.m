@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -44,8 +44,6 @@ NSArray<Class> *RCTGetModuleClasses(void)
   return result;
 }
 
-void RCTFBQuickPerformanceLoggerConfigureHooks(__unused JSGlobalContextRef ctx) { }
-
 /**
  * Register the given class as a bridge module. All modules must be registered
  * prior to the first bridge initialization.
@@ -84,13 +82,17 @@ NSString *RCTBridgeModuleNameForClass(Class cls)
     name = NSStringFromClass(cls);
   }
 
-  if ([name hasPrefix:@"RK"]) {
-    name = [name substringFromIndex:2];
-  } else if ([name hasPrefix:@"RCT"]) {
-    name = [name substringFromIndex:3];
-  }
+  return RCTDropReactPrefixes(name);
+}
 
-  return name;
+static BOOL turboModuleEnabled = NO;
+BOOL RCTTurboModuleEnabled(void)
+{
+  return turboModuleEnabled;
+}
+
+void RCTEnableTurboModule(BOOL enabled) {
+  turboModuleEnabled = enabled;
 }
 
 #if RCT_DEBUG
@@ -128,7 +130,8 @@ void RCTVerifyAllModulesExported(NSArray *extraModules)
           break;
         }
 
-        RCTLogWarn(@"Class %@ was not exported. Did you forget to use RCT_EXPORT_MODULE()?", cls);
+        // Note: Some modules may be lazily loaded and not exported up front, so this message is no longer a warning.
+        RCTLogInfo(@"Class %@ was not exported. Did you forget to use RCT_EXPORT_MODULE()?", cls);
         break;
       }
       superclass = class_getSuperclass(superclass);
@@ -238,9 +241,18 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
   return [self.batchedBridge moduleForName:moduleName];
 }
 
+- (id)moduleForName:(NSString *)moduleName lazilyLoadIfNecessary:(BOOL)lazilyLoad
+{
+  return [self.batchedBridge moduleForName:moduleName lazilyLoadIfNecessary:lazilyLoad];
+}
+
 - (id)moduleForClass:(Class)moduleClass
 {
-  return [self moduleForName:RCTBridgeModuleNameForClass(moduleClass)];
+  id module = [self.batchedBridge moduleForClass:moduleClass];
+  if (!module) {
+    module = [self moduleForName:RCTBridgeModuleNameForClass(moduleClass)];
+  }
+  return module;
 }
 
 - (NSArray *)modulesConformingToProtocol:(Protocol *)protocol
@@ -260,11 +272,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 - (BOOL)moduleIsInitialized:(Class)moduleClass
 {
   return [self.batchedBridge moduleIsInitialized:moduleClass];
-}
-
-- (id)jsBoundExtraModuleForClass:(Class)moduleClass
-{
-  return [self.batchedBridge jsBoundExtraModuleForClass:moduleClass];
 }
 
 - (void)reload
@@ -380,11 +387,6 @@ RCT_NOT_IMPLEMENTED(- (instancetype)init)
 - (void)registerSegmentWithId:(NSUInteger)segmentId path:(NSString *)path
 {
   [self.batchedBridge registerSegmentWithId:segmentId path:path];
-}
-
-- (JSGlobalContextRef)jsContextRef
-{
-  return [self.batchedBridge jsContextRef];
 }
 
 @end

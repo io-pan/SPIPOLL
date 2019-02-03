@@ -3,11 +3,10 @@ package com.spipoll;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
-import com.oblador.vectoricons.VectorIconsPackage;
 import com.mehcode.reactnative.splashscreen.SplashScreenPackage;
 import com.RNFetchBlob.RNFetchBlobPackage;
 import fr.greweb.reactnativeviewshot.RNViewShotPackage;
-import com.horcrux.svg.SvgPackage;
+import com.oblador.vectoricons.VectorIconsPackage;
 import com.gijoehosaphat.keepscreenon.KeepScreenOnPackage;
 import org.reactnative.camera.RNCameraPackage;
 import com.rctunderdark.NetworkManagerPackage;
@@ -31,11 +30,10 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
-            new VectorIconsPackage(),
             new SplashScreenPackage(),
             new RNFetchBlobPackage(),
             new RNViewShotPackage(),
-            new SvgPackage(),
+            new VectorIconsPackage(),
             new KeepScreenOnPackage(),
             new RNCameraPackage(),
             new NetworkManagerPackage()
