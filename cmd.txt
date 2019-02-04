@@ -1,0 +1,8 @@
+npm i  react-native-bluetooth-cross-platform --save
+npm i rn-splash-screen --save
+npm i react-native-vector-icons --save
+npm i react-native-keep-screen-on --save
+npm i rn-fetch-blob --save
+npm i react-native-camera --save
+npm i react-native-view-shot --save
+
