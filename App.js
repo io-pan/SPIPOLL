@@ -57,10 +57,9 @@ const greenFlash ="#92c83e";
 //  screen W x H ..
 //  resize cam preview (on motion-run) based on sampleSize to save battery life.
 //  let screen sleep + option to force seep (absolute black layer)
-
-
 const previewHeight = 480;
 const previewWidth = 360;
+
 
 /*
   CRÉER UNE COLLECTION
@@ -252,7 +251,7 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
-      sdcard:false,
+      sdcard:false, // chkreugneugneu
       devices: [],
       connectedTo:false,
       img:false,
@@ -626,103 +625,39 @@ export default class App extends Component<Props> {
             //   }
             // };
 
- async takeVideo() {
+  async takeVideo() {
     if (this.camera) {
       try {
+        const path = this.state.sdcard
+        ? RNFetchBlob.fs.dirs.SDCardDir+'/Spipoll/' + this.formatedDate()  + '.mp4'
+        : RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/' + this.formatedDate()  + '.mp4';
 
-
-// const {uri} = await this.camera.recordAsync();
-
-        const promise = this.camera.recordAsync(
-          // {  path: RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/record.mp4:' }
-          this.state.recordOptions
-          );
+        const promise = this.camera.recordAsync({
+          path: path,
+          maxDuration:60, // TODO user settings.
+        });
 
         if (promise) {
+          this.sendMessage(this.state.connectedTo, 'distantRec', true);
           this.setState({ isRecording: true });
-          const data = await promise;
-          this.setState({ isRecording: false });
-          console.warn('takeVideo', data);
-        }
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  };
 
-  async recordVideo0(){
-    if (this.camera) {
-      try {
-          try {
-  
-const {uri} = await this.camera.recordAsync(
-  // { path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' }
-  );
+          const uri = await promise;
+          console.log(uri);
 
-       
-          } 
-          catch (err) {
-            alert(JSON.stringify({'recording error':err}, undefined, 2));
-            this.setState({isRecording:false});
+          if (this.stopRecordRequested) {
+            this.sendMessage(this.state.connectedTo, 'distantRec', false);
+            this.setState({ isRecording: false });
           }
-
-      } catch (err) {
-        // console.warn(err)
-      }
-    }
-  };
-
-  async recordVideo0(){
-    if (this.camera) {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO
-        ]);
-        // console.log(grantedA);
-
-        if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-        &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-        &&  granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
-        ){
-   
-          try {
-  
-            // const path = this.state.sdcard
-            //   ? RNFetchBlob.fs.dirs.SDCardDir+'/p2p_' +  Date.now() + '.mp4'
-            //   : RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/p2p_' +  Date.now() + '.mp4';
-//             const path =  
-//               RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/' + this.formatedDate() + '.mp4'
-// console.log(path);
-//             this.setState({isRecording:true});
-            // this.sendMessage(this.state.connectedTo, 'distantRec', true);
-
-const {uri} = await this.camera.recordAsync({ path: RNFetchBlob.fs.dirs.DCIMDir+'/record.mp4:' });
-
-            // const {uri} = await this.camera.recordAsync({
-            //   path: path,
-            //   maxDuration: 180,
-            // });
-
-            // if (this.stopRecordRequested) {
-              this.setState({isRecording:false});
-            //   //alert('record uri:'+uri); // file:///data/user/0/com.btcontrol/cache/Camera/***.mp4
-            //   this.sendMessage(this.state.connectedTo, 'distantRec', false);
-            // }
-            // else {
-            //   this.recordVideo();
-            // }
-          } 
-          catch (err) {
-            alert(JSON.stringify({'recording error':err}, undefined, 2));
-            this.setState({isRecording:false});
+          else {
+            this.takeVideo();
           }
-        } else {
-           alert('PERMISSIONS REFUSED');
         }
-      } catch (err) {
-        // console.warn(err)
+
+      }
+      catch (err) {
+        alert(JSON.stringify({'recording error':err}, undefined, 2));
+        this.setState({isRecording:false});
+        this.sendMessage(this.state.connectedTo, 'distantRec', false);
       }
     }
   };
@@ -805,30 +740,14 @@ const {uri} = await this.camera.recordAsync({ path: RNFetchBlob.fs.dirs.DCIMDir+
             color= { this.state.isRecording ? 'red' : greenFlash}
             backgroundColor ={'transparent'}
 
-onPress={
-  this.state.isRecording 
-  ? () => this.camera.stopRecording()
-  : () => this.takeVideo()
-}
-// onPress={
-//   this.state.isRecording 
-//   ? () => this.camera.stopRecording()
-//   : () => this.recordVideo()
-// }
-          //   onPress = {
-          //     () => {
-          //       console.log(this.state.isRecording);
-          //       console.log( this.stopRecordRequested );
-
-          //       if (this.state.isRecording) {
-          //         this.stopRecordRequested = true;
-          //         this.camera.stopRecording();
-          //       }
-          //       else {
-          //          this.recordVideo();
-          //       }
-          //     }
-          // }
+            onPress={
+              this.state.isRecording 
+              ? () => {
+                  this.stopRecordRequested = true;
+                  this.camera.stopRecording()
+                }
+              : () => this.takeVideo()
+            }
           /></View>
 
           <View style={styles.iconButton2}>
