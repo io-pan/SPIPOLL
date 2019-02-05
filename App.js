@@ -37,7 +37,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 let source;
 // const _source = resolveAssetSource(require('./img/scr.png'));
-const _source = resolveAssetSource(require('./img/bug.png'));
+const _source = resolveAssetSource(require('./img/round_mask.png'));
 
 if (__DEV__) {
   source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
@@ -205,16 +205,17 @@ class Draggable extends Component {
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1)
     };
+    this.initialPos = props.initialPos ? props.initialPos : {x:0,y:0};
   }
 
-  onMove(value){
-    this.props.onMove(value);
-  }
   componentWillMount() {
     this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => {
       this._val = value;
-      this.onMove(value);
+      this.props.onMove({
+        x:value.x+this.initialPos.x,
+        y:value.y+this.initialPos.y,
+      });
     });
 
     this.panResponder = PanResponder.create({
@@ -256,9 +257,8 @@ class Draggable extends Component {
 
   render() {
     return (
-      <View 
-      //style={{ width: "20%", alignItems: "center" }}
-      >
+      <View >
+        
         {this.renderDraggable()}
       </View>
     );
@@ -270,7 +270,7 @@ class Draggable extends Component {
     }
     if (this.state.showDraggable) {
       return (
-        <View style={{ position: "absolute" }}>
+        <View style={{ position: "absolute", left: this.initialPos.x, top:this.initialPos.y }}>
           <Animated.View
             {...this.panResponder.panHandlers}
             style={[panStyle, styles.circle, {opacity:this.state.opacity}]}
@@ -386,16 +386,22 @@ export default class App extends Component<Props> {
       opacity: new Animated.Value(1),
 
       motionInputAreaStyle:{
-        top: 0,
-        left: 0,
-        width: 0,
-        height: 0,
+        top: 30 + CIRCLE_RADIUS,
+        left: 30 + CIRCLE_RADIUS,
+        width: previewWidth - 30  - 30  - CIRCLE_RADIUS*2,
+        height: previewHeight - 30 - 30  - CIRCLE_RADIUS*2,
       },
 
     };
 
+    this.poignee = [{
+        x:30,
+        y:30
+      },{
+        x:previewWidth - 30  - 30 + CIRCLE_RADIUS, 
+        y:previewHeight - 30  - 30 + CIRCLE_RADIUS
+      }];
 
-    this.poignee = [{x:0,y:0},{x:0,y:0}];
     this.camRequested = false;
     this.stopRecordRequested = false;
     this.safeIds = [
@@ -792,7 +798,7 @@ export default class App extends Component<Props> {
 
   renderMotion(){
     return (
-        <View style={styles.MotionContainer} pointerEvents="none">
+      <View style={styles.MotionContainer} pointerEvents="none">
         {
           this.state.motionBase64
           ? this.state.freshImages 
@@ -850,6 +856,75 @@ export default class App extends Component<Props> {
 
         {this.renderMotion()}
 
+        <Slider  
+          ref="zoom"
+          style={styles.sliderZoom} 
+          thumbTintColor = {greenFlash} 
+          minimumTrackTintColor={greenFlash} 
+          maximumTrackTintColor={greenFlash}
+          minimumValue={0}
+          maximumValue={1}
+          step={0.1}
+          value={0}
+          onValueChange={
+            (value) => this.onZoom(value)
+          } 
+        />
+
+
+            <View style={styles.MotionContainer} >
+
+              <View  pointerEvents="none"
+                style={[styles.motionInputAreaMask,  {
+                  top:0,
+                  left:0,
+                  right:0,
+                  height:this.state.motionInputAreaStyle.top,
+                } ]}
+              />
+              <View  pointerEvents="none"
+                style={[styles.motionInputAreaMask,  {
+                  top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
+                  left:0,
+                  right:0,
+                  bottom:0,
+                } ]}
+              />
+              <View pointerEvents="none"
+                style={[styles.motionInputAreaMask, {
+                  top:this.state.motionInputAreaStyle.top,
+                  left:0,
+                  width: this.state.motionInputAreaStyle.left,
+                  height: this.state.motionInputAreaStyle.height,
+                }]}
+               />
+              <View pointerEvents="none"
+                style={[styles.motionInputAreaMask, {
+                  top:this.state.motionInputAreaStyle.top,
+                  right:0,
+                  left: this.state.motionInputAreaStyle.left + this.state.motionInputAreaStyle.width,
+                  height: this.state.motionInputAreaStyle.height,
+                }]}
+               />     
+
+              <View pointerEvents="none"
+                style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
+              />
+              <Image pointerEvents="none"
+                style={[styles.motionInputArea,  this.state.motionInputAreaStyle ,{opacity:0.3}]}
+                source = {source}
+                resizeMode="stretch"
+              />
+              <Draggable 
+                onMove = {(value) => this.onMovePoignee(0, value) }
+                initialPos = {{x:30,y:30}}
+              />
+              <Draggable
+                onMove = {(value) => this.onMovePoignee(1, value) }
+                initialPos = {{x:previewWidth-50,y:previewHeight-50}}
+              />
+            </View>
+
         <View style={styles.iconButtonContainer} >
           <View style={styles.iconButton2}>
           <MaterialCommunityIcons.Button   
@@ -901,22 +976,7 @@ export default class App extends Component<Props> {
             // onPress = {() => this.takeMotion()}
           /></View>
 
- 
         </View>
-           <Slider  
-              ref="zoom"
-              style={styles.sliderZoom} 
-              thumbTintColor = {greenFlash} 
-              minimumTrackTintColor={greenFlash} 
-              maximumTrackTintColor={greenFlash}
-              minimumValue={0}
-              maximumValue={1}
-              step={0.1}
-              value={0}
-              onValueChange={
-                (value) => this.onZoom(value)
-              } 
-            />
 
        </RNCamera>
       {/*
@@ -1120,54 +1180,7 @@ export default class App extends Component<Props> {
 
       <ScrollView style={styles.scroll}>
 
-         <View style={styles.mainContainer}>
-
-              <View style={[styles.motionInputAreaMask,  {
-                top:0,
-                left:0,
-                right:0,
-                height:this.state.motionInputAreaStyle.top,
-              } ]}
-               />
-              <View style={[styles.motionInputAreaMask,  {
-                top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
-                left:0,
-                right:0,
-                bottom:0,
-              } ]}
-               />
-
-              <View 
-                style={[styles.motionInputAreaMask, {
-                  top:this.state.motionInputAreaStyle.top,
-                  left:0,
-                  width: this.state.motionInputAreaStyle.left,
-                  height: this.state.motionInputAreaStyle.height,
-                }]}
-               />
-              <View 
-                style={[styles.motionInputAreaMask, {
-                  top:this.state.motionInputAreaStyle.top,
-                  right:0,
-                  left: this.state.motionInputAreaStyle.left + this.state.motionInputAreaStyle.width,
-                  height: this.state.motionInputAreaStyle.height,
-                }]}
-               />     
-
-   
-
-              <View 
-                style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
-              />
-
-
-              <Draggable 
-                onMove = {(value) => this.onMovePoignee(0, value) }
-              />
-              <Draggable
-                onMove = {(value) => this.onMovePoignee(1, value) }
-              />
-        </View>
+       
 
 
        
@@ -1363,15 +1376,11 @@ const styles = StyleSheet.create({
   },
   motionInputAreaMask:{
     position: 'absolute',
-    backgroundColor: 'rgba(0,0,0,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.3)',
   },
   mainContainer: {
-    // flex: 1,
     height:500,
     backgroundColor:'red',
-  },
-  ballContainer: {
-    height:200
   },
   circle: {
     backgroundColor:greenFlash,
