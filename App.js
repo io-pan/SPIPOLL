@@ -9,18 +9,21 @@
 import React, {Component} from 'react';
 
 import {Platform, StyleSheet, Text, View,
-    ScrollView,
-    Button,
-    // TouchableHighlight ,
-    // TouchableOpacity ,
-    Alert,
-    Image,
-    PermissionsAndroid,
-    NativeModules,
-    PixelRatio,
-    Slider,
-    StatusBar,
+  ScrollView,
+  Button,
+  // TouchableHighlight ,
+  // TouchableOpacity ,
+  Alert,
+  Image,
+  PermissionsAndroid,
+  NativeModules,
+  PixelRatio,
+  Slider,
+  StatusBar,
+  PanResponder,
+  Animated,
 } from 'react-native';
+
 import SplashScreen from "rn-splash-screen";
 import KeepScreenOn from 'react-native-keep-screen-on';
 import RNFetchBlob from 'rn-fetch-blob';
@@ -188,6 +191,87 @@ const previewWidth = 360;
 
 */
 
+//----------------------------------------------------------------------------------------
+class Draggable extends Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      showDraggable: true,
+      dropAreaValues: null,
+      pan: new Animated.ValueXY(),
+      opacity: new Animated.Value(1)
+    };
+  }
+
+  componentWillMount() {
+    this._val = { x:0, y:0 }
+    this.state.pan.addListener((value) => this._val = value);
+
+    this.panResponder = PanResponder.create({
+        onStartShouldSetPanResponder: (e, gesture) => true,
+        onPanResponderGrant: (e, gesture) => {
+          this.state.pan.setOffset({
+            x: this._val.x,
+            y:this._val.y
+          })
+          this.state.pan.setValue({ x:0, y:0})
+        },
+        onPanResponderMove: Animated.event([ 
+          null, { dx: this.state.pan.x, dy: this.state.pan.y }
+        ]),
+        onPanResponderRelease: (e, gesture) => {
+          if (this.isDropArea(gesture)) {
+            Animated.timing(this.state.opacity, {
+              toValue: 0,
+              duration: 1000
+            }).start(() =>
+              this.setState({
+                showDraggable: false
+              })
+            );
+          }  
+          else {
+            Animated.spring(this.state.pan, {
+              toValue: { x: 0, y: 0 },
+              friction: 5
+            }).start();
+          }
+        }
+      });
+  }
+
+  isDropArea(gesture) {
+    return gesture.moveY < 200;
+  }
+
+  render() {
+    return (
+      <View style={{ width: "20%", alignItems: "center" }}>
+        {this.renderDraggable()}
+      </View>
+    );
+  }
+
+  renderDraggable() {
+    const panStyle = {
+      transform: this.state.pan.getTranslateTransform()
+    }
+    if (this.state.showDraggable) {
+      return (
+        <View style={{ position: "absolute" }}>
+          <Animated.View
+            {...this.panResponder.panHandlers}
+            style={[panStyle, styles.circle, {opacity:this.state.opacity}]}
+          />
+        </View>
+      );
+    }
+  }
+}
+
+
+
 //-----------------------------------------------------------------------------------------
 class FreshImages extends Component {
   constructor(props) {
@@ -281,6 +365,11 @@ export default class App extends Component<Props> {
       },
 
       zoom:0,
+
+      showDraggable: true,
+      dropAreaValues: null,
+      pan: new Animated.ValueXY(),
+      opacity: new Animated.Value(1),
     };
 
     this.camRequested = false;
@@ -334,6 +423,57 @@ export default class App extends Component<Props> {
     } catch (err) {
       console.warn(err)
     }
+  }
+
+
+ _handlePanResponderEnd = (event: PressEvent, gestureState: GestureState) => {
+  alert(""+gestureState.dx+" - "+gestureState.dy);
+    this.state.pan.setValue({ x:gestureState.dx, y:gestureState.dy});
+  };
+
+  componentWillMount() {
+    // Add a listener for the delta value change
+    this._val = { x:100, y:100 }
+    this.state.pan.addListener((value) => this._val = value);
+
+    // Initialize PanResponder with move handling
+ // this.panResponder = PanResponder.create({
+ //    onStartShouldSetPanResponder: this._handleStartShouldSetPanResponder,
+ //    onMoveShouldSetPanResponder: this._handleMoveShouldSetPanResponder,
+ //    onPanResponderGrant: this._handlePanResponderGrant,
+ //    onPanResponderMove: this._handlePanResponderMove,
+ //    onPanResponderRelease: this._handlePanResponderEnd,
+ //    onPanResponderTerminate: this._handlePanResponderEnd,
+ //  });
+
+    this.panResponder = PanResponder.create({
+      onStartShouldSetPanResponder: (e, gesture) => true,
+      onPanResponderMove: Animated.event([
+        null, { dx: this.state.pan.x, dy: this.state.pan.y }
+      ]),
+       onPanResponderRelease: (e, gesture) => {
+        if (this.isDropArea(gesture)) {
+          Animated.timing(this.state.opacity, {
+            toValue: 0,
+            duration: 1000
+          }).start(() =>
+            this.setState({
+               showDraggable: false
+            })
+          );
+        } 
+        else {
+          Animated.spring(this.state.pan, {
+            toValue: { x: 0, y: 0 },
+            friction: 5
+          }).start();
+        }
+      }
+    });
+  }
+
+  isDropArea(gesture) {
+    return gesture.moveY < 200;
   }
 
   componentDidMount() {
@@ -533,20 +673,22 @@ export default class App extends Component<Props> {
 
   
   onMotionDetected = ({ motion }) => {
-    if (this.state.motionPreviewPaused) return;
+    if (this.state.motionPreviewPaused) 
+      return;
     
-    console.log('MOTION', motion);
-
+    // console.log('MOTION', motion);
     this.setState({
       motionDetected:motion.motionDetected,
-      // imgTest:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg'+ '?' + new Date(),
       motionBase64: motion.motionBase64,
-
     }, function(){
       //
-    });    
-  }
+    });  
 
+    if (motion.motionDetected){
+      //    1. photo every X sec.   for X sec.   /  until no motion
+      //    2. video                for X sec.   /  until no motion
+    }
+  }
 
 
   takePicture = async () => {
@@ -962,16 +1104,31 @@ export default class App extends Component<Props> {
 
   render() {
     console.log('render');
-
+    const panStyle = {
+      transform: this.state.pan.getTranslateTransform()
+    }
     return (
+
       <View style={styles.container}>
+
+
       <ScrollView style={styles.scroll}>
 
-        {/*
-          on motion detected take
-             1. photo every X sec.   for X sec.   /  until no motion
-             2. video                for X sec.   /  until no motion
-      */}
+         <View style={styles.mainContainer}>
+            <View style={styles.dropZone}>
+              <Text style={styles.text}>Drop them here!</Text>
+            </View>
+            <View style={styles.ballContainer} />
+            <View style={styles.row}>
+              <Draggable />
+              <Draggable />
+              <Draggable />
+              <Draggable />
+              <Draggable />
+            </View>
+          </View>
+
+       
 
 {/*        <Image
           ref="bug"
@@ -1084,10 +1241,9 @@ export default class App extends Component<Props> {
 
         <View style={styles.containerPreview}>
           {/*        
-           
             { this.renderImage() }
             { this.renderImageTest() }
-            { this.renderImageLocal()}
+            { this.renderImageLocal() }
           */}
 
           { this.renderCamera() }
@@ -1120,8 +1276,40 @@ export default class App extends Component<Props> {
   }
 }
 
-
+let CIRCLE_RADIUS = 30;
 const styles = StyleSheet.create({ 
+    mainContainer: {
+    // flex: 1,
+    height:500,
+    backgroundColor:'red',
+  },
+  ballContainer: {
+    height:200
+  },
+  circle: {
+    backgroundColor: "skyblue",
+    width: CIRCLE_RADIUS * 2,
+    height: CIRCLE_RADIUS * 2,
+    borderRadius: CIRCLE_RADIUS
+  },
+  row: {
+    flexDirection: "row"
+  },  
+  dropZone: {
+    height: 200,
+    backgroundColor: "#00334d"
+  },
+  text: {
+    marginTop: 25,
+    marginLeft: 5,
+    marginRight: 5,
+    textAlign: "center",
+    color: "#fff",
+    fontSize: 25,
+    fontWeight: "bold"
+  }
+
+  ,
   container: {
     flex: 1,
     // justifyContent: 'flex-end',
