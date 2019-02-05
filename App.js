@@ -11,7 +11,7 @@ import React, {Component} from 'react';
 import {Platform, StyleSheet, Text, View,
   ScrollView,
   Button,
-  // TouchableHighlight ,
+  TouchableHighlight ,
   // TouchableOpacity ,
   Alert,
   Image,
@@ -19,6 +19,7 @@ import {Platform, StyleSheet, Text, View,
   NativeModules,
   PixelRatio,
   Slider,
+  CheckBox,
   StatusBar,
   PanResponder,
   Animated,
@@ -191,22 +192,30 @@ const previewWidth = 360;
 
 */
 
+
 //----------------------------------------------------------------------------------------
 class Draggable extends Component {
+//----------------------------------------------------------------------------------------    
   constructor(props) {
     super(props);
 
     this.state = {
       showDraggable: true,
-      dropAreaValues: null,
+      // dropAreaValues: null,
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1)
     };
   }
 
+  onMove(value){
+    this.props.onMove(value);
+  }
   componentWillMount() {
     this._val = { x:0, y:0 }
-    this.state.pan.addListener((value) => this._val = value);
+    this.state.pan.addListener((value) => {
+      this._val = value;
+      this.onMove(value);
+    });
 
     this.panResponder = PanResponder.create({
         onStartShouldSetPanResponder: (e, gesture) => true,
@@ -221,33 +230,35 @@ class Draggable extends Component {
           null, { dx: this.state.pan.x, dy: this.state.pan.y }
         ]),
         onPanResponderRelease: (e, gesture) => {
-          if (this.isDropArea(gesture)) {
-            Animated.timing(this.state.opacity, {
-              toValue: 0,
-              duration: 1000
-            }).start(() =>
-              this.setState({
-                showDraggable: false
-              })
-            );
-          }  
-          else {
-            Animated.spring(this.state.pan, {
-              toValue: { x: 0, y: 0 },
-              friction: 5
-            }).start();
-          }
+          // if (this.isDropArea(gesture)) {
+            // Animated.timing(this.state.opacity, {
+            //   toValue: 0,
+            //   duration: 1000
+            // }).start(() =>
+            //   this.setState({
+            //     showDraggable: false
+            //   })
+            // );
+          // }  
+          // else {
+          //   Animated.spring(this.state.pan, {
+          //     toValue: { x: 0, y: 0 },
+          //     friction: 5
+          //   }).start();
+          // }
         }
       });
   }
 
-  isDropArea(gesture) {
-    return gesture.moveY < 200;
-  }
+  // isDropArea(gesture) {
+  //   return gesture.moveY < 200;
+  // }
 
   render() {
     return (
-      <View style={{ width: "20%", alignItems: "center" }}>
+      <View 
+      //style={{ width: "20%", alignItems: "center" }}
+      >
         {this.renderDraggable()}
       </View>
     );
@@ -274,10 +285,11 @@ class Draggable extends Component {
 
 //-----------------------------------------------------------------------------------------
 class FreshImages extends Component {
+//-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
     this.state = {};
-    this.count = this.props.count ? this.props.count : 2;
+    this.count = this.props.count ? this.props.count : 3;
     this.curId = 0;
     this.source =  new Array(this.count);
     this.opacity = new Array(this.count);
@@ -332,6 +344,7 @@ class FreshImages extends Component {
 
 //-----------------------------------------------------------------------------------------
 export default class App extends Component<Props> {
+//-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
     this.state = {
@@ -365,13 +378,24 @@ export default class App extends Component<Props> {
       },
 
       zoom:0,
+      freshImages:false,
 
       showDraggable: true,
       dropAreaValues: null,
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1),
+
+      motionInputAreaStyle:{
+        top: 0,
+        left: 0,
+        width: 0,
+        height: 0,
+      },
+
     };
 
+
+    this.poignee = [{x:0,y:0},{x:0,y:0}];
     this.camRequested = false;
     this.stopRecordRequested = false;
     this.safeIds = [
@@ -665,9 +689,6 @@ export default class App extends Component<Props> {
     // const getPreviewSize = await this.camera.getPreviewSize();
     // console.log(getPreviewSize);
 
-    // TEST SNAPVID
-    // inter = setInterval(this.takePt, 5000);
-
     SplashScreen.hide();
   }
 
@@ -730,43 +751,7 @@ export default class App extends Component<Props> {
       }
     }
   }
-            // Test local snapshot while video recording.
-            // takePt = async () => {
-            //   if (this.camera) {
-            //     try {
-            //       const granted = await PermissionsAndroid.requestMultiple([
-            //         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-            //         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]);
-            //         // console.log(granted);
-
-            //       if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-            //       &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
-
-            //         try {
-            //           var picture = await this.camera.takePictureAsync({ 
-            //             width:400,
-            //             quality: 0.7, 
-            //             // base64: true, 
-            //             fixOrientation: true,
-            //           });
-            //           // alert(JSON.stringify(picture, undefined, 2));
-
-
-            //           this.setState({img:picture.uri});
-
-            //         } 
-            //         catch (err) {
-            //           // console.log('takePictureAsync ERROR: ', err);
-            //         }
-            //       } else {
-            //        // console.log('REFUSED');
-            //       }
-            //     } catch (err) {
-            //       // console.warn(err)
-            //     }
-            //   }
-            // };
-
+           
   async takeVideo() {
     if (this.camera) {
       try {
@@ -809,12 +794,21 @@ export default class App extends Component<Props> {
     return (
         <View style={styles.MotionContainer} pointerEvents="none">
         {
-          this.state.motionBase64 ? (
-          <FreshImages
-            style = {[styles.motionpreview,{position:'absolute'}]}
-            source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
-          />
-          ):null
+          this.state.motionBase64
+          ? this.state.freshImages 
+            ? (
+              <FreshImages
+                style = {[styles.motionpreview,{position:'absolute'}]}
+                source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
+              />
+              )
+            : (
+              <Image
+                style = {[styles.motionpreview,{position:'absolute'}]}
+                source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
+              />
+              )
+          :null
         }
       </View>
     );
@@ -1096,11 +1090,23 @@ export default class App extends Component<Props> {
   }
   onZoom(value) {
     this.setState({zoom:value});
-  }
+  };
   //  togglePreviewMotion() {
   //    var value = !this.state.motionPreviewPaused;
   //    this.setState({motionPreviewPaused:value});
   //  }
+
+  onMovePoignee(id, value){
+    console.log(value);
+    this.poignee[id]=value;
+
+    this.setState({motionInputAreaStyle:{
+      top: Math.min(this.poignee[0].y, this.poignee[1].y) + CIRCLE_RADIUS,
+      left: Math.min(this.poignee[0].x, this.poignee[1].x) + CIRCLE_RADIUS,
+      width: Math.abs(this.poignee[0].x - this.poignee[1].x),
+      height: Math.abs(this.poignee[0].y - this.poignee[1].y),
+    }});
+  }
 
   render() {
     console.log('render');
@@ -1115,18 +1121,54 @@ export default class App extends Component<Props> {
       <ScrollView style={styles.scroll}>
 
          <View style={styles.mainContainer}>
-            <View style={styles.dropZone}>
-              <Text style={styles.text}>Drop them here!</Text>
-            </View>
-            <View style={styles.ballContainer} />
-            <View style={styles.row}>
-              <Draggable />
-              <Draggable />
-              <Draggable />
-              <Draggable />
-              <Draggable />
-            </View>
-          </View>
+
+              <View style={[styles.motionInputAreaMask,  {
+                top:0,
+                left:0,
+                right:0,
+                height:this.state.motionInputAreaStyle.top,
+              } ]}
+               />
+              <View style={[styles.motionInputAreaMask,  {
+                top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
+                left:0,
+                right:0,
+                bottom:0,
+              } ]}
+               />
+
+              <View 
+                style={[styles.motionInputAreaMask, {
+                  top:this.state.motionInputAreaStyle.top,
+                  left:0,
+                  width: this.state.motionInputAreaStyle.left,
+                  height: this.state.motionInputAreaStyle.height,
+                }]}
+               />
+              <View 
+                style={[styles.motionInputAreaMask, {
+                  top:this.state.motionInputAreaStyle.top,
+                  right:0,
+                  left: this.state.motionInputAreaStyle.left + this.state.motionInputAreaStyle.width,
+                  height: this.state.motionInputAreaStyle.height,
+                }]}
+               />     
+
+   
+
+              <View 
+                style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
+              />
+
+
+              <Draggable 
+                onMove = {(value) => this.onMovePoignee(0, value) }
+              />
+              <Draggable
+                onMove = {(value) => this.onMovePoignee(1, value) }
+              />
+        </View>
+
 
        
 
@@ -1151,6 +1193,41 @@ export default class App extends Component<Props> {
               onPress = {() => this.togglePreviewMotion()}
             />
             */}
+            <TouchableHighlight
+              onPress = {() => this.setState({freshImages: !this.state.freshImages}) }
+              >
+              <View style={{flexDirection:'row', padding:5,}}>
+                <CheckBox
+                  value={this.state.freshImages}
+                  // style={{
+                  //   color:'red',
+                  //   borderWidth:1,
+                  //   borderColor:'red',
+                  //   }}
+                />
+                          {/* 
+                          You can change the color directly in XML. Use buttonTint for the box: (as of API level 23)
+
+                          <CheckBox
+                              android:layout_width="wrap_content"
+                              android:layout_height="wrap_content"
+                              android:buttonTint="@color/CHECK_COLOR" />
+                          You can also do this using appCompatCheckbox v7 for older API levels:
+
+                          <android.support.v7.widget.AppCompatCheckBox 
+                              android:layout_width="wrap_content" 
+                              android:layout_height="wrap_content" 
+                              app:buttonTint="@color/COLOR_HERE" /> 
+                          */}
+                <Text
+                  style={{
+                    color:greenFlash,
+                    padding:5,
+                  }}>
+                  Image persistante
+                </Text>
+              </View>
+            </TouchableHighlight>
 
             <Slider  
               ref="sampleSize"
@@ -1223,6 +1300,7 @@ export default class App extends Component<Props> {
                 onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
               />
 
+
             <Slider  
               ref="minimum_pixels"
               style={styles.sliderDenoise} 
@@ -1276,9 +1354,18 @@ export default class App extends Component<Props> {
   }
 }
 
-let CIRCLE_RADIUS = 30;
+let CIRCLE_RADIUS = 10;
 const styles = StyleSheet.create({ 
-    mainContainer: {
+  motionInputArea:{
+    borderWidth:1,
+    borderColor:greenFlash,
+    position:'absolute',
+  },
+  motionInputAreaMask:{
+    position: 'absolute',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+  },
+  mainContainer: {
     // flex: 1,
     height:500,
     backgroundColor:'red',
@@ -1287,26 +1374,13 @@ const styles = StyleSheet.create({
     height:200
   },
   circle: {
-    backgroundColor: "skyblue",
+    backgroundColor:greenFlash,
     width: CIRCLE_RADIUS * 2,
     height: CIRCLE_RADIUS * 2,
-    borderRadius: CIRCLE_RADIUS
+    borderRadius: CIRCLE_RADIUS,
   },
   row: {
     flexDirection: "row"
-  },  
-  dropZone: {
-    height: 200,
-    backgroundColor: "#00334d"
-  },
-  text: {
-    marginTop: 25,
-    marginLeft: 5,
-    marginRight: 5,
-    textAlign: "center",
-    color: "#fff",
-    fontSize: 25,
-    fontWeight: "bold"
   }
 
   ,
