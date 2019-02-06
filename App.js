@@ -895,7 +895,7 @@ export default class App extends Component<Props> {
             <View style={styles.MotionContainer} >
 
               <Image pointerEvents="none"
-                style={[this.state.motionInputAreaStyle ,{position:'absolute', opacity:0.3}]}
+                style={[this.state.motionInputAreaStyle ,{borderWidth:2, borderColor:'transparent', position:'absolute', opacity:0.3}]}
                 source = {source}
                 resizeMode="stretch"
               />
@@ -934,7 +934,7 @@ export default class App extends Component<Props> {
                />     
 
 
-              <Svg style={[styles.motionInputArea,this.state.motionInputAreaStyle]}
+              <Svg style={[styles.motionInputArea,this.state.motionInputAreaStyle,{borderWidth:2, borderColor:'transparent'}]}
                 pointerEvents="none"
                 height={this.state.motionInputAreaStyle.height}
                 width={this.state.motionInputAreaStyle.width}
@@ -942,8 +942,8 @@ export default class App extends Component<Props> {
                 <Ellipse
                   cx={this.state.motionInputAreaStyle.width/2}
                   cy={this.state.motionInputAreaStyle.height/2}
-                  rx={2-this.state.motionInputAreaStyle.width/2}
-                  ry={2-this.state.motionInputAreaStyle.height/2}
+                  rx={this.state.motionInputAreaStyle.width/2 - 1}
+                  ry={this.state.motionInputAreaStyle.height/2 - 1}
                   stroke={greenFlash}
                   strokeWidth="2"
                   fill="transparent"
