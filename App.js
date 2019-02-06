@@ -890,81 +890,97 @@ export default class App extends Component<Props> {
             (value) => this.onZoom(value)
           } 
         />
+            
+        <View style={styles.MotionContainer}>
+          <Image pointerEvents="none"
+            style={[
+              this.state.motionInputAreaStyle,{
+              borderWidth:2, 
+              borderColor:'transparent', 
+              position:'absolute', 
+              opacity:0.4,
+            }]}
+            source = {source}
+            resizeMode="stretch"
+          />
+          <View pointerEvents="none"
+            style={[
+              this.state.motionInputAreaStyle,{
+              borderWidth:1, 
+              borderColor:greenDark, 
+              position:'absolute'
+            }]}
+          />
 
+          <View  pointerEvents="none"
+            style={[styles.motionInputAreaMask,{
+              top:0,
+              left:0,
+              right:0,
+              height:this.state.motionInputAreaStyle.top,
+            } ]}
+          />
+          <View  pointerEvents="none"
+            style={[styles.motionInputAreaMask,{
+              top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
+              left:0,
+              right:0,
+              bottom:0,
+            } ]}
+          />
+          <View pointerEvents="none"
+            style={[styles.motionInputAreaMask,{
+              top:this.state.motionInputAreaStyle.top,
+              left:0,
+              width: this.state.motionInputAreaStyle.left,
+              height: this.state.motionInputAreaStyle.height,
+            }]}
+          />
+          <View pointerEvents="none"
+            style={[styles.motionInputAreaMask,{
+              top:this.state.motionInputAreaStyle.top,
+              right:0,
+              left: this.state.motionInputAreaStyle.left + this.state.motionInputAreaStyle.width,
+              height: this.state.motionInputAreaStyle.height,
+            }]}
+          />     
 
-            <View style={styles.MotionContainer} >
+          <Svg 
+            style={[
+              styles.motionInputArea, 
+              this.state.motionInputAreaStyle, 
+              {borderWidth:2, borderColor:'transparent'}
+            ]}
+            pointerEvents="none"
+            height={this.state.motionInputAreaStyle.height}
+            width={this.state.motionInputAreaStyle.width}
+            >
+            <Ellipse
+              cx={this.state.motionInputAreaStyle.width/2}
+              cy={this.state.motionInputAreaStyle.height/2}
+              rx={this.state.motionInputAreaStyle.width/2 - 1}
+              ry={this.state.motionInputAreaStyle.height/2 - 1}
+              stroke={greenFlash}
+              strokeWidth="2"
+              fill="transparent"
+            />
+          </Svg>
 
-              <Image pointerEvents="none"
-                style={[this.state.motionInputAreaStyle ,{borderWidth:2, borderColor:'transparent', position:'absolute', opacity:0.3}]}
-                source = {source}
-                resizeMode="stretch"
-              />
+          {/*              
+          <View pointerEvents="none"
+            style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
+          />
+          */}
 
-              <View  pointerEvents="none"
-                style={[styles.motionInputAreaMask,  {
-                  top:0,
-                  left:0,
-                  right:0,
-                  height:this.state.motionInputAreaStyle.top,
-                } ]}
-              />
-              <View  pointerEvents="none"
-                style={[styles.motionInputAreaMask,  {
-                  top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
-                  left:0,
-                  right:0,
-                  bottom:0,
-                } ]}
-              />
-              <View pointerEvents="none"
-                style={[styles.motionInputAreaMask, {
-                  top:this.state.motionInputAreaStyle.top,
-                  left:0,
-                  width: this.state.motionInputAreaStyle.left,
-                  height: this.state.motionInputAreaStyle.height,
-                }]}
-               />
-              <View pointerEvents="none"
-                style={[styles.motionInputAreaMask, {
-                  top:this.state.motionInputAreaStyle.top,
-                  right:0,
-                  left: this.state.motionInputAreaStyle.left + this.state.motionInputAreaStyle.width,
-                  height: this.state.motionInputAreaStyle.height,
-                }]}
-               />     
-
-
-              <Svg style={[styles.motionInputArea,this.state.motionInputAreaStyle,{borderWidth:2, borderColor:'transparent'}]}
-                pointerEvents="none"
-                height={this.state.motionInputAreaStyle.height}
-                width={this.state.motionInputAreaStyle.width}
-                >
-                <Ellipse
-                  cx={this.state.motionInputAreaStyle.width/2}
-                  cy={this.state.motionInputAreaStyle.height/2}
-                  rx={this.state.motionInputAreaStyle.width/2 - 1}
-                  ry={this.state.motionInputAreaStyle.height/2 - 1}
-                  stroke={greenFlash}
-                  strokeWidth="2"
-                  fill="transparent"
-                />
-              </Svg>
-
-              {/*              
-              <View pointerEvents="none"
-                style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
-              />
-              */}
-
-              <Draggable 
-                onMove = {(value) => this.onMovePoignee(0, value) }
-                initialPos = {{x:30,y:30}}
-              />
-              <Draggable
-                onMove = {(value) => this.onMovePoignee(1, value) }
-                initialPos = {{x:previewWidth-30, y:previewHeight-30}}
-              />
-            </View>
+          <Draggable 
+            onMove = {(value) => this.onMovePoignee(0, value) }
+            initialPos = {{x:30,y:30}}
+          />
+          <Draggable
+            onMove = {(value) => this.onMovePoignee(1, value) }
+            initialPos = {{x:previewWidth-30, y:previewHeight-30}}
+          />
+        </View>
 
         <View style={styles.iconButtonContainer} >
           <View style={styles.iconButton2}>
@@ -1081,7 +1097,7 @@ export default class App extends Component<Props> {
             // onLoad= { () => this.onloadimg(0) }
           />
 
-{/*
+        {/*
         {this.state.imgLocal.length >= 1 ? (
           <Image 
             style = {[styles.captureLocal, {borderColor:'blue', opacity:this.state.imgLocal0?1:0}]}
@@ -1099,7 +1115,7 @@ export default class App extends Component<Props> {
             onLoad= { () => this.onloadimg(1) }
           />
         ) : null}
-*/}
+        */}
       </View>
     );
   }
@@ -1172,14 +1188,14 @@ export default class App extends Component<Props> {
     );
   }
 
-  onThreshold(mask, color) {
+  onThreshold(mask, color){
     const threshold = this.state.threshold & ~mask | color;
     this.setState({threshold:threshold});
   }
-  onMinimumPixels(value) {
+  onMinimumPixels(value){
     this.setState({minimumPixels:value});
   }
-  onSampleSize(value) {
+  onSampleSize(value){
     let minimumPixels = this.state.minimumPixels;
     if(minimumPixels > previewHeight/value){
       minimumPixels = previewHeight/value;
@@ -1189,7 +1205,7 @@ export default class App extends Component<Props> {
       minimumPixels:minimumPixels,
     });
   }
-  onZoom(value) {
+  onZoom(value){
     this.setState({zoom:value});
   };
   //  togglePreviewMotion() {
@@ -1217,14 +1233,7 @@ export default class App extends Component<Props> {
     return (
 
       <View style={styles.container}>
-
-
       <ScrollView style={styles.scroll}>
-
-       
-
-
-       
 
 {/*        <Image
           ref="bug"
@@ -1251,33 +1260,23 @@ export default class App extends Component<Props> {
               onPress = {() => this.setState({freshImages: !this.state.freshImages}) }
               >
               <View style={{flexDirection:'row', padding:5,}}>
+                <CheckBox value={this.state.freshImages} />
+                {/* 
+                You can change the color directly in XML. Use buttonTint for the box: (as of API level 23)
+
                 <CheckBox
-                  value={this.state.freshImages}
-                  // style={{
-                  //   color:'red',
-                  //   borderWidth:1,
-                  //   borderColor:'red',
-                  //   }}
-                />
-                          {/* 
-                          You can change the color directly in XML. Use buttonTint for the box: (as of API level 23)
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:buttonTint="@color/CHECK_COLOR" />
+                You can also do this using appCompatCheckbox v7 for older API levels:
 
-                          <CheckBox
-                              android:layout_width="wrap_content"
-                              android:layout_height="wrap_content"
-                              android:buttonTint="@color/CHECK_COLOR" />
-                          You can also do this using appCompatCheckbox v7 for older API levels:
+                <android.support.v7.widget.AppCompatCheckBox 
+                    android:layout_width="wrap_content" 
+                    android:layout_height="wrap_content" 
+                    app:buttonTint="@color/COLOR_HERE" /> 
+                */}
 
-                          <android.support.v7.widget.AppCompatCheckBox 
-                              android:layout_width="wrap_content" 
-                              android:layout_height="wrap_content" 
-                              app:buttonTint="@color/COLOR_HERE" /> 
-                          */}
-                <Text
-                  style={{
-                    color:this.state.freshImages ? greenFlash : '#333333',
-                    padding:5,
-                  }}>
+                <Text style={{color:this.state.freshImages ? greenFlash : greenDark, padding:5,}}>
                   Accentuer l'affichage
                 </Text>
               </View>
@@ -1354,7 +1353,6 @@ export default class App extends Component<Props> {
                 onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
               />
 
-
             <Slider  
               ref="minimum_pixels"
               style={styles.sliderDenoise} 
@@ -1383,8 +1381,8 @@ export default class App extends Component<Props> {
         
         { this.state.devices.map((value, index) => 
           <View 
-            key={index}
-            style={{flexDirection:'row'}}
+            key = {index}
+            style = {{flexDirection:'row'}}
             >
             <Button 
               style={{ 
@@ -1396,9 +1394,7 @@ export default class App extends Component<Props> {
               color = {value.connected ? '#338433' : 'grey'}
               onPress = {() => this.connectToDevice(value.id)}
             />
-
             { this.renderCamButton(value) }
-      
           </View>
         )}
 
@@ -1411,13 +1407,11 @@ export default class App extends Component<Props> {
 let CIRCLE_RADIUS = 10;
 const styles = StyleSheet.create({ 
   motionInputArea:{
-    borderWidth:1,
-    borderColor:greenDark,
     position:'absolute',
   },
   motionInputAreaMask:{
     position: 'absolute',
-    backgroundColor: 'rgba(0,0,0,0.3)',
+    backgroundColor: 'rgba(0,0,0,0.4)',
   },
   mainContainer: {
     height:500,
