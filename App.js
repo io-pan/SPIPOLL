@@ -56,7 +56,7 @@ else {
 
 
 // Spipoll greens
-const greenDark = "#b7d432";
+const greenDark = "#231f20";
 const green = "#d2e284";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
@@ -284,7 +284,7 @@ class Draggable extends Component {
     }
     if (this.state.showDraggable) {
       return (
-        <View style={{ position: "absolute", left: this.initialPos.x, top:this.initialPos.y }}>
+        <View style={{ position: "absolute", left: this.initialPos.x-CIRCLE_RADIUS , top:this.initialPos.y-CIRCLE_RADIUS }}>
           <Animated.View
             {...this.panResponder.panHandlers}
             style={[panStyle, styles.circle,/* {opacity:this.state.opacity}*/]}
@@ -400,20 +400,20 @@ export default class App extends Component<Props> {
       opacity: new Animated.Value(1),
 
       motionInputAreaStyle:{
-        top: 30 + CIRCLE_RADIUS,
-        left: 30 + CIRCLE_RADIUS,
-        width: previewWidth - 30  - 30  - CIRCLE_RADIUS*2,
-        height: previewHeight - 30 - 30  - CIRCLE_RADIUS*2,
+        top: 30,
+        left: 30,
+        width: previewWidth - 30 - 30,
+        height: previewHeight - 30 - 30,
       },
 
     };
 
     this.poignee = [{
         x:30,
-        y:30
+        y:30,
       },{
-        x:previewWidth - 30  - 30 + CIRCLE_RADIUS, 
-        y:previewHeight - 30  - 30 + CIRCLE_RADIUS
+        x:previewWidth - 30, 
+        y:previewHeight - 30,
       }];
 
     this.camRequested = false;
@@ -894,6 +894,12 @@ export default class App extends Component<Props> {
 
             <View style={styles.MotionContainer} >
 
+              <Image pointerEvents="none"
+                style={[this.state.motionInputAreaStyle ,{position:'absolute', opacity:0.3}]}
+                source = {source}
+                resizeMode="stretch"
+              />
+
               <View  pointerEvents="none"
                 style={[styles.motionInputAreaMask,  {
                   top:0,
@@ -928,16 +934,16 @@ export default class App extends Component<Props> {
                />     
 
 
-              <Svg style={[{position:'absolute'},this.state.motionInputAreaStyle]}
+              <Svg style={[styles.motionInputArea,this.state.motionInputAreaStyle]}
                 pointerEvents="none"
-                height={this.state.motionInputAreaStyle.height+4}
-                width={this.state.motionInputAreaStyle.width+4}
+                height={this.state.motionInputAreaStyle.height}
+                width={this.state.motionInputAreaStyle.width}
                 >
                 <Ellipse
                   cx={this.state.motionInputAreaStyle.width/2}
                   cy={this.state.motionInputAreaStyle.height/2}
-                  rx={this.state.motionInputAreaStyle.width/2}
-                  ry={this.state.motionInputAreaStyle.height/2}
+                  rx={2-this.state.motionInputAreaStyle.width/2}
+                  ry={2-this.state.motionInputAreaStyle.height/2}
                   stroke={greenFlash}
                   strokeWidth="2"
                   fill="transparent"
@@ -950,20 +956,13 @@ export default class App extends Component<Props> {
               />
               */}
 
-              <Image pointerEvents="none"
-                style={[styles.motionInputArea,  this.state.motionInputAreaStyle ,{opacity:0.3}]}
-                source = {source}
-                resizeMode="stretch"
-              />
-
-
               <Draggable 
                 onMove = {(value) => this.onMovePoignee(0, value) }
                 initialPos = {{x:30,y:30}}
               />
               <Draggable
                 onMove = {(value) => this.onMovePoignee(1, value) }
-                initialPos = {{x:previewWidth-50,y:previewHeight-50}}
+                initialPos = {{x:previewWidth-30, y:previewHeight-30}}
               />
             </View>
 
@@ -1203,8 +1202,8 @@ export default class App extends Component<Props> {
     this.poignee[id]=value;
 
     this.setState({motionInputAreaStyle:{
-      top: Math.min(this.poignee[0].y, this.poignee[1].y) + CIRCLE_RADIUS,
-      left: Math.min(this.poignee[0].x, this.poignee[1].x) + CIRCLE_RADIUS,
+      top: Math.min(this.poignee[0].y, this.poignee[1].y),
+      left: Math.min(this.poignee[0].x, this.poignee[1].x),
       width: Math.abs(this.poignee[0].x - this.poignee[1].x),
       height: Math.abs(this.poignee[0].y - this.poignee[1].y),
     }});
@@ -1412,8 +1411,8 @@ export default class App extends Component<Props> {
 let CIRCLE_RADIUS = 10;
 const styles = StyleSheet.create({ 
   motionInputArea:{
-    borderWidth:0,
-    borderColor:greenFlash,
+    borderWidth:1,
+    borderColor:greenDark,
     position:'absolute',
   },
   motionInputAreaMask:{
@@ -1428,8 +1427,10 @@ const styles = StyleSheet.create({
     backgroundColor:greenFlash,
     width: CIRCLE_RADIUS * 2,
     height: CIRCLE_RADIUS * 2,
-    borderRadius: CIRCLE_RADIUS,
-    opacity:0.5,
+    // borderRadius: CIRCLE_RADIUS,
+    borderWidth: 1,
+    borderColor:greenDark,
+    // opacity:0.5,
   },
   row: {
     flexDirection: "row"
