@@ -35,6 +35,11 @@ import Icon from 'react-native-vector-icons/FontAwesome';             // http://
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';  // https://material.io/icons/
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
+
+import Svg,{
+    Ellipse,
+} from 'react-native-svg';
+
 let source;
 // const _source = resolveAssetSource(require('./img/scr.png'));
 const _source = resolveAssetSource(require('./img/round_mask.png'));
@@ -43,7 +48,7 @@ if (__DEV__) {
   source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
 }
 else {
-  const sourceAndroid = {uri: 'asset:/scr.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
+  const sourceAndroid = {uri: 'asset:/img/round_mask.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
   const sourceIOS = { uri: 'file://${_source.uri}' };
   source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
 }
@@ -210,8 +215,10 @@ class Draggable extends Component {
 
   componentWillMount() {
     this._val = { x:0, y:0 }
+
     this.state.pan.addListener((value) => {
       this._val = value;
+      // Frame adjustment callback.
       this.props.onMove({
         x:value.x+this.initialPos.x,
         y:value.y+this.initialPos.y,
@@ -221,16 +228,24 @@ class Draggable extends Component {
     this.panResponder = PanResponder.create({
         onStartShouldSetPanResponder: (e, gesture) => true,
         onPanResponderGrant: (e, gesture) => {
-          this.state.pan.setOffset({
-            x: this._val.x,
-            y:this._val.y
-          })
+          this.state.pan.setOffset(this._val)
           this.state.pan.setValue({ x:0, y:0})
         },
         onPanResponderMove: Animated.event([ 
           null, { dx: this.state.pan.x, dy: this.state.pan.y }
         ]),
         onPanResponderRelease: (e, gesture) => {
+            if (this._val.x + this.initialPos.x < CIRCLE_RADIUS
+            ||  this._val.y + this.initialPos.y < CIRCLE_RADIUS
+            ||  this._val.x + this.initialPos.x > previewWidth-CIRCLE_RADIUS
+            ||  this._val.y + this.initialPos.y > previewHeight-CIRCLE_RADIUS
+            ) {
+              Animated.spring(this.state.pan, {
+                toValue: { x: 0, y: 0 },
+                friction: 5
+              }).start();   
+            }
+ 
           // if (this.isDropArea(gesture)) {
             // Animated.timing(this.state.opacity, {
             //   toValue: 0,
@@ -258,7 +273,6 @@ class Draggable extends Component {
   render() {
     return (
       <View >
-        
         {this.renderDraggable()}
       </View>
     );
@@ -273,7 +287,7 @@ class Draggable extends Component {
         <View style={{ position: "absolute", left: this.initialPos.x, top:this.initialPos.y }}>
           <Animated.View
             {...this.panResponder.panHandlers}
-            style={[panStyle, styles.circle, {opacity:this.state.opacity}]}
+            style={[panStyle, styles.circle,/* {opacity:this.state.opacity}*/]}
           />
         </View>
       );
@@ -456,14 +470,14 @@ export default class App extends Component<Props> {
   }
 
 
- _handlePanResponderEnd = (event: PressEvent, gestureState: GestureState) => {
-  alert(""+gestureState.dx+" - "+gestureState.dy);
-    this.state.pan.setValue({ x:gestureState.dx, y:gestureState.dy});
-  };
+ // _handlePanResponderEnd = (event: PressEvent, gestureState: GestureState) => {
+ //  alert(""+gestureState.dx+" - "+gestureState.dy);
+ //    this.state.pan.setValue({ x:gestureState.dx, y:gestureState.dy});
+ //  };
 
   componentWillMount() {
     // Add a listener for the delta value change
-    this._val = { x:100, y:100 }
+    this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => this._val = value);
 
     // Initialize PanResponder with move handling
@@ -482,29 +496,35 @@ export default class App extends Component<Props> {
         null, { dx: this.state.pan.x, dy: this.state.pan.y }
       ]),
        onPanResponderRelease: (e, gesture) => {
-        if (this.isDropArea(gesture)) {
-          Animated.timing(this.state.opacity, {
-            toValue: 0,
-            duration: 1000
-          }).start(() =>
-            this.setState({
-               showDraggable: false
-            })
-          );
-        } 
-        else {
+        if (true) {
           Animated.spring(this.state.pan, {
             toValue: { x: 0, y: 0 },
             friction: 5
           }).start();
         }
+        // if (this.isDropArea(gesture)) {
+        //   Animated.timing(this.state.opacity, {
+        //     toValue: 0,
+        //     duration: 1000
+        //   }).start(() =>
+        //     this.setState({
+        //        showDraggable: false
+        //     })
+        //   );
+        // } 
+        // else {
+        //   Animated.spring(this.state.pan, {
+        //     toValue: { x: 0, y: 0 },
+        //     friction: 5
+        //   }).start();
+        // }
       }
     });
   }
 
-  isDropArea(gesture) {
-    return gesture.moveY < 200;
-  }
+  // isDropArea(gesture) {
+  //   return gesture.moveY < 200;
+  // }
 
   componentDidMount() {
     StatusBar.setHidden(true);
@@ -907,14 +927,36 @@ export default class App extends Component<Props> {
                 }]}
                />     
 
+
+              <Svg style={[{position:'absolute'},this.state.motionInputAreaStyle]}
+                pointerEvents="none"
+                height={this.state.motionInputAreaStyle.height+4}
+                width={this.state.motionInputAreaStyle.width+4}
+                >
+                <Ellipse
+                  cx={this.state.motionInputAreaStyle.width/2}
+                  cy={this.state.motionInputAreaStyle.height/2}
+                  rx={this.state.motionInputAreaStyle.width/2}
+                  ry={this.state.motionInputAreaStyle.height/2}
+                  stroke={greenFlash}
+                  strokeWidth="2"
+                  fill="transparent"
+                />
+              </Svg>
+
+              {/*              
               <View pointerEvents="none"
                 style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
               />
+              */}
+
               <Image pointerEvents="none"
                 style={[styles.motionInputArea,  this.state.motionInputAreaStyle ,{opacity:0.3}]}
                 source = {source}
                 resizeMode="stretch"
               />
+
+
               <Draggable 
                 onMove = {(value) => this.onMovePoignee(0, value) }
                 initialPos = {{x:30,y:30}}
@@ -1234,10 +1276,10 @@ export default class App extends Component<Props> {
                           */}
                 <Text
                   style={{
-                    color:greenFlash,
+                    color:this.state.freshImages ? greenFlash : '#333333',
                     padding:5,
                   }}>
-                  Image persistante
+                  Accentuer l'affichage
                 </Text>
               </View>
             </TouchableHighlight>
@@ -1370,7 +1412,7 @@ export default class App extends Component<Props> {
 let CIRCLE_RADIUS = 10;
 const styles = StyleSheet.create({ 
   motionInputArea:{
-    borderWidth:1,
+    borderWidth:0,
     borderColor:greenFlash,
     position:'absolute',
   },
@@ -1387,6 +1429,7 @@ const styles = StyleSheet.create({
     width: CIRCLE_RADIUS * 2,
     height: CIRCLE_RADIUS * 2,
     borderRadius: CIRCLE_RADIUS,
+    opacity:0.5,
   },
   row: {
     flexDirection: "row"
