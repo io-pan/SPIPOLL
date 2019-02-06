@@ -10,6 +10,7 @@ import com.oblador.vectoricons.VectorIconsPackage;
 import com.gijoehosaphat.keepscreenon.KeepScreenOnPackage;
 import org.reactnative.camera.RNCameraPackage;
 import com.rctunderdark.NetworkManagerPackage;
+import com.horcrux.svg.SvgPackage;
 import com.facebook.react.ReactNativeHost;
 import com.facebook.react.ReactPackage;
 import com.facebook.react.shell.MainReactPackage;
@@ -36,7 +37,8 @@ public class MainApplication extends Application implements ReactApplication {
             new VectorIconsPackage(),
             new KeepScreenOnPackage(),
             new RNCameraPackage(),
-            new NetworkManagerPackage()
+            new NetworkManagerPackage(),
+            new SvgPackage()
       );
     }
 

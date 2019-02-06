@@ -12,6 +12,7 @@
     "react-native-bluetooth-cross-platform": "0.0.9",
     "react-native-camera": "^1.10.1",
     "react-native-keep-screen-on": "^1.2.0",
+    "react-native-svg": "^9.2.3",
     "react-native-vector-icons": "^6.2.0",
     "react-native-view-shot": "^2.5.0",
     "rn-fetch-blob": "^0.10.15",
