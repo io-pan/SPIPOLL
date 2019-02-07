@@ -701,7 +701,7 @@ export default class App extends Component<Props> {
     hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
     minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
     second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
-    return year + "-" + month + "-" + day + " " + hour + ":" + minute + ":" + second;
+    return year + "" + month + "" + day + "-" + hour + "" + minute + "" + second;
   }
   // -------------------------------------------------
   //                    Camera 
@@ -794,8 +794,7 @@ export default class App extends Component<Props> {
           this.sendMessage(this.state.connectedTo, 'distantRec', true);
           this.setState({ isRecording: true });
 
-          const uri = await promise;
-          console.log(uri);
+          const {uri} = await promise;
 
           if (this.stopRecordRequested) {
             this.sendMessage(this.state.connectedTo, 'distantRec', false);
@@ -873,6 +872,7 @@ export default class App extends Component<Props> {
         motionDetectionThreshold={this.state.threshold}
         motionDetectionSampleSize={this.state.sampleSize}
         motionDetectionArea={this.state.motionInputAreaStyle}
+
 
         // OA^2 =  OB^2 + Of^2
         // Of= {Math.sqrt(Math.pow(motionInputAreaStyle.width,2) - Math.pow(motionInputAreaStyle.height,2))}
