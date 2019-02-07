@@ -693,6 +693,11 @@ export default class App extends Component<Props> {
     } 
   }
 
+  // -------------------------------------------------
+  //                    Camera 
+  // -------------------------------------------------
+
+
   formatedDate(){
     now = new Date();
     year = "" + now.getFullYear();
@@ -701,11 +706,8 @@ export default class App extends Component<Props> {
     hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
     minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
     second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
-    return year + "" + month + "" + day + "-" + hour + "" + minute + "" + second;
+    return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;
   }
-  // -------------------------------------------------
-  //                    Camera 
-  // -------------------------------------------------
 
   onCameraReady = async () => {
     // const getAvailablePictureSizes = await this.camera.getAvailablePictureSizes('4:3');
@@ -723,7 +725,7 @@ export default class App extends Component<Props> {
     if (this.state.motionPreviewPaused) 
       return;
     
-    // console.log('MOTION', motion);
+    console.log('MOTION', motion);
     this.setState({
       motionDetected:motion.motionDetected,
       motionBase64: motion.motionBase64,
@@ -871,7 +873,13 @@ export default class App extends Component<Props> {
         motionDetectionMinimumPixels={this.state.minimumPixels}
         motionDetectionThreshold={this.state.threshold}
         motionDetectionSampleSize={this.state.sampleSize}
-        motionDetectionArea={this.state.motionInputAreaStyle}
+        motionDetectionArea={     
+          "elipse;"+  // shape : elypse / rectanglr
+          "0;"+       // x origin
+          "0;"+       // x origin
+          "100;"+     // width
+          "150;"      // height
+        }    
 
 
         // OA^2 =  OB^2 + Of^2
