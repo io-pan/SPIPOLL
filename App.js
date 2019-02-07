@@ -872,6 +872,14 @@ export default class App extends Component<Props> {
         motionDetectionMinimumPixels={this.state.minimumPixels}
         motionDetectionThreshold={this.state.threshold}
         motionDetectionSampleSize={this.state.sampleSize}
+        motionDetectionArea={this.state.motionInputAreaStyle}
+
+        // OA^2 =  OB^2 + Of^2
+        // Of= {Math.sqrt(Math.pow(motionInputAreaStyle.width,2) - Math.pow(motionInputAreaStyle.height,2))}
+
+        // Pf1 + Pf2 = cst
+        // Pf1
+
         >
 
         {this.renderMotion()}
@@ -1049,17 +1057,6 @@ export default class App extends Component<Props> {
   //                Render
   //---------------------------------------------
 
-  // onloadimg (id) {
-  //   console.log('onloadimg '+ id);
-  //   // setTimeout( 
-  //   //   () => {
-  //       this.setState({imgLocal0 : this.state.imgLocal0 ? 0 : 1}, function(){
-  //       })
-  //   // }
-  //   // , 1);
-  //   //this.motionDetect();
-  // }
-
   renderImageTest(){ // distant image
     if (!this.state.imgTest) return null;
     console.log(this.state.imgTest);
@@ -1078,7 +1075,6 @@ export default class App extends Component<Props> {
       <Image 
         style={styles.capture} 
         source={{uri:this.state.img}} // {uri: 'asset:/scr.png'}
-        // onLoad={this.onloadimg}
       />
     );
   }
@@ -1087,41 +1083,19 @@ export default class App extends Component<Props> {
     // if (this.state.imgLocal.length==0) return null;
     if (!this.state.imgLocal) return null;
     return(
-      <View 
-        style = {styles.captureLocalView}
-        >
+      <View style={styles.captureLocalView}>
           <Image 
             style = {styles.captureLocal}
-            source={{uri:this.state.imgLocal}} 
-            // source={{uri: 'asset:/scr.png'}}
-            // onLoad= { () => this.onloadimg(0) }
+            source = {{uri:this.state.imgLocal}} 
           />
-
-        {/*
-        {this.state.imgLocal.length >= 1 ? (
-          <Image 
-            style = {[styles.captureLocal, {borderColor:'blue', opacity:this.state.imgLocal0?1:0}]}
-            source={{uri:this.state.imgLocal[0]}} 
-            // source={{uri: 'asset:/scr.png'}}
-            onLoad= { () => this.onloadimg(0) }
-          />
-        ) : null}
-
-        {this.state.imgLocal.length >= 2 ? (
-          <Image 
-            style = {[styles.captureLocal, {borderColor:'red', opacity:this.state.imgLocal0?0:1}]}
-            source={{uri:this.state.imgLocal[1]}} 
-            // source={{uri: 'asset:/scr.png'}}
-            onLoad= { () => this.onloadimg(1) }
-          />
-        ) : null}
-        */}
       </View>
     );
   }
 
   renderOtherButtons(value){
-    if(!value.connected || !this.state.distantcam) return null;
+    if(!value.connected || !this.state.distantcam) 
+      return null;
+
     return (
       <View>
       <Button 
@@ -1170,7 +1144,9 @@ export default class App extends Component<Props> {
   }
 
   renderCamButton(value){
-    if(!value.connected) return null;
+    if(!value.connected) 
+      return null;
+
     return (
       <View>
       <Button 
@@ -1235,138 +1211,136 @@ export default class App extends Component<Props> {
       <View style={styles.container}>
       <ScrollView style={styles.scroll}>
 
-{/*        <Image
+        {/*        
+        <Image
           ref="bug"
           style={{width:50, height:50,}} 
           source={source}
         />
-*/}
-        <View style={styles.header} >
+        */}
 
+        <View style={styles.header}>
+          {/*
+          <Button 
+            style={{ 
+              margin:1, 
+              height:40 ,
+              marginBottom:2,
+            }}
+            color={ this.state.previewing ? '#338433' : 'grey'}
+            title = 'Pause motion'
+            onPress = {() => this.togglePreviewMotion()}
+          />
+          */}
+          <TouchableHighlight
+            onPress = {() => this.setState({freshImages: !this.state.freshImages}) }
+            >
+            <View style={{flexDirection:'row', padding:5,}}>
+              <CheckBox value={this.state.freshImages} />
+              {/* 
+              You can change the color directly in XML. Use buttonTint for the box: (as of API level 23)
 
-            {/*
-            <Button 
-              style={{ 
-                margin:1, 
-                height:40 ,
-                marginBottom:2,
-              }}
-              color={ this.state.previewing ? '#338433' : 'grey'}
-              title = 'Pause motion'
-              onPress = {() => this.togglePreviewMotion()}
-            />
-            */}
-            <TouchableHighlight
-              onPress = {() => this.setState({freshImages: !this.state.freshImages}) }
-              >
-              <View style={{flexDirection:'row', padding:5,}}>
-                <CheckBox value={this.state.freshImages} />
-                {/* 
-                You can change the color directly in XML. Use buttonTint for the box: (as of API level 23)
+              <CheckBox
+                  android:layout_width="wrap_content"
+                  android:layout_height="wrap_content"
+                  android:buttonTint="@color/CHECK_COLOR" />
+              You can also do this using appCompatCheckbox v7 for older API levels:
 
-                <CheckBox
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:buttonTint="@color/CHECK_COLOR" />
-                You can also do this using appCompatCheckbox v7 for older API levels:
+              <android.support.v7.widget.AppCompatCheckBox 
+                  android:layout_width="wrap_content" 
+                  android:layout_height="wrap_content" 
+                  app:buttonTint="@color/COLOR_HERE" /> 
+              */}
 
-                <android.support.v7.widget.AppCompatCheckBox 
-                    android:layout_width="wrap_content" 
-                    android:layout_height="wrap_content" 
-                    app:buttonTint="@color/COLOR_HERE" /> 
-                */}
+              <Text style={{color:this.state.freshImages ? greenFlash : greenDark, padding:5,}}>
+                Accentuer l'affichage
+              </Text>
+            </View>
+          </TouchableHighlight>
 
-                <Text style={{color:this.state.freshImages ? greenFlash : greenDark, padding:5,}}>
-                  Accentuer l'affichage
-                </Text>
-              </View>
-            </TouchableHighlight>
+          <Slider  
+            ref="sampleSize"
+            style={styles.slider} 
+            thumbTintColor = '#000' 
+            minimumTrackTintColor='#cccccc' 
+            maximumTrackTintColor='#ffffff' 
+            minimumValue={-parseInt(previewHeight/10,10)}
+            maximumValue={-1}
+            step={1}
+            value={-this.state.sampleSize}
+            onValueChange={
+              (value) => this.onSampleSize(-value)
+            } 
+          />
 
+          <Slider  
+            ref="threshold"
+            style={styles.slider} 
+            thumbTintColor = '#fff' 
+            minimumTrackTintColor='#dddddd' 
+            maximumTrackTintColor='#ffffff' 
+            minimumValue={-255}
+            maximumValue={0}
+            step={1}
+            // value={this.state.threshold}
+            value={
+              -(
+                (this.state.threshold>>>16) 
+              + ((this.state.threshold&0x00ff00)>>>8)
+              + (this.state.threshold&0x0000ff)
+              )/3
+            }
+            onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
+          />
             <Slider  
-              ref="sampleSize"
+              ref="threshold_red"
               style={styles.slider} 
-              thumbTintColor = '#000' 
-              minimumTrackTintColor='#cccccc' 
-              maximumTrackTintColor='#ffffff' 
-              minimumValue={-parseInt(previewHeight/10,10)}
-              maximumValue={-1}
-              step={1}
-              value={-this.state.sampleSize}
-              onValueChange={
-                (value) => this.onSampleSize(-value)
-              } 
-            />
-
-            <Slider  
-              ref="threshold"
-              style={styles.slider} 
-              thumbTintColor = '#fff' 
-              minimumTrackTintColor='#dddddd' 
-              maximumTrackTintColor='#ffffff' 
+              thumbTintColor = '#d00' 
+              minimumTrackTintColor='#dd0000' 
+              maximumTrackTintColor='#dd0000' 
               minimumValue={-255}
               maximumValue={0}
               step={1}
-              // value={this.state.threshold}
-              value={
-                -(
-                  (this.state.threshold>>>16) 
-                + ((this.state.threshold&0x00ff00)>>>8)
-                + (this.state.threshold&0x0000ff)
-                )/3
-              }
-              onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)  } 
+              value={-(this.state.threshold>>>16)}
+              onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
             />
-              <Slider  
-                ref="threshold_red"
-                style={styles.slider} 
-                thumbTintColor = '#d00' 
-                minimumTrackTintColor='#dd0000' 
-                maximumTrackTintColor='#dd0000' 
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-(this.state.threshold>>>16)}
-                onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
-              />
-              <Slider  
-                ref="threshold_green"
-                style={styles.slider} 
-                thumbTintColor = {greenFlash}
-                minimumTrackTintColor={greenFlash}
-                maximumTrackTintColor={greenFlash}
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-((this.state.threshold & 0x00ff00) >>> 8)}
-                onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
-              />
-              <Slider  
-                ref="threshold_blue"
-                style={styles.slider} 
-                thumbTintColor = '#0000dd' 
-                minimumTrackTintColor='#0000dd' 
-                maximumTrackTintColor='#0000dd' 
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-(this.state.threshold & 0x0000ff)}
-                onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
-              />
-
             <Slider  
-              ref="minimum_pixels"
-              style={styles.sliderDenoise} 
-              thumbTintColor = '#000' 
-              minimumTrackTintColor='#ff0000' 
-              maximumTrackTintColor='#0000ff' 
-              minimumValue={1}
-              maximumValue={previewHeight/this.state.sampleSize}
+              ref="threshold_green"
+              style={styles.slider} 
+              thumbTintColor = {greenFlash}
+              minimumTrackTintColor={greenFlash}
+              maximumTrackTintColor={greenFlash}
+              minimumValue={-255}
+              maximumValue={0}
               step={1}
-              value={this.state.minimumPixels}
-              onValueChange={
-                (value) => this.onMinimumPixels(value)
-              } 
+              value={-((this.state.threshold & 0x00ff00) >>> 8)}
+              onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
             />
+            <Slider  
+              ref="threshold_blue"
+              style={styles.slider} 
+              thumbTintColor = '#0000dd' 
+              minimumTrackTintColor='#0000dd' 
+              maximumTrackTintColor='#0000dd' 
+              minimumValue={-255}
+              maximumValue={0}
+              step={1}
+              value={-(this.state.threshold & 0x0000ff)}
+              onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
+            />
+
+          <Slider  
+            ref="minimum_pixels"
+            style={styles.sliderDenoise} 
+            thumbTintColor='#000' 
+            minimumTrackTintColor='#ff0000' 
+            maximumTrackTintColor='#0000ff' 
+            minimumValue={1}
+            maximumValue={previewHeight/this.state.sampleSize}
+            step={1}
+            value={this.state.minimumPixels}
+            onValueChange={(value) => this.onMinimumPixels(value)} 
+          />
         </View>
 
         <View style={styles.containerPreview}>
@@ -1424,13 +1398,8 @@ const styles = StyleSheet.create({
     // borderRadius: CIRCLE_RADIUS,
     borderWidth: 1,
     borderColor:greenDark,
-    // opacity:0.5,
   },
-  row: {
-    flexDirection: "row"
-  }
 
-  ,
   container: {
     flex: 1,
     // justifyContent: 'flex-end',
