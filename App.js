@@ -399,7 +399,7 @@ export default class App extends Component<Props> {
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1),
 
-      motionInputAreaShape:"elipse",
+      motionInputAreaShape:"rectangle",
       motionInputAreaStyle:{
         top: 30,
         left: 30,
@@ -842,6 +842,15 @@ export default class App extends Component<Props> {
     );
   }
 
+
+  toggleShape(){
+    this.setState({motionInputAreaShape: 
+      this.state.motionInputAreaShape == 'elipse'
+        ? 'rectangle'
+        : 'elipse'
+      })
+  }
+
   renderCamera() {
     if(!this.state.cam) {
       if(this.state.connectedTo && this.camRequested){
@@ -850,7 +859,8 @@ export default class App extends Component<Props> {
       }
       return null;     
     }
-console.log(this.state.motionInputAreaStyle);
+
+    // console.log(this.state.motionInputAreaStyle);
     return (
       <View //ViewShot
         ref="viewShot"
@@ -901,24 +911,29 @@ console.log(this.state.motionInputAreaStyle);
         />
             
         <View style={styles.MotionContainer}>
-          <Image 
-            pointerEvents="none"
-            source = {source}
-            resizeMode="stretch"
-            style={[
-              this.state.motionInputAreaStyle,{
-              borderWidth:2, 
-              borderColor:'transparent', 
-              position:'absolute', 
-              opacity:0.4,
-            }]}
-          />
+
+          { this.state.motionInputAreaShape=='elipse'
+            ? <Image 
+                pointerEvents="none"
+                source = {source}
+                resizeMode="stretch"
+                style={[
+                  this.state.motionInputAreaStyle,{
+                  borderWidth:2, 
+                  borderColor:'transparent', 
+                  position:'absolute', 
+                  opacity:0.4,
+                }]}
+              />
+            :null
+          }
+
           <View 
             pointerEvents="none"
             style={[
               this.state.motionInputAreaStyle,{
               borderWidth:1, 
-              borderColor:greenDark, 
+              borderColor: this.state.motionInputAreaShape=='elipse' ?  greenDark : greenFlash, 
               position:'absolute'
             }]}
           />
@@ -960,27 +975,30 @@ console.log(this.state.motionInputAreaStyle);
             }]}
           />     
 
-          <Svg 
-            style={[
-              styles.motionInputArea, 
-              this.state.motionInputAreaStyle, 
-              {borderWidth:2, borderColor:'transparent'}
-            ]}
-            pointerEvents="none"
-            height={this.state.motionInputAreaStyle.height}
-            width={this.state.motionInputAreaStyle.width}
-            >
-            <Ellipse
-              cx={this.state.motionInputAreaStyle.width/2}
-              cy={this.state.motionInputAreaStyle.height/2}
-              rx={this.state.motionInputAreaStyle.width/2 - 1}
-              ry={this.state.motionInputAreaStyle.height/2 - 1}
-              stroke={greenFlash}
-              strokeWidth="2"
-              fill="transparent"
-            />
-          </Svg>
-
+          { this.state.motionInputAreaShape=='elipse'
+            ? 
+              <Svg 
+                style={[
+                  styles.motionInputArea, 
+                  this.state.motionInputAreaStyle, 
+                  {borderWidth:2, borderColor:'transparent'}
+                ]}
+                pointerEvents="none"
+                height={this.state.motionInputAreaStyle.height}
+                width={this.state.motionInputAreaStyle.width}
+                >
+                <Ellipse
+                  cx={this.state.motionInputAreaStyle.width/2}
+                  cy={this.state.motionInputAreaStyle.height/2}
+                  rx={this.state.motionInputAreaStyle.width/2 - 1}
+                  ry={this.state.motionInputAreaStyle.height/2 - 1}
+                  stroke={greenFlash}
+                  strokeWidth="2"
+                  fill="transparent"
+                />
+              </Svg>
+            :null
+          }
           {/*              
           <View pointerEvents="none"
             style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
@@ -998,6 +1016,19 @@ console.log(this.state.motionInputAreaStyle);
         </View>
 
         <View style={styles.iconButtonContainer} >
+          <MaterialCommunityIcons.Button   
+            name='camera'
+            underlayColor={greenSuperLight}
+            size={40}
+            width={100}
+            margin={0}
+            paddingLeft={30}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleShape()}
+          />
+
           <View style={styles.iconButton2}>
           <MaterialCommunityIcons.Button   
             name='camera'
@@ -1402,7 +1433,7 @@ const styles = StyleSheet.create({
     backgroundColor:greenFlash,
     width: CIRCLE_RADIUS * 2,
     height: CIRCLE_RADIUS * 2,
-    // borderRadius: CIRCLE_RADIUS,
+    borderRadius: CIRCLE_RADIUS,
     borderWidth: 1,
     borderColor:greenDark,
   },
