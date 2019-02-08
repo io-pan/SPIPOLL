@@ -38,7 +38,8 @@ public class MainApplication extends Application implements ReactApplication {
             new KeepScreenOnPackage(),
             new RNCameraPackage(),
             new NetworkManagerPackage(),
-            new SvgPackage()
+            new SvgPackage(),
+            new BatteryReactPackage()
       );
     }
 

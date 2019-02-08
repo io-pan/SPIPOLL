@@ -33,6 +33,7 @@ import { RNCamera } from 'react-native-camera';
 import BluetoothCP  from "react-native-bluetooth-cross-platform"
 import Icon from 'react-native-vector-icons/FontAwesome';             // http://fontawesome.io/icons/          
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';  // https://material.io/icons/
+import FontAwesomeIcons  from 'react-native-vector-icons/FontAwesome';;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 
@@ -477,19 +478,11 @@ export default class App extends Component<Props> {
  //  };
 
   componentWillMount() {
+    StatusBar.setHidden(true);
+
     // Add a listener for the delta value change
     this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => this._val = value);
-
-    // Initialize PanResponder with move handling
- // this.panResponder = PanResponder.create({
- //    onStartShouldSetPanResponder: this._handleStartShouldSetPanResponder,
- //    onMoveShouldSetPanResponder: this._handleMoveShouldSetPanResponder,
- //    onPanResponderGrant: this._handlePanResponderGrant,
- //    onPanResponderMove: this._handlePanResponderMove,
- //    onPanResponderRelease: this._handlePanResponderEnd,
- //    onPanResponderTerminate: this._handlePanResponderEnd,
- //  });
 
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: (e, gesture) => true,
@@ -503,7 +496,7 @@ export default class App extends Component<Props> {
             friction: 5
           }).start();
         }
-        // if (this.isDropArea(gesture)) {
+       
         //   Animated.timing(this.state.opacity, {
         //     toValue: 0,
         //     duration: 1000
@@ -512,23 +505,35 @@ export default class App extends Component<Props> {
         //        showDraggable: false
         //     })
         //   );
-        // } 
-        // else {
+      
         //   Animated.spring(this.state.pan, {
         //     toValue: { x: 0, y: 0 },
         //     friction: 5
         //   }).start();
-        // }
       }
     });
   }
 
-  // isDropArea(gesture) {
-  //   return gesture.moveY < 200;
+  testBattery(){
+    NativeModules.Battery.getLevel()
+    .then((level) => {
+      console.log(level);
+      if(level<15) {
+        // TODO send alert to distant.
+      }
+    })
+  }
+  // getBatteryLevel = (callback) => {
+  //   NativeModules.Battery.getBatteryStatus(callback);
   // }
 
   componentDidMount() {
-    StatusBar.setHidden(true);
+    // this.getBatteryLevel(
+    //   (batteryLevel) => {
+    //     console.log(batteryLevel);
+    //   }
+    // );
+    setInterval(this.testBattery,5*60000);
     KeepScreenOn.setKeepScreenOn(true);
 
     this.requestForPermission();
@@ -1025,8 +1030,50 @@ export default class App extends Component<Props> {
         }
 
         <View style={styles.iconButtonContainer} >
-          <MaterialCommunityIcons.Button   
-            name='camera'
+          <FontAwesomeIcons.Button   
+            name='th' //   th-large      
+            underlayColor={greenSuperLight}
+            size={40}
+            width={100}
+            margin={0}
+            paddingLeft={30}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleShape()}
+          />
+
+          <FontAwesomeIcons.Button   
+            name='th-large' //      
+            underlayColor={greenSuperLight}
+            size={40}
+            width={100}
+            margin={0}
+            paddingLeft={30}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleShape()}
+          />
+
+          <FontAwesomeIcons.Button   
+            name='adjust' //   th-large      
+            underlayColor={greenSuperLight}
+            size={40}
+            width={100}
+            margin={0}
+            paddingLeft={30}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleShape()}
+          />
+        </View>
+
+        {/*
+        <View style={styles.iconButtonContainer} >
+          <FontAwesomeIcons.Button   
+            name='th' //h   th-large   adjust   
             underlayColor={greenSuperLight}
             size={40}
             width={100}
@@ -1087,8 +1134,8 @@ export default class App extends Component<Props> {
             onPress = {() =>{}}
             // onPress = {() => this.takeMotion()}
           /></View>
-
         </View>
+        */}
 
        </RNCamera>
       {/*
@@ -1266,6 +1313,36 @@ export default class App extends Component<Props> {
         />
         */}
 
+
+        <View style={styles.containerPreview}>
+          {/*        
+            { this.renderImage() }
+            { this.renderImageTest() }
+            { this.renderImageLocal() }
+          */}
+
+          { this.renderCamera() }
+        </View>
+        
+        { this.state.devices.map((value, index) => 
+          <View 
+            key = {index}
+            style = {{flexDirection:'row'}}
+            >
+            <Button 
+              style={{ 
+                margin:1, 
+                height:40,
+                marginBottom:2,
+              }}
+              title = {value.name}
+              color = {value.connected ? '#338433' : 'grey'}
+              onPress = {() => this.connectToDevice(value.id)}
+            />
+            { this.renderCamButton(value) }
+          </View>
+        )}
+
         <View style={styles.header}>
           {/*
           <Button 
@@ -1390,34 +1467,6 @@ export default class App extends Component<Props> {
           />
         </View>
 
-        <View style={styles.containerPreview}>
-          {/*        
-            { this.renderImage() }
-            { this.renderImageTest() }
-            { this.renderImageLocal() }
-          */}
-
-          { this.renderCamera() }
-        </View>
-        
-        { this.state.devices.map((value, index) => 
-          <View 
-            key = {index}
-            style = {{flexDirection:'row'}}
-            >
-            <Button 
-              style={{ 
-                margin:1, 
-                height:40,
-                marginBottom:2,
-              }}
-              title = {value.name}
-              color = {value.connected ? '#338433' : 'grey'}
-              onPress = {() => this.connectToDevice(value.id)}
-            />
-            { this.renderCamButton(value) }
-          </View>
-        )}
 
       </ScrollView>
       </View>
