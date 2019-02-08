@@ -399,7 +399,7 @@ export default class App extends Component<Props> {
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1),
 
-      motionInputAreaShape:"rectangle",
+      motionInputAreaShape:'elipse',
       motionInputAreaStyle:{
         top: 30,
         left: 30,
@@ -845,9 +845,11 @@ export default class App extends Component<Props> {
 
   toggleShape(){
     this.setState({motionInputAreaShape: 
-      this.state.motionInputAreaShape == 'elipse'
-        ? 'rectangle'
-        : 'elipse'
+      this.state.motionInputAreaShape == ''
+      ? 'elipse'
+      : this.state.motionInputAreaShape == 'elipse'
+          ? 'rectangle'
+          : ''
       })
   }
 
@@ -884,12 +886,14 @@ export default class App extends Component<Props> {
         motionDetectionMinimumPixels={this.state.minimumPixels}
         motionDetectionThreshold={this.state.threshold}
         motionDetectionSampleSize={this.state.sampleSize}
-        motionDetectionArea={     
-          this.state.motionInputAreaShape +";"+  // shape : elypse / rectangle
-          Math.ceil(this.state.motionInputAreaStyle.left/this.state.sampleSize) +";"+ 
-          Math.ceil(this.state.motionInputAreaStyle.top /this.state.sampleSize) +";"+
-          Math.floor(this.state.motionInputAreaStyle.width /this.state.sampleSize) +";"+
-          Math.floor(this.state.motionInputAreaStyle.height /this.state.sampleSize) +";"
+        motionDetectionArea={ 
+          this.state.motionInputAreaShape == ''
+          ? ""
+          : this.state.motionInputAreaShape +";"+  // shape : elypse / rectangle
+            Math.ceil(this.state.motionInputAreaStyle.left/this.state.sampleSize) +";"+ 
+            Math.ceil(this.state.motionInputAreaStyle.top /this.state.sampleSize) +";"+
+            Math.floor(this.state.motionInputAreaStyle.width /this.state.sampleSize) +";"+
+            Math.floor(this.state.motionInputAreaStyle.height /this.state.sampleSize) +";"
         }
         >
 
@@ -910,110 +914,115 @@ export default class App extends Component<Props> {
           } 
         />
             
-        <View style={styles.MotionContainer}>
+        { this.state.motionInputAreaShape != '' ?
 
-          { this.state.motionInputAreaShape=='elipse'
-            ? <Image 
-                pointerEvents="none"
-                source = {source}
-                resizeMode="stretch"
-                style={[
-                  this.state.motionInputAreaStyle,{
-                  borderWidth:2, 
-                  borderColor:'transparent', 
-                  position:'absolute', 
-                  opacity:0.4,
-                }]}
-              />
-            :null
-          }
+          <View style={styles.MotionContainer}>
 
-          <View 
-            pointerEvents="none"
-            style={[
-              this.state.motionInputAreaStyle,{
-              borderWidth:1, 
-              borderColor: this.state.motionInputAreaShape=='elipse' ?  greenDark : greenFlash, 
-              position:'absolute'
-            }]}
-          />
-
-          <View 
-            pointerEvents="none"
-            style={[styles.motionInputAreaMask,{
-              top:0,
-              left:0,
-              right:0,
-              height:this.state.motionInputAreaStyle.top,
-            } ]}
-          />
-          <View 
-            pointerEvents="none"
-            style={[styles.motionInputAreaMask,{
-              top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
-              left:0,
-              right:0,
-              bottom:0,
-            } ]}
-          />
-          <View 
-            pointerEvents="none"
-            style={[styles.motionInputAreaMask,{
-              top:this.state.motionInputAreaStyle.top,
-              left:0,
-              width: this.state.motionInputAreaStyle.left,
-              height: this.state.motionInputAreaStyle.height,
-            }]}
-          />
-          <View 
-            pointerEvents="none"
-            style={[styles.motionInputAreaMask,{
-              top:this.state.motionInputAreaStyle.top,
-              right:0,
-              left: this.state.motionInputAreaStyle.left + this.state.motionInputAreaStyle.width,
-              height: this.state.motionInputAreaStyle.height,
-            }]}
-          />     
-
-          { this.state.motionInputAreaShape=='elipse'
-            ? 
-              <Svg 
-                style={[
-                  styles.motionInputArea, 
-                  this.state.motionInputAreaStyle, 
-                  {borderWidth:2, borderColor:'transparent'}
-                ]}
-                pointerEvents="none"
-                height={this.state.motionInputAreaStyle.height}
-                width={this.state.motionInputAreaStyle.width}
-                >
-                <Ellipse
-                  cx={this.state.motionInputAreaStyle.width/2}
-                  cy={this.state.motionInputAreaStyle.height/2}
-                  rx={this.state.motionInputAreaStyle.width/2 - 1}
-                  ry={this.state.motionInputAreaStyle.height/2 - 1}
-                  stroke={greenFlash}
-                  strokeWidth="2"
-                  fill="transparent"
+            { this.state.motionInputAreaShape=='elipse'
+              ? <Image 
+                  pointerEvents="none"
+                  source = {source}
+                  resizeMode="stretch"
+                  style={[
+                    this.state.motionInputAreaStyle,{
+                    borderWidth:2, 
+                    borderColor:'transparent', 
+                    position:'absolute', 
+                    opacity:0.4,
+                  }]}
                 />
-              </Svg>
-            :null
-          }
-          {/*              
-          <View pointerEvents="none"
-            style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
-          />
-          */}
+              :null
+            }
 
-          <Draggable 
-            onMove = {(value) => this.onMovePoignee(0, value) }
-            initialPos = {{x:30,y:30}}
-          />
-          <Draggable
-            onMove = {(value) => this.onMovePoignee(1, value) }
-            initialPos = {{x:previewWidth-30, y:previewHeight-30}}
-          />
-        </View>
+            <View 
+              pointerEvents="none"
+              style={[
+                this.state.motionInputAreaStyle,{
+                borderWidth:1, 
+                borderColor: this.state.motionInputAreaShape=='elipse' ?  greenDark : greenFlash, 
+                position:'absolute'
+              }]}
+            />
+
+            <View 
+              pointerEvents="none"
+              style={[styles.motionInputAreaMask,{
+                top:0,
+                left:0,
+                right:0,
+                height:this.state.motionInputAreaStyle.top,
+              } ]}
+            />
+            <View 
+              pointerEvents="none"
+              style={[styles.motionInputAreaMask,{
+                top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
+                left:0,
+                right:0,
+                bottom:0,
+              } ]}
+            />
+            <View 
+              pointerEvents="none"
+              style={[styles.motionInputAreaMask,{
+                top:this.state.motionInputAreaStyle.top,
+                left:0,
+                width: this.state.motionInputAreaStyle.left,
+                height: this.state.motionInputAreaStyle.height,
+              }]}
+            />
+            <View 
+              pointerEvents="none"
+              style={[styles.motionInputAreaMask,{
+                top:this.state.motionInputAreaStyle.top,
+                right:0,
+                left: this.state.motionInputAreaStyle.left + this.state.motionInputAreaStyle.width,
+                height: this.state.motionInputAreaStyle.height,
+              }]}
+            />     
+
+            { this.state.motionInputAreaShape=='elipse'
+              ? 
+                <Svg 
+                  style={[
+                    styles.motionInputArea, 
+                    this.state.motionInputAreaStyle, 
+                    {borderWidth:2, borderColor:'transparent'}
+                  ]}
+                  pointerEvents="none"
+                  height={this.state.motionInputAreaStyle.height}
+                  width={this.state.motionInputAreaStyle.width}
+                  >
+                  <Ellipse
+                    cx={this.state.motionInputAreaStyle.width/2}
+                    cy={this.state.motionInputAreaStyle.height/2}
+                    rx={this.state.motionInputAreaStyle.width/2 - 1}
+                    ry={this.state.motionInputAreaStyle.height/2 - 1}
+                    stroke={greenFlash}
+                    strokeWidth="2"
+                    fill="transparent"
+                  />
+                </Svg>
+              :null
+            }
+            {/*              
+            <View pointerEvents="none"
+              style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
+            />
+            */}
+
+            <Draggable 
+              onMove = {(value) => this.onMovePoignee(0, value) }
+              initialPos = {{x:this.state.motionInputAreaStyle.left, y:this.state.motionInputAreaStyle.top}}
+            />
+            <Draggable
+              onMove = {(value) => this.onMovePoignee(1, value) }
+              initialPos = {{x:this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
+                             y:this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height}}
+            />
+          </View>
+          :null
+        }
 
         <View style={styles.iconButtonContainer} >
           <MaterialCommunityIcons.Button   
