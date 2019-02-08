@@ -399,6 +399,7 @@ export default class App extends Component<Props> {
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1),
 
+      motionInputAreaShape:"elipse",
       motionInputAreaStyle:{
         top: 30,
         left: 30,
@@ -849,7 +850,7 @@ export default class App extends Component<Props> {
       }
       return null;     
     }
-
+console.log(this.state.motionInputAreaStyle);
     return (
       <View //ViewShot
         ref="viewShot"
@@ -874,20 +875,12 @@ export default class App extends Component<Props> {
         motionDetectionThreshold={this.state.threshold}
         motionDetectionSampleSize={this.state.sampleSize}
         motionDetectionArea={     
-          "elipse;"+  // shape : elypse / rectanglr
-          "0;"+       // x origin
-          "0;"+       // x origin
-          "100;"+     // width
-          "150;"      // height
-        }    
-
-
-        // OA^2 =  OB^2 + Of^2
-        // Of= {Math.sqrt(Math.pow(motionInputAreaStyle.width,2) - Math.pow(motionInputAreaStyle.height,2))}
-
-        // Pf1 + Pf2 = cst
-        // Pf1
-
+          this.state.motionInputAreaShape +";"+  // shape : elypse / rectangle
+          Math.ceil(this.state.motionInputAreaStyle.left/this.state.sampleSize) +";"+ 
+          Math.ceil(this.state.motionInputAreaStyle.top /this.state.sampleSize) +";"+
+          Math.floor(this.state.motionInputAreaStyle.width /this.state.sampleSize) +";"+
+          Math.floor(this.state.motionInputAreaStyle.height /this.state.sampleSize) +";"
+        }
         >
 
         {this.renderMotion()}
@@ -908,7 +901,10 @@ export default class App extends Component<Props> {
         />
             
         <View style={styles.MotionContainer}>
-          <Image pointerEvents="none"
+          <Image 
+            pointerEvents="none"
+            source = {source}
+            resizeMode="stretch"
             style={[
               this.state.motionInputAreaStyle,{
               borderWidth:2, 
@@ -916,10 +912,9 @@ export default class App extends Component<Props> {
               position:'absolute', 
               opacity:0.4,
             }]}
-            source = {source}
-            resizeMode="stretch"
           />
-          <View pointerEvents="none"
+          <View 
+            pointerEvents="none"
             style={[
               this.state.motionInputAreaStyle,{
               borderWidth:1, 
@@ -928,7 +923,8 @@ export default class App extends Component<Props> {
             }]}
           />
 
-          <View  pointerEvents="none"
+          <View 
+            pointerEvents="none"
             style={[styles.motionInputAreaMask,{
               top:0,
               left:0,
@@ -936,7 +932,8 @@ export default class App extends Component<Props> {
               height:this.state.motionInputAreaStyle.top,
             } ]}
           />
-          <View  pointerEvents="none"
+          <View 
+            pointerEvents="none"
             style={[styles.motionInputAreaMask,{
               top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
               left:0,
@@ -944,7 +941,8 @@ export default class App extends Component<Props> {
               bottom:0,
             } ]}
           />
-          <View pointerEvents="none"
+          <View 
+            pointerEvents="none"
             style={[styles.motionInputAreaMask,{
               top:this.state.motionInputAreaStyle.top,
               left:0,
@@ -952,7 +950,8 @@ export default class App extends Component<Props> {
               height: this.state.motionInputAreaStyle.height,
             }]}
           />
-          <View pointerEvents="none"
+          <View 
+            pointerEvents="none"
             style={[styles.motionInputAreaMask,{
               top:this.state.motionInputAreaStyle.top,
               right:0,
@@ -1198,7 +1197,7 @@ export default class App extends Component<Props> {
   //  }
 
   onMovePoignee(id, value){
-    console.log(value);
+    // console.log(value);
     this.poignee[id]=value;
 
     this.setState({motionInputAreaStyle:{
@@ -1386,7 +1385,7 @@ export default class App extends Component<Props> {
   }
 }
 
-let CIRCLE_RADIUS = 10;
+let CIRCLE_RADIUS = 15;
 const styles = StyleSheet.create({ 
   motionInputArea:{
     position:'absolute',
