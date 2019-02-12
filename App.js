@@ -10,9 +10,9 @@ import React, {Component} from 'react';
 
 import {Platform, StyleSheet, Text, View,
   ScrollView,
-  Button,
+  // Button,
   TouchableHighlight ,
-  // TouchableOpacity ,
+  TouchableOpacity ,
   Alert,
   Image,
   PermissionsAndroid,
@@ -35,6 +35,9 @@ import Icon from 'react-native-vector-icons/FontAwesome';             // http://
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';  // https://material.io/icons/
 import FontAwesomeIcons  from 'react-native-vector-icons/FontAwesome';;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+
+
+import CollectionForm from "./src/collection-form"
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 
 import Svg,{
@@ -54,14 +57,13 @@ else {
   source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
 }
 
-
-
 // Spipoll greens
 const greenDark = "#231f20";
 const green = "#d2e284";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
+
 
 // TODO: 
 //  screen W x H ..
@@ -78,58 +80,7 @@ const previewWidth = 360;
 
     Connection à www.spipoll.org
 
-    Nom de la collection
-
-    PROTOCOLE
-      Flash (une seule session photographique de 20mn.)
-      Long (un ou plusieurs sessions photographiques de plus de 20mn sur 3 jour max.)
-
-      Dans les deux cas, 
-      l’objectif est d’avoir une photo par ce que vous considérez comme "espèce" d'insecte, 
-      de qualité suffisante pour certifier que ce spécimen 
-      diffère des autres spécimens de votre collection.
-
-      Pour chacune des espèces photographiées, 
-      vous aurez la possibilité de nous communiquer une information sur son abondance : 
-      y-a-t-il 1 seul individu ? Entre 2 et 5 ? Plus de 5 ?
-
-    STATION FLORALE
-      FLEUR
-        Photo un gros plan de la fleur ;
-        Nom fleur
-          idenifier plus tard
-          inconnu
-          taxon (liste)
-          dénomination plus précise
-        Commentaire
-        
-      ENVIRONEMENT
-        Photo l’environnement proche de la plante (à 2-3 mètres de celle-ci).  
-
-        Plante est :
-          spontanée   
-          plantée   
-          ne se prononce pas
-
-        Type d'habitat :
-          urbain   
-          péri-urbain   
-          rural   
-          grande(s) culture(s)   
-          forêt   
-          prairie   
-          littoral   
-          parc ou jardin public   
-          jardin privé   
-          rochers   
-          bord de route   
-          bord de l'eau
-
-        Localiser 
-          par  nom d'une commune, d'une région, d'un département ou d'un code postal
-          No INSEE.
-          GPS
-
+ 
     SESSIONS
       1
         Date 
@@ -356,7 +307,6 @@ class FreshImages extends Component {
   }
 }
 
-
 //-----------------------------------------------------------------------------------------
 export default class App extends Component<Props> {
 //-----------------------------------------------------------------------------------------
@@ -407,6 +357,8 @@ export default class App extends Component<Props> {
         width: previewWidth - 30 - 30,
         height: previewHeight - 30 - 30,
       },
+
+
 
     };
 
@@ -533,7 +485,7 @@ export default class App extends Component<Props> {
     //     console.log(batteryLevel);
     //   }
     // );
-    setInterval(this.testBattery,5*60000);
+    setInterval(this.testBattery,60000);
     KeepScreenOn.setKeepScreenOn(true);
 
     this.requestForPermission();
@@ -831,13 +783,13 @@ export default class App extends Component<Props> {
           ? this.state.freshImages 
             ? (
               <FreshImages
-                style = {[styles.motionpreview,{position:'absolute'}]}
+                style = {styles.motionpreview}
                 source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
               />
               )
             : (
               <Image
-                style = {[styles.motionpreview,{position:'absolute'}]}
+                style = {styles.motionpreview}
                 source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
               />
               )
@@ -1300,6 +1252,7 @@ export default class App extends Component<Props> {
     const panStyle = {
       transform: this.state.pan.getTranslateTransform()
     }
+
     return (
 
       <View style={styles.container}>
@@ -1344,6 +1297,8 @@ export default class App extends Component<Props> {
         )}
 
         <View style={styles.header}>
+
+          <CollectionForm />
           {/*
           <Button 
             style={{ 
@@ -1491,7 +1446,7 @@ const styles = StyleSheet.create({
     backgroundColor:greenFlash,
     width: CIRCLE_RADIUS * 2,
     height: CIRCLE_RADIUS * 2,
-    borderRadius: CIRCLE_RADIUS,
+    // borderRadius: CIRCLE_RADIUS,
     borderWidth: 1,
     borderColor:greenDark,
   },
@@ -1509,7 +1464,6 @@ const styles = StyleSheet.create({
     alignSelf: 'stretch',
     left:0,
     right:0,
-    
     backgroundColor:'#808088',
   },
   slider:{
@@ -1557,6 +1511,7 @@ const styles = StyleSheet.create({
 
   },
   motionpreview:{
+    position:'absolute',
     width: previewWidth, 
     height: previewHeight, 
     resizeMode: 'contain', //enum('cover', 'contain', 'stretch', 'repeat', 'center')
@@ -1610,4 +1565,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
   },
+
+ 
 });
