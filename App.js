@@ -10,7 +10,7 @@ import React, {Component} from 'react';
 
 import {Platform, StyleSheet, Text, View,
   ScrollView,
-  // Button,
+  Button,
   TouchableHighlight ,
   TouchableOpacity ,
   Alert,
@@ -45,16 +45,19 @@ import Svg,{
 } from 'react-native-svg';
 
 let source;
-// const _source = resolveAssetSource(require('./img/scr.png'));
-const _source = resolveAssetSource(require('./img/round_mask.png'));
-
+let motionMask;
+const _source = resolveAssetSource(require('./img/bug.png'));
+const _motionMask = resolveAssetSource(require('./img/round_mask.png'));
 if (__DEV__) {
   source = { uri: `${_source.uri}` };   // uri: `file://${_source.uri}?id=${article.id}` 
+  motionMask = { uri: `${_motionMask.uri}` };
 }
 else {
-  const sourceAndroid = {uri: 'asset:/img/round_mask.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
-  const sourceIOS = { uri: 'file://${_source.uri}' };
-  source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
+  // const sourceAndroid = {uri: 'asset:/img/round_mask.png'};//const sourceAndroid = { uri: `file:///android_asset/helloworld.html?id=${article.id}` };
+  // const sourceIOS = { uri: 'file://${_source.uri}' };
+  // source = Platform.OS === 'ios' ? sourceIOS : sourceAndroid;
+  source = {uri: 'asset:/img/bug.png'};
+  motionMask = {uri: 'asset:/img/round_mask.png'};
 }
 
 // Spipoll greens
@@ -69,86 +72,11 @@ const greenFlash ="#92c83e";
 //  screen W x H ..
 //  resize cam preview (on motion-run) based on sampleSize to save battery life.
 //  let screen sleep + option to force seep (absolute black layer)
-const previewHeight = 480;
-const previewWidth = 360;
+const initialPreviewHeight = 320;
+const initialPreviewWidth = 240;
 
 
-/*
-  CRÉER UNE COLLECTION
-
-  1° la phase "terrain"
-
-    Connection à www.spipoll.org
-
- 
-    SESSIONS
-      1
-        Date 
-        Heure 
-          debut 
-          fin   check > 20min
-        Ciel (couverture nuageuse) 
-          0-25%   
-          25-50%   
-          50-75%   
-          75-100%  
-        Température :
-          < 10ºC   
-          10-20ºC   
-          20-30ºC   
-          >30ºC  
-        Vent :
-          nul   
-          faible, irrégulier 
-          faible, continu
-          fort, irrégulier
-          fort, continu  
-        Fleur à l'ombre :
-          Non   
-          Oui
-
-      2 (si protocole long)
-
-
-    INSECTES
-      1
-        Photo
-        Taxon
-        dénomination + précise    UNIQUE
-        Commentaire
-        SESSION
-          ID
-          Commentaire
-          Nombre maximum d'individus de cette espèce vus simultanément
-            1   
-            entre 2 et 5   
-            plus de 5   
-            je nai pas linformation
-          Avez-vous photographié cet insecte ailleurs que sur la fleur de votre station florale:
-            Non   
-            Oui  
-      2 ...
-
-    min 2 INSECTES pour cloturer la collection.
-
-
-2° la phase "préparation des données"
-   ... trier et mettre en forme les photos
-  Triez vos photos et sélectionnez-en une par espèce ; 
-  puis recadrez les insectes au format 4:3 
-  (ils doivent être conservés dans leur globalité). 
-  Faites alors pivoter les images de manière à ce que vos insectes se retrouvent la tête "en haut" (dans la mesure du possible). 
-
-  De même, recadrez la photo de la fleur.
-
-
-3° la phase "identification et envoi des données"
-  ... charger les photos dans la partie "Mon spipoll",
-  identifier la plante et les insectes à l'aide des clés disponibles en ligne, 
-  puis envoyer les données
-
-*/
-
+//270*360 = 1.33333
 
 //----------------------------------------------------------------------------------------
 class Draggable extends Component {
@@ -189,8 +117,8 @@ class Draggable extends Component {
         onPanResponderRelease: (e, gesture) => {
             if (this._val.x + this.initialPos.x < CIRCLE_RADIUS
             ||  this._val.y + this.initialPos.y < CIRCLE_RADIUS
-            ||  this._val.x + this.initialPos.x > previewWidth-CIRCLE_RADIUS
-            ||  this._val.y + this.initialPos.y > previewHeight-CIRCLE_RADIUS
+            ||  this._val.x + this.initialPos.x > this.props.previewWidth-CIRCLE_RADIUS
+            ||  this._val.y + this.initialPos.y > this.props.previewHeight-CIRCLE_RADIUS
             ) {
               Animated.spring(this.state.pan, {
                 toValue: { x: 0, y: 0 },
@@ -248,68 +176,11 @@ class Draggable extends Component {
 }
 
 
-
 //-----------------------------------------------------------------------------------------
-class FreshImages extends Component {
-//-----------------------------------------------------------------------------------------
-  constructor(props) {
-    super(props);
-    this.state = {};
-    this.count = this.props.count ? this.props.count : 3;
-    this.curId = 0;
-    this.source =  new Array(this.count);
-    this.opacity = new Array(this.count);
-  }
-
-  shouldComponentUpdate(nextProps, nextState) {
-    if (this.props.source != nextProps.source) {
-      this.curId = this.curId+1 == this.source.length ? 0:this.curId+1;
-      this.source[this.curId] = nextProps.source;
-    }
-    return true;
-  }
-
-  // computeDisplay(index){
-  //   if(index==this.curId+1){
-  //     return 'flex';
-  //   }
-  //   if(index==0 && this.curId==this.source.length-1){
-  //     return 'flex';
-  //   }
-  //   return 'none';
-  // }
-
-
-  computeOpacity(index){
-    if(index==this.curId+1){
-      return 1; //petit
-    }
-    if(index==0 && this.curId==this.source.length-1){
-      return 1;
-    }
-    return 0;
-  }
-
-  render(){
-    return(
-      <View>
-        { this.source.map((value, index) =>
-          <Image 
-            key={index}
-            // style={[this.props.style, { display:this.computeDisplay(index) }]}
-            style={[this.props.style, { opacity:this.computeOpacity(index) }]}
-            source={ this.source[index] }
-            resizeMode="stretch"
-          />
-        )}
-      </View>
-    );
-  }
-}
-
 //-----------------------------------------------------------------------------------------
 export default class App extends Component<Props> {
 //-----------------------------------------------------------------------------------------
+  
   constructor(props) {
     super(props);
     this.state = {
@@ -319,13 +190,19 @@ export default class App extends Component<Props> {
       img:false,
       imgLocal: false,
       imgTest:false,//'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg',
-      // cam:false,
-      // TEST 
-      cam:true,
+
+
+      previewWidth:initialPreviewWidth,
+      previewHeight:initialPreviewHeight,
+      cam: 'free', // Different reasons why cam is on:
+        // 'motion-preview'
+        // 'collection-flower'
+        // 'collection-environment'
+        // 'session' (insectes)
+        // 'motion-running' / 'motion-running'
       distantcam:false,
       previewing:false,
       distantRec:false,
-
       isRecording:false,
       motionDetected:false,
       motionBase64:'',
@@ -343,31 +220,28 @@ export default class App extends Component<Props> {
       },
 
       zoom:0,
-      freshImages:false,
+
 
       showDraggable: true,
       dropAreaValues: null,
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1),
 
-      motionInputAreaShape:'elipse',
+      motionInputAreaShape:'',
       motionInputAreaStyle:{
         top: 30,
         left: 30,
-        width: previewWidth - 30 - 30,
-        height: previewHeight - 30 - 30,
+        width: initialPreviewWidth - 30 - 30,
+        height: initialPreviewHeight - 30 - 30,
       },
-
-
-
     };
 
     this.poignee = [{
         x:30,
         y:30,
       },{
-        x:previewWidth - 30, 
-        y:previewHeight - 30,
+        x:initialPreviewWidth - 30, 
+        y:initialPreviewHeight - 30,
       }];
 
     this.camRequested = false;
@@ -651,10 +525,10 @@ export default class App extends Component<Props> {
     } 
   }
 
+
   // -------------------------------------------------
   //                    Camera 
   // -------------------------------------------------
-
 
   formatedDate(){
     now = new Date();
@@ -670,8 +544,8 @@ export default class App extends Component<Props> {
   onCameraReady = async () => {
     // const getAvailablePictureSizes = await this.camera.getAvailablePictureSizes('4:3');
     // console.log(getAvailablePictureSizes);
-    // const getSupportedRatiosAsync = await this.camera.getSupportedRatiosAsync();
-    // console.log(getSupportedRatiosAsync);
+    const getSupportedRatiosAsync = await this.camera.getSupportedRatiosAsync();
+    console.log(getSupportedRatiosAsync);
     // const getPreviewSize = await this.camera.getPreviewSize();
     // console.log(getPreviewSize);
 
@@ -697,7 +571,6 @@ export default class App extends Component<Props> {
     }
   }
 
-
   takePicture = async () => {
     if (this.camera) {
       try {
@@ -718,11 +591,40 @@ export default class App extends Component<Props> {
             });
             // console.log(picture);
             
-            const filename = this.formatedDate()  + '.jpg';
+            let filename;
+            if(this.state.cam=='collection-flower'){
+              filename = 'collection-flower' + '.jpg';
+            }
+            else if(this.state.cam=='collection-environment'){
+              filename = 'collection-environment' + '.jpg';
+            }
+            else{
+              filename = this.formatedDate()  + '.jpg';
+            }
+            
+
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
               RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename
-            );
+            ).then(() => {
+                
+              if(this.state.cam=='collection-flower'){
+                this.setState({
+                  cam:'',
+                }, function(){
+                  this.refs['collectionForm'].refs['collection-flower'].setSource(
+                      {uri:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename});
+                })
+              }
+              else if(this.state.cam=='collection-environment'){
+                this.setState({
+                  cam:'',
+                }, function(){
+                  this.refs['collectionForm'].refs['collection-environment'].setSource(
+                      {uri:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename});
+                })
+              }
+            });
 
             // this.sendMessage(this.state.connectedTo, 'img', picture.base64);
           } 
@@ -776,24 +678,19 @@ export default class App extends Component<Props> {
 
 
   renderMotion(){
+    if (this.state.cam!='motion-preview')
+      return null;
+
     return (
       <View style={styles.MotionContainer} pointerEvents="none">
         {
           this.state.motionBase64
-          ? this.state.freshImages 
-            ? (
-              <FreshImages
-                style = {styles.motionpreview}
-                source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
-              />
-              )
-            : (
-              <Image
-                style = {styles.motionpreview}
-                source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
-              />
-              )
-          :null
+          ? <Image
+              fadeDuration={0}
+              style = {[styles.motionpreview,{width:this.state.previewWidth, height:this.state.previewHeight}]}
+              source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
+            />
+          : null
         }
       </View>
     );
@@ -827,10 +724,11 @@ export default class App extends Component<Props> {
         //   format: "jpg", 
         //   quality:1 ,
         // }}
+        style={[styles.preview,{width:this.state.previewWidth, height:this.state.previewHeight}]}
       >
       <RNCamera
         ref={cam => (this.camera = cam)}
-        style = {styles.cam}
+        style = {[styles.cam,{width:this.state.previewWidth, height:this.state.previewHeight}]}
         onCameraReady = {this.onCameraReady}
         type={RNCamera.Constants.Type.back}
         flashMode={RNCamera.Constants.FlashMode.off}
@@ -871,14 +769,15 @@ export default class App extends Component<Props> {
           } 
         />
             
-        { this.state.motionInputAreaShape != '' ?
-
+        { this.state.motionInputAreaShape != '' 
+        && this.state.cam == 'motion-preview'
+        ?
           <View style={styles.MotionContainer}>
 
             { this.state.motionInputAreaShape=='elipse'
               ? <Image 
                   pointerEvents="none"
-                  source = {source}
+                  source = {motionMask}
                   resizeMode="stretch"
                   style={[
                     this.state.motionInputAreaStyle,{
@@ -971,17 +870,24 @@ export default class App extends Component<Props> {
             <Draggable 
               onMove = {(value) => this.onMovePoignee(0, value) }
               initialPos = {{x:this.state.motionInputAreaStyle.left, y:this.state.motionInputAreaStyle.top}}
+              previewWidth = {this.state.previewWidth}
+              previewHeight = {this.state.previewHeight}
             />
             <Draggable
               onMove = {(value) => this.onMovePoignee(1, value) }
               initialPos = {{x:this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
                              y:this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height}}
+              previewWidth = {this.state.previewWidth}
+              previewHeight = {this.state.previewHeight}
             />
           </View>
           :null
         }
 
-        <View style={styles.iconButtonContainer} >
+        
+        { this.state.cam == 'motion-preview'
+        ?
+          <View style={styles.iconButtonContainer} >
           <FontAwesomeIcons.Button   
             name='th' //   th-large      
             underlayColor={greenSuperLight}
@@ -1020,74 +926,67 @@ export default class App extends Component<Props> {
             // onPress = {() =>{}}
             onPress = {() => this.toggleShape()}
           />
-        </View>
+          </View>
+        :
+          <View style={styles.iconButtonContainer} >
+            <View style={styles.iconButton2}>
+            <MaterialCommunityIcons.Button   
+              name='camera'
+              underlayColor={greenSuperLight}
+              size={40}
+              width={100}
+              margin={0}
+              paddingLeft={30}
+              color= {greenFlash}
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.takePicture()}
+            /></View>
 
-        {/*
-        <View style={styles.iconButtonContainer} >
-          <FontAwesomeIcons.Button   
-            name='th' //h   th-large   adjust   
-            underlayColor={greenSuperLight}
-            size={40}
-            width={100}
-            margin={0}
-            paddingLeft={30}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleShape()}
-          />
+            { this.state.cam != 'collection-flower'
+            && this.state.cam != 'collection-environment'
+              ?
+              <React.Fragment>
+              <View style={styles.iconButton2}>
+              <MaterialCommunityIcons.Button   
+                name='video'
+                underlayColor={greenSuperLight}
+                size={40}
+                width={100}
+                margin={0}
+                paddingLeft={30}
+                color= { this.state.isRecording ? 'red' : greenFlash}
+                backgroundColor ={'transparent'}
 
-          <View style={styles.iconButton2}>
-          <MaterialCommunityIcons.Button   
-            name='camera'
-            underlayColor={greenSuperLight}
-            size={40}
-            width={100}
-            margin={0}
-            paddingLeft={30}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.takePicture()}
-          /></View>
-
-          <View style={styles.iconButton2}>
-          <MaterialCommunityIcons.Button   
-            name='video'
-            underlayColor={greenSuperLight}
-            size={40}
-            width={100}
-            margin={0}
-            paddingLeft={30}
-            color= { this.state.isRecording ? 'red' : greenFlash}
-            backgroundColor ={'transparent'}
-
-            onPress={
-              this.state.isRecording 
-              ? () => {
-                  this.stopRecordRequested = true;
-                  this.camera.stopRecording()
+                onPress={
+                  this.state.isRecording 
+                  ? () => {
+                      this.stopRecordRequested = true;
+                      this.camera.stopRecording()
+                    }
+                  : () => this.takeVideo()
                 }
-              : () => this.takeVideo()
-            }
-          /></View>
+              /></View>
 
-          <View style={styles.iconButton2}>
-          <MaterialCommunityIcons.Button   
-            name='cctv'
-            underlayColor={greenSuperLight}
-            size={40}
-            width={100}
-            margin={0}
-            paddingLeft={30}
-            paddingBottom={12}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            onPress = {() =>{}}
-            // onPress = {() => this.takeMotion()}
-          /></View>
-        </View>
-        */}
+              <View style={styles.iconButton2}>
+              <MaterialCommunityIcons.Button   
+                name='cctv'
+                underlayColor={greenSuperLight}
+                size={40}
+                width={100}
+                margin={0}
+                paddingLeft={30}
+                paddingBottom={12}
+                color= {greenFlash}
+                backgroundColor ={'transparent'}
+                onPress = {() =>{}}
+                // onPress = {() => this.takeMotion()}
+              /></View>
+              </React.Fragment>
+              : null
+            }
+          </View>
+        }
 
        </RNCamera>
       {/*
@@ -1219,8 +1118,8 @@ export default class App extends Component<Props> {
   }
   onSampleSize(value){
     let minimumPixels = this.state.minimumPixels;
-    if(minimumPixels > previewHeight/value){
-      minimumPixels = previewHeight/value;
+    if(minimumPixels > this.state.previewHeight/value){
+      minimumPixels = this.state.previewHeight/value;
     }
     this.setState({
       sampleSize:value,
@@ -1247,6 +1146,32 @@ export default class App extends Component<Props> {
     }});
   }
 
+  getWindowDimension(event) {
+    // TODO: reset inputMotionArea and poignées.
+    if (event.nativeEvent.layout.width > event.nativeEvent.layout.height){
+      // Landscape
+      this.setState({
+        previewWidth:Math.max(this.state.previewWidth, this.state.previewHeight),
+        previewHeight:Math.min(this.state.previewWidth, this.state.previewHeight),
+      });
+    }
+    else{
+      // Portrait
+      this.setState({
+        previewWidth:Math.min(this.state.previewWidth, this.state.previewHeight),
+        previewHeight:Math.max(this.state.previewWidth, this.state.previewHeight),
+      });
+    }
+  }
+
+  toggleView(view) {
+    this.setState({cam:view});
+  }
+
+  pickPhoto(view){
+    this.setState({cam:view});
+  }
+
   render() {
     console.log('render');
     const panStyle = {
@@ -1255,19 +1180,58 @@ export default class App extends Component<Props> {
 
     return (
 
-      <View style={styles.container}>
-      <ScrollView style={styles.scroll}>
+      <View 
+        style={styles.container}
+        onLayout={(event) => this.getWindowDimension(event)}
+        >
 
-        {/*        
+        <View style={styles.header}>
+                    <Button 
+                      style={{ 
+                        margin:1, 
+                        height:40 ,
+                        marginBottom:2,
+
+                      backgroundColor:'transparent',
+                      }}
+                      color={ this.state.previewing ? '#338433' : 'grey'}
+                      title = 'cam motion' 
+                      onPress = {() => this.toggleView('motion-preview')}
+                    />
+                    <Button 
+                      style={{ 
+                        margin:1, 
+                        height:40 ,
+                        marginBottom:2,
+                      }}
+                      color={ this.state.previewing ? '#338433' : 'grey'}
+                      title = 'cam free'
+                      onPress = {() => this.toggleView('free')}
+                    />
+                    <Button 
+                      style={{ 
+                        margin:1, 
+                        height:40 ,
+                        marginBottom:2,
+                      }}
+                      color={ this.state.previewing ? '#338433' : 'grey'}
+                      title = 'form'
+                      onPress = {() => this.toggleView('')}
+                    />
+        </View> 
+
+      <ScrollView>
+
+{/*
         <Image
           ref="bug"
-          style={{width:50, height:50,}} 
+          style={{width:50, height:500,}} 
           source={source}
         />
-        */}
-
+*/}
 
         <View style={styles.containerPreview}>
+
           {/*        
             { this.renderImage() }
             { this.renderImageTest() }
@@ -1296,132 +1260,125 @@ export default class App extends Component<Props> {
           </View>
         )}
 
-        <View style={styles.header}>
 
-          <CollectionForm />
-          {/*
-          <Button 
-            style={{ 
-              margin:1, 
-              height:40 ,
-              marginBottom:2,
+        { this.state.cam == 'motion-preview'
+        ?
+          <View
+          >
+            {/*
+            <Button 
+              style={{ 
+                margin:1, 
+                height:40 ,
+                marginBottom:2,
+              }}
+              color={ this.state.previewing ? '#338433' : 'grey'}
+              title = 'Pause motion'
+              onPress = {() => this.togglePreviewMotion()}
+            />
+            */}
+
+            <Slider  
+              ref="sampleSize"
+              style={styles.slider} 
+              thumbTintColor = '#000' 
+              minimumTrackTintColor='#cccccc' 
+              maximumTrackTintColor='#ffffff' 
+              minimumValue={-parseInt(this.state.previewWidth/10,10)}
+              maximumValue={-1}
+              step={1}
+              value={-this.state.sampleSize}
+              onValueChange={
+                (value) => this.onSampleSize(-value)
+              } 
+            />
+  
+            <Slider  
+              ref="threshold"
+              style={styles.slider} 
+              thumbTintColor = '#fff' 
+              minimumTrackTintColor='#dddddd' 
+              maximumTrackTintColor='#ffffff' 
+              minimumValue={-255}
+              maximumValue={0}
+              step={1}
+              // value={this.state.threshold}
+              value={
+                -(
+                  (this.state.threshold>>>16) 
+                + ((this.state.threshold&0x00ff00)>>>8)
+                + (this.state.threshold&0x0000ff)
+                )/3
+              }
+              onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
+            />
+              <Slider  
+                ref="threshold_red"
+                style={styles.slider} 
+                thumbTintColor = '#d00' 
+                minimumTrackTintColor='#dd0000' 
+                maximumTrackTintColor='#dd0000' 
+                minimumValue={-255}
+                maximumValue={0}
+                step={1}
+                value={-(this.state.threshold>>>16)}
+                onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
+              />
+              <Slider  
+                ref="threshold_green"
+                style={styles.slider} 
+                thumbTintColor = {greenFlash}
+                minimumTrackTintColor={greenFlash}
+                maximumTrackTintColor={greenFlash}
+                minimumValue={-255}
+                maximumValue={0}
+                step={1}
+                value={-((this.state.threshold & 0x00ff00) >>> 8)}
+                onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
+              />
+              <Slider  
+                ref="threshold_blue"
+                style={styles.slider} 
+                thumbTintColor = '#0000dd' 
+                minimumTrackTintColor='#0000dd' 
+                maximumTrackTintColor='#0000dd' 
+                minimumValue={-255}
+                maximumValue={0}
+                step={1}
+                value={-(this.state.threshold & 0x0000ff)}
+                onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
+              />
+  
+            <Slider  
+              ref="minimum_pixels"
+              style={styles.sliderDenoise} 
+              thumbTintColor='#000' 
+              minimumTrackTintColor='#ff0000' 
+              maximumTrackTintColor='#0000ff' 
+              minimumValue={1}
+              maximumValue={this.state.previewWidth/this.state.sampleSize}
+              step={1}
+              value={this.state.minimumPixels}
+              onValueChange={(value) => this.onMinimumPixels(value)} 
+            />
+          </View>
+
+        :null
+        }
+
+
+        { this.state.cam==""
+        ? <CollectionForm
+            ref="collectionForm"
+            data={{
+              'collection-flower':this.state.photoFlower,
+              'collection-environment':this.state.photoEnv,
             }}
-            color={ this.state.previewing ? '#338433' : 'grey'}
-            title = 'Pause motion'
-            onPress = {() => this.togglePreviewMotion()}
-          />
-          */}
-          <TouchableHighlight
-            onPress = {() => this.setState({freshImages: !this.state.freshImages}) }
-            >
-            <View style={{flexDirection:'row', padding:5,}}>
-              <CheckBox value={this.state.freshImages} />
-              {/* 
-              You can change the color directly in XML. Use buttonTint for the box: (as of API level 23)
-
-              <CheckBox
-                  android:layout_width="wrap_content"
-                  android:layout_height="wrap_content"
-                  android:buttonTint="@color/CHECK_COLOR" />
-              You can also do this using appCompatCheckbox v7 for older API levels:
-
-              <android.support.v7.widget.AppCompatCheckBox 
-                  android:layout_width="wrap_content" 
-                  android:layout_height="wrap_content" 
-                  app:buttonTint="@color/COLOR_HERE" /> 
-              */}
-
-              <Text style={{color:this.state.freshImages ? greenFlash : greenDark, padding:5,}}>
-                Accentuer l'affichage
-              </Text>
-            </View>
-          </TouchableHighlight>
-
-          <Slider  
-            ref="sampleSize"
-            style={styles.slider} 
-            thumbTintColor = '#000' 
-            minimumTrackTintColor='#cccccc' 
-            maximumTrackTintColor='#ffffff' 
-            minimumValue={-parseInt(previewHeight/10,10)}
-            maximumValue={-1}
-            step={1}
-            value={-this.state.sampleSize}
-            onValueChange={
-              (value) => this.onSampleSize(-value)
-            } 
-          />
-
-          <Slider  
-            ref="threshold"
-            style={styles.slider} 
-            thumbTintColor = '#fff' 
-            minimumTrackTintColor='#dddddd' 
-            maximumTrackTintColor='#ffffff' 
-            minimumValue={-255}
-            maximumValue={0}
-            step={1}
-            // value={this.state.threshold}
-            value={
-              -(
-                (this.state.threshold>>>16) 
-              + ((this.state.threshold&0x00ff00)>>>8)
-              + (this.state.threshold&0x0000ff)
-              )/3
-            }
-            onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
-          />
-            <Slider  
-              ref="threshold_red"
-              style={styles.slider} 
-              thumbTintColor = '#d00' 
-              minimumTrackTintColor='#dd0000' 
-              maximumTrackTintColor='#dd0000' 
-              minimumValue={-255}
-              maximumValue={0}
-              step={1}
-              value={-(this.state.threshold>>>16)}
-              onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
-            />
-            <Slider  
-              ref="threshold_green"
-              style={styles.slider} 
-              thumbTintColor = {greenFlash}
-              minimumTrackTintColor={greenFlash}
-              maximumTrackTintColor={greenFlash}
-              minimumValue={-255}
-              maximumValue={0}
-              step={1}
-              value={-((this.state.threshold & 0x00ff00) >>> 8)}
-              onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
-            />
-            <Slider  
-              ref="threshold_blue"
-              style={styles.slider} 
-              thumbTintColor = '#0000dd' 
-              minimumTrackTintColor='#0000dd' 
-              maximumTrackTintColor='#0000dd' 
-              minimumValue={-255}
-              maximumValue={0}
-              step={1}
-              value={-(this.state.threshold & 0x0000ff)}
-              onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
-            />
-
-          <Slider  
-            ref="minimum_pixels"
-            style={styles.sliderDenoise} 
-            thumbTintColor='#000' 
-            minimumTrackTintColor='#ff0000' 
-            maximumTrackTintColor='#0000ff' 
-            minimumValue={1}
-            maximumValue={previewHeight/this.state.sampleSize}
-            step={1}
-            value={this.state.minimumPixels}
-            onValueChange={(value) => this.onMinimumPixels(value)} 
-          />
-        </View>
-
+            // source={source}
+            pickPhoto = {(view) => this.pickPhoto(view)}
+         />
+        : null
+        }
 
       </ScrollView>
       </View>
@@ -1462,9 +1419,10 @@ const styles = StyleSheet.create({
 
   header:{
     alignSelf: 'stretch',
+    flexDirection:'row',
     left:0,
     right:0,
-    backgroundColor:'#808088',
+    backgroundColor:'transparent',
   },
   slider:{
     padding:10,
@@ -1478,7 +1436,6 @@ const styles = StyleSheet.create({
   },
   containerPreview: {
     flex: 1,
-    
     flexWrap:'wrap',
     flexDirection:'row',
     justifyContent: 'center',//'flex-end',
@@ -1487,13 +1444,16 @@ const styles = StyleSheet.create({
   },
   cam: {
     position: 'relative',
-    width: previewWidth, 
-    height: previewHeight, 
     margin:1,
   },
+  preview: {
+    position: 'relative',
+    // width: previewWidth, 
+    // height: previewHeight, 
+  },
   captureLocalView:{
-    width: previewWidth, 
-    height: previewHeight,
+    // width: previewWidth, 
+    // height: previewHeight,
     position:'relative',
     // opacity:0,
   },
@@ -1501,8 +1461,8 @@ const styles = StyleSheet.create({
     position:'absolute',
     top:0,
     left:0,
-    width: previewWidth, 
-    height: previewHeight, 
+    // width: previewWidth, 
+    // height: previewHeight, 
     // transform: [{ rotate: '90deg'}],
     resizeMode: 'contain', //enum('cover', 'contain', 'stretch', 'repeat', 'center')
     backgroundColor: 'transparent',
@@ -1510,21 +1470,20 @@ const styles = StyleSheet.create({
     borderColor: 'red',
 
   },
+  capture:{
+    // width: previewWidth, 
+    // height: previewHeight, 
+    transform: [{ rotate: '90deg'}],
+    resizeMode: 'stretch', //enum('cover', 'contain', 'stretch', 'repeat', 'center')
+    borderWidth: 1, borderColor: 'red'
+  },
+
   motionpreview:{
     position:'absolute',
-    width: previewWidth, 
-    height: previewHeight, 
     resizeMode: 'contain', //enum('cover', 'contain', 'stretch', 'repeat', 'center')
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: 'red',
-  },
-  capture:{
-    width: previewWidth, 
-    height: previewHeight, 
-    transform: [{ rotate: '90deg'}],
-    resizeMode: 'stretch', //enum('cover', 'contain', 'stretch', 'repeat', 'center')
-    borderWidth: 1, borderColor: 'red'
   },
 
   MotionContainer: {

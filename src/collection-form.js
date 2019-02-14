@@ -5,7 +5,10 @@ import {
   View,
   TouchableOpacity,
   Text,
+  TextInput,
   Image,
+  Dimensions,
+
 } from 'react-native'
 
 import {
@@ -15,6 +18,8 @@ import {
   ListItem,
 } from 'react-native-elements';
 import ModalFilterPicker from './filterSelect'
+import ImageZoom from 'react-native-image-pan-zoom';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Spipoll
 import { flowerList } from './flowers.js';
@@ -25,25 +30,65 @@ const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
 
 
-
-
 //-----------------------------------------------------------------------------------------
 class ImagePicker extends Component {
 //-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = {
+      source:this.props.source ? this.props.source : false,
+    };
+  }
+
+  setSource(source){
+    console.log(source);
+    this.setState({source:source});
   }
 
   render(){
-    return(
-      <View>
-        <Image
-        />
-      </View>
-    );
+
+    if (this.state.source){
+      return(
+        <View style={this.props.style}>
+        <ImageZoom
+          cropWidth={this.props.size.w}
+          cropHeight={this.props.size.h}
+          imageWidth={this.props.size.w}
+          imageHeight={this.props.size.h}
+          >
+            <Image
+              style={{ 
+                width:150,
+                height:150,
+              }}
+              source={this.state.source }
+            />
+        </ImageZoom>
+        </View>
+      );
+    }
+    else {
+      return(
+        <View style={this.props.style}>
+          <View style={styles.iconButton2}>
+            <MaterialCommunityIcons.Button   
+              name='camera'
+              underlayColor="#eeeeee"
+              size={40}
+              width={100}
+              margin={0}
+              paddingLeft={30}
+              color="#eeeeee"
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.props.onPress()}
+            /></View>
+        </View>
+      );
+    }
   }
-}
+
+} // ImagePicker
 
 
 //-----------------------------------------------------------------------------------------
@@ -57,6 +102,7 @@ export default class CollectionForm extends Component {
         protocole:'Flash',
         flower:{
           photo:'',
+
           later:false,
           unknown:false,
           taxon_id:0,
@@ -76,17 +122,95 @@ export default class CollectionForm extends Component {
           lat:0,
         }
 
-      //   Localiser 
-      //     par  nom d'une commune, d'une région, d'un département ou d'un code postal
-      //     No INSEE.
-      //     GPS
+        //   Localiser 
+        //     par  nom d'une commune, d'une région, d'un département ou d'un code postal
+        //     No INSEE.
+        //     GPS
+
+
+
+/*
+  CRÉER UNE COLLECTION
+
+  1° la phase "terrain"
+
+    Connection à www.spipoll.org
+
+ 
+    SESSIONS
+      1
+        Date 
+        Heure 
+          debut 
+          fin   check > 20min
+        Ciel (couverture nuageuse) 
+          0-25%   
+          25-50%   
+          50-75%   
+          75-100%  
+        Température :
+          < 10ºC   
+          10-20ºC   
+          20-30ºC   
+          >30ºC  
+        Vent :
+          nul   
+          faible, irrégulier 
+          faible, continu
+          fort, irrégulier
+          fort, continu  
+        Fleur à l'ombre :
+          Non   
+          Oui
+
+      2 (si protocole long)
+
+
+    INSECTES
+      1
+        Photo
+        Taxon
+        dénomination + précise    UNIQUE
+        Commentaire
+        SESSION
+          ID
+          Commentaire
+          Nombre maximum d'individus de cette espèce vus simultanément
+            1   
+            entre 2 et 5   
+            plus de 5   
+            je nai pas linformation
+          Avez-vous photographié cet insecte ailleurs que sur la fleur de votre station florale:
+            Non   
+            Oui  
+      2 ...
+
+    min 2 INSECTES pour cloturer la collection.
+
+
+2° la phase "préparation des données"
+   ... trier et mettre en forme les photos
+  Triez vos photos et sélectionnez-en une par espèce ; 
+  puis recadrez les insectes au format 4:3 
+  (ils doivent être conservés dans leur globalité). 
+  Faites alors pivoter les images de manière à ce que vos insectes se retrouvent la tête "en haut" (dans la mesure du possible). 
+
+  De même, recadrez la photo de la fleur.
+
+
+3° la phase "identification et envoi des données"
+  ... charger les photos dans la partie "Mon spipoll",
+  identifier la plante et les insectes à l'aide des clés disponibles en ligne, 
+  puis envoyer les données
+
+*/
       },
       visibleTaxonModal:false,
     };
   }
 
 
-  coll_protocole(type){
+  upd_protocole(type){
     this.setState({collection:{
       ...this.state.collection,
       protocole:type,
@@ -94,7 +218,6 @@ export default class CollectionForm extends Component {
       console.log(this.state.collection);
     });
   }
-
 
   selectTaxon = (picked) => {
     console.log(picked);
@@ -120,7 +243,7 @@ export default class CollectionForm extends Component {
   }
 
   render () {
-    return(
+    return (
 
           <View style={styles.collection}>
             <View style={styles.collection_grp}>
@@ -145,7 +268,7 @@ export default class CollectionForm extends Component {
                 checkedIcon='dot-circle-o'
                 uncheckedIcon='circle-o'
                 checked={this.state.collection.protocole == 'Flash'}
-                onPress = {() => this.coll_protocole('Flash')}
+                onPress = {() => this.upd_protocole('Flash')}
               />
               <Text style={styles.coll_info}>
               Une seule session photographique de 20mn.</Text>
@@ -158,7 +281,7 @@ export default class CollectionForm extends Component {
                 checkedIcon='dot-circle-o'
                 uncheckedIcon='circle-o'
                 checked={this.state.collection.protocole != 'Flash'}
-                onPress = {() => this.coll_protocole('Long')}
+                onPress = {() => this.upd_protocole('Long')}
               />
               <Text style={styles.coll_info}>
               Une ou plusieurs sessions photographiques de plus de 20mn sur 3 jour maximum.</Text>
@@ -186,7 +309,18 @@ export default class CollectionForm extends Component {
 
                 <Text style={styles.coll_subtitle}>
                 Gros plan de la fleur</Text>
-                <ImagePicker style={styles.collection_input_container}></ImagePicker>
+                <ImagePicker 
+                  ref="collection-flower"
+                  style={{
+                    borderWidth:1, borderColor:greenLight,
+                    width:150,
+                    height:150,
+                  }}
+                  onPress = {() => this.props.pickPhoto('collection-flower')}
+                  crop={{w:150,h:150}}
+                  size={{w:150,h:150}}
+                  source={this.props.source}
+                />
                 </View>
 
                 <CheckBox
@@ -198,7 +332,7 @@ export default class CollectionForm extends Component {
                   checkedIcon='dot-circle-o'
                   uncheckedIcon='circle-o'
                   checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.coll_protocole('Long')}
+                  onPress = {() => this.upd_protocole('Long')}
                 />
 
                 <CheckBox
@@ -210,7 +344,7 @@ export default class CollectionForm extends Component {
                   checkedIcon='dot-circle-o'
                   uncheckedIcon='circle-o'
                   checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.coll_protocole('Long')}
+                  onPress = {() => this.upd_protocole('Long')}
                 />
 
                 <View style={styles.modalpickercontainer}>
@@ -234,7 +368,9 @@ export default class CollectionForm extends Component {
                   placeholder='Vous connaissez une dénomination plus précise'
                 />
 
-                <Input
+                <TextInput
+                  multiline={true}
+                  numberOfLines={3} 
                   containerStyle={styles.collection_input_container}
                   placeholder='Commentaires'
                 />
@@ -253,7 +389,19 @@ export default class CollectionForm extends Component {
                 <Text style={styles.coll_info}>
                 l'environnement  de la plante (à 2-3 mètres de celle-ci).</Text>
                 
-                <ImagePicker style={styles.collection_input_container}></ImagePicker>
+                <ImagePicker 
+                  ref="collection-environment"
+                  style={{
+                    borderWidth:1, borderColor:greenLight,
+                    width:150,
+                    height:150,
+                  }}
+                  onPress = {() => this.props.pickPhoto('collection-environment')}
+                  crop={{w:150,h:150}}
+                  size={{w:150,h:150}}
+                  source={this.props.source}
+                />
+
                 </View>
 
                 <View style={styles.collection_subgrp}>
@@ -269,7 +417,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -280,7 +428,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -291,7 +439,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                 </View>
 
@@ -318,7 +466,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -329,7 +477,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -340,7 +488,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                 </View>
 
@@ -358,7 +506,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -369,7 +517,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -380,7 +528,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                 </View>
 
@@ -398,7 +546,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -409,7 +557,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -420,7 +568,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -431,7 +579,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -442,7 +590,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -453,7 +601,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -464,7 +612,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -475,7 +623,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -486,7 +634,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -497,7 +645,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -508,7 +656,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                   <CheckBox
                     containerStyle={styles.collection_input_container}
@@ -519,7 +667,7 @@ export default class CollectionForm extends Component {
                     checkedIcon='dot-circle-o'
                     uncheckedIcon='circle-o'
                     checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.coll_protocole('Long')}
+                    onPress = {() => this.upd_protocole('Long')}
                   />
                 </View>
                           
