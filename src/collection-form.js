@@ -17,8 +17,10 @@ import {
   Input,
   ListItem,
 } from 'react-native-elements';
-import ModalFilterPicker from './filterSelect'
-import ImageZoom from 'react-native-image-pan-zoom';
+
+import ImageView from './imageView';
+import ModalFilterPicker from './filterSelect';
+import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 // Spipoll
@@ -35,35 +37,82 @@ class ImagePicker extends Component {
 //-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
+    const source = this.props.source;
+    source.uri = source.uri.substring(0, 
+      source.uri.indexOf('?t=') < 0 
+      ? source.uri.length
+      : source.uri.indexOf('?t=')
+      ) + '?t='+ new Date().getTime();
+
     this.state = {
-      source:this.props.source ? this.props.source : false,
+      visibleImageView:false,
+      source:source,
     };
+    console.log(this.props.source 
+      ? this.props.source+'?t='+ new Date().getTime()
+      : false);
   }
 
   setSource(source){
+console.log(source);
+console.log(this.state.source);
+    source.uri = source.uri.substring(0, 
+      source.uri.indexOf('?t=') < 0 
+      ? source.uri.length
+      : source.uri.indexOf('?t=')
+      ) + '?t='+ new Date().getTime();
     console.log(source);
     this.setState({source:source});
+  }
+
+  showImageView = () => {
+    console.log('showImageView');
+    this.setState({visibleImageView:true});
+  }
+  hideImageView = () => {
+    this.setState({visibleImageView: false});
   }
 
   render(){
 
     if (this.state.source){
       return(
-        <View style={this.props.style}>
-        <ImageZoom
-          cropWidth={this.props.size.w}
-          cropHeight={this.props.size.h}
-          imageWidth={this.props.size.w}
-          imageHeight={this.props.size.h}
-          >
-            <Image
+        <View style={[this.props.style, {flexDirection:'row'}]}>
+          <ImageView
+            // title="0000000000000000"
+            visible={this.state.visibleImageView}
+            onCancel={this.hideImageView}
+            source={this.state.source }
+          />
+
+          <View style={styles.iconButton2}>
+            <MaterialCommunityIcons.Button   
+              name='camera'
+              underlayColor="#eeeeee"
+              size={40}
+              width={100}
+              margin={0}
+              paddingLeft={30}
+              color="#eeeeee"
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.props.onPress()}
+            /></View>
+            <TouchableOpacity 
+              style={{
+                // borderColor:'blue', borderWidth:1,
+              }} 
+              onPress={this.showImageView}
+              >
+             <Image
               style={{ 
                 width:150,
                 height:150,
               }}
+              resizeMode="contain"
               source={this.state.source }
             />
-        </ImageZoom>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -237,7 +286,6 @@ export default class CollectionForm extends Component {
   showTaxonModal = () => {
     this.setState({visibleTaxonModal:true});
   }
-
   hideTaxon = () => {
     this.setState({visibleTaxonModal: false});
   }
@@ -313,13 +361,13 @@ export default class CollectionForm extends Component {
                   ref="collection-flower"
                   style={{
                     borderWidth:1, borderColor:greenLight,
-                    width:150,
-                    height:150,
+                    // width:150,
+                    // height:150,
                   }}
                   onPress = {() => this.props.pickPhoto('collection-flower')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  source={this.props.source}
+                  source={{uri:'file://'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/collection-flower.jpg'}}
                 />
                 </View>
 
@@ -393,13 +441,13 @@ export default class CollectionForm extends Component {
                   ref="collection-environment"
                   style={{
                     borderWidth:1, borderColor:greenLight,
-                    width:150,
-                    height:150,
+                    // width:150,
+                    // height:150,
                   }}
                   onPress = {() => this.props.pickPhoto('collection-environment')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  source={this.props.source}
+                  source={{uri:'file://'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/collection-environment.jpg'}}
                 />
 
                 </View>
@@ -491,47 +539,6 @@ export default class CollectionForm extends Component {
                     onPress = {() => this.upd_protocole('Long')}
                   />
                 </View>
-
-
-                <View style={styles.collection_subgrp}>
-                  <Text style={styles.coll_subtitle}>
-                  La plante est</Text>
-
-                  <CheckBox
-                    containerStyle={styles.collection_input_container}
-                    textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'spontanée.'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                    containerStyle={styles.collection_input_container}
-                    textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'plantée.'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                    containerStyle={styles.collection_input_container}
-                    textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'ne sais pas.'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                </View>
-
 
                 <View style={styles.collection_subgrp}>
                   <Text style={styles.coll_subtitle}>

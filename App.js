@@ -194,7 +194,8 @@ export default class App extends Component<Props> {
 
       previewWidth:initialPreviewWidth,
       previewHeight:initialPreviewHeight,
-      cam: 'free', // Different reasons why cam is on:
+      cam: '', // Different reasons why cam is on:
+        // 'free'
         // 'motion-preview'
         // 'collection-flower'
         // 'collection-environment'
@@ -776,6 +777,7 @@ export default class App extends Component<Props> {
 
             { this.state.motionInputAreaShape=='elipse'
               ? <Image 
+                  fadeDuration={0}
                   pointerEvents="none"
                   source = {motionMask}
                   resizeMode="stretch"
@@ -1006,7 +1008,8 @@ export default class App extends Component<Props> {
     if (!this.state.imgTest) return null;
     console.log(this.state.imgTest);
     return(
-      <Image 
+      <Image
+        fadeDuration={0} 
         style={styles.captureLocalView} 
         source={{uri:this.state.imgTest}}
       />
@@ -1018,6 +1021,7 @@ export default class App extends Component<Props> {
     if (!this.state.img) return null;
     return(
       <Image 
+        fadeDuration={0}
         style={styles.capture} 
         source={{uri:this.state.img}} // {uri: 'asset:/scr.png'}
       />
@@ -1029,7 +1033,8 @@ export default class App extends Component<Props> {
     if (!this.state.imgLocal) return null;
     return(
       <View style={styles.captureLocalView}>
-          <Image 
+          <Image
+            fadeDuration={0}
             style = {styles.captureLocal}
             source = {{uri:this.state.imgLocal}} 
           />
