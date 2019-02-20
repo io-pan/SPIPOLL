@@ -185,7 +185,7 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
-      sdcard:false, // chkreugneugneu
+      storage:false,
       devices: [],
       connectedTo:false,
       img:false,
@@ -195,7 +195,7 @@ export default class App extends Component<Props> {
 
       previewWidth:initialPreviewWidth,
       previewHeight:initialPreviewHeight,
-      cam: '', // Different reasons why cam is on:
+      cam: 'free', // Different reasons why cam is on:
         // 'free'
         // 'motion-preview'
         // 'collection-flower'
@@ -214,15 +214,7 @@ export default class App extends Component<Props> {
       minimumPixels: 1,
       motionPreviewPaused:false,
 
-      recordOptions: {
-        path: RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/record.mp4',
-        mute: false,
-        maxDuration: 5,
-        quality: RNCamera.Constants.VideoQuality['288p'],
-      },
-
       zoom:0,
-
 
       showDraggable: true,
       dropAreaValues: null,
@@ -266,46 +258,30 @@ export default class App extends Component<Props> {
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
       ])
-      SplashScreen.hide();
-/*
-  LDPI: Portrait: 200x320px. 
-  MDPI: Portrait: 320x480px.
-  HDPI: Portrait: 480x800px. 
-  XHDPI: Portrait: 720px1280px. 
-  XXHDPI: Portrait: 960px1600px.
-  XXXHDPI: Portrait: 1280px1920px
-*/
-      if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-      &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-      // &&  granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
-      // &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
-      // &&  granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
-      // &&  granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
-      ){
-        // Create splipoll folder.
-        RNFetchBlob.fs.isDir( RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll')
-        .then((isDir) => {
-          if(!isDir){
-            RNFetchBlob.fs.mkdir(RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll')
-            .then(() => { console.log('folder created:' + RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll' ) })
-            .catch((err) => { console.log(err) })
-          }
-        })
-      }
-      else {
-        // Exit app.
-      }
+      // if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+      // // &&  granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+      // // &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+      // // &&  granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
+      // // &&  granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
+      // ){
+        
+      // }
+      // else {
+      //   // Exit app.
+      // }
 
+      SplashScreen.hide();
+      // LDPI: Portrait: 200x320px. 
+      // MDPI: Portrait: 320x480px.
+      // HDPI: Portrait: 480x800px. 
+      // XHDPI: Portrait: 720px1280px. 
+      // XXHDPI: Portrait: 960px1600px.
+      // XXXHDPI: Portrait: 1280px1920px
     } catch (err) {
       console.warn(err)
     }
   }
-
-
- // _handlePanResponderEnd = (event: PressEvent, gestureState: GestureState) => {
- //  alert(""+gestureState.dx+" - "+gestureState.dy);
- //    this.state.pan.setValue({ x:gestureState.dx, y:gestureState.dy});
- //  };
 
   componentWillMount() {
     StatusBar.setHidden(true);
@@ -316,7 +292,7 @@ export default class App extends Component<Props> {
 
     // Drag & Drop motion area.
     this.panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: (e, gesture) => true,
+      onStartShouldSetPanResponder: (e, gesture) => {true},
       onPanResponderMove: Animated.event([
         null, { dx: this.state.pan.x, dy: this.state.pan.y }
       ]),
@@ -327,7 +303,7 @@ export default class App extends Component<Props> {
             friction: 5
           }).start();
         }
-       
+        //  // 
         //   Animated.timing(this.state.opacity, {
         //     toValue: 0,
         //     duration: 1000
@@ -359,7 +335,6 @@ export default class App extends Component<Props> {
   // }
 
   componentDidMount() {
-
     // this.getBatteryLevel(
     //   (batteryLevel) => {
     //     console.log(batteryLevel);
@@ -381,10 +356,8 @@ export default class App extends Component<Props> {
     // Get app available folders and set default.
     NativeModules.ioPan.getExternalStorages()
     .then((dirs) => {
-      console.log(dirs);
       this.appDirs = JSON.parse(dirs);
-      console.log(this.appDirs);
-      this.setState({sdcard:this.appDirs[0]});
+      this.setState({storage:this.appDirs[0].path});
     })
     .catch((err) => { console.log(err) })
   }
@@ -414,12 +387,8 @@ export default class App extends Component<Props> {
   //            P2P communication
   //--------------------------------------------------------
 
-  toggleStorage() {
-    this.setState({sdcard:
-      this.state.sdcard == this.appDirs[0]
-      ? this.appDirs[1]
-      : this.appDirs[0]
-    });
+  toggleStorage(index) {
+    this.setState({storage:this.appDirs[index].path});
   }
 
   PeerDetected = (user) => {
@@ -565,8 +534,8 @@ export default class App extends Component<Props> {
   onCameraReady = async () => {
     // const getAvailablePictureSizes = await this.camera.getAvailablePictureSizes('4:3');
     // console.log(getAvailablePictureSizes);
-    const getSupportedRatiosAsync = await this.camera.getSupportedRatiosAsync();
-    console.log(getSupportedRatiosAsync);
+    // const getSupportedRatiosAsync = await this.camera.getSupportedRatiosAsync();
+    // console.log(getSupportedRatiosAsync);
     // const getPreviewSize = await this.camera.getPreviewSize();
     // console.log(getPreviewSize);
 
@@ -575,8 +544,8 @@ export default class App extends Component<Props> {
 
   
   onMotionDetected = ({ motion }) => {
-    if (this.state.motionPreviewPaused) 
-      return;
+    // if (this.state.motionPreviewPaused) 
+    //   return;
     
     console.log('MOTION', motion);
     this.setState({
@@ -612,20 +581,10 @@ export default class App extends Component<Props> {
             });
             // console.log(picture);
             
-            let filename;
-            if(this.state.cam=='collection-flower'){
-              filename = 'collection-flower' + '.jpg';
-            }
-            else if(this.state.cam=='collection-environment'){
-              filename = 'collection-environment' + '.jpg';
-            }
-            else{
-              filename = this.formatedDate()  + '.jpg';
-            }
-            
+            const filename = this.state.cam=='free' ? this.formatedDate() : this.state.cam + '.jpg';
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
-              RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename
+              this.state.storage + '/' + filename
             ).then(() => {
                 
               if(this.state.cam=='collection-flower'){
@@ -633,7 +592,7 @@ export default class App extends Component<Props> {
                   cam:'',
                 }, function(){
                   this.refs['collectionForm'].refs['collection-flower'].setSource(
-                      {uri:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename});
+                      {uri:'file:///' + this.state.storage + '/' + filename});
                 })
               }
               else if(this.state.cam=='collection-environment'){
@@ -641,7 +600,7 @@ export default class App extends Component<Props> {
                   cam:'',
                 }, function(){
                   this.refs['collectionForm'].refs['collection-environment'].setSource(
-                      {uri:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename});
+                      {uri:'file:///' + this.state.storage + '/' + filename});
                 })
               }
             }).catch((err) => { console.log(err) });
@@ -663,11 +622,7 @@ export default class App extends Component<Props> {
   async takeVideo() {
     if (this.camera) {
       try {
-        const path = this.state.sdcard
-        ? '/storage/6465-6631/DCIM/i.mp4' //'/storage/6465-6631/DCIM/' + this.formatedDate()  + '.mp4'
-        : RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/' + this.formatedDate()  + '.mp4';
-        // /storage/emulated/0/DCIM/Spipoll/2019-02-20_00-48-03.mp4
-
+        const path = this.state.storage + '/' + this.formatedDate()  + '.mp4';
         const promise = this.camera.recordAsync({
           path: path,
           maxDuration:60, // TODO user settings.
@@ -951,7 +906,7 @@ export default class App extends Component<Props> {
           </View>
         :
           <View style={styles.iconButtonContainer} >
-            <View style={styles.iconButton2}>
+            <View style={styles.iconButton}>
             <MaterialCommunityIcons.Button   
               name='camera'
               underlayColor={greenSuperLight}
@@ -969,7 +924,7 @@ export default class App extends Component<Props> {
             && this.state.cam != 'collection-environment'
               ?
               <React.Fragment>
-              <View style={styles.iconButton2}>
+              <View style={styles.iconButton}>
               <MaterialCommunityIcons.Button   
                 name='video'
                 underlayColor={greenSuperLight}
@@ -990,7 +945,7 @@ export default class App extends Component<Props> {
                 }
               /></View>
 
-              <View style={styles.iconButton2}>
+              <View style={styles.iconButton}>
               <MaterialCommunityIcons.Button   
                 name='cctv'
                 underlayColor={greenSuperLight}
@@ -1211,35 +1166,35 @@ export default class App extends Component<Props> {
         >
 
         <View style={styles.header}>
-                    <Button 
-                      style={{ 
-                        margin:1, 
-                        height:40 ,
-                        marginBottom:2,
 
-                      backgroundColor:'transparent',
-                      }}
-                      color={ this.state.previewing ? '#338433' : 'grey'}
+                    { this.appDirs.length > 0 
+                      ? this.appDirs.map((value, index) => 
+                          <Button 
+                            key={index}
+                            style={styles.button}
+                            color={ this.state.storage==this.appDirs[index].path ? '#338433' : 'grey'}
+                            title = {""+value.type}
+                            onPress = {() => this.toggleStorage(index)}
+                          />
+                        )
+                      : null 
+                    }
+
+                    <Button 
+                      style={styles.button}
+                      color={ this.state.cam=='motion-preview' ? '#338433' : 'grey'}
                       title = 'cam motion' 
                       onPress = {() => this.toggleView('motion-preview')}
                     />
                     <Button 
-                      style={{ 
-                        margin:1, 
-                        height:40 ,
-                        marginBottom:2,
-                      }}
-                      color={ this.state.previewing ? '#338433' : 'grey'}
+                      style={styles.button}
+                      color={ this.state.cam=='free' ? '#338433' : 'grey'}
                       title = 'cam free'
                       onPress = {() => this.toggleView('free')}
                     />
                     <Button 
-                      style={{ 
-                        margin:1, 
-                        height:40 ,
-                        marginBottom:2,
-                      }}
-                      color={ this.state.previewing ? '#338433' : 'grey'}
+                      style={styles.button}
+                      color={ !this.state.cam ? '#338433' : 'grey'}
                       title = 'form'
                       onPress = {() => this.toggleView('')}
                     />
@@ -1395,11 +1350,7 @@ export default class App extends Component<Props> {
         { this.state.cam==""
         ? <CollectionForm
             ref="collectionForm"
-            data={{
-              'collection-flower':this.state.photoFlower,
-              'collection-environment':this.state.photoEnv,
-            }}
-            // source={source}
+            filePath={this.state.storage}
             pickPhoto = {(view) => this.pickPhoto(view)}
          />
         : null
@@ -1532,7 +1483,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  iconButton2:{
+  iconButton:{
     marginLeft:20,
     marginRight:20,
     borderRadius:50,
@@ -1546,9 +1497,15 @@ const styles = StyleSheet.create({
     borderColor:greenFlash,
   },
 
+  button:{
+    margin:1, 
+    height:40 ,
+    marginBottom:2,
+    backgroundColor:'transparent',  
+  },
+
   row: {
     flexDirection: 'row',
   },
-
  
 });

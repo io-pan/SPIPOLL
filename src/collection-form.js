@@ -147,6 +147,8 @@ export default class CollectionForm extends Component {
   constructor (props, ctx) {
     super(props, ctx)
 
+    // TODO create collection / sessions folders
+
     this.state = {
       collection:{
         protocole:'Flash',
@@ -368,11 +370,8 @@ export default class CollectionForm extends Component {
                   onPress = {() => this.props.pickPhoto('collection-flower')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  // source={{uri:'file://'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/collection-flower.jpg'}}
-
-                  // source={{uri:'file://'+'/storage/emulated/0/DCIM/Spipoll/flower.jpg'}}
-
-                  source={{uri:'file://'+'/storage/6465-6631/DCIM/Camera/PICT0357.JPG'}}
+                  source={{uri:'file://' +this.props.filePath + '/collection-flower.jpg'}}
+                  // source={{uri:'file://'+'/storage/6465-6631/DCIM/Camera/PICT0357.JPG'}}
 
                 />
                 </View>
@@ -453,7 +452,7 @@ export default class CollectionForm extends Component {
                   onPress = {() => this.props.pickPhoto('collection-environment')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  source={{uri:'file://'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/collection-environment.jpg'}}
+                  source={{uri:'file://' +this.props.filePath + '/collection-environment.jpg'}}
                 />
 
                 </View>
