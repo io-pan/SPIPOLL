@@ -180,7 +180,8 @@ class Draggable extends Component {
 //-----------------------------------------------------------------------------------------
 export default class App extends Component<Props> {
 //-----------------------------------------------------------------------------------------
-  
+
+
   constructor(props) {
     super(props);
     this.state = {
@@ -250,9 +251,11 @@ export default class App extends Component<Props> {
     this.safeIds = [
       '6b16c792365daa8b',  //  s6
       'add41fbf38b95c65',  //  s9
-    ]
+    ],
+
+    this.appDirs = [];
   }
- 
+
   requestForPermission = async () => {
     try{
       const granted = await PermissionsAndroid.requestMultiple([
@@ -284,7 +287,7 @@ export default class App extends Component<Props> {
         .then((isDir) => {
           if(!isDir){
             RNFetchBlob.fs.mkdir(RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll')
-            .then(() => { console.log(RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll' ) })
+            .then(() => { console.log('folder created:' + RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll' ) })
             .catch((err) => { console.log(err) })
           }
         })
@@ -311,6 +314,7 @@ export default class App extends Component<Props> {
     this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => this._val = value);
 
+    // Drag & Drop motion area.
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: (e, gesture) => true,
       onPanResponderMove: Animated.event([
@@ -342,19 +346,20 @@ export default class App extends Component<Props> {
   }
 
   testBattery(){
-    NativeModules.Battery.getLevel()
+    NativeModules.ioPan.getLevel()
     .then((level) => {
       console.log(level);
-      if(level<15) {
+      if (level < 15) {
         // TODO send alert to distant.
       }
     })
   }
   // getBatteryLevel = (callback) => {
-  //   NativeModules.Battery.getBatteryStatus(callback);
+  //   NativeModules.ioPan.getBatteryStatus(callback);
   // }
 
   componentDidMount() {
+
     // this.getBatteryLevel(
     //   (batteryLevel) => {
     //     console.log(batteryLevel);
@@ -372,6 +377,16 @@ export default class App extends Component<Props> {
     this.listener3 = BluetoothCP.addReceivedMessageListener(this.receivedMessage)
     this.listener4 = BluetoothCP.addInviteListener(this.gotInvitation)
     this.listener5 = BluetoothCP.addConnectedListener(this.Connected)
+
+    // Get app available folders and set default.
+    NativeModules.ioPan.getExternalStorages()
+    .then((dirs) => {
+      console.log(dirs);
+      this.appDirs = JSON.parse(dirs);
+      console.log(this.appDirs);
+      this.setState({sdcard:this.appDirs[0]});
+    })
+    .catch((err) => { console.log(err) })
   }
 
   componentDidUpdate(){
@@ -399,9 +414,14 @@ export default class App extends Component<Props> {
   //            P2P communication
   //--------------------------------------------------------
 
-  // toggleStorage() {
-  //   this.setState({sdcard:!this.state.sdcard});
-  // }
+  toggleStorage() {
+    this.setState({sdcard:
+      this.state.sdcard == this.appDirs[0]
+      ? this.appDirs[1]
+      : this.appDirs[0]
+    });
+  }
+
   PeerDetected = (user) => {
     // Alert.alert(JSON.stringify({'PeerDetected':user}, undefined, 2));
     let devices = this.state.devices;
@@ -603,7 +623,6 @@ export default class App extends Component<Props> {
               filename = this.formatedDate()  + '.jpg';
             }
             
-
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
               RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename
@@ -625,7 +644,7 @@ export default class App extends Component<Props> {
                       {uri:'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/'+filename});
                 })
               }
-            });
+            }).catch((err) => { console.log(err) });
 
             // this.sendMessage(this.state.connectedTo, 'img', picture.base64);
           } 
@@ -645,8 +664,9 @@ export default class App extends Component<Props> {
     if (this.camera) {
       try {
         const path = this.state.sdcard
-        ? RNFetchBlob.fs.dirs.SDCardDir+'/Spipoll/' + this.formatedDate()  + '.mp4'
+        ? '/storage/6465-6631/DCIM/i.mp4' //'/storage/6465-6631/DCIM/' + this.formatedDate()  + '.mp4'
         : RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/' + this.formatedDate()  + '.mp4';
+        // /storage/emulated/0/DCIM/Spipoll/2019-02-20_00-48-03.mp4
 
         const promise = this.camera.recordAsync({
           path: path,

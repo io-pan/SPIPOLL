@@ -48,9 +48,6 @@ class ImagePicker extends Component {
       visibleImageView:false,
       source:source,
     };
-    console.log(this.props.source 
-      ? this.props.source+'?t='+ new Date().getTime()
-      : false);
   }
 
   setSource(source){
@@ -77,7 +74,11 @@ console.log(this.state.source);
 
     if (this.state.source){
       return(
-        <View style={[this.props.style, {flexDirection:'row'}]}>
+        <View style={[this.props.style, {
+          flexDirection:'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }]}>
           <ImageView
             // title="0000000000000000"
             visible={this.state.visibleImageView}
@@ -86,25 +87,25 @@ console.log(this.state.source);
           />
 
           <View style={styles.iconButton2}>
-            <MaterialCommunityIcons.Button   
-              name='camera'
-              underlayColor="#eeeeee"
-              size={40}
-              width={100}
-              margin={0}
-              paddingLeft={30}
-              color="#eeeeee"
-              backgroundColor ={'transparent'}
-              // onPress = {() =>{}}
-              onPress = {() => this.props.onPress()}
-            /></View>
-            <TouchableOpacity 
-              style={{
-                // borderColor:'blue', borderWidth:1,
-              }} 
-              onPress={this.showImageView}
-              >
-             <Image
+          <MaterialCommunityIcons.Button   
+            name='camera'
+            underlayColor="#eeeeee"
+            size={60}
+            width={80}
+            marginRight={10}
+            color="#dddddd"//{greenSuperLight}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.props.onPress()}
+          /></View>
+
+          <TouchableOpacity 
+            style={{
+                // borderColor:greenLight, borderWidth:1,
+            }} 
+            onPress={this.showImageView}
+            >
+            <Image
               style={{ 
                 width:150,
                 height:150,
@@ -360,14 +361,19 @@ export default class CollectionForm extends Component {
                 <ImagePicker 
                   ref="collection-flower"
                   style={{
-                    borderWidth:1, borderColor:greenLight,
+                    // borderWidth:1, borderColor:greenLight,
                     // width:150,
                     // height:150,
                   }}
                   onPress = {() => this.props.pickPhoto('collection-flower')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  source={{uri:'file://'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/collection-flower.jpg'}}
+                  // source={{uri:'file://'+RNFetchBlob.fs.dirs.DCIMDir+'/Spipoll/collection-flower.jpg'}}
+
+                  // source={{uri:'file://'+'/storage/emulated/0/DCIM/Spipoll/flower.jpg'}}
+
+                  source={{uri:'file://'+'/storage/6465-6631/DCIM/Camera/PICT0357.JPG'}}
+
                 />
                 </View>
 
@@ -440,7 +446,7 @@ export default class CollectionForm extends Component {
                 <ImagePicker 
                   ref="collection-environment"
                   style={{
-                    borderWidth:1, borderColor:greenLight,
+                    // borderWidth:1, borderColor:greenLight,
                     // width:150,
                     // height:150,
                   }}

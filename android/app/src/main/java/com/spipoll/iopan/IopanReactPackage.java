@@ -10,9 +10,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class BatteryReactPackage implements ReactPackage {
+public class IopanReactPackage implements ReactPackage {
 
-  public BatteryReactPackage() {}
+  public IopanReactPackage() {}
   
   // @Override
   public List<Class<? extends JavaScriptModule>> createJSModules() {
@@ -28,7 +28,7 @@ public class BatteryReactPackage implements ReactPackage {
   public List<NativeModule> createNativeModules(ReactApplicationContext reactContext) {
     List<NativeModule> modules = new ArrayList<>();
 
-    modules.add(new BatteryModule(reactContext));
+    modules.add(new IopanModule(reactContext));
 
     return modules;
   }

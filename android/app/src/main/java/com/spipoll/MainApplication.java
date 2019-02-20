@@ -39,7 +39,7 @@ public class MainApplication extends Application implements ReactApplication {
             new RNCameraPackage(),
             new NetworkManagerPackage(),
             new SvgPackage(),
-            new BatteryReactPackage()
+            new IopanReactPackage()
       );
     }
 
