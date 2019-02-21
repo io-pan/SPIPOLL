@@ -443,6 +443,7 @@ export default class CollectionForm extends Component {
                 l'environnement  de la plante (à 2-3 mètres de celle-ci).</Text>
                 
                 <ImagePicker 
+                // TODO ? multiple photos before user choose at the end ?
                   ref="collection-environment"
                   style={{
                     // borderWidth:1, borderColor:greenLight,
