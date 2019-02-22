@@ -28,8 +28,11 @@ export default class ModalFilterPicker extends Component {
     if ((!this.props.visible && newProps.visible) || (this.props.options !== newProps.options)) {
       this.setState({
         filter: '',
-        // ds: this.state.ds.cloneWithRows(newProps.options),
-      })
+        ds: this.props.options,
+      }, function(){
+        this.refs['filter'].focus();
+      });
+
     }
   }
 
@@ -66,11 +69,13 @@ export default class ModalFilterPicker extends Component {
         >
           <View>{renderedTitle}</View>
           {(renderList || this.renderList)()}
+          {/*
           <View 
           // style={cancelContainerStyle || styles.cancelContainer}
           >
             {(renderCancelButton || this.renderCancelButton)()}
           </View>
+*/}
         </KeyboardAvoidingView>
       </Modal>
     )
@@ -92,7 +97,16 @@ export default class ModalFilterPicker extends Component {
       <View 
       // style={filterTextInputContainerStyle || styles.filterTextInputContainer}
       >
+
+      </View>
+    )
+
+    return (
+      <View 
+      // style={listContainerStyle || styles.listContainer}
+      >
         <TextInput
+          ref="filter"
           onChangeText={this.onFilterChange}
           autoCorrect={false}
           blurOnSubmit={true}
@@ -101,17 +115,9 @@ export default class ModalFilterPicker extends Component {
           underlineColorAndroid={androidUnderlineColor}
           placeholderTextColor={placeholderTextColor}
           placeholder={placeholderText}
-          // style={filterTextInputStyle || styles.filterTextInput} 
+          style={filterTextInputStyle || styles.filterTextInput} 
           />
-      </View>
-    )
-
-    return (
-      <View 
-      // style={listContainerStyle || styles.listContainer}
-      >
-        {filter}
-        {this.renderOptionList()}
+                  {this.renderOptionList()}
       </View>
     )
   }
@@ -257,5 +263,6 @@ ModalFilterPicker.defaultProps = {
   noResultsText: 'Aucun résultat',
   visible: true,
   showFilter: true,
-  keyboardShouldPersistTaps: 'never'
+  keyboardShouldPersistTaps: 'never',
+  filterTextInputStyle:{fontSize:18, paddingLeft:10,}
 }

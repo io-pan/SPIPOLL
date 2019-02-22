@@ -9,6 +9,7 @@
 import React, {Component} from 'react';
 
 import {Platform, StyleSheet, Text, View,
+  Dimensions,
   ScrollView,
   Button,
   TouchableHighlight ,
@@ -67,16 +68,6 @@ const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
 
-
-// TODO: 
-//  screen W x H ..
-//  resize cam preview (on motion-run) based on sampleSize to save battery life.
-//  let screen sleep + option to force seep (absolute black layer)
-const initialPreviewHeight = 320;
-const initialPreviewWidth = 240;
-
-
-//270*360 = 1.33333
 
 //----------------------------------------------------------------------------------------
 class Draggable extends Component {
@@ -193,15 +184,15 @@ export default class App extends Component<Props> {
       imgTest:false,//'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg',
 
 
-      previewWidth:initialPreviewWidth,
-      previewHeight:initialPreviewHeight,
-      cam: 'free', // Different reasons why cam is on:
+      previewWidth:Dimensions.get('window').width,
+      previewHeight:Dimensions.get('window').width*4/3,
+      cam: '', // Different reasons why cam is on:
         // 'free'
-        // 'motion-preview'
         // 'collection-flower'
         // 'collection-environment'
-        // 'session' (insectes)
-        // 'motion-running' / 'motion-running'
+        // 'session' ( = free while session running)
+        // 'motion-preview' (while setting motion parameters)
+        // 'motion-running' (while session running) 
       distantcam:false,
       previewing:false,
       distantRec:false,
@@ -225,18 +216,19 @@ export default class App extends Component<Props> {
       motionInputAreaStyle:{
         top: 30,
         left: 30,
-        width: initialPreviewWidth - 30 - 30,
-        height: initialPreviewHeight - 30 - 30,
+        width: Dimensions.get('window').width - 30 - 30,
+        height: Dimensions.get('window').width*4/3 - 30 - 30,
       },
     };
 
     this.poignee = [{
-        x:30,
-        y:30,
-      },{
-        x:initialPreviewWidth - 30, 
-        y:initialPreviewHeight - 30,
-      }];
+      x:30,
+      y:30,
+    },{
+      x: Dimensions.get('window').width - 30, 
+      y: Dimensions.get('window').width*4/3 - 30,
+    }];
+
 
     this.camRequested = false;
     this.stopRecordRequested = false;
@@ -257,6 +249,8 @@ export default class App extends Component<Props> {
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
         PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
         PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+        PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
+        PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       ])
       // if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
       // &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
@@ -581,7 +575,7 @@ export default class App extends Component<Props> {
             });
             // console.log(picture);
             
-            const filename = this.state.cam=='free' ? this.formatedDate() : this.state.cam + '.jpg';
+            const filename = (this.state.cam=='free' ? this.formatedDate() : this.state.cam) + '.jpg';
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
               this.state.storage + '/' + filename
@@ -1126,24 +1120,6 @@ export default class App extends Component<Props> {
     }});
   }
 
-  getWindowDimension(event) {
-    // TODO: reset inputMotionArea and poignées.
-    if (event.nativeEvent.layout.width > event.nativeEvent.layout.height){
-      // Landscape
-      this.setState({
-        previewWidth:Math.max(this.state.previewWidth, this.state.previewHeight),
-        previewHeight:Math.min(this.state.previewWidth, this.state.previewHeight),
-      });
-    }
-    else{
-      // Portrait
-      this.setState({
-        previewWidth:Math.min(this.state.previewWidth, this.state.previewHeight),
-        previewHeight:Math.max(this.state.previewWidth, this.state.previewHeight),
-      });
-    }
-  }
-
   toggleView(view) {
     this.setState({cam:view});
   }
@@ -1159,23 +1135,19 @@ export default class App extends Component<Props> {
     }
 
     return (
-
-      <View 
-        style={styles.container}
-        onLayout={(event) => this.getWindowDimension(event)}
-        >
-
+      <View style={styles.container}>
         <View style={styles.header}>
 
-                    { this.appDirs.length > 0 
+                    { this.appDirs.length > 1
                       ? this.appDirs.map((value, index) => 
-                          <Button 
+                          <TouchableOpacity  
                             key={index}
                             style={styles.button}
-                            color={ this.state.storage==this.appDirs[index].path ? '#338433' : 'grey'}
-                            title = {""+value.type}
                             onPress = {() => this.toggleStorage(index)}
-                          />
+                            ><Text style={{color: this.state.storage==this.appDirs[index].path ? greenFlash : 'grey'}}>
+                            {value.type}
+                            </Text>
+                          </TouchableOpacity>
                         )
                       : null 
                     }
@@ -1341,6 +1313,7 @@ export default class App extends Component<Props> {
               value={this.state.minimumPixels}
               onValueChange={(value) => this.onMinimumPixels(value)} 
             />
+            <Text>{this.state.minimumPixels}</Text>
           </View>
 
         :null
@@ -1362,18 +1335,15 @@ export default class App extends Component<Props> {
   }
 }
 
-let CIRCLE_RADIUS = 15;
-const styles = StyleSheet.create({ 
+const
+CIRCLE_RADIUS = 15,
+styles = StyleSheet.create({ 
   motionInputArea:{
     position:'absolute',
   },
   motionInputAreaMask:{
     position: 'absolute',
     backgroundColor: 'rgba(0,0,0,0.4)',
-  },
-  mainContainer: {
-    height:500,
-    backgroundColor:'red',
   },
   circle: {
     backgroundColor:greenFlash,
@@ -1406,6 +1376,7 @@ const styles = StyleSheet.create({
   },
   sliderDenoise:{
     padding:10,
+    paddingBottom:0,
   },
   sliderZoom:{
     padding:15,

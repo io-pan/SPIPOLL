@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import {
+  Alert,
   StyleSheet,
   View,
   TouchableOpacity,
@@ -8,13 +9,13 @@ import {
   TextInput,
   Image,
   Dimensions,
-
+  Animated,
+  PermissionsAndroid,
 } from 'react-native'
 
 import {
   Button,
   CheckBox,
-  Input,
   ListItem,
 } from 'react-native-elements';
 
@@ -150,6 +151,7 @@ export default class CollectionForm extends Component {
     // TODO create collection / sessions folders
 
     this.state = {
+      gpsOpacity:new Animated.Value(1),
       collection:{
         protocole:'Flash',
         flower:{
@@ -170,8 +172,8 @@ export default class CollectionForm extends Component {
           culture50m:'',
         },
         place:{
-          long:0,
-          lat:0,
+          long:'',
+          lat:'',
         }
 
         //   Localiser 
@@ -259,6 +261,9 @@ export default class CollectionForm extends Component {
       },
       visibleTaxonModal:false,
     };
+
+    this.gpsSearching = false;
+    this.toValue = 1;
   }
 
 
@@ -289,9 +294,98 @@ export default class CollectionForm extends Component {
   showTaxonModal = () => {
     this.setState({visibleTaxonModal:true});
   }
-  hideTaxon = () => {
+  hideTaxonModal = () => {
     this.setState({visibleTaxonModal: false});
   }
+
+  geoLoc = async () => {
+    if (this.gpsSearching) return;
+
+    const granted = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION]);
+
+    // console.log('geoloc permission requested');
+    
+    if (granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+    &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED){
+
+      // console.log('geoloc permission granted');
+
+      this.gpsSearching = true;
+      this.gpsAnimation();
+      this.setState({collection:{
+        ...this.state.collection,
+        place:{
+          lat:'',
+          long:'', 
+        },
+      }});
+
+      this.watchID = navigator.geolocation.watchPosition(
+        (position) => {
+          console.log(position);
+          navigator.geolocation.clearWatch(this.watchID);
+          this.gpsSearching = false;
+
+          this.setState({collection:{
+            ...this.state.collection,
+            place:{
+              lat:position.coords.latitude,
+              long:position.coords.longitude, 
+            },
+          }}, function(){
+            console.log(this.state.collection);
+          });
+
+        },
+        (error) => {
+          this.gpsSearching = false;
+          Alert.alert('Position introuvable.');
+          // console.log('GPS error: ', JSON.stringify(error))
+        },{
+          enableHighAccuracy:true,
+          timeout:500, 
+          maximumAge:1000,
+        }
+      );
+    }
+  }
+
+  convertDMS(deg) {
+    var d = Math.floor (deg);
+    var minfloat = (deg-d)*60;
+    var m = Math.floor(minfloat);
+    var secfloat = (minfloat-m)*60;
+    var s = Math.round(secfloat);
+    // After rounding, the seconds might become 60. These two
+    // if-tests are not necessary if no rounding is done.
+    if (s==60) {
+      m++;
+      s=0;
+    }
+    if (m==60) {
+      d++;
+      m=0;
+    }
+    return "" + d + "° " + m + "' " + s + "'' ";
+  }
+
+  gpsAnimation() {
+    if (!this.gpsSearching && this.toValue==1){
+      return;
+    }
+
+    this.toValue = (this.toValue==0) ?1:0;
+    Animated.timing(
+      this.state.gpsOpacity,
+      {
+        toValue: this.toValue,
+        useNativeDriver: true,
+      }
+    ).start(() => this.gpsAnimation())  
+  }
+
 
   render () {
     return (
@@ -299,8 +393,8 @@ export default class CollectionForm extends Component {
           <View style={styles.collection}>
             <View style={styles.collection_grp}>
               {/*<Text style={styles.coll_title}>Nom de la collection</Text>*/}
-              <Input
-                containerStyle={styles.collection_input_container}
+              <TextInput
+                style={styles.collection_input_text}
                 placeholder='Nom de la collection'
               />
             </View>
@@ -412,12 +506,12 @@ export default class CollectionForm extends Component {
                     visible={this.state.visibleTaxonModal}
                     options={flowerList}
                     onSelect={this.selectTaxon}
-                    onCancel={this.hideTaxon}
+                    onCancel={this.hideTaxonModal}
                   />
                 </View>
 
-                <Input
-                  containerStyle={styles.collection_input_container}
+                <TextInput
+                  style={styles.collection_input_text}
                   placeholder='Vous connaissez une dénomination plus précise'
                 />
 
@@ -500,8 +594,9 @@ export default class CollectionForm extends Component {
                 <View style={styles.collection_subgrp}>
                   <Text style={styles.coll_subtitle}>
                   Distance approximative entre votre fleur et la ruche d'abeilles domestiques la plus proche (en mètres; par exemple : 150)</Text>
-                  <Input
-                    containerStyle={styles.collection_input_container}
+                  <TextInput
+                    keyboardType="number-pad"
+                    style={styles.collection_input_text}
                     placeholder='0'
                   />
                 </View>
@@ -683,16 +778,85 @@ export default class CollectionForm extends Component {
                     onPress = {() => this.upd_protocole('Long')}
                   />
                 </View>
-                          
+
             </View>
             <View style={styles.collection_grp}>
                 <Text style={styles.coll_title}>
                 LOCALISATION
                 </Text>
-                <Input
-                  // GPS + search
-                  containerStyle={styles.collection_input_container}
-                  placeholder='GPS'
+
+                <TouchableOpacity 
+                  style={styles.row}
+                  onPress ={ () => this.geoLoc() }
+                  >
+                  <View style={{
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding:10,
+                    }}
+                    >
+                    <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
+                      <MaterialCommunityIcons
+                        name="crosshairs-gps" 
+                        size={30}
+                        height={40}
+                        width={60}
+                        // style={styles.iconButton}
+                        // borderRadius={0}
+                        // padding={10}
+                        // paddingLeft={0}
+                        margin={0}
+                        // marginLeft={2}
+                        color={greenFlash}
+                        backgroundColor = 'transparent'
+                      />
+                    </Animated.View>
+                    <MaterialCommunityIcons
+                      name="crosshairs"
+                      size={30}
+                      height={40}
+                      width={60}
+                      // style={styles.iconButton}
+                      // borderRadius={0}
+                      // padding={10}
+                      // paddingLeft={0}
+                      margin={0}
+                      // marginLeft={2}
+                      color={greenFlash}
+                      backgroundColor = 'transparent'
+                      
+                    />
+                  </View>
+
+                  <View style={{paddingTop:5}}>
+                    <Text>Latitude: 
+                      { typeof this.state.collection.place.lat == 'number'
+                        ? ( ' '
+                          + this.convertDMS(this.state.collection.place.lat) 
+                          + '' + (this.state.collection.place.lat>0 ? "E" : "W")
+                          // + ' (' + this.state.collection.place.lat.toFixed(6) +')'
+                          )
+                        : this.state.collection.place.lat
+                      }
+                    </Text>
+                    <Text>Longitude: 
+                      {
+                        typeof this.state.collection.place.long == 'number'
+                        ? ( ' '
+                          + this.convertDMS(this.state.collection.place.long, 'long') 
+                          + '' + (this.state.collection.place.long>0 ? "N" : "S")
+                          // + ' (' + this.state.collection.place.long.toFixed(6) +')'
+                          )
+                        : this.state.collection.place.long
+                      }
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+
+                <TextInput
+
+                  style={styles.collection_input_text}
+                  placeholder='Code postale'
                 />
             </View>
 
@@ -764,8 +928,14 @@ const styles = StyleSheet.create({
     borderWidth:0,
   },
   collection_input_text:{
+    margin:5,
+    padding:5,
     fontWeight:'normal',
     fontSize:16,
     color:greenDark,
+    backgroundColor:'white',
   },
+  row:{
+    flexDirection:'row', 
+  }
 });
