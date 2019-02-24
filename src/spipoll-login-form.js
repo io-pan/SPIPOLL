@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import {
+  AsyncStorage,
   Alert,
   StyleSheet,
   View,
@@ -38,50 +39,86 @@ export default class SpipollLoginFrom extends Component {
   //-----------------------------------------------------------------------------------------
   constructor (props) {
     super(props)
+
+    this.hasCred = false;
     this.state = {
       connected: false,
+      name:'',
+      pass:'',
     };
-
-    this.id='ioPan';
-    this.pass='B3ssiere.3';
-    // this.form_build_id='';
   }
 
+  componentWillMount() {
 
-treatlog = (connected) => {
-  this.setState({connected:connected})
-}
-
-login(callback){
-  var callback = callback;
-
-  var data = new FormData();
-  data.append("name", "xxx");
-  data.append("pass", "xxx");
-  data.append("form_id", "user_login");
-
-  var xhr = new XMLHttpRequest();
-  xhr.withCredentials = true;
-
-  xhr.onreadystatechange = function() {
-    if (xhr.readyState === 4) {
-      if (xhr.status === 200
-      && xhr.responseText.indexOf("Se Connecter") < 0){
-        callback(true);
+    let name ='',
+        pass ='';
+    AsyncStorage.getItem('cred', (err, cred) => {
+      if (err) {
+        // Alert.alert('ERROR getting locations'+ JSON.stringify(err));
       }
-      else{
-        Alert.alert('Connection error');
-        callback(false);
+      else {
+        if(cred){
+          cred = JSON.parse(cred);
+          name=cred.name;
+          pass=cred.pass;
+          if(name&& pass){
+            this.setState({
+              name:name,
+              pass:pass,
+            }, function(){
+              this.login(this.treatlog);
+            })
+          }
+        }
+      }
+    })
+  }
+
+  treatlog = (connected) => {
+    this.setState({connected:connected})
+    if(connected){
+      AsyncStorage.setItem('cred', JSON.stringify({
+        name:this.state.name,
+        pass:this.state.pass,
+      }));
+    }
+    else {
+      AsyncStorage.setItem('cred', '');  
+    }    
+  }
+
+  login(callback){
+    var callback = callback;
+
+    var data = new FormData();
+    data.append("name", this.state.name);
+    data.append("pass", this.state.pass);
+    data.append("form_id", "user_login");
+
+    var xhr = new XMLHttpRequest();
+    xhr.withCredentials = true;
+
+    xhr.onreadystatechange = function() {
+      if (xhr.readyState === 4) {
+        if (xhr.status === 200
+        && xhr.responseText.indexOf("Se Connecter") < 0){
+          callback(true);
+        }
+        else{
+          Alert.alert('Connection error');
+          callback(false);
+        }
       }
     }
+
+    xhr.open("POST", "http://www.spipoll.org/mon-spipoll/mon-spipoll?login_popup=");
+    xhr.setRequestHeader("cache-control", "no-cache");
+    xhr.send(data);
   }
 
-  xhr.open("POST", "http://www.spipoll.org/mon-spipoll/mon-spipoll?login_popup=");
-  xhr.setRequestHeader("cache-control", "no-cache");
-  xhr.send(data);
-}
-
-
+  onInput(k,v){
+    this.setState({[k]:v})
+  }
 
   render () {
     return (
@@ -93,15 +130,20 @@ login(callback){
             <TextInput
               style={styles.collection_input_text}
               placeholder='Identifiant'
+              onEndEditing =    {(event) => this.onInput( 'name',event.nativeEvent.text) } 
+              onSubmitEditing = {(event) => this.onInput( 'name',event.nativeEvent.text) } 
             />
             <TextInput
+              secureTextEntry={true}
               style={styles.collection_input_text}
               placeholder='Mot de passe'
+              onEndEditing =    {(event) => this.onInput( 'pass',event.nativeEvent.text) } 
+              onSubmitEditing = {(event) => this.onInput( 'pass',event.nativeEvent.text) } 
             />
 
             <TouchableOpacity 
               style={styles.buttonContainer} 
-              onPress={this.login(this.treatlog)}
+              onPress = {() => this.login(this.treatlog)}
               >
               <Text>Connection</Text>
             </TouchableOpacity> 
