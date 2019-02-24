@@ -37,7 +37,7 @@ import MaterialIcons from 'react-native-vector-icons/MaterialIcons';  // https:/
 import FontAwesomeIcons  from 'react-native-vector-icons/FontAwesome';;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-
+import SpipolLogin from  "./src/spipoll-login-form"
 import CollectionForm from "./src/collection-form"
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 
@@ -186,7 +186,7 @@ export default class App extends Component<Props> {
 
       previewWidth:Dimensions.get('window').width,
       previewHeight:Dimensions.get('window').width*4/3,
-      cam: '', // Different reasons why cam is on:
+      cam: 'login', // Different reasons why cam is on:
         // 'free'
         // 'collection-flower'
         // 'collection-environment'
@@ -678,7 +678,7 @@ export default class App extends Component<Props> {
   }
 
   renderCamera() {
-    if(!this.state.cam) {
+    if(this.state.cam == 'collection-form' || this.state.cam =='login') {
       if(this.state.connectedTo && this.camRequested){
         this.camRequested = false;
         this.sendMessage(this.state.connectedTo, 'distantcam', false);
@@ -1137,6 +1137,7 @@ export default class App extends Component<Props> {
     return (
       <View style={styles.container}>
         <View style={styles.header}>
+          <ScrollView horizontal={true}>
 
                     { this.appDirs.length > 1
                       ? this.appDirs.map((value, index) => 
@@ -1154,6 +1155,13 @@ export default class App extends Component<Props> {
 
                     <Button 
                       style={styles.button}
+                      color={ this.state.cam=='login' ? '#338433' : 'grey'}
+                      title = 'login' 
+                      onPress = {() => this.toggleView('login')}
+                    />
+
+                    <Button 
+                      style={styles.button}
                       color={ this.state.cam=='motion-preview' ? '#338433' : 'grey'}
                       title = 'cam motion' 
                       onPress = {() => this.toggleView('motion-preview')}
@@ -1166,10 +1174,11 @@ export default class App extends Component<Props> {
                     />
                     <Button 
                       style={styles.button}
-                      color={ !this.state.cam ? '#338433' : 'grey'}
+                      color={ this.state.cam=='collection-form' ? '#338433' : 'grey'}
                       title = 'form'
-                      onPress = {() => this.toggleView('')}
+                      onPress = {() => this.toggleView('collection-form')}
                     />
+                  </ScrollView>
         </View> 
 
       <ScrollView>
@@ -1320,11 +1329,19 @@ export default class App extends Component<Props> {
         }
 
 
-        { this.state.cam==""
+        { this.state.cam=="collection-form"
         ? <CollectionForm
             ref="collectionForm"
             filePath={this.state.storage}
             pickPhoto = {(view) => this.pickPhoto(view)}
+         />
+        : null
+        }
+
+
+        { this.state.cam=="login"
+        ? <SpipolLogin
+            ref="LOGIN"
          />
         : null
         }
