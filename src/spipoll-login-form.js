@@ -116,6 +116,11 @@ export default class SpipollLoginFrom extends Component {
     xhr.send(data);
   }
 
+  logout(){
+    this.setState({connected:false});
+    AsyncStorage.setItem('cred', ''); 
+  }
+
   onInput(k,v){
     this.setState({[k]:v})
   }
@@ -128,12 +133,14 @@ export default class SpipollLoginFrom extends Component {
         ? <View style={styles.collection_grp}>
             <Text style={styles.coll_title}>LOGIN</Text>
             <TextInput
+              defaultValue={this.state.name}
               style={styles.collection_input_text}
               placeholder='Identifiant'
               onEndEditing =    {(event) => this.onInput( 'name',event.nativeEvent.text) } 
               onSubmitEditing = {(event) => this.onInput( 'name',event.nativeEvent.text) } 
             />
             <TextInput
+              defaultValue={this.state.pass}
               secureTextEntry={true}
               style={styles.collection_input_text}
               placeholder='Mot de passe'
@@ -150,7 +157,12 @@ export default class SpipollLoginFrom extends Component {
           </View>
         :
           <View style={styles.collection_grp}>
-            <Text>CONNECTÉ</Text>
+            <TouchableOpacity 
+              style={styles.buttonContainer} 
+              onPress = {() => this.logout()}
+              >
+              <Text>Déconnection</Text>
+            </TouchableOpacity> 
           </View>
         }
       </View>
