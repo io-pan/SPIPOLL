@@ -24,6 +24,8 @@ import {Platform, StyleSheet, Text, View,
   StatusBar,
   PanResponder,
   Animated,
+  TextInput,
+  AsyncStorage,
 } from 'react-native';
 
 import SplashScreen from "rn-splash-screen";
@@ -69,6 +71,7 @@ const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
 
 
+const landmarkSize = 2;
 //----------------------------------------------------------------------------------------
 class Draggable extends Component {
 //----------------------------------------------------------------------------------------    
@@ -179,14 +182,14 @@ export default class App extends Component<Props> {
       storage:false,
       devices: [],
       connectedTo:false,
-      img:false,
+      distantPicture:false,
       imgLocal: false,
       imgTest:false,//'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg',
 
 
       previewWidth:Dimensions.get('window').width,
       previewHeight:Dimensions.get('window').width*4/3,
-      cam: 'login', // Different reasons why cam is on:
+      cam: 'free', // Different reasons why cam is on:
         // 'free'
         // 'collection-flower'
         // 'collection-environment'
@@ -197,6 +200,7 @@ export default class App extends Component<Props> {
       previewing:false,
       distantRec:false,
       isRecording:false,
+      isTakingPicture:false,
       motionDetected:false,
       motionBase64:'',
       motionDetectionMode: 1,
@@ -205,6 +209,12 @@ export default class App extends Component<Props> {
       minimumPixels: 1,
       motionPreviewPaused:false,
 
+      motionAction:{
+        type:'',
+        interval:'',
+        until:'',
+      },
+      // faces:[],
       zoom:0,
 
       showDraggable: true,
@@ -214,19 +224,19 @@ export default class App extends Component<Props> {
 
       motionInputAreaShape:'',
       motionInputAreaStyle:{
-        top: 30,
-        left: 30,
-        width: Dimensions.get('window').width - 30 - 30,
-        height: Dimensions.get('window').width*4/3 - 30 - 30,
+        top: 60,
+        left: 60,
+        width: Dimensions.get('window').width - 60 - 60,
+        height: Dimensions.get('window').width*4/3 - 60 - 60,
       },
     };
 
     this.poignee = [{
-      x:30,
-      y:30,
+      x:60,
+      y:60,
     },{
-      x: Dimensions.get('window').width - 30, 
-      y: Dimensions.get('window').width*4/3 - 30,
+      x: Dimensions.get('window').width - 60, 
+      y: Dimensions.get('window').width*4/3 - 60,
     }];
 
 
@@ -279,6 +289,24 @@ export default class App extends Component<Props> {
 
   componentWillMount() {
     StatusBar.setHidden(true);
+
+    AsyncStorage.getItem('motionAction', (err, motionAction) => {
+      if (err) {
+        // Alert.alert('ERROR getting locations'+ JSON.stringify(err));
+      }
+      else {
+        if(motionAction){
+          motionAction = JSON.parse(motionAction);
+
+          this.setState({motionAction:{
+            type: motionAction.type ? motionAction.type : '',
+            interval: motionAction.interval ? motionAction.interval : '',
+            until: motionAction.until ? motionAction.until : '',
+          }});
+        }
+      }
+    });
+
 
     // Add a listener for the delta value change
     this._val = { x:0, y:0 }
@@ -436,6 +464,7 @@ export default class App extends Component<Props> {
 
   sendMessage(id, key, value){
     //alert(JSON.stringify({key:key , value:value }));
+    console.log(key, value);
     if(id){
       BluetoothCP.sendMessage(JSON.stringify({key:key , value:value }), id);
     }
@@ -443,9 +472,10 @@ export default class App extends Component<Props> {
 
   receivedMessage = (user) => {
     // alert(JSON.stringify(user , undefined, 2));
+
     let msg = user.message;
     msg = JSON.parse(msg);
-
+    console.log(msg);
     if(msg.key == 'txt') {
       Alert.alert(msg.value);
     }
@@ -459,15 +489,17 @@ export default class App extends Component<Props> {
     else if(msg.key == 'cmd') {
 
       if(msg.value == 'cam') {
-        this.camRequested = true;
+        // this.camRequested = true;
+        this.setState({cam:'free'});
       } 
       
       if(msg.value=='takePicture'){
+        this.pictureRequested = true;
         this.takePicture();
       }
       else if(msg.value=='startRecording'){
         this.stopRecordRequested = false;
-        this.recordVideo();
+        this.takeVideo();
       }
       else if(msg.value=='stopRecording'){
         this.stopRecordRequested = true;
@@ -480,7 +512,7 @@ export default class App extends Component<Props> {
     }
 
     else if(msg.key == 'img') {
-      this.setState({img:'data:image/png;base64,'+msg.value}, function(){
+      this.setState({distantPicture:'data:image/png;base64,'+msg.value}, function(){
         if(this.state.previewing){
           this.sendMessage(this.state.connectedTo, 'cmd', 'takePicture');
         }
@@ -532,12 +564,55 @@ export default class App extends Component<Props> {
     // console.log(getSupportedRatiosAsync);
     // const getPreviewSize = await this.camera.getPreviewSize();
     // console.log(getPreviewSize);
-
     SplashScreen.hide();
   }
 
-  
+  // onFacesDetected = ({ faces }) => {
+  //   console.log('FACE', faces);
+  //   this.setState({ faces:faces });
+  // };
+  // onFaceDetectionError = state => console.warn('Faces detection error:', state);
+
+  // renderFace({ bounds, faceID, rollAngle, yawAngle }) {
+  //   return (
+  //     <View
+  //       key={faceID}
+  //       transform={[
+  //         { perspective: 600 },
+  //         { rotateZ: `${rollAngle.toFixed(0)}deg` },
+  //         { rotateY: `${yawAngle.toFixed(0)}deg` },
+  //       ]}
+  //       style={[
+  //         styles.face,
+  //         {
+  //           ...bounds.size,
+  //           left: bounds.origin.x,
+  //           top: bounds.origin.y,
+  //         },
+  //       ]}
+  //     >
+  //       {/*
+  //       <Text style={styles.faceText}>ID: {faceID}</Text>
+  //       <Text style={styles.faceText}>rollAngle: {rollAngle.toFixed(0)}</Text>
+  //       <Text style={styles.faceText}>yawAngle: {yawAngle.toFixed(0)}</Text>
+  //       */}
+  //     </View>
+  //   );
+  // }
+
+  // renderFaces() {
+  //   return (
+  //     <View style={styles.facesContainer} pointerEvents="none">
+  //       {this.state.faces.map(this.renderFace)}
+  //     </View>
+  //   );
+  // }
+
   onMotionDetected = ({ motion }) => {
+
+
+    // TODO: find a way to pause it on java side.
+
     // if (this.state.motionPreviewPaused) 
     //   return;
     
@@ -549,10 +624,28 @@ export default class App extends Component<Props> {
       //
     });  
 
-    if (motion.motionDetected){
-      //    1. photo every X sec.   for X sec.   /  until no motion
-      //    2. video                for X sec.   /  until no motion
-    }
+
+    // if (!this.motionSartTime && motion.motionDetected){
+    //   this.motionSartTime = Math.floor(Date.now() / 1000);
+
+    //   if(this.state.motionAction.type=='video'){
+    //     this.takeVideo();
+    //   }
+    //   else if(this.state.motionAction.type=='photo'){
+    //     this.takePicture();
+    //   }
+    // }
+    // else if(this.motionSartTime && !motion.motionDetected){
+    //   this.motionSartTime = false;
+    //   if(this.state.motionAction.type=='video' && this.state.motionAction.until > 0){
+    //     this.stopRecordRequested = true;
+    //     this.camera.stopRecording();
+    //   }
+    //   else if(this.state.motionAction.type=='photo'  && this.state.motionAction.until=='video'){
+    //     // stop taking photos.
+    //   }
+    // }
+    
   }
 
   takePicture = async () => {
@@ -566,24 +659,36 @@ export default class App extends Component<Props> {
         if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
         &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
 
+          // TODO base 64 si distant
           try {
+            this.setState({ isTakingPicture: true }); 
             var picture = await this.camera.takePictureAsync({ 
-              width:400,
+              // width:400,
               quality: 0.9, 
+              // base64:true,
               skipProcessing :true,
               fixOrientation: true,
             });
-            // console.log(picture);
-            
+            console.log(picture);
+
+
             const filename = (this.state.cam=='free' ? this.formatedDate() : this.state.cam) + '.jpg';
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
               this.state.storage + '/' + filename
             ).then(() => {
-                
+              this.setState({ isTakingPicture: false }); 
+
+
+              // TODO: distant take picture
+              // if(this.pictureRequested){
+              //  this.sendMessage(this.state.connectedTo, 'img', picture.base64);
+              //  this.pictureRequested = false;
+              // }
+
               if(this.state.cam=='collection-flower'){
                 this.setState({
-                  cam:'',
+                  cam:'collection-form',
                 }, function(){
                   this.refs['collectionForm'].refs['collection-flower'].setSource(
                       {uri:'file:///' + this.state.storage + '/' + filename});
@@ -591,15 +696,17 @@ export default class App extends Component<Props> {
               }
               else if(this.state.cam=='collection-environment'){
                 this.setState({
-                  cam:'',
+                  cam:'collection-form',
                 }, function(){
                   this.refs['collectionForm'].refs['collection-environment'].setSource(
                       {uri:'file:///' + this.state.storage + '/' + filename});
                 })
               }
-            }).catch((err) => { console.log(err) });
+            }).catch((err) => { 
+              this.setState({ isTakingPicture: false }); 
+              console.log(err) 
+            });
 
-            // this.sendMessage(this.state.connectedTo, 'img', picture.base64);
           } 
           catch (err) {
             console.log('takePictureAsync ERROR: ', err);
@@ -612,14 +719,28 @@ export default class App extends Component<Props> {
       }
     }
   }
+
+  /*
+
+
+We recommend using the library [`react-native-thumbnail`](https://github.com/phuochau/react-native-thumbnail) for generating thumbnails of your video files.
+#### How can I save my video/image to the camera roll?
+You can use the [`CameraRoll` Module](https://facebook.github.io/react-native/docs/cameraroll.htm).
+You must follow the setup instructions in the `react-native` documentation, since `CameraRoll` module needs to be linked first.
+
+  */
            
   async takeVideo() {
     if (this.camera) {
       try {
         const path = this.state.storage + '/' + this.formatedDate()  + '.mp4';
+
+        console.log(this.motionSartTime );
+        console.log( this.state.motionAction.until);
+
         const promise = this.camera.recordAsync({
           path: path,
-          maxDuration:60, // TODO user settings.
+          maxDuration:30
         });
 
         if (promise) {
@@ -652,100 +773,28 @@ export default class App extends Component<Props> {
       return null;
 
     return (
-      <View style={styles.MotionContainer} pointerEvents="none">
+      <React.Fragment>
         {
           this.state.motionBase64
           ? <Image
+              pointerEvents="none"
+              style={styles.MotionContainer} 
               fadeDuration={0}
               style = {[styles.motionpreview,{width:this.state.previewWidth, height:this.state.previewHeight}]}
               source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
             />
           : null
         }
-      </View>
-    );
-  }
 
-
-  toggleShape(){
-    this.setState({motionInputAreaShape: 
-      this.state.motionInputAreaShape == ''
-      ? 'elipse'
-      : this.state.motionInputAreaShape == 'elipse'
-          ? 'rectangle'
-          : ''
-      })
-  }
-
-  renderCamera() {
-    if(this.state.cam == 'collection-form' || this.state.cam =='login') {
-      if(this.state.connectedTo && this.camRequested){
-        this.camRequested = false;
-        this.sendMessage(this.state.connectedTo, 'distantcam', false);
-      }
-      return null;     
-    }
-
-    // console.log(this.state.motionInputAreaStyle);
-    return (
-      <View //ViewShot
-        ref="viewShot"
-        // options={{
-        //   format: "jpg", 
-        //   quality:1 ,
-        // }}
-        style={[styles.preview,{width:this.state.previewWidth, height:this.state.previewHeight}]}
-      >
-      <RNCamera
-        ref={cam => (this.camera = cam)}
-        style = {[styles.cam,{width:this.state.previewWidth, height:this.state.previewHeight}]}
-        onCameraReady = {this.onCameraReady}
-        type={RNCamera.Constants.Type.back}
-        flashMode={RNCamera.Constants.FlashMode.off}
-        ratio="4:3"
-        autoFocus ={RNCamera.Constants.AutoFocus.on}
-        zoom={this.state.zoom}
-
-        motionDetectionMode={this.state.motionDetectionMode}
-        onMotionDetected={this.onMotionDetected}
-        motionDetectionMinimumPixels={this.state.minimumPixels}
-        motionDetectionThreshold={this.state.threshold}
-        motionDetectionSampleSize={this.state.sampleSize}
-        motionDetectionArea={ 
-          this.state.motionInputAreaShape == ''
-          ? ""
-          : this.state.motionInputAreaShape +";"+  // shape : elypse / rectangle
-            Math.ceil(this.state.motionInputAreaStyle.left/this.state.sampleSize) +";"+ 
-            Math.ceil(this.state.motionInputAreaStyle.top /this.state.sampleSize) +";"+
-            Math.floor(this.state.motionInputAreaStyle.width /this.state.sampleSize) +";"+
-            Math.floor(this.state.motionInputAreaStyle.height /this.state.sampleSize) +";"
-        }
-        >
-
-        {this.renderMotion()}
-
-        <Slider  
-          ref="zoom"
-          style={styles.sliderZoom} 
-          thumbTintColor = {greenFlash} 
-          minimumTrackTintColor={greenFlash} 
-          maximumTrackTintColor={greenFlash}
-          minimumValue={0}
-          maximumValue={1}
-          step={0.1}
-          value={0}
-          onValueChange={
-            (value) => this.onZoom(value)
-          } 
-        />
-            
-        { this.state.motionInputAreaShape != '' 
+       { this.state.motionInputAreaShape != '' 
         && this.state.cam == 'motion-preview'
         ?
-          <View style={styles.MotionContainer}>
+          <View 
+            style={styles.MotionContainer}>
 
             { this.state.motionInputAreaShape=='elipse'
               ? <Image 
+                  pointerEvents="none"
                   fadeDuration={0}
                   pointerEvents="none"
                   source = {motionMask}
@@ -783,9 +832,9 @@ export default class App extends Component<Props> {
             <View 
               pointerEvents="none"
               style={[styles.motionInputAreaMask,{
-                top:this.state.motionInputAreaStyle.top + this.state.motionInputAreaStyle.height,
                 left:0,
                 right:0,
+                top: this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height,
                 bottom:0,
               } ]}
             />
@@ -811,12 +860,12 @@ export default class App extends Component<Props> {
             { this.state.motionInputAreaShape=='elipse'
               ? 
                 <Svg 
+                  pointerEvents="none"
                   style={[
                     styles.motionInputArea, 
                     this.state.motionInputAreaStyle, 
                     {borderWidth:2, borderColor:'transparent'}
                   ]}
-                  pointerEvents="none"
                   height={this.state.motionInputAreaStyle.height}
                   width={this.state.motionInputAreaStyle.width}
                   >
@@ -855,111 +904,425 @@ export default class App extends Component<Props> {
           :null
         }
 
-        
-        { this.state.cam == 'motion-preview'
-        ?
-          <View style={styles.iconButtonContainer} >
-          <FontAwesomeIcons.Button   
-            name='th' //   th-large      
-            underlayColor={greenSuperLight}
-            size={40}
-            width={100}
-            margin={0}
-            paddingLeft={30}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleShape()}
-          />
+      </React.Fragment>
+    );
+  }
 
-          <FontAwesomeIcons.Button   
-            name='th-large' //      
-            underlayColor={greenSuperLight}
-            size={40}
-            width={100}
-            margin={0}
-            paddingLeft={30}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleShape()}
-          />
 
-          <FontAwesomeIcons.Button   
-            name='adjust' //   th-large      
-            underlayColor={greenSuperLight}
-            size={40}
-            width={100}
-            margin={0}
-            paddingLeft={30}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleShape()}
-          />
+  toggleShape(){
+    this.setState({motionInputAreaShape: 
+      this.state.motionInputAreaShape == ''
+      ? 'elipse'
+      : this.state.motionInputAreaShape == 'elipse'
+          ? 'rectangle'
+          : ''
+      })
+  }
+
+  renderMotionSetupSlider(){
+    return(
+
+          <View
+          >
+            {/*
+            <Button 
+              style={{ 
+                margin:1, 
+                height:40 ,
+                marginBottom:2,
+              }}
+              color={ this.state.previewing ? '#338433' : 'grey'}
+              title = 'Pause motion'
+              onPress = {() => this.togglePreviewMotion()}
+            />
+            */}
+
+            <Slider  
+              ref="sampleSize"
+              style={styles.slider} 
+              thumbTintColor = '#000' 
+              minimumTrackTintColor='#cccccc' 
+              maximumTrackTintColor='#ffffff' 
+              minimumValue={-parseInt(this.state.previewWidth/10,10)}
+              maximumValue={-1}
+              step={1}
+              value={-this.state.sampleSize}
+              onValueChange={
+                (value) => this.onSampleSize(-value)
+              } 
+            />
+  
+            <Slider  
+              ref="threshold"
+              style={styles.slider} 
+              thumbTintColor = '#fff' 
+              minimumTrackTintColor='#dddddd' 
+              maximumTrackTintColor='#ffffff' 
+              minimumValue={-255}
+              maximumValue={0}
+              step={1}
+              // value={this.state.threshold}
+              value={
+                -(
+                  (this.state.threshold>>>16) 
+                + ((this.state.threshold&0x00ff00)>>>8)
+                + (this.state.threshold&0x0000ff)
+                )/3
+              }
+              onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
+            />
+              <Slider  
+                ref="threshold_red"
+                style={styles.slider} 
+                thumbTintColor = '#d00' 
+                minimumTrackTintColor='#dd0000' 
+                maximumTrackTintColor='#dd0000' 
+                minimumValue={-255}
+                maximumValue={0}
+                step={1}
+                value={-(this.state.threshold>>>16)}
+                onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
+              />
+              <Slider  
+                ref="threshold_green"
+                style={styles.slider} 
+                thumbTintColor = {greenFlash}
+                minimumTrackTintColor={greenFlash}
+                maximumTrackTintColor={greenFlash}
+                minimumValue={-255}
+                maximumValue={0}
+                step={1}
+                value={-((this.state.threshold & 0x00ff00) >>> 8)}
+                onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
+              />
+              <Slider  
+                ref="threshold_blue"
+                style={styles.slider} 
+                thumbTintColor = '#0000dd' 
+                minimumTrackTintColor='#0000dd' 
+                maximumTrackTintColor='#0000dd' 
+                minimumValue={-255}
+                maximumValue={0}
+                step={1}
+                value={-(this.state.threshold & 0x0000ff)}
+                onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
+              />
+  
+            <Slider  
+              ref="minimum_pixels"
+              style={styles.sliderDenoise} 
+              thumbTintColor='#000' 
+              minimumTrackTintColor='#ff0000' 
+              maximumTrackTintColor='#0000ff' 
+              minimumValue={1}
+              maximumValue={this.state.previewWidth/this.state.sampleSize}
+              step={1}
+              value={this.state.minimumPixels}
+              onValueChange={(value) => this.onMinimumPixels(value)} 
+            />
+            <Text>{this.state.minimumPixels}</Text>
           </View>
-        :
-          <View style={styles.iconButtonContainer} >
-            <View style={styles.iconButton}>
-            <MaterialCommunityIcons.Button   
-              name='camera'
-              underlayColor={greenSuperLight}
-              size={40}
-              width={100}
-              margin={0}
-              paddingLeft={30}
-              color= {greenFlash}
-              backgroundColor ={'transparent'}
-              // onPress = {() =>{}}
-              onPress = {() => this.takePicture()}
-            /></View>
 
-            { this.state.cam != 'collection-flower'
-            && this.state.cam != 'collection-environment'
-              ?
-              <React.Fragment>
-              <View style={styles.iconButton}>
-              <MaterialCommunityIcons.Button   
-                name='video'
-                underlayColor={greenSuperLight}
-                size={40}
-                width={100}
-                margin={0}
-                paddingLeft={30}
-                color= { this.state.isRecording ? 'red' : greenFlash}
-                backgroundColor ={'transparent'}
+    );
+  }
 
-                onPress={
-                  this.state.isRecording 
-                  ? () => {
-                      this.stopRecordRequested = true;
-                      this.camera.stopRecording()
-                    }
-                  : () => this.takeVideo()
+  renderCamActionButtons(){   
+    if(this.state.cam == 'motion-preview')
+          return null;
+    
+    return (
+      <View style={styles.iconButtonContainer} >
+        <View style={styles.iconButton}>
+        <MaterialCommunityIcons.Button   
+          name='camera'
+          underlayColor={greenSuperLight}
+          size={40}
+          width={100}
+          margin={0}
+          paddingLeft={30}
+          color= { this.state.isTakingPicture ? 'red' : greenFlash}
+          backgroundColor ={'transparent'}
+          // onPress = {() =>{}}
+          onPress = {() => this.takePicture()}
+        /></View>
+
+        { this.state.cam != 'collection-flower'
+        && this.state.cam != 'collection-environment'
+          ?
+          <React.Fragment>
+          <View style={styles.iconButton}>
+          <MaterialCommunityIcons.Button   
+            name='video'
+            underlayColor={greenSuperLight}
+            size={40}
+            width={100}
+            margin={0}
+            paddingLeft={30}
+            color= { this.state.isRecording ? 'red' : greenFlash}
+            backgroundColor ={'transparent'}
+
+            onPress={
+              this.state.isRecording 
+              ? () => {
+                  this.stopRecordRequested = true;
+                  this.camera.stopRecording()
                 }
-              /></View>
-
-              <View style={styles.iconButton}>
-              <MaterialCommunityIcons.Button   
-                name='cctv'
-                underlayColor={greenSuperLight}
-                size={40}
-                width={100}
-                margin={0}
-                paddingLeft={30}
-                paddingBottom={12}
-                color= {greenFlash}
-                backgroundColor ={'transparent'}
-                onPress = {() =>{}}
-                // onPress = {() => this.takeMotion()}
-              /></View>
-              </React.Fragment>
-              : null
+              : () => this.takeVideo()
             }
-          </View>
-        }
+          /></View>
 
+          <View style={styles.iconButton}>
+          <MaterialCommunityIcons.Button   
+            name='cctv'
+            underlayColor={greenSuperLight}
+            size={40}
+            width={100}
+            margin={0}
+            paddingLeft={30}
+            paddingBottom={12}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            onPress = {() =>{}}
+            // onPress = {() => this.takeMotion()}
+          /></View>
+          </React.Fragment>
+          :null
+        }
+      </View>
+    );
+    
+  }
+
+  toggleMotionAction(type){
+    this.setState({motionAction:{
+      ...this.state.motionAction,
+      type:type,
+    }});
+    this.storeMotionAction();
+  }
+  setMotionActionUntil(sec){
+    this.setState({motionAction:{
+      ...this.state.motionAction,
+      until:sec,
+    }});
+    this.storeMotionAction();
+  }
+  setMotionActionInterval(sec){
+    this.setState({motionAction:{
+      ...this.state.motionAction,
+      interval:sec,
+    }});
+    this.storeMotionAction();
+  }
+  storeMotionAction(){
+    AsyncStorage.setItem('motionAction', JSON.stringify({
+      type:this.state.motionAction.type,
+      until:this.state.motionAction.until,
+      interval:this.state.motionAction.interval,
+    }));
+  }
+
+
+  renderMotionSetupTodoForm(){
+    return(
+      <View>
+        <Text>Action à effectuer:</Text>
+
+        <View style={[styles.row, {justifyContent: 'space-between',}]}>
+          <TouchableOpacity  
+            style={styles.button}
+            onPress = {() => this.toggleMotionAction('photo')}
+            >
+            <Text style={{color: this.state.motionAction.type=='photo' ? greenFlash : 'grey'}}>
+            Prendre une photo
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity  
+            style={styles.button}
+            onPress = {() => this.toggleMotionAction('video')}
+            >
+            <Text style={{color: this.state.motionAction.type=='video' ? greenFlash : 'grey'}}>
+            Prendre une vidéo
+            </Text>
+          </TouchableOpacity>
+
+        </View>
+
+        { this.state.motionAction.type
+        ? <View>
+            { this.state.motionAction.type == 'photo' 
+            ? <View style={[styles.row]}>
+                <Text style={{color: this.state.motionAction.interval ? greenFlash : 'grey'}}>Toutes les </Text>
+                <TextInput
+                  keyboardType="number-pad"
+                  style={{borderWidth:1, borderColor:greenDark}}
+                  defaultValue={this.state.motionAction.interval}
+                  onEndEditing =    {(event) => this.setMotionActionInterval(parseInt(event.nativeEvent.text,10)) } 
+                  onSubmitEditing = {(event) => this.setMotionActionInterval(parseInt(event.nativeEvent.text,10)) } 
+                />
+                <Text style={{color: this.state.motionAction.interval ? greenFlash : 'grey'}}> secondes,</Text>
+              </View> 
+            : null
+            }
+
+           <View style={[styles.row, {justifyContent: 'space-between',}]}>
+             
+              <View style={[styles.row]}>
+                <Text style={{color: this.state.motionAction.until ? greenFlash : 'grey'}}>
+                pendant</Text>
+                <TextInput
+                  keyboardType="number-pad"
+                  style={{borderWidth:1, borderColor:greenDark}}
+                  defaultValue={''+this.state.motionAction.until}
+                  onEndEditing =    {(event) => this.setMotionActionUntil(parseInt(event.nativeEvent.text,10)) } 
+                  onSubmitEditing = {(event) => this.setMotionActionUntil(parseInt(event.nativeEvent.text,10)) } 
+                />
+                <Text style={{color: this.state.motionAction.until ? greenFlash : 'grey'}}>
+                secondes.</Text>
+              </View> 
+              
+              <TouchableOpacity  
+                style={styles.button}
+                onPress = {() => this.setMotionActionUntil(0)}
+                >
+                <Text style={{color: !this.state.motionAction.until? greenFlash : 'grey'}}>
+                jusqu'à la fin du mvt.
+                </Text>
+              </TouchableOpacity>
+
+            </View>
+
+          </View> 
+        : null
+        }
+        
+
+      </View>
+    );
+  }
+
+  renderMotionSetupButtons(){   
+    if ( this.state.cam != 'motion-preview')
+      return null;
+
+    return(  
+      <View>
+        <View style={styles.iconButtonContainer} >
+        <FontAwesomeIcons.Button   
+          name='th' //   th-large      
+          underlayColor={greenSuperLight}
+          size={40}
+          width={100}
+          margin={0}
+          paddingLeft={30}
+          color= {greenFlash}
+          backgroundColor ={'transparent'}
+          // onPress = {() =>{}}
+          onPress = {() => this.toggleShape()}
+        />
+
+        <FontAwesomeIcons.Button   
+          name='th-large' //      
+          underlayColor={greenSuperLight}
+          size={40}
+          width={100}
+          margin={0}
+          paddingLeft={30}
+          color= {greenFlash}
+          backgroundColor ={'transparent'}
+          // onPress = {() =>{}}
+          onPress = {() => this.toggleShape()}
+        />
+
+        <FontAwesomeIcons.Button   
+          name='adjust' //   th-large      
+          underlayColor={greenSuperLight}
+          size={40}
+          width={100}
+          margin={0}
+          paddingLeft={30}
+          color= {greenFlash}
+          backgroundColor ={'transparent'}
+          // onPress = {() =>{}}
+          onPress = {() => this.toggleShape()}
+        />
+        </View>
+        {this.renderMotionSetupSlider()}
+
+        {this.renderMotionSetupTodoForm()}
+      </View>
+
+    );
+  }
+
+  renderCamera() {
+    if(this.state.cam == 'collection-form' || this.state.cam =='login') {
+      this.sendMessage(this.state.connectedTo, 'distantcam', false);
+      return null;
+    }
+
+    if(this.state.connectedTo && this.camRequested){
+      this.camRequested = false;
+      this.sendMessage(this.state.connectedTo, 'distantcam', true);
+    }
+
+    return (
+      <View //ViewShot
+        ref="viewShot"
+        // options={{
+        //   format: "jpg", 
+        //   quality:1 ,
+        // }}
+        style={[styles.preview,{width:this.state.previewWidth, height:this.state.previewHeight}]}
+      >
+      <RNCamera
+        ref={cam => (this.camera = cam)}
+        style = {[styles.cam,{width:this.state.previewWidth, height:this.state.previewHeight}]}
+        onCameraReady = {this.onCameraReady}
+        type={RNCamera.Constants.Type.back}
+        flashMode={RNCamera.Constants.FlashMode.off}
+        ratio="4:3"
+        autoFocus ={RNCamera.Constants.AutoFocus.on}
+        zoom={this.state.zoom}
+
+        // onFacesDetected={this.onFacesDetected}
+        // onFaceDetectionError={this.onFaceDetectionError}  
+
+        motionDetectionMode={this.state.motionDetectionMode}
+        onMotionDetected={this.onMotionDetected}
+        motionDetectionMinimumPixels={this.state.minimumPixels}
+        motionDetectionThreshold={this.state.threshold}
+        motionDetectionSampleSize={this.state.sampleSize}
+        motionDetectionArea={ 
+          this.state.motionInputAreaShape == ''
+          ? ""
+          : this.state.motionInputAreaShape +";"+  // shape : elypse / rectangle
+            Math.ceil(this.state.motionInputAreaStyle.left/this.state.sampleSize) +";"+ 
+            Math.ceil(this.state.motionInputAreaStyle.top /this.state.sampleSize) +";"+
+            Math.floor(this.state.motionInputAreaStyle.width /this.state.sampleSize) +";"+
+            Math.floor(this.state.motionInputAreaStyle.height /this.state.sampleSize) +";"
+        }
+        >
+        {/*this.renderFaces()*/}
+        {this.renderMotion()}
+
+        <Slider  
+          ref="zoom"
+          style={styles.sliderZoom} 
+          thumbTintColor = {greenFlash} 
+          minimumTrackTintColor={greenFlash} 
+          maximumTrackTintColor={greenFlash}
+          minimumValue={0}
+          maximumValue={1}
+          step={0.1}
+          value={0}
+          onValueChange={
+            (value) => this.onZoom(value)
+          } 
+        />
        </RNCamera>
+      
       {/*
       <View ref="black_mask_to_save_battery"
         style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0}}
@@ -986,8 +1349,8 @@ export default class App extends Component<Props> {
   }
   
 
-  renderImage(){ // distant image
-    if (!this.state.img) return null;
+  renderDistantPicture(){ // distant image
+    if (!this.state.distantPicture) return null;
     return(
       <Image 
         fadeDuration={0}
@@ -1194,14 +1557,19 @@ export default class App extends Component<Props> {
         <View style={styles.containerPreview}>
 
           {/*        
-            { this.renderImage() }
+            { this.renderDistantPicture() }
             { this.renderImageTest() }
             { this.renderImageLocal() }
           */}
 
           { this.renderCamera() }
+          {this.renderCamActionButtons()}
+          {this.renderMotionSetupButtons()}
+
         </View>
         
+
+
         { this.state.devices.map((value, index) => 
           <View 
             key = {index}
@@ -1221,112 +1589,6 @@ export default class App extends Component<Props> {
           </View>
         )}
 
-
-        { this.state.cam == 'motion-preview'
-        ?
-          <View
-          >
-            {/*
-            <Button 
-              style={{ 
-                margin:1, 
-                height:40 ,
-                marginBottom:2,
-              }}
-              color={ this.state.previewing ? '#338433' : 'grey'}
-              title = 'Pause motion'
-              onPress = {() => this.togglePreviewMotion()}
-            />
-            */}
-
-            <Slider  
-              ref="sampleSize"
-              style={styles.slider} 
-              thumbTintColor = '#000' 
-              minimumTrackTintColor='#cccccc' 
-              maximumTrackTintColor='#ffffff' 
-              minimumValue={-parseInt(this.state.previewWidth/10,10)}
-              maximumValue={-1}
-              step={1}
-              value={-this.state.sampleSize}
-              onValueChange={
-                (value) => this.onSampleSize(-value)
-              } 
-            />
-  
-            <Slider  
-              ref="threshold"
-              style={styles.slider} 
-              thumbTintColor = '#fff' 
-              minimumTrackTintColor='#dddddd' 
-              maximumTrackTintColor='#ffffff' 
-              minimumValue={-255}
-              maximumValue={0}
-              step={1}
-              // value={this.state.threshold}
-              value={
-                -(
-                  (this.state.threshold>>>16) 
-                + ((this.state.threshold&0x00ff00)>>>8)
-                + (this.state.threshold&0x0000ff)
-                )/3
-              }
-              onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
-            />
-              <Slider  
-                ref="threshold_red"
-                style={styles.slider} 
-                thumbTintColor = '#d00' 
-                minimumTrackTintColor='#dd0000' 
-                maximumTrackTintColor='#dd0000' 
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-(this.state.threshold>>>16)}
-                onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
-              />
-              <Slider  
-                ref="threshold_green"
-                style={styles.slider} 
-                thumbTintColor = {greenFlash}
-                minimumTrackTintColor={greenFlash}
-                maximumTrackTintColor={greenFlash}
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-((this.state.threshold & 0x00ff00) >>> 8)}
-                onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
-              />
-              <Slider  
-                ref="threshold_blue"
-                style={styles.slider} 
-                thumbTintColor = '#0000dd' 
-                minimumTrackTintColor='#0000dd' 
-                maximumTrackTintColor='#0000dd' 
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-(this.state.threshold & 0x0000ff)}
-                onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
-              />
-  
-            <Slider  
-              ref="minimum_pixels"
-              style={styles.sliderDenoise} 
-              thumbTintColor='#000' 
-              minimumTrackTintColor='#ff0000' 
-              maximumTrackTintColor='#0000ff' 
-              minimumValue={1}
-              maximumValue={this.state.previewWidth/this.state.sampleSize}
-              step={1}
-              value={this.state.minimumPixels}
-              onValueChange={(value) => this.onMinimumPixels(value)} 
-            />
-            <Text>{this.state.minimumPixels}</Text>
-          </View>
-
-        :null
-        }
 
 
         { this.state.cam=="collection-form"
@@ -1460,8 +1722,8 @@ styles = StyleSheet.create({
 
   iconButtonContainer:{
     // backgroundColor:'rgba(100,100,100,0.5)',
-    position:'absolute',
-    bottom:20,
+    // position:'absolute',
+    // bottom:20,
     left:0,
     right:0,
     padding:5,
@@ -1496,4 +1758,33 @@ styles = StyleSheet.create({
     flexDirection: 'row',
   },
  
+  // facesContainer: {
+  //   position: 'absolute',
+  //   bottom: 0,
+  //   right: 0,
+  //   left: 0,
+  //   top: 0,
+  // },
+  // face: {
+  //   padding: 10,
+  //   borderWidth: 2,
+  //   borderRadius: 2,
+  //   position: 'absolute',
+  //   borderColor: '#FFD700',
+  //   justifyContent: 'center',
+  //   backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  // },
+  // landmark: {
+  //   width: landmarkSize,
+  //   height: landmarkSize,
+  //   position: 'absolute',
+  //   backgroundColor: 'red',
+  // },
+  // faceText: {
+  //   color: '#FFD700',
+  //   fontWeight: 'bold',
+  //   textAlign: 'center',
+  //   margin: 10,
+  //   backgroundColor: 'transparent',
+  // },
 });
