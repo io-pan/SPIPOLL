@@ -203,7 +203,7 @@ export default class App extends Component<Props> {
       isTakingPicture:false,
       motionDetected:false,
       motionBase64:'',
-      motionDetectionMode: 1,
+      motionDetectionMode: -1,
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
@@ -609,9 +609,6 @@ export default class App extends Component<Props> {
   // }
 
   onMotionDetected = ({ motion }) => {
-
-
-    // TODO: find a way to pause it on java side.
 
     // if (this.state.motionPreviewPaused) 
     //   return;
