@@ -203,7 +203,7 @@ export default class App extends Component<Props> {
       isTakingPicture:false,
       motionDetected:false,
       motionBase64:'',
-      motionDetectionMode: -1,
+      motionDetectionMode: 1,
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
@@ -622,26 +622,26 @@ export default class App extends Component<Props> {
     });  
 
 
-    // if (!this.motionSartTime && motion.motionDetected){
-    //   this.motionSartTime = Math.floor(Date.now() / 1000);
+    if (!this.motionSartTime && motion.motionDetected){
+      this.motionSartTime = Math.floor(Date.now() / 1000);
 
-    //   if(this.state.motionAction.type=='video'){
-    //     this.takeVideo();
-    //   }
-    //   else if(this.state.motionAction.type=='photo'){
-    //     this.takePicture();
-    //   }
-    // }
-    // else if(this.motionSartTime && !motion.motionDetected){
-    //   this.motionSartTime = false;
-    //   if(this.state.motionAction.type=='video' && this.state.motionAction.until > 0){
-    //     this.stopRecordRequested = true;
-    //     this.camera.stopRecording();
-    //   }
-    //   else if(this.state.motionAction.type=='photo'  && this.state.motionAction.until=='video'){
-    //     // stop taking photos.
-    //   }
-    // }
+      if(this.state.motionAction.type=='video'){
+        this.takeVideo();
+      }
+      else if(this.state.motionAction.type=='photo'){
+        this.takePicture();
+      }
+    }
+    else if(this.motionSartTime && !motion.motionDetected){
+      this.motionSartTime = false;
+      if(this.state.motionAction.type=='video' && this.state.motionAction.until > 0){
+        this.stopRecordRequested = true;
+        this.camera.stopRecording();
+      }
+      else if(this.state.motionAction.type=='photo'  && this.state.motionAction.until=='video'){
+        // stop taking photos.
+      }
+    }
     
   }
 
@@ -656,11 +656,10 @@ export default class App extends Component<Props> {
         if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
         &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
 
-          // TODO base 64 si distant
+          // TODO base 64 if distant device has requested.
           try {
             this.setState({ isTakingPicture: true }); 
             var picture = await this.camera.takePictureAsync({ 
-              // width:400,
               quality: 0.9, 
               // base64:true,
               skipProcessing :true,
@@ -677,12 +676,25 @@ export default class App extends Component<Props> {
               this.setState({ isTakingPicture: false }); 
 
 
+              // Go on according to requested motion-action.
+              if (this.motionSartTime){
+                if( Math.floor(Date.now() / 1000) - this.motionSartTime < this.state.motionAction.until){
+                  this.takePicture();
+                }
+                else{
+                  this.motionSartTime = false;
+                }
+              }              
+              
+
+
               // TODO: distant take picture
               // if(this.pictureRequested){
               //  this.sendMessage(this.state.connectedTo, 'img', picture.base64);
               //  this.pictureRequested = false;
               // }
 
+              // Send photo back to from.
               if(this.state.cam=='collection-flower'){
                 this.setState({
                   cam:'collection-form',
@@ -699,6 +711,7 @@ export default class App extends Component<Props> {
                       {uri:'file:///' + this.state.storage + '/' + filename});
                 })
               }
+
             }).catch((err) => { 
               this.setState({ isTakingPicture: false }); 
               console.log(err) 
@@ -1154,7 +1167,7 @@ You must follow the setup instructions in the `react-native` documentation, sinc
                 <TextInput
                   keyboardType="number-pad"
                   style={{borderWidth:1, borderColor:greenDark}}
-                  defaultValue={this.state.motionAction.interval}
+                  defaultValue={''+this.state.motionAction.interval}
                   onEndEditing =    {(event) => this.setMotionActionInterval(parseInt(event.nativeEvent.text,10)) } 
                   onSubmitEditing = {(event) => this.setMotionActionInterval(parseInt(event.nativeEvent.text,10)) } 
                 />
@@ -1488,6 +1501,15 @@ You must follow the setup instructions in the `react-native` documentation, sinc
     this.setState({cam:view});
   }
 
+  toggleMotionMode(){
+    if(this.state.motionDetectionMode==1){
+      this.setState({motionDetectionMode:-1});
+    }
+    else{
+      this.setState({motionDetectionMode:this.state.motionDetectionMode+1});
+    }
+  }
+
   render() {
     console.log('render');
     const panStyle = {
@@ -1512,6 +1534,13 @@ You must follow the setup instructions in the `react-native` documentation, sinc
                         )
                       : null 
                     }
+
+                    <Button 
+                      style={styles.button}
+                      color={ this.state.motionDetectionMode==-1 ?  'grey' : this.state.motionDetectionMode==0 ? '#338433' : '#843333'}
+                      title = 'detect' 
+                      onPress = {() => this.toggleMotionMode()}
+                    />
 
                     <Button 
                       style={styles.button}
