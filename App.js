@@ -567,6 +567,174 @@ export default class App extends Component<Props> {
     SplashScreen.hide();
   }
 
+  onMotionDetected = ({ motion }) => {
+
+    // if (this.state.motionPreviewPaused) 
+    //   return;
+    
+    // console.log('MOTION', motion);
+    this.setState({
+      motionDetected:motion.motionDetected,
+      motionBase64: motion.motionBase64,
+    }, function(){
+      //
+    });  
+
+    // if (!this.motionSartTime && motion.motionDetected){
+    //   this.motionSartTime = Math.floor(Date.now() / 1000);
+
+    //   if(this.state.motionAction.type=='video'){
+    //     this.takeVideo();
+    //   }
+    //   else if(this.state.motionAction.type=='photo'){
+    //     this.takePicture();
+    //   }
+    // }
+    // else if(this.motionSartTime && !motion.motionDetected){
+    //   this.motionSartTime = false;
+    //   if(this.state.motionAction.type=='video' && this.state.motionAction.until > 0){
+    //     this.stopRecordRequested = true;
+    //     this.camera.stopRecording();
+    //   }
+    //   else if(this.state.motionAction.type=='photo'  && this.state.motionAction.until=='video'){
+    //     // stop taking photos.
+    //   }
+    // }
+    
+  }
+
+  takePicture = async () => {
+    if (this.camera) {
+      try {
+        const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
+          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]);
+          // console.log(granted);
+
+        if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+        &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
+
+          const options = { 
+            quality: 0.9,
+            fixOrientation: true,
+          }
+
+          if(this.pictureRequested){
+            options.base64 = true;
+          }
+          else{
+            options.skipProcessing = true;
+          }
+          try {
+            this.setState({ isTakingPicture: true }); 
+            var picture = await this.camera.takePictureAsync(options);
+            console.log(picture);
+
+
+            const filename = (this.state.cam=='free' ? this.formatedDate() : this.state.cam) + '.jpg';
+            RNFetchBlob.fs.mv(
+              picture.uri.replace('file://',''),
+              this.state.storage + '/' + filename
+            ).then(() => {
+              this.setState({ isTakingPicture: false }); 
+
+
+              // Go on according to requested motion-action.
+              if (this.motionSartTime){
+                if( Math.floor(Date.now() / 1000) - this.motionSartTime < this.state.motionAction.until){
+                  this.takePicture();
+                }
+                else{
+                  this.motionSartTime = false;
+                }
+              }              
+              
+              // Send photo to distant device.
+              if(this.pictureRequested){
+               this.sendMessage(this.state.connectedTo, 'img', picture.base64);
+               this.pictureRequested = false;
+              }
+
+              // Send photo back to from.
+              if(this.state.cam=='collection-flower'){
+                this.setState({
+                  cam:'collection-form',
+                }, function(){
+                  this.refs['collectionForm'].refs['collection-flower'].setSource(
+                      {uri:'file:///' + this.state.storage + '/' + filename});
+                })
+              }
+              else if(this.state.cam=='collection-environment'){
+                this.setState({
+                  cam:'collection-form',
+                }, function(){
+                  this.refs['collectionForm'].refs['collection-environment'].setSource(
+                      {uri:'file:///' + this.state.storage + '/' + filename});
+                })
+              }
+
+            }).catch((err) => { 
+              this.setState({ isTakingPicture: false }); 
+              console.log(err) 
+            });
+
+          } 
+          catch (err) {
+            console.log('takePictureAsync ERROR: ', err);
+          }
+        } else {
+         alert('REFUSED');
+        }
+      } catch (err) {
+        // console.warn(err)
+      }
+    }
+  }
+
+  /*
+We recommend using the library [`react-native-thumbnail`](https://github.com/phuochau/react-native-thumbnail) for generating thumbnails of your video files.
+#### How can I save my video/image to the camera roll?
+You can use the [`CameraRoll` Module](https://facebook.github.io/react-native/docs/cameraroll.htm).
+You must follow the setup instructions in the `react-native` documentation, since `CameraRoll` module needs to be linked first.
+  */
+           
+  async takeVideo() {
+    if (this.camera) {
+      try {
+        const path = this.state.storage + '/' + this.formatedDate()  + '.mp4';
+
+        // console.log(this.motionSartTime );
+        // console.log( this.state.motionAction.until);
+
+        const promise = this.camera.recordAsync({
+          path: path,
+          maxDuration:30
+        });
+
+        if (promise) {
+          this.sendMessage(this.state.connectedTo, 'distantRec', true);
+          this.setState({ isRecording: true });
+
+          const {uri} = await promise;
+
+          if (this.stopRecordRequested) {
+            this.sendMessage(this.state.connectedTo, 'distantRec', false);
+            this.setState({ isRecording: false });
+          }
+          else {
+            this.takeVideo();
+          }
+        }
+
+      }
+      catch (err) {
+        alert(JSON.stringify({'recording error':err}, undefined, 2));
+        this.setState({isRecording:false});
+        this.sendMessage(this.state.connectedTo, 'distantRec', false);
+      }
+    }
+  };
+
   // onFacesDetected = ({ faces }) => {
   //   console.log('FACE', faces);
   //   this.setState({ faces:faces });
@@ -608,175 +776,9 @@ export default class App extends Component<Props> {
   //   );
   // }
 
-  onMotionDetected = ({ motion }) => {
-
-    // if (this.state.motionPreviewPaused) 
-    //   return;
-    
-    console.log('MOTION', motion);
-    this.setState({
-      motionDetected:motion.motionDetected,
-      motionBase64: motion.motionBase64,
-    }, function(){
-      //
-    });  
-
-
-    if (!this.motionSartTime && motion.motionDetected){
-      this.motionSartTime = Math.floor(Date.now() / 1000);
-
-      if(this.state.motionAction.type=='video'){
-        this.takeVideo();
-      }
-      else if(this.state.motionAction.type=='photo'){
-        this.takePicture();
-      }
-    }
-    else if(this.motionSartTime && !motion.motionDetected){
-      this.motionSartTime = false;
-      if(this.state.motionAction.type=='video' && this.state.motionAction.until > 0){
-        this.stopRecordRequested = true;
-        this.camera.stopRecording();
-      }
-      else if(this.state.motionAction.type=='photo'  && this.state.motionAction.until=='video'){
-        // stop taking photos.
-      }
-    }
-    
-  }
-
-  takePicture = async () => {
-    if (this.camera) {
-      try {
-        const granted = await PermissionsAndroid.requestMultiple([
-          PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
-          PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]);
-          // console.log(granted);
-
-        if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-        &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
-
-          // TODO base 64 if distant device has requested.
-          try {
-            this.setState({ isTakingPicture: true }); 
-            var picture = await this.camera.takePictureAsync({ 
-              quality: 0.9, 
-              // base64:true,
-              skipProcessing :true,
-              fixOrientation: true,
-            });
-            console.log(picture);
-
-
-            const filename = (this.state.cam=='free' ? this.formatedDate() : this.state.cam) + '.jpg';
-            RNFetchBlob.fs.mv(
-              picture.uri.replace('file://',''),
-              this.state.storage + '/' + filename
-            ).then(() => {
-              this.setState({ isTakingPicture: false }); 
-
-
-              // Go on according to requested motion-action.
-              if (this.motionSartTime){
-                if( Math.floor(Date.now() / 1000) - this.motionSartTime < this.state.motionAction.until){
-                  this.takePicture();
-                }
-                else{
-                  this.motionSartTime = false;
-                }
-              }              
-              
-
-
-              // TODO: distant take picture
-              // if(this.pictureRequested){
-              //  this.sendMessage(this.state.connectedTo, 'img', picture.base64);
-              //  this.pictureRequested = false;
-              // }
-
-              // Send photo back to from.
-              if(this.state.cam=='collection-flower'){
-                this.setState({
-                  cam:'collection-form',
-                }, function(){
-                  this.refs['collectionForm'].refs['collection-flower'].setSource(
-                      {uri:'file:///' + this.state.storage + '/' + filename});
-                })
-              }
-              else if(this.state.cam=='collection-environment'){
-                this.setState({
-                  cam:'collection-form',
-                }, function(){
-                  this.refs['collectionForm'].refs['collection-environment'].setSource(
-                      {uri:'file:///' + this.state.storage + '/' + filename});
-                })
-              }
-
-            }).catch((err) => { 
-              this.setState({ isTakingPicture: false }); 
-              console.log(err) 
-            });
-
-          } 
-          catch (err) {
-            console.log('takePictureAsync ERROR: ', err);
-          }
-        } else {
-         alert('REFUSED');
-        }
-      } catch (err) {
-        // console.warn(err)
-      }
-    }
-  }
-
-  /*
-
-
-We recommend using the library [`react-native-thumbnail`](https://github.com/phuochau/react-native-thumbnail) for generating thumbnails of your video files.
-#### How can I save my video/image to the camera roll?
-You can use the [`CameraRoll` Module](https://facebook.github.io/react-native/docs/cameraroll.htm).
-You must follow the setup instructions in the `react-native` documentation, since `CameraRoll` module needs to be linked first.
-
-  */
-           
-  async takeVideo() {
-    if (this.camera) {
-      try {
-        const path = this.state.storage + '/' + this.formatedDate()  + '.mp4';
-
-        console.log(this.motionSartTime );
-        console.log( this.state.motionAction.until);
-
-        const promise = this.camera.recordAsync({
-          path: path,
-          maxDuration:30
-        });
-
-        if (promise) {
-          this.sendMessage(this.state.connectedTo, 'distantRec', true);
-          this.setState({ isRecording: true });
-
-          const {uri} = await promise;
-
-          if (this.stopRecordRequested) {
-            this.sendMessage(this.state.connectedTo, 'distantRec', false);
-            this.setState({ isRecording: false });
-          }
-          else {
-            this.takeVideo();
-          }
-        }
-
-      }
-      catch (err) {
-        alert(JSON.stringify({'recording error':err}, undefined, 2));
-        this.setState({isRecording:false});
-        this.sendMessage(this.state.connectedTo, 'distantRec', false);
-      }
-    }
-  };
-
+  // onBarCodeRead = (e) => {
+  //  console.log( e.data);
+  // }
 
   renderMotion(){
     if (this.state.cam!='motion-preview')
@@ -1298,6 +1300,7 @@ You must follow the setup instructions in the `react-native` documentation, sinc
 
         // onFacesDetected={this.onFacesDetected}
         // onFaceDetectionError={this.onFaceDetectionError}  
+        // onBarCodeRead={this.onBarCodeRead}
 
         motionDetectionMode={this.state.motionDetectionMode}
         onMotionDetected={this.onMotionDetected}
