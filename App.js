@@ -203,7 +203,7 @@ export default class App extends Component<Props> {
       isTakingPicture:false,
       motionDetected:false,
       motionBase64:'',
-      motionDetectionMode: 1,
+      motionDetectionMode: 1, // -1:detector paused,  0:running,   1:previewing,
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
@@ -211,8 +211,8 @@ export default class App extends Component<Props> {
 
       motionAction:{
         type:'',
-        interval:'',
-        until:'',
+        photoNumber:'',
+        videoLength:'',
       },
       // faces:[],
       zoom:0,
@@ -297,11 +297,11 @@ export default class App extends Component<Props> {
       else {
         if(motionAction){
           motionAction = JSON.parse(motionAction);
-
+console.log(motionAction);
           this.setState({motionAction:{
             type: motionAction.type ? motionAction.type : '',
-            interval: motionAction.interval ? motionAction.interval : '',
-            until: motionAction.until ? motionAction.until : '',
+            videoLength: motionAction.videoLength ? motionAction.videoLength : '',
+            photoNumber: motionAction.photoNumber ? motionAction.photoNumber : '',
           }});
         }
       }
@@ -580,27 +580,19 @@ export default class App extends Component<Props> {
       //
     });  
 
-    // if (!this.motionSartTime && motion.motionDetected){
-    //   this.motionSartTime = Math.floor(Date.now() / 1000);
-
-    //   if(this.state.motionAction.type=='video'){
-    //     this.takeVideo();
-    //   }
-    //   else if(this.state.motionAction.type=='photo'){
-    //     this.takePicture();
-    //   }
-    // }
-    // else if(this.motionSartTime && !motion.motionDetected){
-    //   this.motionSartTime = false;
-    //   if(this.state.motionAction.type=='video' && this.state.motionAction.until > 0){
-    //     this.stopRecordRequested = true;
-    //     this.camera.stopRecording();
-    //   }
-    //   else if(this.state.motionAction.type=='photo'  && this.state.motionAction.until=='video'){
-    //     // stop taking photos.
-    //   }
-    // }
-    
+    if (motion.motionDetected
+    && this.state.motionDetectionMode ==0
+    && this.state.cam != 'motion-running'
+    ){
+      if(!this.videoMotion && this.state.motionAction.type=='video'){
+        this.videoMotion= true;
+        this.takeVideo();
+      }
+      else if(!this.photoNumber && this.state.motionAction.type=='photo'){
+        this.photoNumber = 1;
+        this.takePicture();
+      }
+    }    
   }
 
   takePicture = async () => {
@@ -630,7 +622,7 @@ export default class App extends Component<Props> {
             var picture = await this.camera.takePictureAsync(options);
             console.log(picture);
 
-
+// TODO: when we are on motion runnnig mode, set name based on collection name 
             const filename = (this.state.cam=='free' ? this.formatedDate() : this.state.cam) + '.jpg';
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
@@ -640,12 +632,13 @@ export default class App extends Component<Props> {
 
 
               // Go on according to requested motion-action.
-              if (this.motionSartTime){
-                if( Math.floor(Date.now() / 1000) - this.motionSartTime < this.state.motionAction.until){
+              if (this.photoNumber){
+                if(this.photoNumber <= this.state.motionAction.photoNumber){
+                  this.photoNumber++;
                   this.takePicture();
                 }
                 else{
-                  this.motionSartTime = false;
+                  this.photoNumber = false;
                 }
               }              
               
@@ -692,10 +685,10 @@ export default class App extends Component<Props> {
   }
 
   /*
-We recommend using the library [`react-native-thumbnail`](https://github.com/phuochau/react-native-thumbnail) for generating thumbnails of your video files.
-#### How can I save my video/image to the camera roll?
-You can use the [`CameraRoll` Module](https://facebook.github.io/react-native/docs/cameraroll.htm).
-You must follow the setup instructions in the `react-native` documentation, since `CameraRoll` module needs to be linked first.
+  We recommend using the library [`react-native-thumbnail`](https://github.com/phuochau/react-native-thumbnail) for generating thumbnails of your video files.
+  #### How can I save my video/image to the camera roll?
+  You can use the [`CameraRoll` Module](https://facebook.github.io/react-native/docs/cameraroll.htm).
+  You must follow the setup instructions in the `react-native` documentation, since `CameraRoll` module needs to be linked first.
   */
            
   async takeVideo() {
@@ -708,7 +701,7 @@ You must follow the setup instructions in the `react-native` documentation, sinc
 
         const promise = this.camera.recordAsync({
           path: path,
-          maxDuration:30
+          maxDuration: this.videoMotion ? this.state.motionAction.videoLength : 30,
         });
 
         if (promise) {
@@ -717,7 +710,8 @@ You must follow the setup instructions in the `react-native` documentation, sinc
 
           const {uri} = await promise;
 
-          if (this.stopRecordRequested) {
+          if (this.stopRecordRequested || this.videoMotion) {
+            this.videoMotion = false;
             this.sendMessage(this.state.connectedTo, 'distantRec', false);
             this.setState({ isRecording: false });
           }
@@ -1109,105 +1103,97 @@ You must follow the setup instructions in the `react-native` documentation, sinc
     this.setState({motionAction:{
       ...this.state.motionAction,
       type:type,
-    }});
-    this.storeMotionAction();
-  }
-  setMotionActionUntil(sec){
+    }},function(){this.storeMotionAction()}
+    );
+  } 
+  setMotionActionValue(key, val){
+    if(isNaN(val)){
+      val = 1;
+    }
+    else if(val<1) {
+      val = 1;
+    }
+    else if (val>60){
+      sec = 60;
+    }
+
     this.setState({motionAction:{
       ...this.state.motionAction,
-      until:sec,
-    }});
-    this.storeMotionAction();
+      [key]:val,
+    }},function(){this.storeMotionAction()}
+    );
+    
   }
-  setMotionActionInterval(sec){
-    this.setState({motionAction:{
-      ...this.state.motionAction,
-      interval:sec,
-    }});
-    this.storeMotionAction();
-  }
-  storeMotionAction(){
-    AsyncStorage.setItem('motionAction', JSON.stringify({
-      type:this.state.motionAction.type,
-      until:this.state.motionAction.until,
-      interval:this.state.motionAction.interval,
-    }));
+
+  storeMotionAction() {  
+    AsyncStorage.setItem('motionAction', JSON.stringify(this.state.motionAction));
   }
 
 
   renderMotionSetupTodoForm(){
     return(
       <View>
-        <Text>Action à effectuer:</Text>
+        <Text style={{fontSize:16, textAlign:'center'}}>Lors de la détection de mouvement,</Text>
+        <Text style={{fontSize:18, textAlign:'center'}}>prendre ...</Text>
 
-        <View style={[styles.row, {justifyContent: 'space-between',}]}>
+        <View style={[styles.row, {justifyContent: 'space-between',flex:1, marginTop:5}]}>
+
+          <View style={{flex:0.5}}>
           <TouchableOpacity  
-            style={styles.button}
             onPress = {() => this.toggleMotionAction('photo')}
             >
-            <Text style={{color: this.state.motionAction.type=='photo' ? greenFlash : 'grey'}}>
-            Prendre une photo
+            <Text style={[{fontSize:18, textAlign: 'center',
+              color: this.state.motionAction.type=='photo' ? greenFlash : 'grey'}]}>
+            une série de  {this.state.motionAction.type != 'photo' ? 'photos' : ''}
             </Text>
           </TouchableOpacity>
-          
+
+          { this.state.motionAction.type == 'photo' 
+            ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
+              <TextInput
+                keyboardType="number-pad"
+                textAlign={'center'}
+                style={{borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
+                defaultValue={''+this.state.motionAction.photoNumber}
+                onEndEditing =    {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
+                onSubmitEditing = {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
+              />
+              <Text style={[{fontSize:18, color: greenFlash}]}> photos.</Text>
+              </View>
+            : null
+          }
+          </View>
+
+          <View style={[{flex:0.5}]}>
           <TouchableOpacity  
-            style={styles.button}
             onPress = {() => this.toggleMotionAction('video')}
             >
-            <Text style={{color: this.state.motionAction.type=='video' ? greenFlash : 'grey'}}>
-            Prendre une vidéo
+            <Text style={{fontSize:18, textAlign:'center', color: this.state.motionAction.type=='video' ? greenFlash : 'grey'}}>
+            une vidéo
             </Text>
           </TouchableOpacity>
+
+          { this.state.motionAction.type == 'video' 
+            ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
+                <Text style={{fontSize:18, color: greenFlash}}>de </Text>
+                <TextInput
+                  keyboardType="number-pad"
+                  textAlign={'center'}
+                  style={{borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
+                  defaultValue={''+this.state.motionAction.videoLength}
+                  onEndEditing =    {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
+                  onSubmitEditing = {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
+                />
+                <Text style={{fontSize:18, color: greenFlash}}> secondes.</Text>
+              </View>
+            : null
+          }
+          </View>
 
         </View>
 
-        { this.state.motionAction.type
-        ? <View>
-            { this.state.motionAction.type == 'photo' 
-            ? <View style={[styles.row]}>
-                <Text style={{color: this.state.motionAction.interval ? greenFlash : 'grey'}}>Toutes les </Text>
-                <TextInput
-                  keyboardType="number-pad"
-                  style={{borderWidth:1, borderColor:greenDark}}
-                  defaultValue={''+this.state.motionAction.interval}
-                  onEndEditing =    {(event) => this.setMotionActionInterval(parseInt(event.nativeEvent.text,10)) } 
-                  onSubmitEditing = {(event) => this.setMotionActionInterval(parseInt(event.nativeEvent.text,10)) } 
-                />
-                <Text style={{color: this.state.motionAction.interval ? greenFlash : 'grey'}}> secondes,</Text>
-              </View> 
-            : null
-            }
-
-           <View style={[styles.row, {justifyContent: 'space-between',}]}>
-             
-              <View style={[styles.row]}>
-                <Text style={{color: this.state.motionAction.until ? greenFlash : 'grey'}}>
-                pendant</Text>
-                <TextInput
-                  keyboardType="number-pad"
-                  style={{borderWidth:1, borderColor:greenDark}}
-                  defaultValue={''+this.state.motionAction.until}
-                  onEndEditing =    {(event) => this.setMotionActionUntil(parseInt(event.nativeEvent.text,10)) } 
-                  onSubmitEditing = {(event) => this.setMotionActionUntil(parseInt(event.nativeEvent.text,10)) } 
-                />
-                <Text style={{color: this.state.motionAction.until ? greenFlash : 'grey'}}>
-                secondes.</Text>
-              </View> 
-              
-              <TouchableOpacity  
-                style={styles.button}
-                onPress = {() => this.setMotionActionUntil(0)}
-                >
-                <Text style={{color: !this.state.motionAction.until? greenFlash : 'grey'}}>
-                jusqu'à la fin du mvt.
-                </Text>
-              </TouchableOpacity>
-
-            </View>
-
-          </View> 
-        : null
-        }
+      
+        <View style= {{height:60}}></View>
         
 
       </View>
