@@ -42,6 +42,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import SpipolLogin from  "./src/spipoll-login-form"
 import CollectionForm from "./src/collection-form"
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
+import RNThumbnail from 'react-native-thumbnail';
 
 import Svg,{
     Ellipse,
@@ -229,6 +230,8 @@ export default class App extends Component<Props> {
         width: Dimensions.get('window').width - 60 - 60,
         height: Dimensions.get('window').width*4/3 - 60 - 60,
       },
+
+      bigBlackMask:false,
     };
 
     this.poignee = [{
@@ -248,6 +251,10 @@ export default class App extends Component<Props> {
     ],
 
     this.appDirs = [];
+
+    this.photoNumber=false;
+    this.videoMotion=false;
+    this.motionActionRunning=false;
   }
 
   requestForPermission = async () => {
@@ -297,11 +304,10 @@ export default class App extends Component<Props> {
       else {
         if(motionAction){
           motionAction = JSON.parse(motionAction);
-console.log(motionAction);
           this.setState({motionAction:{
-            type: motionAction.type ? motionAction.type : '',
-            videoLength: motionAction.videoLength ? motionAction.videoLength : '',
-            photoNumber: motionAction.photoNumber ? motionAction.photoNumber : '',
+            type: motionAction.type ? motionAction.type : 'photo',
+            videoLength: motionAction.videoLength ? motionAction.videoLength : '3',
+            photoNumber: motionAction.photoNumber ? motionAction.photoNumber : '3',
           }});
         }
       }
@@ -380,8 +386,18 @@ console.log(motionAction);
     .then((dirs) => {
       this.appDirs = JSON.parse(dirs);
       this.setState({storage:this.appDirs[0].path});
+
+      // TODO: do this on collection / session create
+      RNFetchBlob.fs.isDir(this.appDirs[0].path+'/thumb')
+      .then((isDir) => {
+        if(!isDir){
+          RNFetchBlob.fs.mkdir()
+          .then(() => { console.log('thumb folder created') })
+          .catch((err) => { console.log('error thumb folder created ', err) })
+        }
+      })
     })
-    .catch((err) => { console.log(err) })
+    .catch((err) => { console.log('getExternalStorages', err) })
   }
 
   componentDidUpdate(){
@@ -571,31 +587,42 @@ console.log(motionAction);
 
     // if (this.state.motionPreviewPaused) 
     //   return;
-    
-    // console.log('MOTION', motion);
+
+    console.log('MOTION', motion);
+    console.log(this.videoMotion + ' ' + this.photoNumber); 
+
+    this.curMode = this.state.motionDetectionMode;
     this.setState({
+      // motionDetectionMode:(this.state.motionDetectionMode==0) ? -1 : this.curMode,
       motionDetected:motion.motionDetected,
       motionBase64: motion.motionBase64,
     }, function(){
       //
     });  
 
+    if(this.motionActionRunning){
+      return;
+    }
+
     if (motion.motionDetected
-    && this.state.motionDetectionMode ==0
-    && this.state.cam != 'motion-running'
+    && this.state.motionDetectionMode==0
+    // && this.state.cam != 'motion-running'
     ){
+      this.motionActionRunning = true;
       if(!this.videoMotion && this.state.motionAction.type=='video'){
-        this.videoMotion= true;
+        this.videoMotion = true;
         this.takeVideo();
       }
       else if(!this.photoNumber && this.state.motionAction.type=='photo'){
         this.photoNumber = 1;
         this.takePicture();
       }
-    }    
+    }
   }
 
   takePicture = async () => {
+    console.log('takePicture ' + this.photoNumber);
+
     if (this.camera) {
       try {
         const granted = await PermissionsAndroid.requestMultiple([
@@ -632,13 +659,16 @@ console.log(motionAction);
 
 
               // Go on according to requested motion-action.
+              console.log(this.photoNumber + ' ' +this.state.motionAction.photoNumber);
               if (this.photoNumber){
-                if(this.photoNumber <= this.state.motionAction.photoNumber){
+                if(this.photoNumber < this.state.motionAction.photoNumber){
                   this.photoNumber++;
                   this.takePicture();
                 }
                 else{
+                  this.motionActionRunning = false;
                   this.photoNumber = false;
+                  // this.setState({motionDetectionMode: this.curMode,});
                 }
               }              
               
@@ -684,18 +714,14 @@ console.log(motionAction);
     }
   }
 
-  /*
-  We recommend using the library [`react-native-thumbnail`](https://github.com/phuochau/react-native-thumbnail) for generating thumbnails of your video files.
-  #### How can I save my video/image to the camera roll?
-  You can use the [`CameraRoll` Module](https://facebook.github.io/react-native/docs/cameraroll.htm).
-  You must follow the setup instructions in the `react-native` documentation, since `CameraRoll` module needs to be linked first.
-  */
-           
+
   async takeVideo() {
+    console.log('takeVideo');
+
     if (this.camera) {
       try {
-        const path = this.state.storage + '/' + this.formatedDate()  + '.mp4';
-
+        const filename = this.formatedDate() ;
+        const path = this.state.storage + '/' + filename + '.mp4';
         // console.log(this.motionSartTime );
         // console.log( this.state.motionAction.until);
 
@@ -711,13 +737,33 @@ console.log(motionAction);
           const {uri} = await promise;
 
           if (this.stopRecordRequested || this.videoMotion) {
+            this.motionActionRunning = false;
             this.videoMotion = false;
             this.sendMessage(this.state.connectedTo, 'distantRec', false);
-            this.setState({ isRecording: false });
+
+            // console.log('end vid' + this.curMode);
+            this.setState({ isRecording: false, motionDetectionMode: this.curMode});
+            // this.setState({motionDetectionMode: this.curMode});
           }
           else {
             this.takeVideo();
           }
+
+          // Store video thumb.
+          RNThumbnail.get(path).then((result) => {
+            // TODO: folder accordering to collection/session folder
+            const thumbDest = this.state.storage + '/thumb/' + filename + '.jpg';
+            
+            RNFetchBlob.fs.mv(
+              result.path.replace('file://',''),
+              thumbDest
+            ).then(() => {
+              console.log(thumbDest);
+            }).catch((err) => { 
+              console.log('error move video thumb', err);
+            });
+          });
+
         }
 
       }
@@ -1321,12 +1367,7 @@ console.log(motionAction);
           } 
         />
        </RNCamera>
-      
-      {/*
-      <View ref="black_mask_to_save_battery"
-        style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0}}
-      />
-      */}
+    
       </View>
     );
   }
@@ -1486,6 +1527,10 @@ console.log(motionAction);
     this.setState({cam:view});
   }
 
+  toggleBigBlackMask() {
+    this.setState({bigBlackMask:!this.state.bigBlackMask});
+  }
+
   pickPhoto(view){
     this.setState({cam:view});
   }
@@ -1524,6 +1569,14 @@ console.log(motionAction);
                       : null 
                     }
 
+
+                    <Button 
+                      style={styles.button}
+                      color={ !this.state.bigBlackMask ?  'grey' : '#338433' }
+                      title = 'mask' 
+                      onPress = {() => this.toggleBigBlackMask()}
+                    />
+
                     <Button 
                       style={styles.button}
                       color={ this.state.motionDetectionMode==-1 ?  'grey' : this.state.motionDetectionMode==0 ? '#338433' : '#843333'}
@@ -1557,6 +1610,7 @@ console.log(motionAction);
                       onPress = {() => this.toggleView('collection-form')}
                     />
                   </ScrollView>
+
         </View> 
 
       <ScrollView>
@@ -1624,6 +1678,16 @@ console.log(motionAction);
         }
 
       </ScrollView>
+
+      {this.state.bigBlackMask 
+      ?
+      <TouchableOpacity ref="black_mask_to_save_battery"
+      style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0}}
+      onPress = {() => this.toggleBigBlackMask()}
+      />
+      :null
+      }
+
       </View>
     );
   }

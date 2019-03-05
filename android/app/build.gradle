@@ -145,6 +145,7 @@ android {
 }
 
 dependencies {
+    implementation project(':react-native-thumbnail')
     implementation project(':react-native-svg')
     implementation project(':rn-splash-screen')
     implementation project(':rn-fetch-blob')

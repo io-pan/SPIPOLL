@@ -3,6 +3,7 @@ package com.spipoll;
 import android.app.Application;
 
 import com.facebook.react.ReactApplication;
+import me.hauvo.thumbnail.RNThumbnailPackage;
 import com.mehcode.reactnative.splashscreen.SplashScreenPackage;
 import com.RNFetchBlob.RNFetchBlobPackage;
 import fr.greweb.reactnativeviewshot.RNViewShotPackage;
@@ -31,6 +32,7 @@ public class MainApplication extends Application implements ReactApplication {
     protected List<ReactPackage> getPackages() {
       return Arrays.<ReactPackage>asList(
           new MainReactPackage(),
+            new RNThumbnailPackage(),
             new SplashScreenPackage(),
             new RNFetchBlobPackage(),
             new RNViewShotPackage(),
