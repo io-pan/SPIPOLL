@@ -71,8 +71,13 @@ const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
 
+const MODE_RUN = 0;
+const MODE_OFF = -1;
+const MODE_SET = 1;
 
-const landmarkSize = 2;
+// const landmarkSize = 2; // fce detection
+
+
 //----------------------------------------------------------------------------------------
 class Draggable extends Component {
 //----------------------------------------------------------------------------------------    
@@ -195,7 +200,7 @@ export default class App extends Component<Props> {
         // 'collection-flower'
         // 'collection-environment'
         // 'session' ( = free while session running)
-        // 'motion-preview' (while setting motion parameters)
+        // 'motion-setup' (while setting motion parameters)
         // 'motion-running' (while session running) 
       distantcam:false,
       previewing:false,
@@ -204,7 +209,7 @@ export default class App extends Component<Props> {
       isTakingPicture:false,
       motionDetected:false,
       motionBase64:'',
-      motionDetectionMode: 1, // -1:detector paused,  0:running,   1:previewing,
+      motionDetectionMode: MODE_SET,
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
@@ -232,6 +237,7 @@ export default class App extends Component<Props> {
       },
 
       bigBlackMask:false,
+      motionSetup:false,
     };
 
     this.poignee = [{
@@ -305,9 +311,9 @@ export default class App extends Component<Props> {
         if(motionAction){
           motionAction = JSON.parse(motionAction);
           this.setState({motionAction:{
-            type: motionAction.type ? motionAction.type : 'photo',
+            type: motionAction.type ? motionAction.type : false,
             videoLength: motionAction.videoLength ? motionAction.videoLength : '3',
-            photoNumber: motionAction.photoNumber ? motionAction.photoNumber : '3',
+            photoNumber: motionAction.photoNumber ? motionAction.photoNumber : '3'
           }});
         }
       }
@@ -387,7 +393,17 @@ export default class App extends Component<Props> {
       this.appDirs = JSON.parse(dirs);
       this.setState({storage:this.appDirs[0].path});
 
-      // TODO: do this on collection / session create
+      RNFetchBlob.fs.isDir(this.appDirs[0].path+'/collections')
+      .then((isDir) => {
+        if(!isDir){
+          RNFetchBlob.fs.mkdir()
+          .then(() => { console.log('collection folder created') })
+          .catch((err) => { console.log('error collection folder created ', err) })
+        }
+      })
+
+      // TODO: do this ALSO on collection / session create.
+      // Default thumb folder for freely taken photos or videos.
       RNFetchBlob.fs.isDir(this.appDirs[0].path+'/thumb')
       .then((isDir) => {
         if(!isDir){
@@ -536,6 +552,7 @@ export default class App extends Component<Props> {
     }
   }
 
+  // todo: both options: snap & real picture
   snap(){
     this.sendMessage(this.state.connectedTo, 'cmd', 'takePicture');
   }
@@ -591,7 +608,7 @@ export default class App extends Component<Props> {
     console.log('MOTION', motion);
     console.log(this.videoMotion + ' ' + this.photoNumber); 
 
-    this.curMode = this.state.motionDetectionMode;
+    // this.curMode = this.state.motionDetectionMode;
     this.setState({
       // motionDetectionMode:(this.state.motionDetectionMode==0) ? -1 : this.curMode,
       motionDetected:motion.motionDetected,
@@ -605,7 +622,7 @@ export default class App extends Component<Props> {
     }
 
     if (motion.motionDetected
-    && this.state.motionDetectionMode==0
+    && this.state.motionDetectionMode==MODE_RUN  // runningmode
     // && this.state.cam != 'motion-running'
     ){
       this.motionActionRunning = true;
@@ -742,7 +759,7 @@ export default class App extends Component<Props> {
             this.sendMessage(this.state.connectedTo, 'distantRec', false);
 
             // console.log('end vid' + this.curMode);
-            this.setState({ isRecording: false, motionDetectionMode: this.curMode});
+            this.setState({ isRecording: false});
             // this.setState({motionDetectionMode: this.curMode});
           }
           else {
@@ -775,6 +792,17 @@ export default class App extends Component<Props> {
     }
   };
 
+  takeMotion(){
+    if(this.state.motionAction.type){
+      Alert.alert(
+      "",
+      "Appuyez longuement sur l'icône pour initialiser le détecteur de mouvement.",
+      );
+    }
+  }
+  setupMotion(){
+    this.setState({cam:'motion-setup'});
+  }
   // onFacesDetected = ({ faces }) => {
   //   console.log('FACE', faces);
   //   this.setState({ faces:faces });
@@ -821,7 +849,7 @@ export default class App extends Component<Props> {
   // }
 
   renderMotion(){
-    if (this.state.cam!='motion-preview')
+    if (this.state.cam!='motion-setup')
       return null;
 
     return (
@@ -839,7 +867,7 @@ export default class App extends Component<Props> {
         }
 
        { this.state.motionInputAreaShape != '' 
-        && this.state.cam == 'motion-preview'
+        && this.state.cam == 'motion-setup'
         ?
           <View 
             style={styles.MotionContainer}>
@@ -962,124 +990,184 @@ export default class App extends Component<Props> {
 
 
   toggleShape(){
-    this.setState({motionInputAreaShape: 
-      this.state.motionInputAreaShape == ''
-      ? 'elipse'
-      : this.state.motionInputAreaShape == 'elipse'
+    this.setState({
+      // motionSetup:'motionInputArea',
+      motionInputAreaShape: 
+        this.state.motionInputAreaShape == ''
+        ? 'elipse'
+        : this.state.motionInputAreaShape == 'elipse'
           ? 'rectangle'
           : ''
-      })
+    });
   }
 
-  renderMotionSetupSlider(){
+  toggleMotionSetup(val){
+    if(this.state.motionSetup==val){
+      this.setState({
+        motionSetup:false,
+        // motionInputAreaShape:'',
+      });
+    }
+    else{
+      this.setState({
+        motionSetup:val,
+        // motionInputAreaShape:'',
+      }); 
+    }
+  }
+
+  renderMotionSetupItems(slider){
     return(
 
-          <View
-          >
-            {/*
-            <Button 
-              style={{ 
-                margin:1, 
-                height:40 ,
-                marginBottom:2,
-              }}
-              color={ this.state.previewing ? '#338433' : 'grey'}
-              title = 'Pause motion'
-              onPress = {() => this.togglePreviewMotion()}
-            />
-            */}
+      <View 
+        style={{
+          height:200,
+          position:'absolute', left:0, right:0, top:0, marginTop:-100
+        }}
+        >
+        {/*
+        <Button 
+          style={{ 
+            margin:1, 
+            height:40 ,
+            marginBottom:2,
+          }}
+          color={ this.state.previewing ? '#338433' : 'grey'}
+          title = 'Pause motion'
+          onPress = {() => this.togglePreviewMotion()}
+        />
+        */}
 
+        { this.state.motionSetup == 'sampleSize'
+          ?
+          <Slider  
+            ref="sampleSize"
+            style={styles.slider} 
+            thumbTintColor = '#ffffff' 
+            minimumTrackTintColor='#dddddd' 
+            maximumTrackTintColor='#ffffff' 
+            minimumValue={-parseInt(this.state.previewWidth/10,10)}
+            maximumValue={-1}
+            step={1}
+            value={-this.state.sampleSize}
+            onValueChange={
+              (value) => this.onSampleSize(-value)
+            } 
+          />
+          :null
+        }
+        { this.state.motionSetup == 'threshold'
+          ?
+          <React.Fragment>
+          <Slider  
+            ref="threshold"
+            style={styles.slider} 
+            thumbTintColor = '#ffffff' 
+            minimumTrackTintColor='#dddddd' 
+            maximumTrackTintColor='#ffffff' 
+            minimumValue={-255}
+            maximumValue={0}
+            step={1}
+            // value={this.state.threshold}
+            value={
+              -(
+                (this.state.threshold>>>16) 
+              + ((this.state.threshold&0x00ff00)>>>8)
+              + (this.state.threshold&0x0000ff)
+              )/3
+            }
+            onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
+          />
             <Slider  
-              ref="sampleSize"
+              ref="threshold_red"
               style={styles.slider} 
-              thumbTintColor = '#000' 
-              minimumTrackTintColor='#cccccc' 
-              maximumTrackTintColor='#ffffff' 
-              minimumValue={-parseInt(this.state.previewWidth/10,10)}
-              maximumValue={-1}
-              step={1}
-              value={-this.state.sampleSize}
-              onValueChange={
-                (value) => this.onSampleSize(-value)
-              } 
-            />
-  
-            <Slider  
-              ref="threshold"
-              style={styles.slider} 
-              thumbTintColor = '#fff' 
-              minimumTrackTintColor='#dddddd' 
-              maximumTrackTintColor='#ffffff' 
+              thumbTintColor = '#d00' 
+              minimumTrackTintColor='#dd0000' 
+              maximumTrackTintColor='#dd0000' 
               minimumValue={-255}
               maximumValue={0}
               step={1}
-              // value={this.state.threshold}
-              value={
-                -(
-                  (this.state.threshold>>>16) 
-                + ((this.state.threshold&0x00ff00)>>>8)
-                + (this.state.threshold&0x0000ff)
-                )/3
-              }
-              onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
+              value={-(this.state.threshold>>>16)}
+              onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
             />
-              <Slider  
-                ref="threshold_red"
-                style={styles.slider} 
-                thumbTintColor = '#d00' 
-                minimumTrackTintColor='#dd0000' 
-                maximumTrackTintColor='#dd0000' 
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-(this.state.threshold>>>16)}
-                onValueChange={(value) => this.onThreshold(0xff0000, -value<<16)} 
-              />
-              <Slider  
-                ref="threshold_green"
-                style={styles.slider} 
-                thumbTintColor = {greenFlash}
-                minimumTrackTintColor={greenFlash}
-                maximumTrackTintColor={greenFlash}
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-((this.state.threshold & 0x00ff00) >>> 8)}
-                onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
-              />
-              <Slider  
-                ref="threshold_blue"
-                style={styles.slider} 
-                thumbTintColor = '#0000dd' 
-                minimumTrackTintColor='#0000dd' 
-                maximumTrackTintColor='#0000dd' 
-                minimumValue={-255}
-                maximumValue={0}
-                step={1}
-                value={-(this.state.threshold & 0x0000ff)}
-                onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
-              />
-  
             <Slider  
-              ref="minimum_pixels"
-              style={styles.sliderDenoise} 
-              thumbTintColor='#000' 
-              minimumTrackTintColor='#ff0000' 
-              maximumTrackTintColor='#0000ff' 
-              minimumValue={1}
-              maximumValue={this.state.previewWidth/this.state.sampleSize}
+              ref="threshold_green"
+              style={styles.slider} 
+              thumbTintColor = {greenFlash}
+              minimumTrackTintColor={greenFlash}
+              maximumTrackTintColor={greenFlash}
+              minimumValue={-255}
+              maximumValue={0}
               step={1}
-              value={this.state.minimumPixels}
-              onValueChange={(value) => this.onMinimumPixels(value)} 
+              value={-((this.state.threshold & 0x00ff00) >>> 8)}
+              onValueChange={(value) => this.onThreshold(0x00ff00,-value<<8)} 
             />
-            <Text>{this.state.minimumPixels}</Text>
-          </View>
+            <Slider  
+              ref="threshold_blue"
+              style={styles.slider} 
+              thumbTintColor = '#0000dd' 
+              minimumTrackTintColor='#0000dd' 
+              maximumTrackTintColor='#0000dd' 
+              minimumValue={-255}
+              maximumValue={0}
+              step={1}
+              value={-(this.state.threshold & 0x0000ff)}
+              onValueChange={(value) => this.onThreshold(0x0000ff,-value)} 
+            />
+            </React.Fragment>
+          :null
+        }
+        { this.state.motionSetup == 'minimumPixels'
+          ?
+          <React.Fragment>
+          <Slider  
+            ref="minimumPixels"
+            style={styles.slider} 
+            thumbTintColor = '#ffffff' 
+            minimumTrackTintColor='#dddddd' 
+            maximumTrackTintColor='#ffffff' 
+            minimumValue={1}
+            maximumValue={this.state.previewWidth/this.state.sampleSize}
+            step={1}
+            value={this.state.minimumPixels}
+            onValueChange={(value) => this.onMinimumPixels(value)} 
+          />
+          <Text>{this.state.minimumPixels}</Text>
+          </React.Fragment>
+          :null
+        }
+        { this.state.motionSetup == 'zoom'
+          ?
+          <React.Fragment>
+          <Slider  
+            ref="zoom"
+            style={styles.slider} 
+            thumbTintColor = {greenFlash} 
+            minimumTrackTintColor={greenFlash} 
+            maximumTrackTintColor={greenFlash}
+            minimumValue={0}
+            maximumValue={1}
+            step={0.1}
+            value={0}
+            onValueChange={
+              (value) => this.onZoom(value)
+            } 
+          />
+          <Text>{this.state.minimumPixels}</Text>
+          </React.Fragment>
+          :null
+        }
+        { this.state.motionSetup=='action'
+          ? this.renderMotionSetupTodoForm()
+          : null
+        }
 
+      </View>
     );
   }
 
   renderCamActionButtons(){   
-    if(this.state.cam == 'motion-preview')
+    if(this.state.cam == 'motion-setup')
           return null;
     
     return (
@@ -1134,8 +1222,8 @@ export default class App extends Component<Props> {
             paddingBottom={12}
             color= {greenFlash}
             backgroundColor ={'transparent'}
-            onPress = {() =>{}}
-            // onPress = {() => this.takeMotion()}
+            onPress = {() => this.takeMotion()}
+            onLongPress = {() => this.setupMotion()}
           /></View>
           </React.Fragment>
           :null
@@ -1179,9 +1267,10 @@ export default class App extends Component<Props> {
   renderMotionSetupTodoForm(){
     return(
       <View>
+      {/*
         <Text style={{fontSize:16, textAlign:'center'}}>Lors de la détection de mouvement,</Text>
         <Text style={{fontSize:18, textAlign:'center'}}>prendre ...</Text>
-
+*/}
         <View style={[styles.row, {justifyContent: 'space-between',flex:1, marginTop:5}]}>
 
           <View style={{flex:0.5}}>
@@ -1214,7 +1303,10 @@ export default class App extends Component<Props> {
           <TouchableOpacity  
             onPress = {() => this.toggleMotionAction('video')}
             >
-            <Text style={{fontSize:18, textAlign:'center', color: this.state.motionAction.type=='video' ? greenFlash : 'grey'}}>
+            <Text style={{fontSize:18, textAlign:'center', 
+              color: this.state.motionAction.type=='video' ? greenFlash : 'grey',
+              paddingBottom: this.state.motionAction.type=='video' ? 0 : 30,
+            }}>
             une vidéo
             </Text>
           </TouchableOpacity>
@@ -1241,62 +1333,109 @@ export default class App extends Component<Props> {
       
         <View style= {{height:60}}></View>
         
-
       </View>
     );
   }
 
   renderMotionSetupButtons(){   
-    if ( this.state.cam != 'motion-preview')
+    if ( this.state.cam != 'motion-setup')
       return null;
 
     return(  
       <View>
-        <View style={styles.iconButtonContainer} >
-        <FontAwesomeIcons.Button   
-          name='th' //   th-large      
-          underlayColor={greenSuperLight}
-          size={40}
-          width={100}
-          margin={0}
-          paddingLeft={30}
-          color= {greenFlash}
-          backgroundColor ={'transparent'}
-          // onPress = {() =>{}}
-          onPress = {() => this.toggleShape()}
-        />
+        {this.renderMotionSetupItems()}
+        <View >
+        <ScrollView horizontal={true} style={{ padding:5}}>
 
-        <FontAwesomeIcons.Button   
-          name='th-large' //      
-          underlayColor={greenSuperLight}
-          size={40}
-          width={100}
-          margin={0}
-          paddingLeft={30}
-          color= {greenFlash}
-          backgroundColor ={'transparent'}
-          // onPress = {() =>{}}
-          onPress = {() => this.toggleShape()}
-        />
+          <MaterialCommunityIcons.Button   
+            // Action
+            name='gesture-double-tap' //   th-large      
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            paddingLeft={10}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('action')}
+          >
+            <Text 
+              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
+              color:this.state.motionSetup=='action' ? greenFlash : 'grey' ,}}
+              >Action</Text>
+          </MaterialCommunityIcons.Button>
 
-        <FontAwesomeIcons.Button   
-          name='adjust' //   th-large      
-          underlayColor={greenSuperLight}
-          size={40}
-          width={100}
-          margin={0}
-          paddingLeft={30}
-          color= {greenFlash}
-          backgroundColor ={'transparent'}
-          // onPress = {() =>{}}
-          onPress = {() => this.toggleShape()}
-        />
+          <MaterialCommunityIcons.Button   
+            // Mask
+            name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleShape()}
+          >
+            <Text 
+              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
+              color:this.state.motionInputAreaShape ? greenFlash : 'grey' ,}}
+              >Masque</Text>
+          </MaterialCommunityIcons.Button>
+
+          <MaterialCommunityIcons.Button
+            // Précision
+            name='grid' //      view-grid //view-comfy
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('sampleSize')}
+          >
+            <Text 
+              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
+              color:this.state.motionSetup=='sampleSize' ? greenFlash : 'grey' ,}}
+              >Précision</Text>
+          </MaterialCommunityIcons.Button>
+          <MaterialCommunityIcons.Button   
+            // Sensibilité
+            name='contrast-circle' //   contrast-box     
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('threshold')}
+          >
+            <Text 
+              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
+              color:this.state.motionSetup=='threshold' ? greenFlash : 'grey' ,}}
+              >Sensibilité</Text>
+          </MaterialCommunityIcons.Button>
+
+          <MaterialCommunityIcons.Button   
+            // Bruit
+            name='eraser'   
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            marginRight={20}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('minimumPixels')}
+          >
+            <Text 
+              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
+              color:this.state.motionSetup=='minimumPixels' ? greenFlash : 'grey' ,}}
+              >Antibruit</Text>
+          </MaterialCommunityIcons.Button>
+
+        </ScrollView>
         </View>
-        {this.renderMotionSetupSlider()}
-
-        {this.renderMotionSetupTodoForm()}
       </View>
-
     );
   }
 
@@ -1352,20 +1491,7 @@ export default class App extends Component<Props> {
         {/*this.renderFaces()*/}
         {this.renderMotion()}
 
-        <Slider  
-          ref="zoom"
-          style={styles.sliderZoom} 
-          thumbTintColor = {greenFlash} 
-          minimumTrackTintColor={greenFlash} 
-          maximumTrackTintColor={greenFlash}
-          minimumValue={0}
-          maximumValue={1}
-          step={0.1}
-          value={0}
-          onValueChange={
-            (value) => this.onZoom(value)
-          } 
-        />
+
        </RNCamera>
     
       </View>
@@ -1579,7 +1705,7 @@ export default class App extends Component<Props> {
 
                     <Button 
                       style={styles.button}
-                      color={ this.state.motionDetectionMode==-1 ?  'grey' : this.state.motionDetectionMode==0 ? '#338433' : '#843333'}
+                      color={ this.state.motionDetectionMode==MODE_OFF ?  'grey' : this.state.motionDetectionMode==MODE_RUN ? '#338433' : '#843333'}
                       title = 'detect' 
                       onPress = {() => this.toggleMotionMode()}
                     />
@@ -1590,13 +1716,13 @@ export default class App extends Component<Props> {
                       title = 'login' 
                       onPress = {() => this.toggleView('login')}
                     />
-
+{/*
                     <Button 
                       style={styles.button}
-                      color={ this.state.cam=='motion-preview' ? '#338433' : 'grey'}
+                      color={ this.state.cam=='motion-setup' ? '#338433' : 'grey'}
                       title = 'cam motion' 
-                      onPress = {() => this.toggleView('motion-preview')}
-                    />
+                      onPress = {() => this.toggleView('motion-setup')}
+                    />*/}
                     <Button 
                       style={styles.button}
                       color={ this.state.cam=='free' ? '#338433' : 'grey'}
@@ -1729,16 +1855,10 @@ styles = StyleSheet.create({
     backgroundColor:'transparent',
   },
   slider:{
-    padding:10,
-    // transform: [{ rotate: '180deg'}],
-  },
-  sliderDenoise:{
-    padding:10,
-    paddingBottom:0,
-  },
-  sliderZoom:{
     padding:15,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
+
   containerPreview: {
     flex: 1,
     flexWrap:'wrap',
