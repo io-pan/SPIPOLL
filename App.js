@@ -26,6 +26,7 @@ import {Platform, StyleSheet, Text, View,
   Animated,
   TextInput,
   AsyncStorage,
+  KeyboardAvoidingView,
 } from 'react-native';
 
 import SplashScreen from "rn-splash-screen";
@@ -185,6 +186,7 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
+      batteryLevel:0,
       storage:false,
       devices: [],
       connectedTo:false,
@@ -223,6 +225,7 @@ export default class App extends Component<Props> {
         photoNumber:'',
         videoLength:'',
       },
+      motionOutputRunning:'',
       // faces:[],
       zoom:0,
 
@@ -362,7 +365,7 @@ export default class App extends Component<Props> {
   testBattery(){
     NativeModules.ioPan.getLevel()
     .then((level) => {
-      console.log(level);
+      this.setState({batteryLevel:level});
       if (level < 15) {
         // TODO send alert to distant.
       }
@@ -378,6 +381,7 @@ export default class App extends Component<Props> {
     //     console.log(batteryLevel);
     //   }
     // );
+    this.testBattery();
     setInterval(this.testBattery,60000);
     KeepScreenOn.setKeepScreenOn(true);
 
@@ -798,10 +802,15 @@ export default class App extends Component<Props> {
 
   takeMotion(){
     if((!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))){
-      Alert.alert(
-      "",
-      "Appuyez longuement sur l'icône pour initialiser le détecteur de mouvement.",
-      );
+      // Alert.alert(
+      // "",
+      // "Appuyez longuement sur l'icône pour initialiser le détecteur de mouvement.",
+      // [{}]
+      // );
+      this.setState({cam:'motion-setup'});
+    }
+    else {
+      // TODO: go !!!
     }
   }
   setupMotion(){
@@ -853,7 +862,7 @@ export default class App extends Component<Props> {
   // }
 
   renderMotion(){
-    if (this.state.cam!='motion-setup')
+    if (this.state.cam!='motion-setup' && this.state.motionOutputRunning!='pixels')
       return null;
 
     return (
@@ -1020,9 +1029,13 @@ export default class App extends Component<Props> {
     }
   }
 
+  toggleMotionOutputRunning(val){
+    this.setState({motionOutputRunning:val});
+  }
+
   renderMotionSetupItems(slider){
     return(
-
+  
       <View 
         style={{
           position:'absolute', left:0, right:0, top:0, 
@@ -1037,6 +1050,8 @@ export default class App extends Component<Props> {
                 : -sliderHeight
         }}
         >
+        <KeyboardAvoidingView behavior="padding">
+
         {/*
         <Button 
           style={{ 
@@ -1050,6 +1065,7 @@ export default class App extends Component<Props> {
         />
         */}
 
+    
         { this.state.motionSetup == 'sampleSize'
           ?
           <Slider  
@@ -1137,12 +1153,13 @@ export default class App extends Component<Props> {
           <Text 
             style={{
               height:30,
+              paddingTop:10,
               color:'#ffffff', 
-              backgroundColor:'rgba(0, 0, 0, 0.4)',//this.state.motionInputAreaShape ? 'transparent' : 'rgba(0, 0, 0, 0.4)'
+              // backgroundColor:'rgba(0, 0, 0, 0.4)',//this.state.motionInputAreaShape ? 'transparent' : 'rgba(0, 0, 0, 0.4)'
               fontSize:16,
               textAlign:'center',
             }}
-          >{this.state.minimumPixels} pixel{this.state.minimumPixels>1 ? 's':''}</Text>
+          >{this.state.minimumPixels-1} pixel{this.state.minimumPixels-1>1 ? 's':''}</Text>
           <Slider  
             ref="minimumPixels"
             style={styles.slider} 
@@ -1150,7 +1167,7 @@ export default class App extends Component<Props> {
             minimumTrackTintColor='#dddddd' 
             maximumTrackTintColor='#ffffff' 
             minimumValue={1}
-            maximumValue={this.state.previewWidth/this.state.sampleSize}
+            maximumValue={parseInt(this.state.previewWidth/this.state.sampleSize,10)}
             step={1}
             value={this.state.minimumPixels}
             onValueChange={(value) => this.onMinimumPixels(value)} 
@@ -1194,6 +1211,7 @@ export default class App extends Component<Props> {
           : null
         }
 
+      </KeyboardAvoidingView>
       </View>
     );
   }
@@ -1298,76 +1316,80 @@ export default class App extends Component<Props> {
 
   renderMotionSetupTodoForm(){
     return(
-      <View style={{height:200}}>
-      
-        {/*
-        <Text style={{fontSize:16, textAlign:'center', color:'#ffffff',}}>Lors de la détection de mouvement,</Text>
-        */}
-        <Text style={{padding:10, fontSize:18, textAlign:'center', color:greenFlash,}}>Prendre</Text>
+      <View style={{height:200, backgroundColor: '#F5FCFF',}}>
+        {/*<Text style={{padding:10, fontSize:16, textAlign:'center', color:greenFlash,}}>Lorsqu'un mouvement est détecté</Text>*/}
+        <Text style={{paddingTop:10, fontSize:18, fontWeight: 'bold', textAlign:'center', color:greenFlash,}}>
+          Action à effectuer à la détection de mouvement:
+        </Text>
 
         <View style={[styles.row, {justifyContent: 'space-between',flex:1, marginTop:5}]}>
 
           <View style={{flex:0.5}}>
-          <TouchableOpacity  
-            onPress = {() => this.toggleMotionAction('photo')}
-            >
-            <Text style={[{fontSize:18, padding:5, textAlign: 'center',
-              color: this.state.motionAction.type=='photo' ? greenFlash : 'white'}]}>
-            une série de {this.state.motionAction.type != 'photo' ? 'photos' : ''}
-            </Text>
-          </TouchableOpacity>
+            <TouchableOpacity  
+              onPress = {() => this.toggleMotionAction('photo')}
+              >
+              <Text style={[{fontSize:18, padding:10, textAlign: 'center',
+                color: this.state.motionAction.type=='photo' ? greenFlash : greenDark}]}>
+              Prendre une série de {this.state.motionAction.type != 'photo' ? 'photos' : ''}
+              </Text>
+            </TouchableOpacity>
 
-          { this.state.motionAction.type == 'photo' 
-            ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
-              <TextInput
-                keyboardType="number-pad"
-                autoFocus={true}
-                textAlign={'center'}
-                style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
-                defaultValue={''+this.state.motionAction.photoNumber}
-                onEndEditing =    {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
-                onSubmitEditing = {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
-              />
-              <Text style={[{fontSize:18, color: greenFlash}]}> photo{this.state.motionAction.photoNumber>1?'s':''}.</Text>
-              </View>
-            : null
-          }
-          </View>
-
-          <View style={[{flex:0.5}]}>
-          <TouchableOpacity  
-            onPress = {() => this.toggleMotionAction('video')}
-            >
-            <Text style={{fontSize:18, textAlign:'center', padding:5,
-              color: this.state.motionAction.type=='video' ? greenFlash : 'white',
-              paddingBottom: this.state.motionAction.type=='video' ? 0 : 30,
-            }}>
-            une vidéo
-            </Text>
-          </TouchableOpacity>
-
-          { this.state.motionAction.type == 'video' 
-            ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
-                <Text style={{fontSize:18, color: greenFlash}}>de </Text>
+            { this.state.motionAction.type == 'photo' 
+              ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
                 <TextInput
                   keyboardType="number-pad"
                   autoFocus={true}
                   textAlign={'center'}
                   style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
-                  defaultValue={''+this.state.motionAction.videoLength}
-                  onEndEditing =    {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
-                  onSubmitEditing = {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
+                  defaultValue={''+this.state.motionAction.photoNumber}
+                  onEndEditing =    {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
+                  onSubmitEditing = {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
                 />
-                <Text style={{fontSize:18, color: greenFlash}}> seconde{this.state.motionAction.videoLength>1?'s':''}.</Text>
-              </View>
-            : null
-          }
+                <Text style={[{fontSize:18, color: greenFlash}]}> photo{this.state.motionAction.photoNumber>1?'s':''}.</Text>
+                </View>
+              : null
+            }
           </View>
 
-        </View>
+          <View style={[{flex:0.5}]}>
+            <TouchableOpacity  
+              onPress = {() => this.toggleMotionAction('video')}
+              >
+              <Text style={{fontSize:18, textAlign:'center', padding:10,
+                color: this.state.motionAction.type=='video' ? greenFlash : greenDark,
+                paddingBottom: this.state.motionAction.type=='video' ? 0 : 30,
+              }}>
+              Prendre une vidéo
+              </Text>
+            </TouchableOpacity>
 
-      
-        <View style= {{height:60}}></View>
+            { this.state.motionAction.type == 'video' 
+              ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
+                  <Text style={{fontSize:18, color: greenFlash}}>de </Text>
+                  <TextInput
+                    keyboardType="number-pad"
+                    autoFocus={true}
+                    textAlign={'center'}
+                    style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
+                    defaultValue={''+this.state.motionAction.videoLength}
+                    onEndEditing =    {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
+                    onSubmitEditing = {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
+                  />
+                  <Text style={{fontSize:18, color: greenFlash}}> seconde{this.state.motionAction.videoLength>1?'s':''}.</Text>
+                </View>
+              : null
+            }
+          </View>
+        </View>
+             
+        { this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)
+          ? <Button 
+              color={greenFlash}
+              title = 'OK'
+              onPress = {() => this.toggleMotionSetup('action')}
+            />
+          : null
+        }
         
       </View>
     );
@@ -1380,100 +1402,207 @@ export default class App extends Component<Props> {
     return(  
       <View>
         {this.renderMotionSetupItems()}
-        <View >
-        <ScrollView horizontal={true} style={{ padding:5}}>
-
-          <MaterialCommunityIcons.Button   
-            // Action
-            name='gesture-double-tap' //   th-large      
-            underlayColor={greenSuperLight}
-            size={25}
-            margin={0}
-            paddingLeft={10}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleMotionSetup('action')}
+        <View style={{paddingTop:2}}>
+          {/*
+          <View style={{ // inline
+              padding:5,
+              flexWrap: 'wrap', 
+              alignItems: 'flex-start',
+              flexDirection:'row',
+            }}
           >
-            <Text 
-              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
-                color:
-                  this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength)) 
-                  ? greenFlash 
-                  : 'grey' 
+          */}
+
+          <ScrollView horizontal={true} >
+            <MaterialCommunityIcons.Button   
+              // Action
+              borderRadius={0} 
+              style={{
+                flexDirection:'column',
+                borderRightWidth:1, borderRightColor:'#dddddd',
+                marginLeft:5,
               }}
-              >Action</Text>
-          </MaterialCommunityIcons.Button>
+              name='gesture-double-tap' //   th-large      
+              underlayColor={greenSuperLight}
+              size={25}
+              margin={0}
+              paddingLeft={10}
+              color= {greenFlash}
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.toggleMotionSetup('action')}
+            >
+              <Text 
+                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/ 
+                  
+                  color:
+                    this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength)) 
+                    ? greenFlash 
+                    : 'grey' 
+                }}
+                >Action</Text>
+            </MaterialCommunityIcons.Button>
 
-          <MaterialCommunityIcons.Button   
-            // Mask
-            name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
-            underlayColor={greenSuperLight}
-            size={25}
-            margin={0}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleShape()}
-          >
-            <Text 
-              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
-              color:this.state.motionInputAreaShape ? greenFlash : 'grey' ,}}
-              >Masque</Text>
-          </MaterialCommunityIcons.Button>
+            <MaterialCommunityIcons.Button   
+              // Mask
+              borderRadius={0} 
+              style={{
+                flexDirection:'column',
+                borderRightWidth:1, borderRightColor:'#dddddd',
+              }}
+              name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
+              underlayColor={greenSuperLight}
+              size={25}
+              margin={0}
+              color= {greenFlash}
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.toggleShape()}
+            >
+              <Text 
+                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                  color:this.state.motionInputAreaShape ? greenFlash : 'grey' ,}}
+                >Masque</Text>
+            </MaterialCommunityIcons.Button>
 
-          <MaterialCommunityIcons.Button
-            // Précision
-            name='grid' //      view-grid //view-comfy
-            underlayColor={greenSuperLight}
-            size={25}
-            margin={0}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleMotionSetup('sampleSize')}
-          >
-            <Text 
-              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
-              color:this.state.motionSetup=='sampleSize' ? greenFlash : 'grey' ,}}
-              >Précision</Text>
-          </MaterialCommunityIcons.Button>
-          <MaterialCommunityIcons.Button   
-            // Sensibilité
-            name='contrast-circle' //   contrast-box     
-            underlayColor={greenSuperLight}
-            size={25}
-            margin={0}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleMotionSetup('threshold')}
-          >
-            <Text 
-              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
-              color:this.state.motionSetup=='threshold' ? greenFlash : 'grey' ,}}
-              >Sensibilité</Text>
-          </MaterialCommunityIcons.Button>
+            <MaterialCommunityIcons.Button
+              // Précision
+              borderRadius={0} 
+              style={{
+                flexDirection:'column',
+                borderRightWidth:1, borderRightColor:'#dddddd',
+              }}
+              name='grid' //      view-grid //view-comfy
+              underlayColor={greenSuperLight}
+              size={25}
+              margin={0}
+              color= {greenFlash}
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.toggleMotionSetup('sampleSize')}
+            >
+              <Text 
+                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                color:this.state.motionSetup=='sampleSize' ? greenFlash : 'grey' ,}}
+                >Précision</Text>
+            </MaterialCommunityIcons.Button>
+            <MaterialCommunityIcons.Button   
+              // Sensibilité
+              borderRadius={0} 
+              style={{
+                flexDirection:'column',
+                borderRightWidth:1, borderRightColor:'#dddddd',
+              }}
+              name='contrast-circle' //   contrast-box     
+              underlayColor={greenSuperLight}
+              size={25}
+              margin={0}
+              color= {greenFlash}
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.toggleMotionSetup('threshold')}
+            >
+              <Text 
+                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                color:this.state.motionSetup=='threshold' ? greenFlash : 'grey' ,}}
+                >Sensibilité</Text>
+            </MaterialCommunityIcons.Button>
 
-          <MaterialCommunityIcons.Button   
-            // Bruit
-            name='eraser'   
-            underlayColor={greenSuperLight}
-            size={25}
-            margin={0}
-            marginRight={20}
-            color= {greenFlash}
-            backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
-            onPress = {() => this.toggleMotionSetup('minimumPixels')}
-          >
-            <Text 
-              style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
-              color:this.state.motionSetup=='minimumPixels' ? greenFlash : 'grey' ,}}
-              >Antibruit</Text>
-          </MaterialCommunityIcons.Button>
+            <MaterialCommunityIcons.Button   
+              // Bruit
+              borderRadius={0} 
+              style={{
+                flexDirection:'column',
+                marginRight:5,
+              }}
+              name='eraser'   
+              underlayColor={greenSuperLight}
+              size={25}
+              margin={0}
+              color= {greenFlash}
+              backgroundColor ={'transparent'}
+              // onPress = {() =>{}}
+              onPress = {() => this.toggleMotionSetup('minimumPixels')}
+            >
+              <Text 
+                style={{fontSize:16, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                color:this.state.motionSetup=='minimumPixels' ? greenFlash : 'grey' ,}}
+                >Antibruit</Text>
+            </MaterialCommunityIcons.Button>
+          </ScrollView>
 
-        </ScrollView>
+
+          <View style={{paddingTop:20}}>
+            <Text
+              style={{
+                // fontWeight: 'bold',
+                fontSize:16, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                // color:  greenFlash,
+                textAlign:'center', 
+              }}>
+              Affichage durant l'exécution:
+            </Text> 
+
+            <View style={{
+              flexDirection:'row',
+              justifyContent: 'center'//'space-between',
+            }}>
+
+             <MaterialCommunityIcons.Button
+                borderRadius={0} 
+                style={{borderRightWidth:1, borderRightColor:'#dddddd',}}
+                name='cancel' 
+                underlayColor={greenSuperLight}
+                size={25}
+                margin={0}
+                // paddingLeft={15}
+                color= {greenFlash}
+                backgroundColor ={'transparent'}
+                // onPress = {() =>{}}
+                onPress = {() => this.toggleMotionOutputRunning('')}
+              >
+                <Text 
+                  style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7, 
+                    color: !this.state.motionOutputRunning ? greenFlash : 'grey' }}
+                  >Aucun</Text>
+              </MaterialCommunityIcons.Button>
+
+              <MaterialCommunityIcons.Button  
+                borderRadius={0} 
+                style={{borderRightWidth:1, borderRightColor:'#dddddd',}}
+                name='blur'   
+                underlayColor={greenSuperLight}
+                size={25}
+                margin={0}
+                color= {greenFlash}
+                backgroundColor ={'transparent'}
+                onPress = {() => this.toggleMotionOutputRunning('pixels')}
+              >
+                <Text 
+                  style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
+                    color:this.state.motionOutputRunning=='pixels' ? greenFlash : 'grey' ,}}
+                  >Pixels</Text>
+              </MaterialCommunityIcons.Button>
+
+              <MaterialCommunityIcons.Button
+                borderRadius={0} 
+                name='ladybug'
+                underlayColor={greenSuperLight}
+                size={25}
+                margin={0}
+                // paddingRight={15}
+                color= {greenFlash}
+                backgroundColor ={'transparent'}
+                onPress = {() => this.toggleMotionOutputRunning('icon')}
+              >
+                <Text 
+                  style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
+                  color: this.state.motionOutputRunning=='icon' ? greenFlash : 'grey' ,}}
+                  >Icône</Text>
+              </MaterialCommunityIcons.Button>
+            </View>
+                
+          </View>
         </View>
       </View>
     );
@@ -1497,7 +1626,6 @@ export default class App extends Component<Props> {
         //   format: "jpg", 
         //   quality:1 ,
         // }}
-        style={[styles.preview,{width:this.state.previewWidth, height:this.state.previewHeight}]}
       >
       <RNCamera
         ref={cam => (this.camera = cam)}
@@ -1733,68 +1861,68 @@ export default class App extends Component<Props> {
 
     return (
       <View style={styles.container}>
+
         <View style={styles.header}>
           <ScrollView horizontal={true}>
 
-                    { this.appDirs.length > 1
-                      ? this.appDirs.map((value, index) => 
-                          <TouchableOpacity  
-                            key={index}
-                            style={styles.button}
-                            onPress = {() => this.toggleStorage(index)}
-                            ><Text style={{color: this.state.storage==this.appDirs[index].path ? greenFlash : 'grey'}}>
-                            {value.type}
-                            </Text>
-                          </TouchableOpacity>
-                        )
-                      : null 
-                    }
+            { this.appDirs.length > 1
+              ? this.appDirs.map((value, index) => 
+                  <TouchableOpacity  
+                    key={index}
+                    style={styles.button}
+                    onPress = {() => this.toggleStorage(index)}
+                    ><Text style={{color: this.state.storage==this.appDirs[index].path ? greenFlash : 'grey'}}>
+                    {value.type}
+                    </Text>
+                  </TouchableOpacity>
+                )
+              : null 
+            }
 
 
-                    <Button 
-                      style={styles.button}
-                      color={ !this.state.bigBlackMask ?  'grey' : '#338433' }
-                      title = 'mask' 
-                      onPress = {() => this.toggleBigBlackMask()}
-                    />
+            <Button 
+              style={styles.button}
+              color={ !this.state.bigBlackMask ?  'grey' : '#338433' }
+              title = 'mask' 
+              onPress = {() => this.toggleBigBlackMask()}
+            />
 
-                    <Button 
-                      style={styles.button}
-                      color={ this.state.motionDetectionMode==MODE_OFF ?  'grey' : this.state.motionDetectionMode==MODE_RUN ? '#338433' : '#843333'}
-                      title = 'detect' 
-                      onPress = {() => this.toggleMotionMode()}
-                    />
+            <Button 
+              style={styles.button}
+              color={ this.state.motionDetectionMode==MODE_OFF ?  'grey' : this.state.motionDetectionMode==MODE_RUN ? '#338433' : '#843333'}
+              title = 'detect' 
+              onPress = {() => this.toggleMotionMode()}
+            />
 
-                    <Button 
-                      style={styles.button}
-                      color={ this.state.cam=='login' ? '#338433' : 'grey'}
-                      title = 'login' 
-                      onPress = {() => this.toggleView('login')}
-                    />
+            <Button 
+              style={styles.button}
+              color={ this.state.cam=='login' ? '#338433' : 'grey'}
+              title = 'login' 
+              onPress = {() => this.toggleView('login')}
+            />
 {/*
-                    <Button 
-                      style={styles.button}
-                      color={ this.state.cam=='motion-setup' ? '#338433' : 'grey'}
-                      title = 'cam motion' 
-                      onPress = {() => this.toggleView('motion-setup')}
-                    />*/}
-                    <Button 
-                      style={styles.button}
-                      color={ this.state.cam=='free' ? '#338433' : 'grey'}
-                      title = 'cam free'
-                      onPress = {() => this.toggleView('free')}
-                    />
-                    <Button 
-                      style={styles.button}
-                      color={ this.state.cam=='collection-form' ? '#338433' : 'grey'}
-                      title = 'form'
-                      onPress = {() => this.toggleView('collection-form')}
-                    />
-                  </ScrollView>
-
+            <Button 
+              style={styles.button}
+              color={ this.state.cam=='motion-setup' ? '#338433' : 'grey'}
+              title = 'cam motion' 
+              onPress = {() => this.toggleView('motion-setup')}
+            />*/}
+            <Button 
+              style={styles.button}
+              color={ this.state.cam=='free' ? '#338433' : 'grey'}
+              title = 'cam free'
+              onPress = {() => this.toggleView('free')}
+            />
+            <Button 
+              style={styles.button}
+              color={ this.state.cam=='collection-form' ? '#338433' : 'grey'}
+              title = 'form'
+              onPress = {() => this.toggleView('collection-form')}
+            />
+          </ScrollView>
         </View> 
 
-      <ScrollView>
+        <ScrollView>
 
 {/*
         <Image
@@ -1812,7 +1940,7 @@ export default class App extends Component<Props> {
             { this.renderImageLocal() }
           */}
 
-          { this.renderCamera() }
+          {this.renderCamera()}
           {this.renderCamActionButtons()}
           {this.renderMotionSetupButtons()}
 
@@ -1861,11 +1989,16 @@ export default class App extends Component<Props> {
       </ScrollView>
 
       {this.state.bigBlackMask 
-      ?
-      <TouchableOpacity ref="black_mask_to_save_battery"
-      style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0}}
-      onPress = {() => this.toggleBigBlackMask()}
-      />
+      ? <TouchableOpacity ref="black_mask_to_save_battery"
+          style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0,
+            justifyContent: 'center',
+    alignItems: 'center',}}
+          onPress = {() => this.toggleBigBlackMask()}
+        >
+          <Text
+            style={{color:'grey', fontSize:22,fontWeight:'bold'}}
+            >{this.state.batteryLevel}%</Text>
+        </TouchableOpacity>
       :null
       }
 
@@ -1926,11 +2059,7 @@ styles = StyleSheet.create({
     position: 'relative',
     margin:1,
   },
-  preview: {
-    position: 'relative',
-    // width: previewWidth, 
-    // height: previewHeight, 
-  },
+
   captureLocalView:{
     // width: previewWidth, 
     // height: previewHeight,
@@ -1962,8 +2091,8 @@ styles = StyleSheet.create({
     position:'absolute',
     resizeMode: 'contain', //enum('cover', 'contain', 'stretch', 'repeat', 'center')
     backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: 'red',
+    // borderWidth: 1,
+    // borderColor: 'transparent',
   },
 
   MotionContainer: {
