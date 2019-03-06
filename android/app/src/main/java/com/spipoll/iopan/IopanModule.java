@@ -43,17 +43,25 @@ public class IopanModule extends ReactContextBaseJavaModule {
   }
 
   @ReactMethod
-  public void getLevel(final Promise promise) {
+  public void getBatteryInfo(final Promise promise) {
     try {
       Intent batteryIntent = getCurrentActivity().registerReceiver(null, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
       int level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
       int scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1);
-   
+
       if(level == -1 || scale == -1) {
           level = 0;
       }
+
+      int status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+      boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING;
       
-      promise.resolve(level);
+      WritableNativeMap rv = new WritableNativeMap();
+      rv.putBoolean("charging", isCharging);
+      rv.putInt("level", level);
+
+      promise.resolve(rv);
+
     } catch (Exception e) {
       promise.reject(e);
     }
@@ -68,7 +76,15 @@ public class IopanModule extends ReactContextBaseJavaModule {
     if(level == -1 || scale == -1) {
         level = 0;
     }
-    successCallback.invoke(level);
+
+    int status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1);
+    boolean isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING;
+    
+    WritableNativeMap rv = new WritableNativeMap();
+    rv.putBoolean("charging", isCharging);
+    rv.putInt("level", level);
+
+    successCallback.invoke(rv);
   }
 
   @ReactMethod

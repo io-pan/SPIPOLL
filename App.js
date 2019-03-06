@@ -186,7 +186,7 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
-      batteryLevel:0,
+      battery:{charging:false, level:0},
       storage:false,
       devices: [],
       connectedTo:false,
@@ -363,10 +363,11 @@ export default class App extends Component<Props> {
   }
 
   testBattery(){
-    NativeModules.ioPan.getLevel()
-    .then((level) => {
-      this.setState({batteryLevel:level});
-      if (level < 15) {
+    NativeModules.ioPan.getBatteryInfo()
+    .then((battery) => {
+      console.log(battery);
+      this.setState({battery:battery});
+      if (battery.level < 15) {
         // TODO send alert to distant.
       }
     })
@@ -382,7 +383,7 @@ export default class App extends Component<Props> {
     //   }
     // );
     this.testBattery();
-    setInterval(this.testBattery,60000);
+    setInterval(() => {this.testBattery}, 6000);
     KeepScreenOn.setKeepScreenOn(true);
 
     this.requestForPermission();
@@ -1990,14 +1991,30 @@ export default class App extends Component<Props> {
 
       {this.state.bigBlackMask 
       ? <TouchableOpacity ref="black_mask_to_save_battery"
-          style={{position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0,
+          style={{
+            position:'absolute', backgroundColor:'black', top:0,bottom:0,left:0,right:0,
             justifyContent: 'center',
-    alignItems: 'center',}}
+            alignItems: 'center',
+            flexDirection:'row',
+          }}
           onPress = {() => this.toggleBigBlackMask()}
         >
           <Text
-            style={{color:'grey', fontSize:22,fontWeight:'bold'}}
-            >{this.state.batteryLevel}%</Text>
+            style={{
+              color:this.state.battery.charging ? greenFlash : 'grey', 
+              fontSize:50,fontWeight:'bold'}}
+            >
+            {this.state.battery.level}%
+          </Text>
+          { this.state.battery.charging
+            ? <MaterialCommunityIcons.Button 
+                backgroundColor={'transparent'} 
+                name='battery-charging-40'
+                size={60}
+                color={this.state.battery.charging ? greenFlash : 'grey'}
+              />
+            : <MaterialCommunityIcons.Button name='battery-40' />
+          }
         </TouchableOpacity>
       :null
       }
