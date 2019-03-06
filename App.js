@@ -70,7 +70,7 @@ const green = "#d2e284";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
-
+const sliderHeight = 50;
 const MODE_RUN = 0;
 const MODE_OFF = -1;
 const MODE_SET = 1;
@@ -191,7 +191,9 @@ export default class App extends Component<Props> {
       distantPicture:false,
       imgLocal: false,
       imgTest:false,//'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg',
-
+      distantcam:false,
+      previewing:false,
+      distantRec:false,
 
       previewWidth:Dimensions.get('window').width,
       previewHeight:Dimensions.get('window').width*4/3,
@@ -202,20 +204,21 @@ export default class App extends Component<Props> {
         // 'session' ( = free while session running)
         // 'motion-setup' (while setting motion parameters)
         // 'motion-running' (while session running) 
-      distantcam:false,
-      previewing:false,
-      distantRec:false,
+
       isRecording:false,
       isTakingPicture:false,
       motionDetected:false,
       motionBase64:'',
+    
+      motionPreviewPaused:false,
+
       motionDetectionMode: MODE_SET,
+
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
-      motionPreviewPaused:false,
 
-      motionAction:{
+      motionAction:{  // initialised on willMount.
         type:'',
         photoNumber:'',
         videoLength:'',
@@ -223,6 +226,7 @@ export default class App extends Component<Props> {
       // faces:[],
       zoom:0,
 
+      //
       showDraggable: true,
       dropAreaValues: null,
       pan: new Animated.ValueXY(),
@@ -312,8 +316,8 @@ export default class App extends Component<Props> {
           motionAction = JSON.parse(motionAction);
           this.setState({motionAction:{
             type: motionAction.type ? motionAction.type : false,
-            videoLength: motionAction.videoLength ? motionAction.videoLength : '3',
-            photoNumber: motionAction.photoNumber ? motionAction.photoNumber : '3'
+            videoLength:motionAction.videoLength ? motionAction.videoLength : '',
+            photoNumber:motionAction.photoNumber ? motionAction.photoNumber : '',
           }});
         }
       }
@@ -793,7 +797,7 @@ export default class App extends Component<Props> {
   };
 
   takeMotion(){
-    if(this.state.motionAction.type){
+    if((!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))){
       Alert.alert(
       "",
       "Appuyez longuement sur l'icône pour initialiser le détecteur de mouvement.",
@@ -991,7 +995,7 @@ export default class App extends Component<Props> {
 
   toggleShape(){
     this.setState({
-      // motionSetup:'motionInputArea',
+      // motionSetup: this.state.motionSetup=='action'?'':this.state.motionSetup,
       motionInputAreaShape: 
         this.state.motionInputAreaShape == ''
         ? 'elipse'
@@ -1021,8 +1025,16 @@ export default class App extends Component<Props> {
 
       <View 
         style={{
-          height:200,
-          position:'absolute', left:0, right:0, top:0, marginTop:-100
+          position:'absolute', left:0, right:0, top:0, 
+          backgroundColor:'rgba(0,0,0,0.5)',
+          marginTop: 
+            this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))
+            ? -200
+            : this.state.motionSetup=='minimumPixels' 
+              ? -sliderHeight-30
+              : this.state.motionSetup=='threshold' 
+                ? -sliderHeight*3
+                : -sliderHeight
         }}
         >
         {/*
@@ -1056,10 +1068,11 @@ export default class App extends Component<Props> {
           />
           :null
         }
+
         { this.state.motionSetup == 'threshold'
           ?
           <React.Fragment>
-          <Slider  
+          {/*<Slider  
             ref="threshold"
             style={styles.slider} 
             thumbTintColor = '#ffffff' 
@@ -1077,7 +1090,7 @@ export default class App extends Component<Props> {
               )/3
             }
             onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
-          />
+          />*/}
             <Slider  
               ref="threshold_red"
               style={styles.slider} 
@@ -1117,9 +1130,19 @@ export default class App extends Component<Props> {
             </React.Fragment>
           :null
         }
+
         { this.state.motionSetup == 'minimumPixels'
           ?
           <React.Fragment>
+          <Text 
+            style={{
+              height:30,
+              color:'#ffffff', 
+              backgroundColor:'rgba(0, 0, 0, 0.4)',//this.state.motionInputAreaShape ? 'transparent' : 'rgba(0, 0, 0, 0.4)'
+              fontSize:16,
+              textAlign:'center',
+            }}
+          >{this.state.minimumPixels} pixel{this.state.minimumPixels>1 ? 's':''}</Text>
           <Slider  
             ref="minimumPixels"
             style={styles.slider} 
@@ -1132,13 +1155,22 @@ export default class App extends Component<Props> {
             value={this.state.minimumPixels}
             onValueChange={(value) => this.onMinimumPixels(value)} 
           />
-          <Text>{this.state.minimumPixels}</Text>
           </React.Fragment>
           :null
         }
-        { this.state.motionSetup == 'zoom'
+
+        {/* this.state.motionSetup == 'zoom'
           ?
           <React.Fragment>
+          <Text 
+            style={{
+              height:30,
+              color:'#ffffff', 
+              backgroundColor:'rgba(0, 0, 0, 0.4)',//this.state.motionInputAreaShape ? 'transparent' : 'rgba(0, 0, 0, 0.4)'
+              fontSize:16,
+              textAlign:'center',
+            }}
+          >{this.state.zoom}</Text>
           <Slider  
             ref="zoom"
             style={styles.slider} 
@@ -1153,11 +1185,11 @@ export default class App extends Component<Props> {
               (value) => this.onZoom(value)
             } 
           />
-          <Text>{this.state.minimumPixels}</Text>
           </React.Fragment>
           :null
-        }
-        { this.state.motionSetup=='action'
+        */}
+
+        { this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))
           ? this.renderMotionSetupTodoForm()
           : null
         }
@@ -1266,20 +1298,22 @@ export default class App extends Component<Props> {
 
   renderMotionSetupTodoForm(){
     return(
-      <View>
-      {/*
-        <Text style={{fontSize:16, textAlign:'center'}}>Lors de la détection de mouvement,</Text>
-        <Text style={{fontSize:18, textAlign:'center'}}>prendre ...</Text>
-*/}
+      <View style={{height:200}}>
+      
+        {/*
+        <Text style={{fontSize:16, textAlign:'center', color:'#ffffff',}}>Lors de la détection de mouvement,</Text>
+        */}
+        <Text style={{padding:10, fontSize:18, textAlign:'center', color:greenFlash,}}>Prendre</Text>
+
         <View style={[styles.row, {justifyContent: 'space-between',flex:1, marginTop:5}]}>
 
           <View style={{flex:0.5}}>
           <TouchableOpacity  
             onPress = {() => this.toggleMotionAction('photo')}
             >
-            <Text style={[{fontSize:18, textAlign: 'center',
-              color: this.state.motionAction.type=='photo' ? greenFlash : 'grey'}]}>
-            une série de  {this.state.motionAction.type != 'photo' ? 'photos' : ''}
+            <Text style={[{fontSize:18, padding:5, textAlign: 'center',
+              color: this.state.motionAction.type=='photo' ? greenFlash : 'white'}]}>
+            une série de {this.state.motionAction.type != 'photo' ? 'photos' : ''}
             </Text>
           </TouchableOpacity>
 
@@ -1287,13 +1321,14 @@ export default class App extends Component<Props> {
             ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
               <TextInput
                 keyboardType="number-pad"
+                autoFocus={true}
                 textAlign={'center'}
-                style={{borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
+                style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
                 defaultValue={''+this.state.motionAction.photoNumber}
                 onEndEditing =    {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
                 onSubmitEditing = {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
               />
-              <Text style={[{fontSize:18, color: greenFlash}]}> photos.</Text>
+              <Text style={[{fontSize:18, color: greenFlash}]}> photo{this.state.motionAction.photoNumber>1?'s':''}.</Text>
               </View>
             : null
           }
@@ -1303,8 +1338,8 @@ export default class App extends Component<Props> {
           <TouchableOpacity  
             onPress = {() => this.toggleMotionAction('video')}
             >
-            <Text style={{fontSize:18, textAlign:'center', 
-              color: this.state.motionAction.type=='video' ? greenFlash : 'grey',
+            <Text style={{fontSize:18, textAlign:'center', padding:5,
+              color: this.state.motionAction.type=='video' ? greenFlash : 'white',
               paddingBottom: this.state.motionAction.type=='video' ? 0 : 30,
             }}>
             une vidéo
@@ -1316,13 +1351,14 @@ export default class App extends Component<Props> {
                 <Text style={{fontSize:18, color: greenFlash}}>de </Text>
                 <TextInput
                   keyboardType="number-pad"
+                  autoFocus={true}
                   textAlign={'center'}
-                  style={{borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
+                  style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
                   defaultValue={''+this.state.motionAction.videoLength}
                   onEndEditing =    {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
                   onSubmitEditing = {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
                 />
-                <Text style={{fontSize:18, color: greenFlash}}> secondes.</Text>
+                <Text style={{fontSize:18, color: greenFlash}}> seconde{this.state.motionAction.videoLength>1?'s':''}.</Text>
               </View>
             : null
           }
@@ -1361,7 +1397,11 @@ export default class App extends Component<Props> {
           >
             <Text 
               style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:2,
-              color:this.state.motionSetup=='action' ? greenFlash : 'grey' ,}}
+                color:
+                  this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength)) 
+                  ? greenFlash 
+                  : 'grey' 
+              }}
               >Action</Text>
           </MaterialCommunityIcons.Button>
 
@@ -1488,9 +1528,24 @@ export default class App extends Component<Props> {
             Math.floor(this.state.motionInputAreaStyle.height /this.state.sampleSize) +";"
         }
         >
+
+        <Slider  
+          ref="zoom"
+          style={styles.slider} 
+          thumbTintColor = {greenFlash} 
+          minimumTrackTintColor={greenFlash} 
+          maximumTrackTintColor={greenFlash}
+          minimumValue={0}
+          maximumValue={1}
+          step={0.1}
+          value={0}
+          onValueChange={
+            (value) => this.onZoom(value)
+          } 
+        />
+
         {/*this.renderFaces()*/}
         {this.renderMotion()}
-
 
        </RNCamera>
     
@@ -1855,8 +1910,8 @@ styles = StyleSheet.create({
     backgroundColor:'transparent',
   },
   slider:{
-    padding:15,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    height:sliderHeight,
+    // backgroundColor:'rgba(0, 0, 0, 0.4)',
   },
 
   containerPreview: {
