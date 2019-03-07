@@ -216,7 +216,7 @@ export default class App extends Component<Props> {
         videoLength:'',
       },
       motionOutputRunning:'',
-      motionDetectionMode: MODE_SET,
+      motionDetectionMode: MODE_OFF,
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
@@ -344,7 +344,7 @@ export default class App extends Component<Props> {
               photoNumber:motion_parameters.motionAction.photoNumber ? motion_parameters.motionAction.photoNumber : '',
             },
             motionOutputRunning:motion_parameters.motionOutputRunning ? motion_parameters.motionOutputRunning : '',
-            motionDetectionMode:motion_parameters.motionDetectionMode ? motion_parameters.motionDetectionMode : MODE_SET,
+            // motionDetectionMode:motion_parameters.motionDetectionMode ? motion_parameters.motionDetectionMode : MODE_OFF,
             threshold :motion_parameters.threshold ? motion_parameters.threshold :  0xa0a0a0,
             sampleSize :motion_parameters.sampleSize ? motion_parameters.sampleSize :  30,
             minimumPixels:motion_parameters.minimumPixels ? motion_parameters.minimumPixels :  1,
@@ -606,11 +606,8 @@ export default class App extends Component<Props> {
     //   return;
 
     console.log('MOTION', motion);
-    console.log(this.videoMotion + ' ' + this.photoNumber); 
 
-    // this.curMode = this.state.motionDetectionMode;
     this.setState({
-      // motionDetectionMode:(this.state.motionDetectionMode==0) ? -1 : this.curMode,
       motionDetected:motion.motionDetected,
       motionBase64: motion.motionBase64,
     }, function(){
@@ -685,7 +682,6 @@ export default class App extends Component<Props> {
                 else{
                   this.motionActionRunning = false;
                   this.photoNumber = false;
-                  // this.setState({motionDetectionMode: this.curMode,});
                 }
               }              
               
@@ -758,9 +754,7 @@ export default class App extends Component<Props> {
             this.videoMotion = false;
             this.sendMessage(this.state.connectedTo, 'distantRec', false);
 
-            // console.log('end vid' + this.curMode);
             this.setState({ isRecording: false});
-            // this.setState({motionDetectionMode: this.curMode});
           }
           else {
             this.takeVideo();
@@ -792,34 +786,33 @@ export default class App extends Component<Props> {
     }
   };
 
-  takeMotion(){
-    if(this.state.motionDetectionMode==MODE_RUN){
+
+  onMotionButton(){
+    if(this.state.motionDetectionMode!=MODE_OFF){
       this.setState({motionDetectionMode:MODE_OFF});
     }
-    else {
-      if((!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))){
-        // Alert.alert(
-        // "",
-        // "Appuyez longuement sur l'icône pour initialiser le détecteur de mouvement.",
-        // [{}]
-        // );
-        this.setState({cam:'motion-setup'});
-      }
-      else {
-        this.setState({
-          cam:'free',
-          motionDetectionMode:MODE_RUN
-        });
-      }    
+    else{
+      this.setState({
+        cam:'motion-setup',
+        motionDetectionMode:MODE_SET
+      });
     }
   }
 
-  setupMotion(){
+  takeMotion(){
     this.setState({
-      cam:'motion-setup',
-      motionDetectionMode: MODE_SET,
+      cam:'free',
+      motionDetectionMode:MODE_RUN
     });
   }
+
+  closeSetupMotion(){
+    this.setState({
+      cam:'free',
+      motionDetectionMode: MODE_OFF,
+    }); 
+  }
+
   // onFacesDetected = ({ faces }) => {
   //   console.log('FACE', faces);
   //   this.setState({ faces:faces });
@@ -1280,8 +1273,7 @@ export default class App extends Component<Props> {
             paddingBottom={12}
             color= {this.state.motionDetectionMode==MODE_RUN ? 'red' : greenFlash }
             backgroundColor ={'transparent'}
-            onPress = {() => this.takeMotion()}
-            onLongPress = {() => this.setupMotion()}
+            onPress = {() => this.onMotionButton()}
           /></View>
           </React.Fragment>
           :null
@@ -1309,11 +1301,15 @@ export default class App extends Component<Props> {
       sec = 60;
     }
 
-    this.setState({motionAction:{
-      ...this.state.motionAction,
-      [key]:val,
-    }},function(){this.storeMotionSettings()}
-    );
+    this.setState({
+      motionAction:{
+        ...this.state.motionAction,
+        [key]:val
+      },
+      motionSetup:false,
+    },function(){
+      this.storeMotionSettings();
+    });
     
   }
 
@@ -1321,7 +1317,7 @@ export default class App extends Component<Props> {
     AsyncStorage.setItem('motion_parameters', JSON.stringify({
       motionAction:         this.state.motionAction,
       motionOutputRunning:  this.state.motionOutputRunning,
-      motionDetectionMode:  this.state.motionDetectionMode,
+      // motionDetectionMode:  this.state.motionDetectionMode,
       threshold:            this.state.threshold,
       sampleSize:           this.state.sampleSize,
       minimumPixelskey:     this.state.minimumPixels,
@@ -1416,17 +1412,7 @@ export default class App extends Component<Props> {
                 </TouchableOpacity>
             }
           </View>
-        </View>
-             
-        { this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)
-          ? <Button 
-              color={greenFlash}
-              title = 'OK'
-              onPress = {() => this.toggleMotionSetup('action')}
-            />
-          : null
-        }
-        
+        </View>        
       </View>
     );
   }
@@ -1567,9 +1553,9 @@ export default class App extends Component<Props> {
           backgroundColor:greenFlash}}
           >
           <TouchableOpacity 
-            onPress = {() => this.takeMotion()}
+            onPress = {() => this.closeSetupMotion()}
             style={{padding:10, 
-              flex:0.5,
+              flex:this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)?0.5:1,
               flexDirection:'row',
               justifyContent:'center',
               borderRightColor:'white', borderRightWidth:1,
@@ -1580,30 +1566,32 @@ export default class App extends Component<Props> {
               padding={0}
               margin={0}
               color='white'
-              backgroundColor ={greenFlash}
             />
             <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
             Fermer</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            onPress = {() => this.takeMotion()}
-            style={{padding:10, 
-              flex:0.5,
-              flexDirection:'row',
-              justifyContent:'center',
-            }}>
-            <MaterialCommunityIcons   
-              name='cctv'
-              size={30}
-              padding={0}
-              margin={0}
-              color='white'
-              backgroundColor ={greenFlash}
-            />
-            <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
-            Lancer</Text>
-          </TouchableOpacity>
+          { this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)
+            ? <TouchableOpacity 
+              onPress = {() => this.takeMotion()}
+              style={{padding:10, 
+                flex:0.5,
+                flexDirection:'row',
+                justifyContent:'center',
+              }}>
+              <MaterialCommunityIcons
+                style={{
+                  borderRadius:30,
+                  backgroundColor:'white'}}
+                name='cctv'
+                size={30}
+                color ={greenFlash}
+              />
+              <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
+              Lancer</Text>
+            </TouchableOpacity>
+            : null
+          }
         </View>
      
       </View>
@@ -1862,15 +1850,6 @@ export default class App extends Component<Props> {
     this.setState({cam:view});
   }
 
-  toggleMotionMode(){
-    if(this.state.motionDetectionMode==1){
-      this.setState({motionDetectionMode:-1});
-    }
-    else{
-      this.setState({motionDetectionMode:this.state.motionDetectionMode+1});
-    }
-  }
-
   render() {
     console.log('render');
     const panStyle = {
@@ -1903,13 +1882,6 @@ export default class App extends Component<Props> {
               color={ !this.state.bigBlackMask ?  'grey' : '#338433' }
               title = 'mask' 
               onPress = {() => this.toggleBigBlackMask()}
-            />
-
-            <Button 
-              style={styles.button}
-              color={ this.state.motionDetectionMode==MODE_OFF ?  'grey' : this.state.motionDetectionMode==MODE_RUN ? '#338433' : '#843333'}
-              title = 'detect' 
-              onPress = {() => this.toggleMotionMode()}
             />
 
             <Button 
