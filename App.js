@@ -44,6 +44,12 @@ import SpipolLogin from  "./src/spipoll-login-form"
 import CollectionForm from "./src/collection-form"
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import RNThumbnail from 'react-native-thumbnail';
+// TODO:
+//  . deal with back button
+//    . mask
+//    . setup sliders
+//    . collection form take picture
+//  
 
 import Svg,{
     Ellipse,
@@ -87,7 +93,6 @@ class Draggable extends Component {
 
     this.state = {
       showDraggable: true,
-      // dropAreaValues: null,
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1)
     };
@@ -107,44 +112,27 @@ class Draggable extends Component {
     });
 
     this.panResponder = PanResponder.create({
-        onStartShouldSetPanResponder: (e, gesture) => true,
-        onPanResponderGrant: (e, gesture) => {
-          this.state.pan.setOffset(this._val)
-          this.state.pan.setValue({ x:0, y:0})
-        },
-        onPanResponderMove: Animated.event([ 
-          null, { dx: this.state.pan.x, dy: this.state.pan.y }
-        ]),
-        onPanResponderRelease: (e, gesture) => {
-            if (this._val.x + this.initialPos.x < CIRCLE_RADIUS
-            ||  this._val.y + this.initialPos.y < CIRCLE_RADIUS
-            ||  this._val.x + this.initialPos.x > this.props.previewWidth-CIRCLE_RADIUS
-            ||  this._val.y + this.initialPos.y > this.props.previewHeight-CIRCLE_RADIUS
-            ) {
-              Animated.spring(this.state.pan, {
-                toValue: { x: 0, y: 0 },
-                friction: 5
-              }).start();   
-            }
- 
-          // if (this.isDropArea(gesture)) {
-            // Animated.timing(this.state.opacity, {
-            //   toValue: 0,
-            //   duration: 1000
-            // }).start(() =>
-            //   this.setState({
-            //     showDraggable: false
-            //   })
-            // );
-          // }  
-          // else {
-          //   Animated.spring(this.state.pan, {
-          //     toValue: { x: 0, y: 0 },
-          //     friction: 5
-          //   }).start();
-          // }
+      onStartShouldSetPanResponder: (e, gesture) => true,
+      onPanResponderGrant: (e, gesture) => {
+        this.state.pan.setOffset(this._val)
+        this.state.pan.setValue({ x:0, y:0})
+      },
+      onPanResponderMove: Animated.event([ 
+        null, { dx: this.state.pan.x, dy: this.state.pan.y }
+      ]),
+      onPanResponderRelease: (e, gesture) => {
+        if (this._val.x + this.initialPos.x < CIRCLE_RADIUS
+        ||  this._val.y + this.initialPos.y < CIRCLE_RADIUS
+        ||  this._val.x + this.initialPos.x > this.props.previewWidth-CIRCLE_RADIUS
+        ||  this._val.y + this.initialPos.y > this.props.previewHeight-CIRCLE_RADIUS
+        ) {
+          Animated.spring(this.state.pan, {
+            toValue: { x: 0, y: 0 },
+            friction: 5
+          }).start();   
         }
-      });
+      }
+    });
   }
 
   // isDropArea(gesture) {
@@ -199,6 +187,7 @@ export default class App extends Component<Props> {
 
       previewWidth:Dimensions.get('window').width,
       previewHeight:Dimensions.get('window').width*4/3,
+      zoom:0,
       cam: 'free', // Different reasons why cam is on:
         // 'free'
         // 'collection-flower'
@@ -206,34 +195,31 @@ export default class App extends Component<Props> {
         // 'session' ( = free while session running)
         // 'motion-setup' (while setting motion parameters)
         // 'motion-running' (while session running) 
+      // TODO: ? re-think views vs cam state to switch to form etc..
 
+      // Pure layout needs.
       isRecording:false,
       isTakingPicture:false,
+      bigBlackMask:false,
+      motionSetup:false,  // on/off motion setup icons states.
+
       motionDetected:false,
       motionBase64:'',
     
-      motionPreviewPaused:false,
+      // motionPreviewPaused:false,
+      // faces:[],
 
-      motionDetectionMode: MODE_SET,
-
-      threshold : 0xa0a0a0,
-      sampleSize : 30,
-      minimumPixels: 1,
-
-      motionAction:{  // initialised on willMount.
-        type:'',
+      // Locally stored, re-initialised on componentWillMount().
+      motionAction:{
+        type:false,
         photoNumber:'',
         videoLength:'',
       },
-      motionOutputRunning:'',
-      // faces:[],
-      zoom:0,
-
-      //
-      showDraggable: true,
-      dropAreaValues: null,
-      pan: new Animated.ValueXY(),
-      opacity: new Animated.Value(1),
+      motionOutputRunning:'pixels',
+      motionDetectionMode: MODE_SET,
+      threshold : 0xa0a0a0,
+      sampleSize : 30,
+      minimumPixels: 1,
 
       motionInputAreaShape:'',
       motionInputAreaStyle:{
@@ -243,8 +229,7 @@ export default class App extends Component<Props> {
         height: Dimensions.get('window').width*4/3 - 60 - 60,
       },
 
-      bigBlackMask:false,
-      motionSetup:false,
+      pan: new Animated.ValueXY(),
     };
 
     this.poignee = [{
@@ -310,18 +295,34 @@ export default class App extends Component<Props> {
   componentWillMount() {
     StatusBar.setHidden(true);
 
-    AsyncStorage.getItem('motionAction', (err, motionAction) => {
+    // Get stored parameters.
+    AsyncStorage.getItem('motion_parameters', (err, motion_parameters) => {
       if (err) {
         // Alert.alert('ERROR getting locations'+ JSON.stringify(err));
       }
       else {
-        if(motionAction){
-          motionAction = JSON.parse(motionAction);
-          this.setState({motionAction:{
-            type: motionAction.type ? motionAction.type : false,
-            videoLength:motionAction.videoLength ? motionAction.videoLength : '',
-            photoNumber:motionAction.photoNumber ? motionAction.photoNumber : '',
-          }});
+        if(motion_parameters){
+          motion_parameters = JSON.parse(motion_parameters);
+
+          this.setState({
+            motionAction:{
+              type: motion_parameters.motionAction.type ? motion_parameters.motionAction.type : false,
+              videoLength:motion_parameters.motionAction.videoLength ? motion_parameters.motionAction.videoLength : '',
+              photoNumber:motion_parameters.motionAction.photoNumber ? motion_parameters.motionAction.photoNumber : '',
+            },
+            // motionOutputRunning:motion_parameters.motionOutputRunning ? motion_parameters.motionOutputRunning : '',
+            motionDetectionMode:motion_parameters.motionDetectionMode ? motion_parameters.motionDetectionMode : MODE_SET,
+            threshold :motion_parameters.threshold ? motion_parameters.threshold :  0xa0a0a0,
+            sampleSize :motion_parameters.sampleSize ? motion_parameters.sampleSize :  30,
+            minimumPixels:motion_parameters.minimumPixels ? motion_parameters.minimumPixels :  1,
+            motionInputAreaShape:motion_parameters.motionInputAreaShape ? motion_parameters.motionInputAreaShape : '',
+            // motionInputAreaStyle:{
+            //     top: 60,
+            //     left: 60,
+            //     width: Dimensions.get('window').width - 60 - 60,
+            //     height: Dimensions.get('window').width*4/3 - 60 - 60,
+            //   },
+          });
         }
       }
     });
@@ -331,7 +332,7 @@ export default class App extends Component<Props> {
     this._val = { x:0, y:0 }
     this.state.pan.addListener((value) => this._val = value);
 
-    // Drag & Drop motion area.
+    // Motion area Drag & Drop handels.
     this.panResponder = PanResponder.create({
       onStartShouldSetPanResponder: (e, gesture) => {true},
       onPanResponderMove: Animated.event([
@@ -344,20 +345,6 @@ export default class App extends Component<Props> {
             friction: 5
           }).start();
         }
-        //  // 
-        //   Animated.timing(this.state.opacity, {
-        //     toValue: 0,
-        //     duration: 1000
-        //   }).start(() =>
-        //     this.setState({
-        //        showDraggable: false
-        //     })
-        //   );
-      
-        //   Animated.spring(this.state.pan, {
-        //     toValue: { x: 0, y: 0 },
-        //     friction: 5
-        //   }).start();
       }
     });
   }
@@ -878,21 +865,6 @@ export default class App extends Component<Props> {
           : null
         }
 
-        { this.state.motionDetected && (this.state.cam=='motion-setup' || this.state.motionOutputRunning=='icon')
-          ? <MaterialCommunityIcons
-              style={{
-                position:'absolute', bottom:0, right:0, padding:10, margin:5,
-                backgroundColor:'rgba(0,0,0,0.5)',
-                borderRadius:40,
-              }}
-              name='ladybug'
-              size={40}
-              margin={0}
-              color= {greenFlash}
-            />
-          : null
-        }
-
         { this.state.motionInputAreaShape != '' && this.state.cam == 'motion-setup'
           ? <View 
               style={styles.MotionContainer}>
@@ -1008,6 +980,20 @@ export default class App extends Component<Props> {
           : null
         }
 
+        {/* this.state.motionDetected && (this.state.cam=='motion-setup' || this.state.motionOutputRunning=='icon')
+          ? <MaterialCommunityIcons
+              style={{
+                position:'absolute', bottom:0, right:0, padding:7, margin:5,
+                backgroundColor:'rgba(0,0,0,0.5)',
+                borderRadius:40,
+              }}
+              name='ladybug'
+              size={40}
+              margin={0}
+              color= {greenFlash}
+            />
+          : null
+        */}
       </React.Fragment>
     );
   }
@@ -1022,7 +1008,7 @@ export default class App extends Component<Props> {
         : this.state.motionInputAreaShape == 'elipse'
           ? 'rectangle'
           : ''
-    });
+    }, function(){this.storeMotionSettings()});
   }
 
   toggleMotionSetup(val){
@@ -1040,9 +1026,9 @@ export default class App extends Component<Props> {
     }
   }
 
-  toggleMotionOutputRunning(val){
-    this.setState({motionOutputRunning:val});
-  }
+  // toggleMotionOutputRunning(val){
+  //   this.setState({motionOutputRunning:val}, function(){this.storeMotionSettings()});
+  // }
 
   renderMotionSetupItems(slider){
     return(
@@ -1298,7 +1284,7 @@ export default class App extends Component<Props> {
     this.setState({motionAction:{
       ...this.state.motionAction,
       type:type,
-    }},function(){this.storeMotionAction()}
+    }},function(){this.storeMotionSettings()}
     );
   } 
   setMotionActionValue(key, val){
@@ -1315,80 +1301,107 @@ export default class App extends Component<Props> {
     this.setState({motionAction:{
       ...this.state.motionAction,
       [key]:val,
-    }},function(){this.storeMotionAction()}
+    }},function(){this.storeMotionSettings()}
     );
     
   }
 
-  storeMotionAction() {  
-    AsyncStorage.setItem('motionAction', JSON.stringify(this.state.motionAction));
+  storeMotionSettings(){
+    AsyncStorage.setItem('motion_parameters', JSON.stringify({
+      motionAction:         this.state.motionAction,
+      // motionOutputRunning:  this.state.motionOutputRunning,
+      motionDetectionMode:  this.state.motionDetectionMode,
+      threshold:            this.state.threshold,
+      sampleSize:           this.state.sampleSize,
+      minimumPixelskey:     this.state.minimumPixels,
+      motionInputAreaShape: this.state.motionInputAreaShape,
+    }));
   }
-
 
   renderMotionSetupTodoForm(){
     return(
-      <View style={{height:200, backgroundColor: '#F5FCFF',}}>
+      <View style={{height:200, padding:10, backgroundColor: '#F5FCFF',}}>
         {/*<Text style={{padding:10, fontSize:16, textAlign:'center', color:greenFlash,}}>Lorsqu'un mouvement est détecté</Text>*/}
         <Text style={{paddingTop:10, fontSize:18, fontWeight: 'bold', textAlign:'center', color:greenFlash,}}>
-          Action à effectuer à la détection de mouvement:
+          Action en cas de mouvement
         </Text>
 
         <View style={[styles.row, {justifyContent: 'space-between',flex:1, marginTop:5}]}>
 
           <View style={{flex:0.5}}>
-            <TouchableOpacity  
-              onPress = {() => this.toggleMotionAction('photo')}
-              >
-              <Text style={[{fontSize:18, padding:10, textAlign: 'center',
-                color: this.state.motionAction.type=='photo' ? greenFlash : greenDark}]}>
-              Prendre une série de {this.state.motionAction.type != 'photo' ? 'photos' : ''}
-              </Text>
-            </TouchableOpacity>
-
             { this.state.motionAction.type == 'photo' 
-              ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
+              ? <View 
+                  style={{
+                    flexDirection:'row', 
+                    flex:1, 
+                    justifyContent:'center',
+                    flexWrap: 'wrap', 
+                    alignItems: 'flex-start',
+                  }}>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='photo' ? greenFlash : greenDark}]}>
+                  Prendre </Text>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='photo' ? greenFlash : greenDark}]}>
+                  une </Text>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='photo' ? greenFlash : greenDark}]}>
+                  série </Text>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='photo' ? greenFlash : greenDark}]}>
+                  de </Text>
                 <TextInput
                   keyboardType="number-pad"
                   autoFocus={true}
                   textAlign={'center'}
-                  style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
+                  style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0}}
                   defaultValue={''+this.state.motionAction.photoNumber}
                   onEndEditing =    {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
                   onSubmitEditing = {(event) => this.setMotionActionValue('photoNumber', parseInt(event.nativeEvent.text,10)) } 
                 />
                 <Text style={[{fontSize:18, color: greenFlash}]}> photo{this.state.motionAction.photoNumber>1?'s':''}.</Text>
                 </View>
-              : null
+
+              : <TouchableOpacity onPress = {() => this.toggleMotionAction('photo')}>
+                  <Text style={[{fontSize:18, padding:10, textAlign: 'center',
+                    color: this.state.motionAction.type=='photo' ? greenFlash : greenDark}]}>
+                  Prendre une série de photos</Text>
+                </TouchableOpacity>
             }
           </View>
 
           <View style={[{flex:0.5}]}>
-            <TouchableOpacity  
-              onPress = {() => this.toggleMotionAction('video')}
-              >
-              <Text style={{fontSize:18, textAlign:'center', padding:10,
-                color: this.state.motionAction.type=='video' ? greenFlash : greenDark,
-                paddingBottom: this.state.motionAction.type=='video' ? 0 : 30,
-              }}>
-              Prendre une vidéo
-              </Text>
-            </TouchableOpacity>
-
             { this.state.motionAction.type == 'video' 
-              ? <View style={{flexDirection:'row', flex:1, justifyContent:'center'}}>
-                  <Text style={{fontSize:18, color: greenFlash}}>de </Text>
+              ? <View 
+                  style={{
+                    flexDirection:'row', 
+                    flex:1, 
+                    justifyContent:'center',
+                    flexWrap: 'wrap', 
+                    alignItems: 'flex-start',
+                  }}>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='video' ? greenFlash : greenDark}]}>
+                  Prendre </Text>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='video' ? greenFlash : greenDark}]}>
+                  une </Text>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='video' ? greenFlash : greenDark}]}>
+                  vidéo </Text>
+                  <Text style={[{fontSize:18, color: this.state.motionAction.type=='video' ? greenFlash : greenDark}]}>
+                  de </Text>
                   <TextInput
                     keyboardType="number-pad"
                     autoFocus={true}
                     textAlign={'center'}
-                    style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0, marginBottom:2}}
+                    style={{backgroundColor:'white', width:30, height:30, borderWidth:1, borderColor:greenDark, padding:0, margin:0}}
                     defaultValue={''+this.state.motionAction.videoLength}
                     onEndEditing =    {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
                     onSubmitEditing = {(event) => this.setMotionActionValue('videoLength', parseInt(event.nativeEvent.text,10)) } 
                   />
                   <Text style={{fontSize:18, color: greenFlash}}> seconde{this.state.motionAction.videoLength>1?'s':''}.</Text>
                 </View>
-              : null
+
+              : <TouchableOpacity onPress = {() => this.toggleMotionAction('video')}>
+                  <Text style={{fontSize:18, textAlign:'center', padding:10,
+                    color: this.state.motionAction.type=='video' ? greenFlash : greenDark
+                  }}>
+                  Prendre une vidéo</Text>
+                </TouchableOpacity>
             }
           </View>
         </View>
@@ -1542,12 +1555,12 @@ export default class App extends Component<Props> {
             </MaterialCommunityIcons.Button>
           </ScrollView>
 
-
+          {/* Choose icon/pixels/none outpout on running
           <View style={{paddingTop:20}}>
             <Text
               style={{
                 // fontWeight: 'bold',
-                fontSize:16, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                fontSize:16, padding:0, margin:0,
                 // color:  greenFlash,
                 textAlign:'center', 
               }}>
@@ -1612,8 +1625,8 @@ export default class App extends Component<Props> {
                   >Icône</Text>
               </MaterialCommunityIcons.Button>
             </View>
-                
-          </View>
+          </View> 
+          */}
         </View>
       </View>
     );
@@ -1808,21 +1821,24 @@ export default class App extends Component<Props> {
 
   onThreshold(mask, color){
     const threshold = this.state.threshold & ~mask | color;
-    this.setState({threshold:threshold});
+    this.setState({threshold:threshold}, function(){this.storeMotionSettings()});
   }
+
   onMinimumPixels(value){
-    this.setState({minimumPixels:value});
+    this.setState({minimumPixels:value}, function(){this.storeMotionSettings()});
   }
+
   onSampleSize(value){
     let minimumPixels = this.state.minimumPixels;
     if(minimumPixels > this.state.previewHeight/value){
-      minimumPixels = this.state.previewHeight/value;
+      minimumPixels = parseInt(this.state.previewHeight/value);
     }
     this.setState({
       sampleSize:value,
       minimumPixels:minimumPixels,
-    });
+    }, function(){this.storeMotionSettings()});
   }
+
   onZoom(value){
     this.setState({zoom:value});
   };
