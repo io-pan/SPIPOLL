@@ -175,7 +175,6 @@ export default class App extends Component<Props> {
     super(props);
     this.state = {
       battery:{charging:false, level:0},
-      storage:false,
       devices: [],
       connectedTo:false,
       distantPicture:false,
@@ -210,6 +209,7 @@ export default class App extends Component<Props> {
       // faces:[],
 
       // Locally stored, re-initialised on componentWillMount().
+      storage:'',
       motionAction:{
         type:false,
         photoNumber:'',
@@ -220,7 +220,6 @@ export default class App extends Component<Props> {
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
-
       motionInputAreaShape:'',
       motionInputAreaStyle:{
         top: 60,
@@ -295,6 +294,39 @@ export default class App extends Component<Props> {
   componentWillMount() {
     StatusBar.setHidden(true);
 
+    // Get app available folders and set default.
+    NativeModules.ioPan.getExternalStorages()
+    .then((dirs) => {
+      this.appDirs = JSON.parse(dirs);
+
+      // this.setState({storage:this.appDirs[0].path}, 
+      // function(){
+        for(i=0; i<this.appDirs.length; i++){
+          const curDir = this.appDirs[i].path;
+          RNFetchBlob.fs.isDir(curDir+'/collections')
+          .then((isDir) => {
+            if(!isDir){
+              RNFetchBlob.fs.mkdir(curDir+'/collections')
+              .then(() => { console.log('collection folder created') })
+              .catch((err) => { console.log('error collection folder created '+curDir, err) })
+            }
+          })
+
+          // TODO: do this ALSO on collection / session create.
+          // Default thumb folder for freely taken videos.
+          RNFetchBlob.fs.isDir(curDir+'/thumb')
+          .then((isDir) => {
+            if(!isDir){
+              RNFetchBlob.fs.mkdir(curDir+'/thumb')
+              .then(() => { console.log('thumb folder created ') })
+              .catch((err) => { console.log('error thumb folder created '+curDir, err) })
+            }
+          })
+        }
+      // });
+    })
+    .catch((err) => { console.log('getExternalStorages', err) })
+
     // Get stored parameters.
     AsyncStorage.getItem('motion_parameters', (err, motion_parameters) => {
       if (err) {
@@ -305,6 +337,7 @@ export default class App extends Component<Props> {
           motion_parameters = JSON.parse(motion_parameters);
 
           this.setState({
+            storage: motion_parameters.storage ? motion_parameters.storage : this.appDirs[0].path,
             motionAction:{
               type: motion_parameters.motionAction.type ? motion_parameters.motionAction.type : false,
               videoLength:motion_parameters.motionAction.videoLength ? motion_parameters.motionAction.videoLength : '',
@@ -326,7 +359,6 @@ export default class App extends Component<Props> {
         }
       }
     });
-
 
     // Add a listener for the delta value change
     this._val = { x:0, y:0 }
@@ -363,6 +395,7 @@ export default class App extends Component<Props> {
   // }
 
   componentDidMount() {
+    console.log('DidMount');
     // this.getBatteryLevel(
     //   (batteryLevel) => {
     //     console.log(batteryLevel);
@@ -381,36 +414,6 @@ export default class App extends Component<Props> {
     this.listener3 = BluetoothCP.addReceivedMessageListener(this.receivedMessage)
     this.listener4 = BluetoothCP.addInviteListener(this.gotInvitation)
     this.listener5 = BluetoothCP.addConnectedListener(this.Connected)
-
-    // Get app available folders and set default.
-    NativeModules.ioPan.getExternalStorages()
-    .then((dirs) => {
-      this.appDirs = JSON.parse(dirs);
-      this.setState({storage:this.appDirs[0].path}, function(){
-
-        RNFetchBlob.fs.isDir(this.state.storage+'/collections')
-        .then((isDir) => {
-          if(!isDir){
-            RNFetchBlob.fs.mkdir(this.state.storage+'/collections')
-            .then(() => { console.log('collection folder created') })
-            .catch((err) => { console.log('error collection folder created ', err) })
-          }
-        })
-
-        // TODO: do this ALSO on collection / session create.
-        // Default thumb folder for freely taken photos or videos.
-        RNFetchBlob.fs.isDir(this.state.storage+'/thumb')
-        .then((isDir) => {
-          if(!isDir){
-            RNFetchBlob.fs.mkdir(this.state.storage+'/thumb')
-            .then(() => { console.log('thumb folder created') })
-            .catch((err) => { console.log('error thumb folder created ', err) })
-          }
-        })
-
-      });
-    })
-    .catch((err) => { console.log('getExternalStorages', err) })
   }
 
   componentDidUpdate(){
@@ -439,7 +442,7 @@ export default class App extends Component<Props> {
   //--------------------------------------------------------
 
   toggleStorage(index) {
-    this.setState({storage:this.appDirs[index].path});
+    this.setState({storage:this.appDirs[index].path},function(){this.storeMotionSettings()});
   }
 
   PeerDetected = (user) => {
@@ -1312,6 +1315,7 @@ export default class App extends Component<Props> {
       sampleSize:           this.state.sampleSize,
       minimumPixelskey:     this.state.minimumPixels,
       motionInputAreaShape: this.state.motionInputAreaShape,
+      storage:              this.state.storage,
     }));
   }
 
@@ -2047,9 +2051,14 @@ export default class App extends Component<Props> {
                 backgroundColor={'transparent'} 
                 name='battery-charging-40'
                 size={60}
-                color={this.state.battery.charging ? greenFlash : 'grey'}
+                color={greenFlash}
               />
-            : <MaterialCommunityIcons.Button name='battery-40' /> 
+            : <MaterialCommunityIcons.Button 
+                name='battery-40' 
+                color={'grey'}
+                backgroundColor={'transparent'}
+                size={60}
+              /> 
           }
         </TouchableOpacity>
       :null
