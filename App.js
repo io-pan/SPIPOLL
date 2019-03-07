@@ -215,7 +215,7 @@ export default class App extends Component<Props> {
         photoNumber:'',
         videoLength:'',
       },
-      motionOutputRunning:'pixels',
+      motionOutputRunning:'',
       motionDetectionMode: MODE_SET,
       threshold : 0xa0a0a0,
       sampleSize : 30,
@@ -310,7 +310,7 @@ export default class App extends Component<Props> {
               videoLength:motion_parameters.motionAction.videoLength ? motion_parameters.motionAction.videoLength : '',
               photoNumber:motion_parameters.motionAction.photoNumber ? motion_parameters.motionAction.photoNumber : '',
             },
-            // motionOutputRunning:motion_parameters.motionOutputRunning ? motion_parameters.motionOutputRunning : '',
+            motionOutputRunning:motion_parameters.motionOutputRunning ? motion_parameters.motionOutputRunning : '',
             motionDetectionMode:motion_parameters.motionDetectionMode ? motion_parameters.motionDetectionMode : MODE_SET,
             threshold :motion_parameters.threshold ? motion_parameters.threshold :  0xa0a0a0,
             sampleSize :motion_parameters.sampleSize ? motion_parameters.sampleSize :  30,
@@ -386,27 +386,29 @@ export default class App extends Component<Props> {
     NativeModules.ioPan.getExternalStorages()
     .then((dirs) => {
       this.appDirs = JSON.parse(dirs);
-      this.setState({storage:this.appDirs[0].path});
+      this.setState({storage:this.appDirs[0].path}, function(){
 
-      RNFetchBlob.fs.isDir(this.appDirs[0].path+'/collections')
-      .then((isDir) => {
-        if(!isDir){
-          RNFetchBlob.fs.mkdir()
-          .then(() => { console.log('collection folder created') })
-          .catch((err) => { console.log('error collection folder created ', err) })
-        }
-      })
+        RNFetchBlob.fs.isDir(this.state.storage+'/collections')
+        .then((isDir) => {
+          if(!isDir){
+            RNFetchBlob.fs.mkdir(this.state.storage+'/collections')
+            .then(() => { console.log('collection folder created') })
+            .catch((err) => { console.log('error collection folder created ', err) })
+          }
+        })
 
-      // TODO: do this ALSO on collection / session create.
-      // Default thumb folder for freely taken photos or videos.
-      RNFetchBlob.fs.isDir(this.appDirs[0].path+'/thumb')
-      .then((isDir) => {
-        if(!isDir){
-          RNFetchBlob.fs.mkdir()
-          .then(() => { console.log('thumb folder created') })
-          .catch((err) => { console.log('error thumb folder created ', err) })
-        }
-      })
+        // TODO: do this ALSO on collection / session create.
+        // Default thumb folder for freely taken photos or videos.
+        RNFetchBlob.fs.isDir(this.state.storage+'/thumb')
+        .then((isDir) => {
+          if(!isDir){
+            RNFetchBlob.fs.mkdir(this.state.storage+'/thumb')
+            .then(() => { console.log('thumb folder created') })
+            .catch((err) => { console.log('error thumb folder created ', err) })
+          }
+        })
+
+      });
     })
     .catch((err) => { console.log('getExternalStorages', err) })
   }
@@ -788,18 +790,24 @@ export default class App extends Component<Props> {
   };
 
   takeMotion(){
-    if((!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))){
-      // Alert.alert(
-      // "",
-      // "Appuyez longuement sur l'icône pour initialiser le détecteur de mouvement.",
-      // [{}]
-      // );
-      this.setState({cam:'motion-setup'});
+    if(this.state.motionDetectionMode==MODE_RUN){
+      this.setState({motionDetectionMode:MODE_OFF});
     }
     else {
-      // TODO: go !!!
+      if((!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))){
+        // Alert.alert(
+        // "",
+        // "Appuyez longuement sur l'icône pour initialiser le détecteur de mouvement.",
+        // [{}]
+        // );
+        this.setState({cam:'motion-setup'});
+      }
+      else {
+        this.setState({motionDetectionMode:MODE_RUN});
+      }    
     }
   }
+
   setupMotion(){
     this.setState({cam:'motion-setup'});
   }
@@ -980,20 +988,6 @@ export default class App extends Component<Props> {
           : null
         }
 
-        {/* this.state.motionDetected && (this.state.cam=='motion-setup' || this.state.motionOutputRunning=='icon')
-          ? <MaterialCommunityIcons
-              style={{
-                position:'absolute', bottom:0, right:0, padding:7, margin:5,
-                backgroundColor:'rgba(0,0,0,0.5)',
-                borderRadius:40,
-              }}
-              name='ladybug'
-              size={40}
-              margin={0}
-              color= {greenFlash}
-            />
-          : null
-        */}
       </React.Fragment>
     );
   }
@@ -1026,9 +1020,9 @@ export default class App extends Component<Props> {
     }
   }
 
-  // toggleMotionOutputRunning(val){
-  //   this.setState({motionOutputRunning:val}, function(){this.storeMotionSettings()});
-  // }
+  toggleMotionOutputRunning(val){
+    this.setState({motionOutputRunning:val}, function(){this.storeMotionSettings()});
+  }
 
   renderMotionSetupItems(slider){
     return(
@@ -1259,6 +1253,9 @@ export default class App extends Component<Props> {
           /></View>
 
           <View style={styles.iconButton}>
+          {/*
+            TODO: small motion count.
+          */}
           <MaterialCommunityIcons.Button   
             name='cctv'
             underlayColor={greenSuperLight}
@@ -1267,7 +1264,7 @@ export default class App extends Component<Props> {
             margin={0}
             paddingLeft={30}
             paddingBottom={12}
-            color= {greenFlash}
+            color= {this.state.motionDetectionMode==MODE_RUN ? 'red' : greenFlash }
             backgroundColor ={'transparent'}
             onPress = {() => this.takeMotion()}
             onLongPress = {() => this.setupMotion()}
@@ -1309,7 +1306,7 @@ export default class App extends Component<Props> {
   storeMotionSettings(){
     AsyncStorage.setItem('motion_parameters', JSON.stringify({
       motionAction:         this.state.motionAction,
-      // motionOutputRunning:  this.state.motionOutputRunning,
+      motionOutputRunning:  this.state.motionOutputRunning,
       motionDetectionMode:  this.state.motionDetectionMode,
       threshold:            this.state.threshold,
       sampleSize:           this.state.sampleSize,
@@ -1457,7 +1454,7 @@ export default class App extends Component<Props> {
               onPress = {() => this.toggleMotionSetup('action')}
             >
               <Text 
-                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/ 
+                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/ 
                   
                   color:
                     this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength)) 
@@ -1484,7 +1481,7 @@ export default class App extends Component<Props> {
               onPress = {() => this.toggleShape()}
             >
               <Text 
-                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
                   color:this.state.motionInputAreaShape ? greenFlash : 'grey' ,}}
                 >Masque</Text>
             </MaterialCommunityIcons.Button>
@@ -1506,7 +1503,7 @@ export default class App extends Component<Props> {
               onPress = {() => this.toggleMotionSetup('sampleSize')}
             >
               <Text 
-                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
                 color:this.state.motionSetup=='sampleSize' ? greenFlash : 'grey' ,}}
                 >Précision</Text>
             </MaterialCommunityIcons.Button>
@@ -1527,7 +1524,7 @@ export default class App extends Component<Props> {
               onPress = {() => this.toggleMotionSetup('threshold')}
             >
               <Text 
-                style={{fontSize:16, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
                 color:this.state.motionSetup=='threshold' ? greenFlash : 'grey' ,}}
                 >Sensibilité</Text>
             </MaterialCommunityIcons.Button>
@@ -1549,18 +1546,18 @@ export default class App extends Component<Props> {
               onPress = {() => this.toggleMotionSetup('minimumPixels')}
             >
               <Text 
-                style={{fontSize:16, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                style={{fontSize:14, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
                 color:this.state.motionSetup=='minimumPixels' ? greenFlash : 'grey' ,}}
                 >Antibruit</Text>
             </MaterialCommunityIcons.Button>
           </ScrollView>
 
-          {/* Choose icon/pixels/none outpout on running
+
           <View style={{paddingTop:20}}>
             <Text
               style={{
                 // fontWeight: 'bold',
-                fontSize:16, padding:0, margin:0,
+                fontSize:16, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
                 // color:  greenFlash,
                 textAlign:'center', 
               }}>
@@ -1586,7 +1583,7 @@ export default class App extends Component<Props> {
                 onPress = {() => this.toggleMotionOutputRunning('')}
               >
                 <Text 
-                  style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7, 
+                  style={{fontSize:14, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7, 
                     color: !this.state.motionOutputRunning ? greenFlash : 'grey' }}
                   >Aucun</Text>
               </MaterialCommunityIcons.Button>
@@ -1603,7 +1600,7 @@ export default class App extends Component<Props> {
                 onPress = {() => this.toggleMotionOutputRunning('pixels')}
               >
                 <Text 
-                  style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
+                  style={{fontSize:14, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
                     color:this.state.motionOutputRunning=='pixels' ? greenFlash : 'grey' ,}}
                   >Pixels</Text>
               </MaterialCommunityIcons.Button>
@@ -1620,13 +1617,13 @@ export default class App extends Component<Props> {
                 onPress = {() => this.toggleMotionOutputRunning('icon')}
               >
                 <Text 
-                  style={{fontSize:16, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
+                  style={{fontSize:14, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
                   color: this.state.motionOutputRunning=='icon' ? greenFlash : 'grey' ,}}
                   >Icône</Text>
               </MaterialCommunityIcons.Button>
             </View>
-          </View> 
-          */}
+                
+          </View>
         </View>
       </View>
     );
@@ -1680,21 +1677,34 @@ export default class App extends Component<Props> {
             Math.floor(this.state.motionInputAreaStyle.height /this.state.sampleSize) +";"
         }
         >
-
-        <Slider  
-          ref="zoom"
-          style={styles.slider} 
-          thumbTintColor = {greenFlash} 
-          minimumTrackTintColor={greenFlash} 
-          maximumTrackTintColor={greenFlash}
-          minimumValue={0}
-          maximumValue={1}
-          step={0.1}
-          value={0}
-          onValueChange={
-            (value) => this.onZoom(value)
-          } 
-        />
+          <Slider  
+            ref="zoom"
+            style={[styles.slider,{marginRight:60}]} 
+            thumbTintColor = {greenFlash} 
+            minimumTrackTintColor={greenFlash} 
+            maximumTrackTintColor={greenFlash}
+            minimumValue={0}
+            maximumValue={1}
+            step={0.1}
+            value={0}
+            onValueChange={
+              (value) => this.onZoom(value)
+            } 
+          />
+          { this.state.motionDetected && (this.state.cam=='motion-setup' || this.state.motionOutputRunning=='icon')
+          ? <MaterialCommunityIcons
+              style={{
+                position:'absolute', top:0, right:0, padding:7, margin:5,
+                backgroundColor:'rgba(0,0,0,0.5)',
+                borderRadius:40,
+              }}
+              name='ladybug'
+              size={40}
+              margin={0}
+              color= {greenFlash}
+            />
+          : null
+        }
 
         {/*this.renderFaces()*/}
         {this.renderMotion()}
