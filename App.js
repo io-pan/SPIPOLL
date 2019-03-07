@@ -806,13 +806,19 @@ export default class App extends Component<Props> {
         this.setState({cam:'motion-setup'});
       }
       else {
-        this.setState({motionDetectionMode:MODE_RUN});
+        this.setState({
+          cam:'free',
+          motionDetectionMode:MODE_RUN
+        });
       }    
     }
   }
 
   setupMotion(){
-    this.setState({cam:'motion-setup'});
+    this.setState({
+      cam:'motion-setup',
+      motionDetectionMode: MODE_SET,
+    });
   }
   // onFacesDetected = ({ faces }) => {
   //   console.log('FACE', faces);
@@ -860,12 +866,12 @@ export default class App extends Component<Props> {
   // }
 
   renderMotion(){
-    if (this.state.cam!='motion-setup' && !this.state.motionOutputRunning)
+    if (this.state.motionDetectionMode == MODE_OFF)
       return null;
 
     return (
       <React.Fragment>
-        { this.state.motionBase64 && (this.state.cam=='motion-setup' || this.state.motionOutputRunning=='pixels')
+        { this.state.motionBase64
           ? <Image
               pointerEvents="none"
               style={styles.MotionContainer} 
@@ -876,7 +882,7 @@ export default class App extends Component<Props> {
           : null
         }
 
-        { this.state.motionInputAreaShape != '' && this.state.cam == 'motion-setup'
+        { this.state.motionInputAreaShape
           ? <View 
               style={styles.MotionContainer}>
 
@@ -974,19 +980,24 @@ export default class App extends Component<Props> {
               />
               */}
 
-              <Draggable 
-                onMove = {(value) => this.onMovePoignee(0, value) }
-                initialPos = {{x:this.state.motionInputAreaStyle.left, y:this.state.motionInputAreaStyle.top}}
-                previewWidth = {this.state.previewWidth}
-                previewHeight = {this.state.previewHeight}
-              />
-              <Draggable
-                onMove = {(value) => this.onMovePoignee(1, value) }
-                initialPos = {{x:this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
-                               y:this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height}}
-                previewWidth = {this.state.previewWidth}
-                previewHeight = {this.state.previewHeight}
-              />
+              { this.state.motionDetectionMode == MODE_SET
+                ? <React.Fragment>
+                  <Draggable 
+                    onMove = {(value) => this.onMovePoignee(0, value) }
+                    initialPos = {{x:this.state.motionInputAreaStyle.left, y:this.state.motionInputAreaStyle.top}}
+                    previewWidth = {this.state.previewWidth}
+                    previewHeight = {this.state.previewHeight}
+                  />
+                  <Draggable
+                    onMove = {(value) => this.onMovePoignee(1, value) }
+                    initialPos = {{x:this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
+                                   y:this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height}}
+                    previewWidth = {this.state.previewWidth}
+                    previewHeight = {this.state.previewHeight}
+                  />
+                  </React.Fragment>
+                : null
+              }
             </View>
           : null
         }
@@ -1425,210 +1436,176 @@ export default class App extends Component<Props> {
       return null;
 
     return(  
-      <View>
+      <View style={{flex: 1, justifyContent:'space-between'}}>
+
         {this.renderMotionSetupItems()}
-        <View style={{paddingTop:2}}>
-          {/*
-          <View style={{ // inline
-              padding:5,
-              flexWrap: 'wrap', 
-              alignItems: 'flex-start',
-              flexDirection:'row',
+
+        <View></View>
+
+        <View>
+        <ScrollView horizontal={true} >
+          <MaterialCommunityIcons.Button   
+            // Action
+            borderRadius={0} 
+            style={{
+              flexDirection:'column',
+              borderRightWidth:1, borderRightColor:'#dddddd',
+              marginLeft:5,
             }}
+            name='gesture-double-tap' //   th-large      
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            paddingLeft={10}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('action')}
           >
-          */}
-
-          <ScrollView horizontal={true} >
-            <MaterialCommunityIcons.Button   
-              // Action
-              borderRadius={0} 
-              style={{
-                flexDirection:'column',
-                borderRightWidth:1, borderRightColor:'#dddddd',
-                marginLeft:5,
-              }}
-              name='gesture-double-tap' //   th-large      
-              underlayColor={greenSuperLight}
-              size={25}
-              margin={0}
-              paddingLeft={10}
-              color= {greenFlash}
-              backgroundColor ={'transparent'}
-              // onPress = {() =>{}}
-              onPress = {() => this.toggleMotionSetup('action')}
-            >
-              <Text 
-                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/ 
-                  
-                  color:
-                    this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength)) 
-                    ? greenFlash 
-                    : 'grey' 
-                }}
-                >Action</Text>
-            </MaterialCommunityIcons.Button>
-
-            <MaterialCommunityIcons.Button   
-              // Mask
-              borderRadius={0} 
-              style={{
-                flexDirection:'column',
-                borderRightWidth:1, borderRightColor:'#dddddd',
-              }}
-              name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
-              underlayColor={greenSuperLight}
-              size={25}
-              margin={0}
-              color= {greenFlash}
-              backgroundColor ={'transparent'}
-              // onPress = {() =>{}}
-              onPress = {() => this.toggleShape()}
-            >
-              <Text 
-                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
-                  color:this.state.motionInputAreaShape ? greenFlash : 'grey' ,}}
-                >Masque</Text>
-            </MaterialCommunityIcons.Button>
-
-            <MaterialCommunityIcons.Button
-              // Précision
-              borderRadius={0} 
-              style={{
-                flexDirection:'column',
-                borderRightWidth:1, borderRightColor:'#dddddd',
-              }}
-              name='grid' //      view-grid //view-comfy
-              underlayColor={greenSuperLight}
-              size={25}
-              margin={0}
-              color= {greenFlash}
-              backgroundColor ={'transparent'}
-              // onPress = {() =>{}}
-              onPress = {() => this.toggleMotionSetup('sampleSize')}
-            >
-              <Text 
-                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
-                color:this.state.motionSetup=='sampleSize' ? greenFlash : 'grey' ,}}
-                >Précision</Text>
-            </MaterialCommunityIcons.Button>
-            <MaterialCommunityIcons.Button   
-              // Sensibilité
-              borderRadius={0} 
-              style={{
-                flexDirection:'column',
-                borderRightWidth:1, borderRightColor:'#dddddd',
-              }}
-              name='contrast-circle' //   contrast-box     
-              underlayColor={greenSuperLight}
-              size={25}
-              margin={0}
-              color= {greenFlash}
-              backgroundColor ={'transparent'}
-              // onPress = {() =>{}}
-              onPress = {() => this.toggleMotionSetup('threshold')}
-            >
-              <Text 
-                style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
-                color:this.state.motionSetup=='threshold' ? greenFlash : 'grey' ,}}
-                >Sensibilité</Text>
-            </MaterialCommunityIcons.Button>
-
-            <MaterialCommunityIcons.Button   
-              // Bruit
-              borderRadius={0} 
-              style={{
-                flexDirection:'column',
-                marginRight:5,
-              }}
-              name='eraser'   
-              underlayColor={greenSuperLight}
-              size={25}
-              margin={0}
-              color= {greenFlash}
-              backgroundColor ={'transparent'}
-              // onPress = {() =>{}}
-              onPress = {() => this.toggleMotionSetup('minimumPixels')}
-            >
-              <Text 
-                style={{fontSize:14, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
-                color:this.state.motionSetup=='minimumPixels' ? greenFlash : 'grey' ,}}
-                >Antibruit</Text>
-            </MaterialCommunityIcons.Button>
-          </ScrollView>
-
-
-          <View style={{paddingTop:20}}>
-            <Text
-              style={{
-                // fontWeight: 'bold',
-                fontSize:16, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
-                // color:  greenFlash,
-                textAlign:'center', 
-              }}>
-              Affichage durant l'exécution:
-            </Text> 
-
-            <View style={{
-              flexDirection:'row',
-              justifyContent: 'center'//'space-between',
-            }}>
-
-             <MaterialCommunityIcons.Button
-                borderRadius={0} 
-                style={{borderRightWidth:1, borderRightColor:'#dddddd',}}
-                name='cancel' 
-                underlayColor={greenSuperLight}
-                size={25}
-                margin={0}
-                // paddingLeft={15}
-                color= {greenFlash}
-                backgroundColor ={'transparent'}
-                // onPress = {() =>{}}
-                onPress = {() => this.toggleMotionOutputRunning('')}
-              >
-                <Text 
-                  style={{fontSize:14, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7, 
-                    color: !this.state.motionOutputRunning ? greenFlash : 'grey' }}
-                  >Aucun</Text>
-              </MaterialCommunityIcons.Button>
-
-              <MaterialCommunityIcons.Button  
-                borderRadius={0} 
-                style={{borderRightWidth:1, borderRightColor:'#dddddd',}}
-                name='blur'   
-                underlayColor={greenSuperLight}
-                size={25}
-                margin={0}
-                color= {greenFlash}
-                backgroundColor ={'transparent'}
-                onPress = {() => this.toggleMotionOutputRunning('pixels')}
-              >
-                <Text 
-                  style={{fontSize:14, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
-                    color:this.state.motionOutputRunning=='pixels' ? greenFlash : 'grey' ,}}
-                  >Pixels</Text>
-              </MaterialCommunityIcons.Button>
-
-              <MaterialCommunityIcons.Button
-                borderRadius={0} 
-                name='ladybug'
-                underlayColor={greenSuperLight}
-                size={25}
-                margin={0}
-                // paddingRight={15}
-                color= {greenFlash}
-                backgroundColor ={'transparent'}
-                onPress = {() => this.toggleMotionOutputRunning('icon')}
-              >
-                <Text 
-                  style={{fontSize:14, padding:0, margin:0, marginLeft:-5, marginRight:-7, paddingRight:7,
-                  color: this.state.motionOutputRunning=='icon' ? greenFlash : 'grey' ,}}
-                  >Icône</Text>
-              </MaterialCommunityIcons.Button>
-            </View>
+            <Text 
+              style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/ 
                 
-          </View>
+                color:
+                  this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength)) 
+                  ? greenFlash 
+                  : 'grey' 
+              }}
+              >Action</Text>
+          </MaterialCommunityIcons.Button>
+
+          <MaterialCommunityIcons.Button   
+            // Mask
+            borderRadius={0} 
+            style={{
+              flexDirection:'column',
+              borderRightWidth:1, borderRightColor:'#dddddd',
+            }}
+            name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleShape()}
+          >
+            <Text 
+              style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+                color:this.state.motionInputAreaShape ? greenFlash : 'grey' ,}}
+              >Masque</Text>
+          </MaterialCommunityIcons.Button>
+
+          <MaterialCommunityIcons.Button
+            // Précision
+            borderRadius={0} 
+            style={{
+              flexDirection:'column',
+              borderRightWidth:1, borderRightColor:'#dddddd',
+            }}
+            name='blur' //      grid // view-grid //view-comfy
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('sampleSize')}
+          >
+            <Text 
+              style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+              color:this.state.motionSetup=='sampleSize' ? greenFlash : 'grey' ,}}
+              >Précision</Text>
+          </MaterialCommunityIcons.Button>
+          <MaterialCommunityIcons.Button   
+            // Sensibilité
+            borderRadius={0} 
+            style={{
+              flexDirection:'column',
+              borderRightWidth:1, borderRightColor:'#dddddd',
+            }}
+            name='contrast-circle' //   contrast-box     
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('threshold')}
+          >
+            <Text 
+              style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+              color:this.state.motionSetup=='threshold' ? greenFlash : 'grey' ,}}
+              >Sensibilité</Text>
+          </MaterialCommunityIcons.Button>
+
+          <MaterialCommunityIcons.Button   
+            // Bruit
+            borderRadius={0} 
+            style={{
+              flexDirection:'column',
+              marginRight:5,
+            }}
+            name='eraser'   
+            underlayColor={greenSuperLight}
+            size={25}
+            margin={0}
+            color= {greenFlash}
+            backgroundColor ={'transparent'}
+            // onPress = {() =>{}}
+            onPress = {() => this.toggleMotionSetup('minimumPixels')}
+          >
+            <Text 
+              style={{fontSize:14, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
+              color:this.state.motionSetup=='minimumPixels' ? greenFlash : 'grey' ,}}
+              >Antibruit</Text>
+          </MaterialCommunityIcons.Button>
+        </ScrollView>
         </View>
+
+        <View style={{ 
+          flexDirection:'row', 
+          backgroundColor:greenFlash}}
+          >
+          <TouchableOpacity 
+            onPress = {() => this.takeMotion()}
+            style={{padding:10, 
+              flex:0.5,
+              flexDirection:'row',
+              justifyContent:'center',
+              borderRightColor:'white', borderRightWidth:1,
+            }}>
+            <MaterialCommunityIcons   
+              name='close'
+              size={30}
+              padding={0}
+              margin={0}
+              color='white'
+              backgroundColor ={greenFlash}
+            />
+            <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
+            Fermer</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            onPress = {() => this.takeMotion()}
+            style={{padding:10, 
+              flex:0.5,
+              flexDirection:'row',
+              justifyContent:'center',
+            }}>
+            <MaterialCommunityIcons   
+              name='cctv'
+              size={30}
+              padding={0}
+              margin={0}
+              color='white'
+              backgroundColor ={greenFlash}
+            />
+            <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
+            Lancer</Text>
+          </TouchableOpacity>
+        </View>
+     
       </View>
     );
   }
@@ -1695,7 +1672,7 @@ export default class App extends Component<Props> {
               (value) => this.onZoom(value)
             } 
           />
-          { this.state.motionDetected && (this.state.cam=='motion-setup' || this.state.motionOutputRunning=='icon')
+          { this.state.motionDetected && (this.state.cam=='motion-setup' || this.state.motionDetectionMode==MODE_RUN)
           ? <MaterialCommunityIcons
               style={{
                 position:'absolute', top:0, right:0, padding:7, margin:5,
@@ -1963,7 +1940,8 @@ export default class App extends Component<Props> {
           </ScrollView>
         </View> 
 
-        <ScrollView>
+        {/*        
+        <ScrollView style={{backgroundColor:'red', paddingBottom:200}}>*/}
 
 {/*
         <Image
@@ -1973,7 +1951,7 @@ export default class App extends Component<Props> {
         />
 */}
 
-        <View style={styles.containerPreview}>
+        {/*<View style={styles.containerPreview}>*/}
 
           {/*        
             { this.renderDistantPicture() }
@@ -1985,7 +1963,7 @@ export default class App extends Component<Props> {
           {this.renderCamActionButtons()}
           {this.renderMotionSetupButtons()}
 
-        </View>
+        {/*</View>*/}
         
 
 
@@ -2009,7 +1987,6 @@ export default class App extends Component<Props> {
         )}
 
 
-
         { this.state.cam=="collection-form"
         ? <CollectionForm
             ref="collectionForm"
@@ -2027,7 +2004,10 @@ export default class App extends Component<Props> {
         : null
         }
 
+        {/*      
+        <View style={{height:500}}></View>
       </ScrollView>
+      */}
 
       {this.state.bigBlackMask 
       ? <TouchableOpacity ref="black_mask_to_save_battery"
@@ -2090,10 +2070,6 @@ styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    // justifyContent: 'flex-end',
-    // alignItems: 'flex-end',
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#F5FCFF',
   },
 
@@ -2112,14 +2088,14 @@ styles = StyleSheet.create({
   containerPreview: {
     flex: 1,
     flexWrap:'wrap',
-    flexDirection:'row',
-    justifyContent: 'center',//'flex-end',
+    // flexDirection:'row',
+    // justifyContent: 'flex-end',
     alignItems: 'center',//'flex-end',
     backgroundColor: '#F5FCFF',
   },
   cam: {
-    position: 'relative',
-    margin:1,
+    // position: 'relative',
+    // margin:1,
   },
 
   captureLocalView:{
@@ -2203,6 +2179,14 @@ styles = StyleSheet.create({
     flexDirection: 'row',
   },
  
+
+  // inline:{
+  //   padding:5,
+  //   flexWrap: 'wrap', 
+  //   alignItems: 'flex-start',
+  //   flexDirection:'row',
+  // }
+
   // facesContainer: {
   //   position: 'absolute',
   //   bottom: 0,
