@@ -601,6 +601,7 @@ export default class App extends Component<Props> {
     // && this.state.cam != 'motion-running'
     ){
       this.motionActionRunning = true;
+      this.setState({motionsCount: this.state.motionsCount+1});
       if(!this.videoMotion && this.state.motionAction.type=='video'){
         this.videoMotion = true;
         this.takeVideo();
@@ -647,8 +648,7 @@ export default class App extends Component<Props> {
               picture.uri.replace('file://',''),
               this.state.storage + '/' + filename
             ).then(() => {
-              this.setState({ isTakingPicture: false }); 
-
+              this.setState({ isTakingPicture: false });
 
               // Go on according to requested motion-action.
               console.log(this.photoNumber + ' ' +this.state.motionAction.photoNumber);
@@ -731,8 +731,7 @@ export default class App extends Component<Props> {
             this.motionActionRunning = false;
             this.videoMotion = false;
             this.sendMessage(this.state.connectedTo, 'distantRec', false);
-
-            this.setState({ isRecording: false});
+            this.setState({isRecording: false});
           }
           else {
             this.takeVideo();
@@ -767,7 +766,11 @@ export default class App extends Component<Props> {
 
   onMotionButton(){
     if(this.state.motionDetectionMode!=MODE_OFF){
-      this.setState({motionDetectionMode:MODE_OFF});
+      // TODO: return to collection>session
+      this.setState({
+        motionDetectionMode:MODE_OFF,
+        motionsCount:0,
+      });
     }
     else{
       this.setState({
@@ -1247,9 +1250,6 @@ export default class App extends Component<Props> {
           /></View>
 
           <View style={styles.iconButton}>
-          {/*
-            TODO: small motion count.
-          */}
           <MaterialCommunityIcons.Button   
             name='cctv'
             underlayColor={greenSuperLight}
@@ -1262,6 +1262,17 @@ export default class App extends Component<Props> {
             backgroundColor ={'transparent'}
             onPress = {() => this.onMotionButton()}
           /></View>
+           
+          { this.state.motionsCount
+            ? <Text style={{
+                marginTop:-40, marginLeft:-30, textAlign:'center',
+                height:20,width:20, backgroundColor:'red', borderRadius:20,
+                color:'white', fontSize:12, fontWeight:'bold',
+                }}>
+                {this.state.motionsCount}</Text>
+            : null
+          }
+              
           </React.Fragment>
           :null
         }
