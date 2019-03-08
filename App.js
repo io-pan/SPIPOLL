@@ -217,11 +217,7 @@ export default class App extends Component<Props> {
         height: Dimensions.get('window').width*4/3 - 60 - 60,
       },
     };
-
-    this.previewWidth = Dimensions.get('window').width;
-    this.previewHeight = Dimensions.get('window').width*4/3;
-
-    this.poignee = [{
+    this.handles = [{
       x:60,
       y:60,
     },{
@@ -230,21 +226,25 @@ export default class App extends Component<Props> {
     }];
 
 
+    this.previewWidth = Dimensions.get('window').width;
+    this.previewHeight = Dimensions.get('window').width*4/3;
+
     this.camRequested = false;
     this.stopRecordRequested = false;
-    this.safeIds = [
-      '6b16c792365daa8b',  //  s6
-      'add41fbf38b95c65',  //  s9
-    ],
+    // TODO: http protocole.
+    // TODO: trusted devices.
+    // this.safeIds = [
+    //   '6b16c792365daa8b',  //  s6 
+    //   'add41fbf38b95c65',  //  s9
+    // ],
 
     this.appDirs = [];
-
     this.photoNumber=false;
     this.videoMotion=false;
     this.motionActionRunning=false;
-
   }
 
+  // TODO: rewthink permissions.
   requestForPermission = async () => {
     try{
       const granted = await PermissionsAndroid.requestMultiple([
@@ -326,7 +326,6 @@ export default class App extends Component<Props> {
       else {
         if(motion_parameters){
           motion_parameters = JSON.parse(motion_parameters);
-
           this.setState({
             storage: motion_parameters.storage ? motion_parameters.storage : this.appDirs[0].path,
             motionAction:{
@@ -340,12 +339,20 @@ export default class App extends Component<Props> {
             sampleSize :motion_parameters.sampleSize ? motion_parameters.sampleSize :  30,
             minimumPixels:motion_parameters.minimumPixels ? motion_parameters.minimumPixels :  1,
             motionInputAreaShape:motion_parameters.motionInputAreaShape ? motion_parameters.motionInputAreaShape : '',
-            // motionInputAreaStyle:{
-            //     top: 60,
-            //     left: 60,
-            //     width: Dimensions.get('window').width - 60 - 60,
-            //     height: Dimensions.get('window').width*4/3 - 60 - 60,
-            //   },
+            motionInputAreaStyle:{
+                top: motion_parameters.motionInputAreaStyle&&motion_parameters.motionInputAreaStyle.top ? motion_parameters.motionInputAreaStyle.top : 60,
+                left: motion_parameters.motionInputAreaStyle&&motion_parameters.motionInputAreaStyle.left ? motion_parameters.motionInputAreaStyle.left : 60,
+                width: motion_parameters.motionInputAreaStyle&&motion_parameters.motionInputAreaStyle.width ? motion_parameters.motionInputAreaStyle.width : Dimensions.get('window').width - 60 - 60,
+                height: motion_parameters.motionInputAreaStyle&&motion_parameters.motionInputAreaStyle.height ? motion_parameters.motionInputAreaStyle.height : Dimensions.get('window').width*4/3 - 60 - 60,
+              },
+          }, function(){
+            this.handles = [{
+              x:this.state.motionInputAreaStyle.left,
+              y:this.state.motionInputAreaStyle.top,
+            },{
+              x: this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
+              y: this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height,
+            }];
           });
         }
       }
@@ -940,15 +947,20 @@ export default class App extends Component<Props> {
               { this.state.motionDetectionMode == MODE_SET
                 ? <React.Fragment>
                   <Draggable 
-                    onMove = {(value) => this.onMovePoignee(0, value) }
-                    initialPos = {{x:this.state.motionInputAreaStyle.left, y:this.state.motionInputAreaStyle.top}}
+                    onMove = {(value) => this.onMoveHandle( 0, value) }
+                    initialPos = {{
+                      x:this.state.motionInputAreaStyle.left, 
+                      y:this.state.motionInputAreaStyle.top
+                    }}
                     previewWidth = {this.previewWidth}
                     previewHeight = {this.previewHeight}
                   />
                   <Draggable
-                    onMove = {(value) => this.onMovePoignee(1, value) }
-                    initialPos = {{x:this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
-                                   y:this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height}}
+                    onMove = {(value) => this.onMoveHandle(1, value) }
+                    initialPos = {{
+                      x:this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
+                      y:this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height
+                    }}
                     previewWidth = {this.previewWidth}
                     previewHeight = {this.previewHeight}
                   />
@@ -965,6 +977,17 @@ export default class App extends Component<Props> {
 
 
   toggleShape(){
+    // Besure displaying right handle on right place (actually reset them).
+    if (this.state.motionInputAreaShape=='') {
+      this.handles = [{
+        x:Math.min(this.handles[0].x, this.handles[1].x),
+        y:Math.min(this.handles[0].y, this.handles[1].y),
+      },{
+        x:Math.max(this.handles[0].x, this.handles[1].x),
+        y:Math.max(this.handles[0].y, this.handles[1].y),
+      }];
+    }
+
     this.setState({
       // motionSetup: this.state.motionSetup=='action'?'':this.state.motionSetup,
       motionInputAreaShape: 
@@ -1792,14 +1815,21 @@ export default class App extends Component<Props> {
   //    this.setState({motionPreviewPaused:value});
   //  }
 
-  onMovePoignee(id, value){
-    this.poignee[id]=value;
+  onMoveHandle(id, value){
+    this.handles[id]=value;
     this.setState({motionInputAreaStyle:{
-      top: Math.min(this.poignee[0].y, this.poignee[1].y),
-      left: Math.min(this.poignee[0].x, this.poignee[1].x),
-      width: Math.abs(this.poignee[0].x - this.poignee[1].x),
-      height: Math.abs(this.poignee[0].y - this.poignee[1].y),
+      top: Math.min(this.handles[0].y, this.handles[1].y),
+      left: Math.min(this.handles[0].x, this.handles[1].x),
+      width: Math.abs(this.handles[0].x - this.handles[1].x),
+      height: Math.abs(this.handles[0].y - this.handles[1].y),
     }}, function(){ 
+      // this.handles = [{ 
+      //   x: Math.min(this.handles[0].x,this.handles[1].x),
+      //   y: Math.min(this.handles[0].y,this.handles[1].y),
+      //   },{
+      //   x: Math.max(this.handles[0].x,this.handles[1].x),
+      //   y: Math.max(this.handles[0].y,this.handles[1].y),
+      // }];
       this.storeMotionSettings();
     });
   }
@@ -1824,7 +1854,8 @@ export default class App extends Component<Props> {
         <View style={styles.header}>
           <ScrollView horizontal={true}>
 
-            { this.appDirs.length > 1
+            { // Storege: SD / Phone
+              this.appDirs.length > 1
               ? this.appDirs.map((value, index) => 
                   <TouchableOpacity  
                     key={index}
@@ -1837,7 +1868,6 @@ export default class App extends Component<Props> {
                 )
               : null 
             }
-
 
             <Button 
               style={styles.button}
@@ -1852,13 +1882,7 @@ export default class App extends Component<Props> {
               title = 'login' 
               onPress = {() => this.toggleView('login')}
             />
-{/*
-            <Button 
-              style={styles.button}
-              color={ this.state.cam=='motion-setup' ? '#338433' : 'grey'}
-              title = 'cam motion' 
-              onPress = {() => this.toggleView('motion-setup')}
-            />*/}
+
             <Button 
               style={styles.button}
               color={ this.state.cam=='free' ? '#338433' : 'grey'}
@@ -2076,6 +2100,7 @@ styles = StyleSheet.create({
   },
 
   iconButtonContainer:{
+    flex:1,
     // backgroundColor:'rgba(100,100,100,0.5)',
     // position:'absolute',
     // bottom:20,
