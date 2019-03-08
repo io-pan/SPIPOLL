@@ -92,7 +92,6 @@ class Draggable extends Component {
     super(props);
 
     this.state = {
-      showDraggable: true,
       pan: new Animated.ValueXY(),
       opacity: new Animated.Value(1)
     };
@@ -121,6 +120,7 @@ class Draggable extends Component {
         null, { dx: this.state.pan.x, dy: this.state.pan.y }
       ]),
       onPanResponderRelease: (e, gesture) => {
+        // Back to initial position if out of canvas.
         if (this._val.x + this.initialPos.x < CIRCLE_RADIUS
         ||  this._val.y + this.initialPos.y < CIRCLE_RADIUS
         ||  this._val.x + this.initialPos.x > this.props.previewWidth-CIRCLE_RADIUS
@@ -135,32 +135,22 @@ class Draggable extends Component {
     });
   }
 
-  // isDropArea(gesture) {
-  //   return gesture.moveY < 200;
-  // }
-
   render() {
-    return (
-      <View >
-        {this.renderDraggable()}
-      </View>
-    );
-  }
-
-  renderDraggable() {
     const panStyle = {
       transform: this.state.pan.getTranslateTransform()
     }
-    if (this.state.showDraggable) {
-      return (
-        <View style={{ position: "absolute", left: this.initialPos.x-CIRCLE_RADIUS , top:this.initialPos.y-CIRCLE_RADIUS }}>
-          <Animated.View
-            {...this.panResponder.panHandlers}
-            style={[panStyle, styles.circle,/* {opacity:this.state.opacity}*/]}
-          />
-        </View>
-      );
-    }
+    return (
+      <View >
+      <View style={{ position: "absolute", 
+        left: this.initialPos.x-CIRCLE_RADIUS , 
+        top:this.initialPos.y-CIRCLE_RADIUS }}>
+        <Animated.View
+          {...this.panResponder.panHandlers}
+          style={[panStyle, styles.circle]}
+        />
+      </View>
+      </View>
+    );
   }
 }
 
@@ -184,8 +174,6 @@ export default class App extends Component<Props> {
       previewing:false,
       distantRec:false,
 
-      previewWidth:Dimensions.get('window').width,
-      previewHeight:Dimensions.get('window').width*4/3,
       zoom:0,
       cam: 'free', // Different reasons why cam is on:
         // 'free'
@@ -201,6 +189,7 @@ export default class App extends Component<Props> {
       isTakingPicture:false,
       bigBlackMask:false,
       motionSetup:false,  // on/off motion setup icons states.
+      motionsCount:0,
 
       motionDetected:false,
       motionBase64:'',
@@ -227,9 +216,10 @@ export default class App extends Component<Props> {
         width: Dimensions.get('window').width - 60 - 60,
         height: Dimensions.get('window').width*4/3 - 60 - 60,
       },
-
-      pan: new Animated.ValueXY(),
     };
+
+    this.previewWidth = Dimensions.get('window').width;
+    this.previewHeight = Dimensions.get('window').width*4/3;
 
     this.poignee = [{
       x:60,
@@ -252,6 +242,7 @@ export default class App extends Component<Props> {
     this.photoNumber=false;
     this.videoMotion=false;
     this.motionActionRunning=false;
+
   }
 
   requestForPermission = async () => {
@@ -356,26 +347,6 @@ export default class App extends Component<Props> {
             //     height: Dimensions.get('window').width*4/3 - 60 - 60,
             //   },
           });
-        }
-      }
-    });
-
-    // Add a listener for the delta value change
-    this._val = { x:0, y:0 }
-    this.state.pan.addListener((value) => this._val = value);
-
-    // Motion area Drag & Drop handels.
-    this.panResponder = PanResponder.create({
-      onStartShouldSetPanResponder: (e, gesture) => {true},
-      onPanResponderMove: Animated.event([
-        null, { dx: this.state.pan.x, dy: this.state.pan.y }
-      ]),
-       onPanResponderRelease: (e, gesture) => {
-        if (true) {
-          Animated.spring(this.state.pan, {
-            toValue: { x: 0, y: 0 },
-            friction: 5
-          }).start();
         }
       }
     });
@@ -663,7 +634,7 @@ export default class App extends Component<Props> {
             var picture = await this.camera.takePictureAsync(options);
             console.log(picture);
 
-// TODO: when we are on motion runnnig mode, set name based on collection name 
+            // TODO: when we are on motion runnnig mode, set name based on collection name 
             const filename = (this.state.cam=='free' ? this.formatedDate() : this.state.cam) + '.jpg';
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
@@ -869,16 +840,14 @@ export default class App extends Component<Props> {
               pointerEvents="none"
               style={styles.MotionContainer} 
               fadeDuration={0}
-              style = {[styles.motionpreview,{width:this.state.previewWidth, height:this.state.previewHeight}]}
+              style = {[styles.motionpreview,{width:this.previewWidth, height:this.previewHeight}]}
               source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
             />
           : null
         }
 
         { this.state.motionInputAreaShape
-          ? <View 
-              style={styles.MotionContainer}>
-
+          ? <View style={styles.MotionContainer}>
               { this.state.motionInputAreaShape=='elipse'
                 ? <Image 
                     pointerEvents="none"
@@ -967,26 +936,21 @@ export default class App extends Component<Props> {
                   </Svg>
                 : null
               }
-              {/*              
-              <View pointerEvents="none"
-                style={[styles.motionInputArea,  this.state.motionInputAreaStyle ]}
-              />
-              */}
 
               { this.state.motionDetectionMode == MODE_SET
                 ? <React.Fragment>
                   <Draggable 
                     onMove = {(value) => this.onMovePoignee(0, value) }
                     initialPos = {{x:this.state.motionInputAreaStyle.left, y:this.state.motionInputAreaStyle.top}}
-                    previewWidth = {this.state.previewWidth}
-                    previewHeight = {this.state.previewHeight}
+                    previewWidth = {this.previewWidth}
+                    previewHeight = {this.previewHeight}
                   />
                   <Draggable
                     onMove = {(value) => this.onMovePoignee(1, value) }
                     initialPos = {{x:this.state.motionInputAreaStyle.left+this.state.motionInputAreaStyle.width,
                                    y:this.state.motionInputAreaStyle.top+this.state.motionInputAreaStyle.height}}
-                    previewWidth = {this.state.previewWidth}
-                    previewHeight = {this.state.previewHeight}
+                    previewWidth = {this.previewWidth}
+                    previewHeight = {this.previewHeight}
                   />
                   </React.Fragment>
                 : null
@@ -997,7 +961,7 @@ export default class App extends Component<Props> {
 
       </React.Fragment>
     );
-  }
+  }// renderMotion
 
 
   toggleShape(){
@@ -1072,7 +1036,7 @@ export default class App extends Component<Props> {
             thumbTintColor = '#ffffff' 
             minimumTrackTintColor='#dddddd' 
             maximumTrackTintColor='#ffffff' 
-            minimumValue={-parseInt(this.state.previewWidth/10,10)}
+            minimumValue={-parseInt(this.previewWidth/10,10)}
             maximumValue={-1}
             step={1}
             value={-this.state.sampleSize}
@@ -1165,7 +1129,7 @@ export default class App extends Component<Props> {
             minimumTrackTintColor='#dddddd' 
             maximumTrackTintColor='#ffffff' 
             minimumValue={1}
-            maximumValue={parseInt(this.state.previewWidth/this.state.sampleSize,10)}
+            maximumValue={parseInt(this.previewWidth/this.state.sampleSize,10)}
             step={1}
             value={this.state.minimumPixels}
             onValueChange={(value) => this.onMinimumPixels(value)} 
@@ -1322,6 +1286,7 @@ export default class App extends Component<Props> {
       sampleSize:           this.state.sampleSize,
       minimumPixelskey:     this.state.minimumPixels,
       motionInputAreaShape: this.state.motionInputAreaShape,
+      motionInputAreaStyle: this.state.motionInputAreaStyle,
       storage:              this.state.storage,
     }));
   }
@@ -1410,6 +1375,8 @@ export default class App extends Component<Props> {
                   }}>
                   Prendre une vidéo</Text>
                 </TouchableOpacity>
+
+              // TODO: Send alert to connected device.
             }
           </View>
         </View>        
@@ -1430,6 +1397,7 @@ export default class App extends Component<Props> {
 
         <View>
         <ScrollView horizontal={true} >
+
           <MaterialCommunityIcons.Button   
             // Action
             borderRadius={0} 
@@ -1445,7 +1413,6 @@ export default class App extends Component<Props> {
             paddingLeft={10}
             color= {greenFlash}
             backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
             onPress = {() => this.toggleMotionSetup('action')}
           >
             <Text 
@@ -1472,7 +1439,6 @@ export default class App extends Component<Props> {
             margin={0}
             color= {greenFlash}
             backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
             onPress = {() => this.toggleShape()}
           >
             <Text 
@@ -1494,7 +1460,6 @@ export default class App extends Component<Props> {
             margin={0}
             color= {greenFlash}
             backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
             onPress = {() => this.toggleMotionSetup('sampleSize')}
           >
             <Text 
@@ -1502,20 +1467,22 @@ export default class App extends Component<Props> {
               color:this.state.motionSetup=='sampleSize' ? greenFlash : 'grey' ,}}
               >Précision</Text>
           </MaterialCommunityIcons.Button>
+
           <MaterialCommunityIcons.Button   
             // Sensibilité
             borderRadius={0} 
             style={{
+              // fontSize :16,
               flexDirection:'column',
+                alignItems: 'center',
+                justifyContent:'center',
               borderRightWidth:1, borderRightColor:'#dddddd',
             }}
             name='contrast-circle' //   contrast-box     
             underlayColor={greenSuperLight}
             size={25}
-            margin={0}
             color= {greenFlash}
             backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
             onPress = {() => this.toggleMotionSetup('threshold')}
           >
             <Text 
@@ -1537,7 +1504,6 @@ export default class App extends Component<Props> {
             margin={0}
             color= {greenFlash}
             backgroundColor ={'transparent'}
-            // onPress = {() =>{}}
             onPress = {() => this.toggleMotionSetup('minimumPixels')}
           >
             <Text 
@@ -1619,7 +1585,7 @@ export default class App extends Component<Props> {
       >
       <RNCamera
         ref={cam => (this.camera = cam)}
-        style = {[styles.cam,{width:this.state.previewWidth, height:this.state.previewHeight}]}
+        style = {[styles.cam,{width:this.previewWidth, height:this.previewHeight}]}
         onCameraReady = {this.onCameraReady}
         type={RNCamera.Constants.Type.back}
         flashMode={RNCamera.Constants.FlashMode.off}
@@ -1639,7 +1605,7 @@ export default class App extends Component<Props> {
         motionDetectionArea={ 
           this.state.motionInputAreaShape == ''
           ? ""
-          : this.state.motionInputAreaShape +";"+  // shape : elypse / rectangle
+          : this.state.motionInputAreaShape +";"+
             Math.ceil(this.state.motionInputAreaStyle.left/this.state.sampleSize) +";"+ 
             Math.ceil(this.state.motionInputAreaStyle.top /this.state.sampleSize) +";"+
             Math.floor(this.state.motionInputAreaStyle.width /this.state.sampleSize) +";"+
@@ -1809,8 +1775,8 @@ export default class App extends Component<Props> {
 
   onSampleSize(value){
     let minimumPixels = this.state.minimumPixels;
-    if(minimumPixels > this.state.previewHeight/value){
-      minimumPixels = parseInt(this.state.previewHeight/value);
+    if(minimumPixels > this.previewHeight/value){
+      minimumPixels = parseInt(this.previewHeight/value);
     }
     this.setState({
       sampleSize:value,
@@ -1827,15 +1793,15 @@ export default class App extends Component<Props> {
   //  }
 
   onMovePoignee(id, value){
-    // console.log(value);
     this.poignee[id]=value;
-
     this.setState({motionInputAreaStyle:{
       top: Math.min(this.poignee[0].y, this.poignee[1].y),
       left: Math.min(this.poignee[0].x, this.poignee[1].x),
       width: Math.abs(this.poignee[0].x - this.poignee[1].x),
       height: Math.abs(this.poignee[0].y - this.poignee[1].y),
-    }});
+    }}, function(){ 
+      this.storeMotionSettings();
+    });
   }
 
   toggleView(view) {
@@ -1852,10 +1818,6 @@ export default class App extends Component<Props> {
 
   render() {
     console.log('render');
-    const panStyle = {
-      transform: this.state.pan.getTranslateTransform()
-    }
-
     return (
       <View style={styles.container}>
 
