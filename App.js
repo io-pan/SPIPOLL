@@ -41,7 +41,7 @@ import FontAwesomeIcons  from 'react-native-vector-icons/FontAwesome';;
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import SpipolLogin from  "./src/spipoll-login-form"
-import CollectionForm from "./src/collection-form"
+import CollectionList from "./src/collections"
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import RNThumbnail from 'react-native-thumbnail';
 // TODO:
@@ -175,8 +175,9 @@ export default class App extends Component<Props> {
       distantRec:false,
 
       zoom:0,
-      cam: 'free', // Different reasons why cam is on:
+      cam: 'collection-form', // Different reasons why cam is on:
         // 'free'
+        // collection-form
         // 'collection-flower'
         // 'collection-environment'
         // 'session' ( = free while session running)
@@ -363,6 +364,7 @@ export default class App extends Component<Props> {
     NativeModules.ioPan.getBatteryInfo()
     .then((battery) => {
       this.setState({battery:battery});
+      console.log(battery.level);
       if (battery.level < 15) {
         // TODO send alert to distant.
       }
@@ -379,8 +381,8 @@ export default class App extends Component<Props> {
     //     console.log(batteryLevel);
     //   }
     // );
-    this.testBattery();
-    setInterval(() => {this.testBattery}, 6000);
+
+    setInterval(() => {this.testBattery()}, 6000);
     KeepScreenOn.setKeepScreenOn(true);
 
     this.requestForPermission();
@@ -674,7 +676,7 @@ export default class App extends Component<Props> {
                 this.setState({
                   cam:'collection-form',
                 }, function(){
-                  this.refs['collectionForm'].refs['collection-flower'].setSource(
+                  this.refs['collectionList'].refs['collection-flower'].setSource(
                       {uri:'file:///' + this.state.storage + '/' + filename});
                 })
               }
@@ -682,7 +684,7 @@ export default class App extends Component<Props> {
                 this.setState({
                   cam:'collection-form',
                 }, function(){
-                  this.refs['collectionForm'].refs['collection-environment'].setSource(
+                  this.refs['collectionList'].refs['collection-environment'].setSource(
                       {uri:'file:///' + this.state.storage + '/' + filename});
                 })
               }
@@ -1205,11 +1207,8 @@ export default class App extends Component<Props> {
   }
 
   renderCamActionButtons(){   
-    if(this.state.cam == 'motion-setup')
-          return null;
-    
     return (
-      <View style={styles.iconButtonContainer} >
+      <View key="renderCamActionButtons" style={styles.iconButtonContainer} >
         <View style={styles.iconButton}>
         <MaterialCommunityIcons.Button   
           name='camera'
@@ -1419,11 +1418,8 @@ export default class App extends Component<Props> {
   }
 
   renderMotionSetupButtons(){   
-    if ( this.state.cam != 'motion-setup')
-      return null;
-
     return(  
-      <View style={{flex: 1, justifyContent:'space-between'}}>
+      <View key="renderMotionSetupButtons" style={{flex: 1, justifyContent:'space-between'}}>
 
         {this.renderMotionSetupItems()}
 
@@ -1599,10 +1595,6 @@ export default class App extends Component<Props> {
   }
 
   renderCamera() {
-    if(this.state.cam == 'collection-form' || this.state.cam =='login') {
-      this.sendMessage(this.state.connectedTo, 'distantcam', false);
-      return null;
-    }
 
     if(this.state.connectedTo && this.camRequested){
       this.camRequested = false;
@@ -1611,6 +1603,7 @@ export default class App extends Component<Props> {
 
     return (
       <View //ViewShot
+        key="renderCamera"
         ref="viewShot"
         // options={{
         //   format: "jpg", 
@@ -1894,49 +1887,60 @@ export default class App extends Component<Props> {
               onPress = {() => this.toggleView('login')}
             />
 
-            <Button 
-              style={styles.button}
-              color={ this.state.cam=='free' ? '#338433' : 'grey'}
-              title = 'cam free'
+            <View style={styles.iconButtonHeader}>
+            <MaterialCommunityIcons.Button   
+              borderRadius={0}
+              name='camera'
+              underlayColor={greenSuperLight}
+              size={30}
+              color={ this.state.cam=='free' ? greenFlash : 'grey'}
+              // backgroundColor = { this.state.cam !='collection-form' ? greenFlash : 'white'}
+              backgroundColor='transparent'
               onPress = {() => this.toggleView('free')}
             />
-            <Button 
-              style={styles.button}
-              color={ this.state.cam=='collection-form' ? '#338433' : 'grey'}
-              title = 'form'
+            </View>
+
+            <TouchableOpacity 
+              style={styles.button}        
               onPress = {() => this.toggleView('collection-form')}
-            />
+            ><Text style={{ color:this.state.cam=='collection-form' ? greenFlash : 'grey'}}
+            >Collections</Text></TouchableOpacity>
           </ScrollView>
         </View> 
 
         {/*        
         <ScrollView style={{backgroundColor:'red', paddingBottom:200}}>*/}
 
-{/*
+        {/*
         <Image
           ref="bug"
           style={{width:50, height:500,}} 
           source={source}
         />
-*/}
+        */}
 
-        {/*<View style={styles.containerPreview}>*/}
-
-          {/*        
-            { this.renderDistantPicture() }
-            { this.renderImageTest() }
-            { this.renderImageLocal() }
-          */}
-
-          {this.renderCamera()}
-          {this.renderCamActionButtons()}
-          {this.renderMotionSetupButtons()}
-
-        {/*</View>*/}
-        
+        {/*
+        <View style={styles.containerPreview}>
+          { this.renderDistantPicture() }
+          { this.renderImageTest() }
+          { this.renderImageLocal() }
+       </View>
+        */}
 
 
-        { this.state.devices.map((value, index) => 
+        { // Camera & buttons.
+          this.state.cam == 'collection-form' || this.state.cam =='login'
+          ? null
+          : [this.renderCamera(),
+              this.state.cam == 'motion-setup'
+              ? this.renderMotionSetupButtons()
+              : this.renderCamActionButtons()
+            ]
+        }
+
+
+        { // Distant devices.
+          this.state.devices.map((value, index) => 
           <View 
             key = {index}
             style = {{flexDirection:'row'}}
@@ -1957,10 +1961,8 @@ export default class App extends Component<Props> {
 
 
         { this.state.cam=="collection-form"
-        ? <CollectionForm
-            ref="collectionForm"
-            filePath={this.state.storage}
-            pickPhoto = {(view) => this.pickPhoto(view)}
+        ? <CollectionList
+            ref="collectionList"
          />
         : null
         }
@@ -1998,7 +2000,7 @@ export default class App extends Component<Props> {
           { this.state.battery.charging
             ? <MaterialCommunityIcons.Button 
                 backgroundColor={'transparent'} 
-                name='battery-charging-40'
+                name='battery-charging'
                 size={60}
                 color={greenFlash}
               />
@@ -2039,7 +2041,7 @@ styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#F5FCFF',
+    backgroundColor: '#fafaff' //'#F5FCFF',
   },
 
   header:{
@@ -2124,6 +2126,15 @@ styles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  iconButtonHeader:{
+    marginLeft:0,
+    marginRight:0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow:'hidden',
+    height:40,
+    backgroundColor:'transparent',
+  },
   iconButton:{
     marginLeft:20,
     marginRight:20,

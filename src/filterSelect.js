@@ -30,9 +30,8 @@ export default class ModalFilterPicker extends Component {
         filter: '',
         ds: this.props.options,
       }, function(){
-        this.refs['filter'].focus();
+        // this.refs['filter'].focus();
       });
-
     }
   }
 
@@ -42,16 +41,15 @@ export default class ModalFilterPicker extends Component {
       titleTextStyle,
       overlayStyle,
       cancelContainerStyle,
-      renderList,
       renderCancelButton,
+      filterTextInputStyle,
       visible,
       modal,
       onCancel
     } = this.props
 
     const renderedTitle = (!title) ? null : (
-      <Text 
-      // style={titleTextStyle || styles.titleTextStyle}
+      <Text style={titleTextStyle || styles.titleTextStyle}
       >{title}</Text>
     )
 
@@ -67,58 +65,26 @@ export default class ModalFilterPicker extends Component {
           // style={overlayStyle || styles.overlay}
           enabled={Platform.OS === 'ios'}
         >
-          <View>{renderedTitle}</View>
-          {(renderList || this.renderList)()}
-          {/*
-          <View 
-          // style={cancelContainerStyle || styles.cancelContainer}
-          >
-            {(renderCancelButton || this.renderCancelButton)()}
-          </View>
-*/}
+          {renderedTitle}
+          <View style={{padding:10}}>
+
+          <TextInput
+            ref="filter"
+            style={filterTextInputStyle}
+            onChangeText={this.onFilterChange}
+            autoCorrect={false}
+            blurOnSubmit={true}
+            autoFocus={true}
+            keyboardType="default"
+            autoCapitalize="none"
+            placeholder={' Filtrer ...'}
+            // style={filterTextInputStyle || styles.filterTextInput} 
+          />
+          {this.renderOptionList()}
+
+        </View>
         </KeyboardAvoidingView>
       </Modal>
-    )
-  }
-
-  renderList = () => {
-    const {
-      showFilter,
-      autoFocus,
-      listContainerStyle,
-      androidUnderlineColor,
-      placeholderText,
-      placeholderTextColor,
-      filterTextInputContainerStyle,
-      filterTextInputStyle
-    } = this.props
-
-    const filter = (!showFilter) ? null : (
-      <View 
-      // style={filterTextInputContainerStyle || styles.filterTextInputContainer}
-      >
-
-      </View>
-    )
-
-    return (
-      <View 
-      // style={listContainerStyle || styles.listContainer}
-      >
-        <TextInput
-          ref="filter"
-          onChangeText={this.onFilterChange}
-          autoCorrect={false}
-          blurOnSubmit={true}
-          autoFocus={autoFocus}
-          autoCapitalize="none"
-          underlineColorAndroid={androidUnderlineColor}
-          placeholderTextColor={placeholderTextColor}
-          placeholder={placeholderText}
-          style={filterTextInputStyle || styles.filterTextInput} 
-          />
-                  {this.renderOptionList()}
-      </View>
     )
   }
 
@@ -132,7 +98,7 @@ export default class ModalFilterPicker extends Component {
     const { ds } = this.state
 
     if (1 > ds.length) {
-      return <Text>{noResultsText}</Text>
+      return <Text style={{textAlign:'center'}}>{noResultsText}</Text>
     } else {
       return (
         <FlatList
@@ -170,14 +136,14 @@ export default class ModalFilterPicker extends Component {
     } else {
       return (
         <TouchableOpacity activeOpacity={0.7}
-		  key={key}
-	      style={{
-	      	padding:5,
-	      	borderBottomWidth:1,
-	      	borderBottomColor:'#333333',
-	      }}
+  		    key={key}
+  	      style={{
+  	      	padding:5,
+  	      	borderBottomWidth:1,
+  	      	borderBottomColor:'#92c83e',
+  	      }}
           onPress={() => this.props.onSelect(rowData.item)}
-        >
+          >
           <Text style={{fontSize:14, color:'#333333'}}>{label}</Text>
           <Text style={{fontSize:12, color:'#888888'}}>{espece}</Text>
         </TouchableOpacity>
@@ -216,7 +182,7 @@ export default class ModalFilterPicker extends Component {
         0 <= label.toLowerCase().indexOf(filter) ||
           (searchKey && 0 <= searchKey.toLowerCase().indexOf(filter))
       ))
-console.log(filtered);
+
     this.setState({
       filter: text.toLowerCase(),
       ds: filtered,
@@ -240,7 +206,6 @@ ModalFilterPicker.propTypes = {
   selectedOption: PropTypes.string,
   renderOption: PropTypes.func,
   renderCancelButton: PropTypes.func,
-  renderList: PropTypes.func,
   FlatListProps: PropTypes.object,
   filterTextInputContainerStyle: PropTypes.any,
   filterTextInputStyle: PropTypes.any,
@@ -264,5 +229,5 @@ ModalFilterPicker.defaultProps = {
   visible: true,
   showFilter: true,
   keyboardShouldPersistTaps: 'never',
-  filterTextInputStyle:{fontSize:18, paddingLeft:10,}
+  filterTextInputStyle:{fontSize:18},
 }

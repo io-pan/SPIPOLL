@@ -11,6 +11,8 @@ import {
   Dimensions,
   Animated,
   PermissionsAndroid,
+  ScrollView,
+  AsyncStorage,
 } from 'react-native'
 
 import {
@@ -31,7 +33,22 @@ const green = "#d2e284";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
+const formatedDate = function(type){
+    now = new Date();
+    year = "" + now.getFullYear();
+    month = "" + (now.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
+    day = "" + now.getDate(); if (day.length == 1) { day = "0" + day; }
+    hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
+    minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
+    second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
 
+    if(type=='filename'){
+      return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;  
+    }
+    else{
+      return year + "." + month + "." + day + " " + hour + ":" + minute + ":" + second; 
+    }
+  };
 
 //-----------------------------------------------------------------------------------------
 class ImagePicker extends Component {
@@ -52,8 +69,8 @@ class ImagePicker extends Component {
   }
 
   setSource(source){
-console.log(source);
-console.log(this.state.source);
+    // console.log(source);
+    // console.log(this.state.source);
     source.uri = source.uri.substring(0, 
       source.uri.indexOf('?t=') < 0 
       ? source.uri.length
@@ -64,7 +81,7 @@ console.log(this.state.source);
   }
 
   showImageView = () => {
-    console.log('showImageView');
+    // console.log('showImageView');
     this.setState({visibleImageView:true});
   }
   hideImageView = () => {
@@ -72,7 +89,6 @@ console.log(this.state.source);
   }
 
   render(){
-
     if (this.state.source){
       return(
         <View style={[this.props.style, {
@@ -143,8 +159,8 @@ console.log(this.state.source);
 
 
 //-----------------------------------------------------------------------------------------
-export default class CollectionForm extends Component {
-  //-----------------------------------------------------------------------------------------
+class CollectionForm extends Component {
+//-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx)
 
@@ -152,8 +168,17 @@ export default class CollectionForm extends Component {
 
     this.state = {
       gpsOpacity:new Animated.Value(1),
+
+      name: this.props.data.name,
+      protocole: this.props.data.protocole,
+
       collection:{
-        protocole:'Flash',
+
+        place:{
+          long:'',
+          lat:'',
+        },
+
         flower:{
           photo:'',
 
@@ -171,10 +196,7 @@ export default class CollectionForm extends Component {
           ruche:'',
           culture50m:'',
         },
-        place:{
-          long:'',
-          lat:'',
-        }
+
 
         //   Localiser 
         //     par  nom d'une commune, d'une région, d'un département ou d'un code postal
@@ -264,6 +286,17 @@ export default class CollectionForm extends Component {
 
     this.gpsSearching = false;
     this.toValue = 1;
+  }
+
+
+  componentWillMount(){
+    // Load flower, sessions ...
+  }
+
+  componentDidMount(){
+    if(!this.state.name){
+      this.refs['name'].focus();
+    }
   }
 
 
@@ -386,17 +419,78 @@ export default class CollectionForm extends Component {
     ).start(() => this.gpsAnimation())  
   }
 
+  store(key, value){
+    if(value){
+      this.setState({[key]:value}, function(){
+        this.props.valueChanged(key,value);
+      })     
+    }
+    else{
+      this.setState({[key]:this.tempValue});
+    }
+  }
+
+  edit(field){
+    this.tempValue = this.state[field];
+    this.setState({[field]:''}, function(){
+      this.refs[field].focus();
+    });
+  }
+
+  back(){
+    this.props.valueChanged('editing',false);
+  }
 
   render () {
     return (
-
+      <ScrollView>
           <View style={styles.collection}>
             <View style={styles.collection_grp}>
-              {/*<Text style={styles.coll_title}>Nom de la collection</Text>*/}
-              <TextInput
-                style={styles.collection_input_text}
-                placeholder='Nom de la collection'
-              />
+              { this.state.name
+                ? <View style={{flexDirection:'row'}}>
+ 
+                    <TouchableOpacity 
+                      style={[{
+                        padding:10,
+                        borderRightWidth:1, borderRightColor:'white', 
+                        backgroundColor:greenFlash,
+                      }]}
+                      onPress = {() => this.back()} 
+                      >
+                      <MaterialCommunityIcons
+                        name="chevron-left" 
+                        style={[{ color:'white',
+                        }]}
+                        size={30}
+                      />
+                    </TouchableOpacity>
+
+                  <TouchableOpacity 
+                    style={{flexDirection:'row', flex:1}}
+                    onPress = {() => this.edit('name')} 
+                    >
+                    <Text style={styles.titleTextStyle}>{this.state.name}</Text>
+                    <MaterialCommunityIcons
+                      name="pencil" 
+                      style={[{color:'white', paddingTop:10, width:50, backgroundColor:greenFlash} ]}
+                      size={25}
+                      backgroundColor = 'transparent'
+                    />
+                  </TouchableOpacity>
+
+       
+                  </View>
+
+
+                : <TextInput
+                    ref="name"
+                    style={styles.collection_input_text}
+                    placeholder='Nom de la collection'
+                    onEndEditing = {(event) => this.store('name', event.nativeEvent.text)} 
+                    onSubmitEditing = {(event) => this.store('name', event.nativeEvent.text)} 
+                  />
+              }
+
             </View>
 
             <View style={styles.collection_grp}>
@@ -429,7 +523,7 @@ export default class CollectionForm extends Component {
                 onPress = {() => this.upd_protocole('Long')}
               />
               <Text style={styles.coll_info}>
-              Une ou plusieurs sessions photographiques de plus de 20mn sur 3 jour maximum.</Text>
+              Une ou plusieurs sessions photographiques de plus de 20mn sur 3 jours maximum.</Text>
               {/*                            
               <Text style={styles.coll_info_grp}>
                     Dans les deux cas, 
@@ -475,7 +569,7 @@ export default class CollectionForm extends Component {
                   textStyle={styles.collection_input_text}
                   checkedColor = {greenFlash}
                   uncheckedColor = {greenDark}
-                  title={'Identifier plus tard'}
+                  title={'Faire confiance en l\'IA'}
                   checkedIcon='dot-circle-o'
                   uncheckedIcon='circle-o'
                   checked={this.state.collection.protocole != 'Flash'}
@@ -504,6 +598,8 @@ export default class CollectionForm extends Component {
                   <Text>{this.state.collection.flower.taxon_name}</Text>
                   <ModalFilterPicker
                     visible={this.state.visibleTaxonModal}
+                    title='Fleur'
+                    titleTextStyle={styles.titleTextStyle}
                     options={flowerList}
                     onSelect={this.selectTaxon}
                     onCancel={this.hideTaxonModal}
@@ -645,6 +741,7 @@ export default class CollectionForm extends Component {
                   <Text style={styles.coll_subtitle}>
                   Type d'habitat</Text>
 
+                  {/* multi select */}
                   <CheckBox
                     containerStyle={styles.collection_input_container}
                     textStyle={styles.collection_input_text}
@@ -861,81 +958,160 @@ export default class CollectionForm extends Component {
             </View>
 
           </View>
-
+      </ScrollView>
     );
   }
 }
 
-const styles = StyleSheet.create({ 
- collection:{
-    backgroundColor:'white',
-    padding:10,
-  },
-  coll_title:{
-    marginLeft:10,
-    color:'white',
-    fontSize:18,
-    fontWeight:'bold',
-    paddingBottom:10,
-    paddingTop:5,
-  },
-  coll_subtitle:{
-    marginLeft:10,
-    color:greenFlash,
-    fontSize:16,
-    fontWeight:'bold',
-    paddingBottom:10,
-    paddingTop:5,
-  },
-  coll_info:{
-    color: green,
-    fontSize:12,
-    marginLeft:45,
-    paddingRight:5,
-    paddingBottom:5,
-  },
-  coll_info_grp:{
-    fontSize:14,
-    color: greenDark,
-    padding:10,
-  },
 
-  collection_grp:{
-    backgroundColor:greenLight,
-    margin:5,
-    borderWidth:1,
-    borderColor:'#dddddd',
-    borderRadius:10,
-    
-    paddingBottom:10,
-    marginBottom:10,
-  },
-  collection_subgrp:{
-    backgroundColor:'white',
-    margin:5,
-    borderWidth:1,
-    borderColor:'#dddddd',
-    borderRadius:10,
-    
-    paddingBottom:10,
-    marginBottom:10,
-  },
+//=========================================================================================
+export default class CollectionList extends Component {
+//-----------------------------------------------------------------------------------------
+ constructor(props) {
+    super(props);
 
-  collection_input_container:{
-    margin:0,
-    padding:0,
-    backgroundColor:'white',
-    borderWidth:0,
-  },
-  collection_input_text:{
-    margin:5,
-    padding:5,
-    fontWeight:'normal',
-    fontSize:16,
-    color:greenDark,
-    backgroundColor:'white',
-  },
-  row:{
-    flexDirection:'row', 
+    this.state = {
+      collections:[],
+      editing:false,
+    };
   }
+
+  componentWillMount(){
+ 
+    AsyncStorage.getItem('collections', (err, collections) => {
+      if (err) {
+        Alert.alert('ERROR getting collections '+ JSON.stringify(err));
+      }
+      else {
+        if(collections){
+          console.log(JSON.parse(collections));
+          this.setState({collections:JSON.parse(collections)});
+        }
+      }
+    });
+  }
+
+  newCollection(){
+    let coll = this.state.collections;
+    coll.push({
+        name:'',
+        date:formatedDate(),
+    });
+
+    this.setState({ 
+      collections: coll,
+      editing:coll.length-1,
+    }, function(){
+      AsyncStorage.setItem('collections', JSON.stringify( this.state.collections ));
+    });
+  }
+
+  selectCollection(index){
+    this.setState({editing:index});
+  }
+
+  collectionChanged(key, val){
+    if(key=='editing'){
+      this.setState({[key]:val});
+    }
+    else{
+      let coll = this.state.collections;
+      coll[this.state.editing][key] = val;
+      this.setState({collections:coll}, function(){
+        AsyncStorage.setItem('collections', JSON.stringify( this.state.collections ));   
+      })
+    }
+  }
+
+  render(){
+    return(
+      <View>
+        { this.state.editing === false
+          ? <React.Fragment>
+            <TouchableOpacity  
+              style={[styles.listItem,styles.listItemNew]}
+              onPress = {() => this.newCollection()}
+              >
+              <MaterialCommunityIcons   
+                name='plus-circle-outline'
+                style={{fontSize:24, paddingRight:10, color:'white'}}
+              />
+              <Text style={{color: 'white', fontSize:16,}}>
+              Nouvelle Collection</Text>
+            </TouchableOpacity>
+
+            <ScrollView>
+            { this.state.collections.map((value, index) => 
+              <TouchableOpacity  
+                key={index}
+                style={styles.listItem}
+                onPress = {() => this.selectCollection(index)}
+                >
+                <Text style={styles.listItemText}>
+                {value.name}</Text>
+                <Text style={styles.listItemText}>
+                {value.date}</Text>
+
+              </TouchableOpacity>
+            )}
+            </ScrollView>
+            </React.Fragment>
+
+          : <React.Fragment>
+              <CollectionForm 
+                data={this.state.collections[this.state.editing]}
+                valueChanged={(key,val) => this.collectionChanged(key,val)}
+              />
+            </React.Fragment>
+
+        }
+
+      </View>
+    );
+  }
+
+} // Main CollectionList
+
+
+const styles = StyleSheet.create({ 
+  titleTextStyle:{
+    flex:1,
+    backgroundColor:greenFlash, 
+    color:'white', 
+    fontSize:18, 
+    fontWeight:'bold', 
+    textAlign:'center', 
+    padding:10,
+  },
+  titleTextEdit:{
+    backgroundColor:greenFlash, 
+    color:'white', 
+    fontSize:18, 
+    fontWeight:'bold', 
+    textAlign:'center', 
+    padding:10,
+  },
+  titleInputStyle:{
+    backgroundColor:greenFlash, 
+    color:'white', 
+    fontSize:18, 
+    fontWeight:'bold', 
+    textAlign:'center', 
+    padding:10,
+  },
+  listItem:{
+    padding:20,
+    paddingTop:10,
+    paddingBottom:10,
+    flexDirection:'row',
+    borderBottomWidth:1,
+    borderBottomColor:greenFlash,
+  },
+  listItemText:{
+    color:'grey',
+    fontSize:14,
+  },
+  listItemNew:{
+    backgroundColor:greenFlash,
+  },
 });

@@ -133,17 +133,19 @@ export default class SpipollLoginFrom extends Component {
         ? <View style={styles.collection_grp}>
             <Text style={styles.coll_title}>LOGIN</Text>
             <TextInput
-              defaultValue={this.state.name}
-              style={styles.collection_input_text}
               placeholder='Identifiant'
+              autoCapitalize="none"
+              style={styles.collection_input_text}
+              defaultValue={this.state.name}
               onEndEditing =    {(event) => this.onInput( 'name',event.nativeEvent.text) } 
               onSubmitEditing = {(event) => this.onInput( 'name',event.nativeEvent.text) } 
             />
             <TextInput
+              placeholder='Mot de passe'
               defaultValue={this.state.pass}
+              autoCapitalize="none"
               secureTextEntry={true}
               style={styles.collection_input_text}
-              placeholder='Mot de passe'
               onEndEditing =    {(event) => this.onInput( 'pass',event.nativeEvent.text) } 
               onSubmitEditing = {(event) => this.onInput( 'pass',event.nativeEvent.text) } 
             />
