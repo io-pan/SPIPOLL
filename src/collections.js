@@ -13,6 +13,7 @@ import {
   PermissionsAndroid,
   ScrollView,
   AsyncStorage,
+  Modal,
 } from 'react-native'
 
 import {
@@ -159,6 +160,27 @@ class ImagePicker extends Component {
 
 
 //-----------------------------------------------------------------------------------------
+class ModalHelp extends Component {
+//-----------------------------------------------------------------------------------------
+  constructor (props) {
+    super(props)
+    this.state = {}
+  }
+
+  render(){
+    return(
+      <Modal
+        onRequestClose={this.props.onCancel}
+        visible={this.props.visible}
+        >
+        <Text style={styles.titleTextStyle}>{this.props.title}</Text>
+      </Modal>
+    );
+  }
+}
+
+
+//-----------------------------------------------------------------------------------------
 class CollectionForm extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
@@ -171,6 +193,11 @@ class CollectionForm extends Component {
 
       name: this.props.data.name,
       protocole: this.props.data.protocole,
+
+      help:{
+        visible:false,
+        title:'',
+      },
 
       collection:{
 
@@ -441,14 +468,35 @@ class CollectionForm extends Component {
     this.props.valueChanged('editing',false);
   }
 
+  help(topic){
+    this.setState({
+      help:{visible:true, title:topic}
+    })
+  }
+
+  hideHelpModal(){
+    this.setState({
+      help:{visible:false,}
+    })
+  }
+
   render () {
     return (
-      <ScrollView>
+      <View>
+
+          <ModalHelp
+            visible={this.state.help.visible}
+            title={this.state.help.title}
+            titleTextStyle={styles.titleTextStyle}
+            content={this.state.help.content}
+            onCancel={() => this.hideHelpModal()} 
+          />
+
+
           <View style={styles.collection}>
             <View style={styles.collection_grp}>
               { this.state.name
                 ? <View style={{flexDirection:'row'}}>
- 
                     <TouchableOpacity 
                       style={[{
                         padding:10,
@@ -465,22 +513,19 @@ class CollectionForm extends Component {
                       />
                     </TouchableOpacity>
 
-                  <TouchableOpacity 
-                    style={{flexDirection:'row', flex:1}}
-                    onPress = {() => this.edit('name')} 
-                    >
-                    <Text style={styles.titleTextStyle}>{this.state.name}</Text>
-                    <MaterialCommunityIcons
-                      name="pencil" 
-                      style={[{color:'white', paddingTop:10, width:50, backgroundColor:greenFlash} ]}
-                      size={25}
-                      backgroundColor = 'transparent'
-                    />
-                  </TouchableOpacity>
-
-       
+                    <TouchableOpacity 
+                      style={{flexDirection:'row', flex:1}}
+                      onPress = {() => this.edit('name')} 
+                      >
+                      <Text style={styles.titleTextStyle}>{this.state.name}</Text>
+                      <MaterialCommunityIcons
+                        name="pencil" 
+                        style={[{color:'white', paddingTop:10, width:50, backgroundColor:greenFlash} ]}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                    </TouchableOpacity>
                   </View>
-
 
                 : <TextInput
                     ref="name"
@@ -493,10 +538,29 @@ class CollectionForm extends Component {
 
             </View>
 
+
+            <ScrollView>
+
+            <TouchableOpacity 
+              style={{flexDirection:'row', flex:1, justifyContent:'center'}}
+              onPress = {() => this.help('protocole')} 
+              >
+              <Text style={{
+                fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
+                padding:10,color:greenFlash, backgroundColor:'transparent'}}>
+              PROTOCOLE</Text>
+              <MaterialCommunityIcons
+                name="help-circle-outline" 
+                style={[{color:greenFlash, paddingTop:10, width:50, backgroundColor:'transparent'} ]}
+                size={15}
+                backgroundColor = 'transparent'
+              />
+            </TouchableOpacity>
+            
+
+
             <View style={styles.collection_grp}>
-              <Text style={styles.coll_title}>
-              PROTOCOLE
-              </Text>
+          
               <View style={styles.collection_subgrp}>
               <CheckBox
                 containerStyle={styles.collection_input_container}
@@ -509,8 +573,7 @@ class CollectionForm extends Component {
                 checked={this.state.collection.protocole == 'Flash'}
                 onPress = {() => this.upd_protocole('Flash')}
               />
-              <Text style={styles.coll_info}>
-              Une seule session photographique de 20mn.</Text>
+
               <CheckBox
                 containerStyle={styles.collection_input_container}
                 textStyle={styles.collection_input_text}
@@ -522,20 +585,7 @@ class CollectionForm extends Component {
                 checked={this.state.collection.protocole != 'Flash'}
                 onPress = {() => this.upd_protocole('Long')}
               />
-              <Text style={styles.coll_info}>
-              Une ou plusieurs sessions photographiques de plus de 20mn sur 3 jours maximum.</Text>
-              {/*                            
-              <Text style={styles.coll_info_grp}>
-                    Dans les deux cas, 
-                    l’objectif est d’avoir UNE photo par ce que vous considérez comme "espèce" d'insecte, 
-                    de qualité suffisante pour certifier que ce spécimen 
-                    diffère des autres spécimens de votre collection.
-               </Text><Text style={styles.coll_info_grp}>
-                    Pour chacune des espèces photographiées, 
-                    vous aurez la possibilité de nous communiquer une information sur son abondance : 
-                    y-a-t-il 1 seul individu ? Entre 2 et 5 ? Plus de 5 ?
-              </Text>
-                */}
+       
               </View>
             </View>
 
@@ -957,8 +1007,10 @@ class CollectionForm extends Component {
                 />
             </View>
 
-          </View>
+
       </ScrollView>
+      </View>
+      </View>
     );
   }
 }
@@ -995,6 +1047,9 @@ export default class CollectionList extends Component {
     let coll = this.state.collections;
     coll.push({
         name:'',
+        protocole:'',
+        coord:{lat:0, lon:0},
+
         date:formatedDate(),
     });
 
@@ -1114,4 +1169,7 @@ const styles = StyleSheet.create({
   listItemNew:{
     backgroundColor:greenFlash,
   },
+
+  collection_input_text:
+  {padding:10, fontSize:16},
 });
