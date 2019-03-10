@@ -1,0 +1,57 @@
+-- Merging decision tree log ---
+manifest
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:1-14:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:1-14:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:1-14:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:1-14:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:1-14:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:1-14:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:1-14:12
+	package
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:2:5-31
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+	android:versionName
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:4:5-30
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+	xmlns:android
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:1:11-69
+	android:versionCode
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:3:5-28
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+uses-permission#android.permission.INTERNET
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:6:5-67
+	android:name
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:6:22-64
+uses-permission#android.permission.SYSTEM_ALERT_WINDOW
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:7:5-77
+	android:name
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:7:22-75
+uses-permission#android.permission.READ_PHONE_STATE
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:8:5-75
+	android:name
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:8:22-72
+uses-permission#android.permission.READ_PROFILE
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:9:5-71
+	android:name
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:9:22-68
+uses-permission#android.permission.READ_CONTACTS
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:10:5-72
+	android:name
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:10:22-69
+uses-sdk
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:11:5-13:41
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:11:5-13:41
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:11:5-13:41
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:11:5-13:41
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:11:5-13:41
+	android:targetSdkVersion
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:13:9-38
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml:12:9-35
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-bluetooth-cross-platform\android\src\main\AndroidManifest.xml

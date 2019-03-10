@@ -1,0 +1,39 @@
+-- Merging decision tree log ---
+manifest
+ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+	package
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:58-98
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+	android:versionName
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+	xmlns:tools
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:11-57
+	xmlns:android
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+	android:versionCode
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml:1:1-3:12
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+uses-sdk
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+		ADDED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
+		INJECTED from D:\dev\app\SPIPOLL\node_modules\react-native-keep-screen-on\android\src\main\AndroidManifest.xml
