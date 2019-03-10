@@ -1,8 +1,32 @@
 npm i  react-native-bluetooth-cross-platform --save
+	android/build.gradle
+	subprojects {
+	    afterEvaluate {project ->
+	        if (project.hasProperty("android")) {
+	            android {
+	                compileSdkVersion 28
+	                buildToolsVersion "28.0.2"
+	            }
+	        }
+	    }
+	}
+
 npm i rn-splash-screen --save
 npm i react-native-vector-icons --save
 npm i react-native-keep-screen-on --save
 npm i rn-fetch-blob --save
 npm i react-native-camera --save
 npm i react-native-view-shot --save
+npm i react-native-image-pan-zoom  --save
+npm install react-native-thumbnail --save
+npm i react-native-maps --save
 
+react-native run-android
+react-native run-android --variant=release 
+
+
+adb reverse tcp:8081 tcp:8081
+adb reverse tcp:8097 tcp:8097
+
+
+https://react-native-training.github.io/react-native-elements/docs/input.html

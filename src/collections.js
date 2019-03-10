@@ -14,6 +14,8 @@ import {
   ScrollView,
   AsyncStorage,
   Modal,
+  BackHandler,
+
 } from 'react-native'
 
 import {
@@ -26,6 +28,7 @@ import ImageView from './imageView';
 import ModalFilterPicker from './filterSelect';
 import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import MapView from 'react-native-maps';
 
 // Spipoll
 import { flowerList } from './flowers.js';
@@ -45,6 +48,300 @@ const formatedDate = function(){
 
     return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second
   };
+
+
+//-----------------------------------------------------------------------------------------
+class ModalPlace extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      visible: this.props.visible,
+
+      name: this.props.location.name,
+      lat: this.props.location.lat,
+      lon: this.props.location.lon,
+
+      region:{
+        latitude: this.props.location.lat,
+        longitude: this.props.location.lon,
+        latitudeDelta: 0.002,
+        longitudeDelta: 0.002,
+      },
+    }    
+
+    this.makeCancelable = (promise) => {
+      let hasCanceled_ = false;
+      const wrappedPromise = new Promise((resolve, reject) => {
+        promise.then(
+          val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
+          error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
+        );
+      });
+      return {
+        promise: wrappedPromise,
+        cancel() {
+          hasCanceled_ = true;
+        },
+      };
+    };
+    this.geocodeAddressPromise = false;
+  }
+
+  onSearchInput(text) {
+    if (text) {
+      fetch('https://maps.googleapis.com/maps/api/geocode/json'
+        +'?address='+text
+        +'&key='+GOOGLE_APIKEY)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        if(responseJson.status=="OK") {
+          // console.log('geocode', responseJson.results[0].geometry.location);
+          this.setState({ 
+            name: text,
+            lat: responseJson.results[0].geometry.location.lat,
+            lon: responseJson.results[0].geometry.location.lng,
+          }, function(){
+            this.refs.lamap.animateToRegion({
+              latitude:responseJson.results[0].geometry.location.lat,
+              longitude:responseJson.results[0].geometry.location.lng,
+              latitudeDelta:this.state.latitudeDelta,
+              longitudeDelta:this.state.longitudeDelta,
+            });
+          });
+
+          // Get timezone
+          var summerDate = new Date();
+          summerDate.setFullYear(summerDate.getFullYear()-1);
+          summerDate.setMonth(6);
+          summerDate = summerDate.getTime()/1000;
+          fetch('https://maps.googleapis.com/maps/api/timezone/json'
+            +'?location='
+            +responseJson.results[0].geometry.location.lat+','
+            +responseJson.results[0].geometry.location.lng
+            +'&timestamp='+summerDate
+            +'&key='+GOOGLE_APIKEY)
+          .then((response) => response.json())
+          .then((responseJson) => {
+            // console.log('timezone', responseJson);
+            if(responseJson.status=="OK") {
+              this.setState({ 
+                gmt: responseJson.rawOffset,
+                dst: responseJson.dstOffset,
+              });
+            }
+            else {
+              this.setState({ 
+                gmt: 0,
+                dst: 0,
+              });
+            }
+          })
+          .catch((error) => { }); 
+        }
+        else {
+          // console.log('api geocode ERROR:');
+          // console.log(responseJson);
+          this.setState({ 
+            name: strings.unknownplace,
+            lat: 0,
+            lon: 0,
+            gmt: 0,
+            dst: 0,
+          })
+        }
+      })
+      .catch((error) => { 
+        // console.log(error);
+      }); 
+    }
+  }
+
+
+
+  _renderSearchInput(){
+    if (this.props.location.id>=0) return null;
+    return (
+      <View style={{margin:10}}>
+        <MaterialCommunityIcons.Button   
+          name="magnify"
+          size={30}
+        >
+          <TextInput
+            underlineColorAndroid='transparent'
+            ref='searchText'
+            style={{ 
+              backgroundColor:'white', 
+              flex:1,
+              margin:0, 
+              padding:3,
+            }}
+            onEndEditing =    {(event) => this.onSearchInput( event.nativeEvent.text) } 
+            onSubmitEditing = {(event) => this.onSearchInput( event.nativeEvent.text) } 
+          />
+        </MaterialCommunityIcons.Button>
+      </View>
+    );
+  }
+
+  // onRegionChange(region) {
+
+  // }
+
+  onRegionChangeComplete(region) {
+    this.setState({ 
+      lat: region.latitude,
+      lon: region.longitude,
+      latitudeDelta: region.latitudeDelta,
+      longitudeDelta: region.longitudeDelta,
+    }); 
+
+    if (this.props.location.id < 0 && region.latitude && region.longitude) {
+      // Get place name
+      fetch('https://maps.googleapis.com/maps/api/geocode/json?'
+          +'latlng=' + region.latitude + ',' + region.longitude
+          +'&location_type=APPROXIMATE&result_type=political'
+          +'&language='+strings.getLanguage()
+          +'&key='+GOOGLE_APIKEY)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        if(responseJson.status=="OK") {
+          var storableLocation = {city:'',state:'',country:''};
+          for (var ac = 0; ac < responseJson.results[0].address_components.length; ac++) {
+            var component = responseJson.results[0].address_components[ac];
+
+            switch(component.types[0]) {
+                case 'locality':
+                    storableLocation.city = component.long_name;
+                    break;
+                case 'administrative_area_level_1':
+                    storableLocation.state = component.short_name;
+                    break;
+                case 'country':
+                    storableLocation.country = component.long_name;
+                    break;
+            }
+          }
+          // console.log('geo code', responseJson.results[0]);
+          this.setState({ 
+            name: (storableLocation.city
+                  ? storableLocation.city : storableLocation.state)
+                  + ', '+ storableLocation.country,
+          });
+        }
+        else {
+          // console.log('api geocode ERROR:');
+          // console.log(responseJson);
+        }
+      })
+      .catch((error) => { 
+        // console.log(error);  
+      }); 
+
+      // Get timezone
+      var summerDate = new Date();
+      summerDate.setFullYear(summerDate.getFullYear()-1);
+      summerDate.setMonth(6);
+      summerDate = summerDate.getTime()/1000;
+      fetch('https://maps.googleapis.com/maps/api/timezone/json?location='+region.latitude+','+region.longitude+'&timestamp='+summerDate+'&key='+GOOGLE_APIKEY)
+      .then((response) => response.json())
+      .then((responseJson) => {
+        if(responseJson.status=="OK") {
+          this.setState({
+            gmt: responseJson.rawOffset,
+            dst: responseJson.dstOffset,
+          });
+        }
+      })
+      .catch((error) => {});
+    }
+  }
+
+  _renderMap(){
+    return(
+      <View style={styles.map_container}  >
+
+        <MapView style={styles.map} 
+          ref="lamap"
+          mapType="hybrid"
+          initialRegion={{
+            latitude: this.props.location.lat,
+            longitude: this.props.location.lon,
+            latitudeDelta: 0.002,
+            longitudeDelta: 0.002,
+          }} 
+          // region={this.region}
+          // onRegionChange={this.onRegionChange.bind(this)}
+          onRegionChangeComplete = { (region) => this.onRegionChangeComplete(region) } 
+ 
+        />
+        <View style={styles.target_h}  ></View>
+        <View style={styles.target_v}  ></View>
+      </View>   
+    );
+  }
+
+  componentDidMount() {
+    if (this.props.location.id < 0 ) {
+      this.refs.searchText.focus(); 
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.geocodeAddressPromise){
+      this.geocodeAddressPromise.cancel();
+    }
+  }
+
+  render() {
+    return (
+       <Modal
+        // onRequestClose={onCancel}
+   
+        visible={this.props.visible}
+      >
+
+      <View style={styles.editLocation} >
+
+        <ScrollView style={{marginTop:50}}>
+
+          {this._renderSearchInput()}
+
+          <TextInput
+            underlineColorAndroid = 'transparent'
+            defaultValue = {this.props.location.name}
+            value = {this.state.name}
+            onChangeText = {(text) => this.setState({name:text})}
+            multiline = {true}
+            numberOfLines = {2}
+            style = {{ 
+              backgroundColor:'white', 
+              fontSize:22,
+              margin:10, 
+              padding:5,
+            }}
+          />
+
+          {this._renderMap()}
+
+
+        </ScrollView>
+
+        <View style = {{position:'absolute', top:0, left:0, right:0, margin:0, flexDirection:'row', flex:1,}} >
+     
+
+            <View style={{flexDirection:'row', flex:1, justifyContent: 'flex-end'}} >
+              
+              <Text>dfgdfgdfgdfg</Text>
+
+            </View>
+        </View> 
+
+      </View>
+      </Modal>
+    )
+  }
+}
+
 
 //-----------------------------------------------------------------------------------------
 class ImagePicker extends Component {
@@ -189,6 +486,11 @@ class CollectionForm extends Component {
 
       name: this.props.data.name,
       protocole: this.props.data.protocole,
+      place:{
+        long: this.props.data.place.long,
+        lat: this.props.data.place.lat,
+      },
+      placeModalVisible: false,
 
       help:{
         visible:false,
@@ -196,11 +498,6 @@ class CollectionForm extends Component {
       },
 
       collection:{
-
-        place:{
-          long:'',
-          lat:'',
-        },
 
         flower:{
           photo:'',
@@ -311,17 +608,25 @@ class CollectionForm extends Component {
     this.toValue = 1;
   }
 
-
   componentWillMount(){
     // Load flower, sessions ...
   }
 
   componentDidMount(){
+    this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      this.back();
+      return true;
+    });
+  
     if(!this.state.name){
       this.refs['name'].focus();
     }
   }
 
+  componentWillUnmount(){
+     this.backHandler.remove();
+    BackHandler.removeEventListener('hardwareBackPress', this.backButton);
+  }
 
   upd_protocole(type){
     this.setState({collection:{
@@ -370,30 +675,40 @@ class CollectionForm extends Component {
 
       this.gpsSearching = true;
       this.gpsAnimation();
-      this.setState({collection:{
-        ...this.state.collection,
+      // this.setState({collection:{
+      //   ...this.state.collection,
+      //   place:{
+      //     lat:'',
+      //     long:'', 
+      //   },
+      // }});
+      this.setState({
         place:{
           lat:'',
           long:'', 
         },
-      }});
+      });
 
+      // TODO: cancel if close form.
       this.watchID = navigator.geolocation.watchPosition(
         (position) => {
           console.log(position);
           navigator.geolocation.clearWatch(this.watchID);
           this.gpsSearching = false;
 
-          this.setState({collection:{
-            ...this.state.collection,
-            place:{
-              lat:position.coords.latitude,
-              long:position.coords.longitude, 
-            },
-          }}, function(){
-            console.log(this.state.collection);
+          // this.setState({collection:{
+          //   ...this.state.collection,
+          //   place:{
+          //     lat:position.coords.latitude,
+          //     long:position.coords.longitude, 
+          //   },
+          // }}, function(){
+          //   console.log(this.state.collection);
+          // });
+          this.store('place',{
+            lat:position.coords.latitude,
+            long:position.coords.longitude, 
           });
-
         },
         (error) => {
           this.gpsSearching = false;
@@ -460,6 +775,13 @@ class CollectionForm extends Component {
     });
   }
 
+  showPlaceModal(){
+    this.setState({placeModalVisible:true});
+  }
+  hidePlaceModal(){
+    this.setState({placeModalVisible:false});
+  }
+
   back(){
     this.props.valueChanged('editing',false);
   }
@@ -491,6 +813,22 @@ class CollectionForm extends Component {
             onCancel={() => this.hideHelpModal()} 
           />
 
+          <ModalPlace
+            visible = {this.state.placeModalVisible}
+            location = {this.state.lat && this.state.lon
+              ? {
+                  id:this.state.editing, 
+                  name:this.state.name,  
+                  lat:this.state.lat, lon:this.state.lon 
+                }
+              : {id:-1, name:'', lat:0, lon:0} 
+            }
+            locationChanged = {this._updateLocation}
+            onCancel={() => this.hidePlaceModal()} 
+
+            // closeMe = {this._closeModal}
+            // connected = {this.state.connected}
+          />
 
           <View style={{flex:1}}>
             <View style={styles.collection_grp}>
@@ -541,7 +879,7 @@ class CollectionForm extends Component {
             <ScrollView>
 
               <TouchableOpacity 
-                style={{flexDirection:'row', flex:1, justifyContent:'center'}}
+                style={{flexDirection:'row', flex:1, justifyContent:'center', marginTop:20,}}
                 onPress = {() => this.help('protocole')} 
                 >
                 <Text style={{
@@ -559,9 +897,9 @@ class CollectionForm extends Component {
               <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, padding:10}]}>
                       
                 <TouchableOpacity 
-                  style={{ marginRight:5, 
-                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                    borderColor:this.state.protocole=='flash'?greenFlash:'grey',
+                  style={{ marginRight:5, padding:2,
+                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
+                    borderWidth:1, borderColor:this.state.protocole=='flash'?greenFlash:'grey',
                   }}
                   onPress = {() => this.store('protocole','flash')} 
                   >
@@ -580,9 +918,9 @@ class CollectionForm extends Component {
                 </TouchableOpacity>
 
                 <TouchableOpacity 
-                  style={{ marginLeft:5,
-                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                    borderColor:this.state.protocole=='long'?greenFlash:'grey',
+                  style={{ marginLeft:5, padding:2,
+                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
+                    borderWidth:1, borderColor:this.state.protocole=='long'?greenFlash:'grey',
                     }}
                   onPress = {() => this.store('protocole','long')} 
                   >
@@ -594,7 +932,7 @@ class CollectionForm extends Component {
                     }}
                     size={25}
                   />
-                  <Text style={{ fontSize:14,
+                  <Text style={{ fontSize:16,
                     color:this.state.protocole=='long'?greenFlash:'grey',
                     }}>
                   Long</Text>
@@ -611,36 +949,97 @@ class CollectionForm extends Component {
                 <Text style={{
                   fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
                   padding:10,color:greenFlash, backgroundColor:'transparent'}}>
-                Station Florale</Text>
-                <MaterialCommunityIcons
-                  name="help-circle-outline" 
-                  style={[{color:greenFlash, paddingTop:10, backgroundColor:'transparent'} ]}
-                  size={15}
-                  backgroundColor = 'transparent'
-                />
+                LIEU</Text>
               </TouchableOpacity>
 
+              <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, justifyContent: 'space-between'}]}>
+                <Text style={{fontSize:16}}> </Text>
+                <Text style={{fontSize:16,
+                  color:'grey'
+                  }}
+                  >
+                  { typeof this.state.place.lat == 'number'
+                    ? ( ' '
+                      + this.convertDMS(this.state.place.lat) 
+                      + '' + (this.state.place.lat>0 ? "E" : "W")
+                      // + ' (' + this.state.place.lat.toFixed(6) +')'
+                      )
+                    : this.state.place.lat
+                  }
+                </Text>
+                <Text style={{fontSize:16}}> / </Text>
+
+                <Text style={{ fontSize:16,
+                  color:'grey',
+                  }}
+                  >
+                  {
+                    typeof this.state.place.long == 'number'
+                    ? ( ' '
+                      + this.convertDMS(this.state.place.long, 'long') 
+                      + '' + (this.state.place.long>0 ? "N" : "S")
+                      // + ' (' + this.state.place.long.toFixed(6) +')'
+                      )
+                    : this.state.place.long
+                  }
+                </Text>
+                <Text style={{fontSize:16}}> </Text>
+              </View>
+
                                   <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, padding:10}]}>
-                                            
+
                                       <TouchableOpacity 
                                         style={{ marginRight:5, 
                                           flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
                                           borderColor:this.state.protocole=='flash'?greenFlash:'grey',
                                         }}
-                                        onPress = {() => this.store('protocole','flash')} 
+                                         
+
+                                        onPress ={ () => this.geoLoc() }
                                         >
-                                        <MaterialCommunityIcons
-                                          name="flash" 
-                                          style={{
-                                            backgroundColor:'transparent',
-                                            color:this.state.protocole=='flash'?greenFlash:'grey',
+                                        <View style={{
+                                          justifyContent: 'center',
+                                          alignItems: 'center',
+                                          padding:0,
                                           }}
-                                          size={25}
-                                        />
-                                        <Text style={{fontSize:16,
-                                          color:this.state.protocole=='flash'?greenFlash:'grey'
+                                          >
+                                          <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
+                                            <MaterialCommunityIcons
+                                              name="crosshairs-gps" 
+                                              size={20}
+                                              height={40}
+                                              width={60}
+                                              // style={styles.iconButton}
+                                              // borderRadius={0}
+                                              // padding={10}
+                                              // paddingLeft={0}
+                                              margin={0}
+                                              // marginLeft={2}
+                                              color={greenFlash}
+                                              backgroundColor = 'transparent'
+                                            />
+                                          </Animated.View>
+                                          <MaterialCommunityIcons
+                                            name="crosshairs"
+                                            size={0}
+                                            height={40}
+                                            width={60}
+                                            // style={styles.iconButton}
+                                            // borderRadius={0}
+                                            // padding={10}
+                                            // paddingLeft={0}
+                                            margin={0}
+                                            // marginLeft={2}
+                                            color={greenFlash}
+                                            backgroundColor = 'transparent'
+                                            
+                                          />
+                                        </View>
+                                        <Text style={{fontSize:16, marginLeft:15,
+                                          color: this.gpsSearching  ? greenFlash:'grey'
                                           }}>
-                                        Flash</Text>
+                                        Localiser</Text>
+
                                       </TouchableOpacity>
 
                                       <TouchableOpacity 
@@ -648,23 +1047,34 @@ class CollectionForm extends Component {
                                           flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
                                           borderColor:this.state.protocole=='long'?greenFlash:'grey',
                                           }}
-                                        onPress = {() => this.store('protocole','long')} 
+                                        onPress = {() => this.editLocation()} 
                                         >
                                         <MaterialCommunityIcons
-                                          name="timer-sand" 
+                                          name="magnify"  // search-web  magnify  map-search
                                           style={{
                                             backgroundColor:'transparent',
                                             color:this.state.protocole=='long'?greenFlash:'grey',
                                           }}
                                           size={25}
                                         />
-                                        <Text style={{ fontSize:14,
+                                        <Text style={{ fontSize:16,
                                           color:this.state.protocole=='long'?greenFlash:'grey',
                                           }}>
-                                        Long</Text>
+                                        Chercher</Text>
                                       </TouchableOpacity>
 
                                   </View>
+
+              <View 
+                style={{flexDirection:'row', flex:1, justifyContent:'center'}}
+                // onPress = {() => this.help('protocole')} 
+                >
+                <Text style={{
+                  fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
+                  padding:10,color:greenFlash, backgroundColor:'transparent'}}>
+                Station Florale</Text>
+              </View>
+
 
             <View style={styles.collection_grp}>
               <Text style={styles.coll_title}>
@@ -1052,24 +1462,24 @@ class CollectionForm extends Component {
 
                   <View style={{paddingTop:5}}>
                     <Text>Latitude: 
-                      { typeof this.state.collection.place.lat == 'number'
+                      { typeof this.state.place.lat == 'number'
                         ? ( ' '
-                          + this.convertDMS(this.state.collection.place.lat) 
-                          + '' + (this.state.collection.place.lat>0 ? "E" : "W")
-                          // + ' (' + this.state.collection.place.lat.toFixed(6) +')'
+                          + this.convertDMS(this.state.place.lat) 
+                          + '' + (this.state.place.lat>0 ? "E" : "W")
+                          // + ' (' + this.state.place.lat.toFixed(6) +')'
                           )
-                        : this.state.collection.place.lat
+                        : this.state.place.lat
                       }
                     </Text>
                     <Text>Longitude: 
                       {
-                        typeof this.state.collection.place.long == 'number'
+                        typeof this.state.place.long == 'number'
                         ? ( ' '
-                          + this.convertDMS(this.state.collection.place.long, 'long') 
-                          + '' + (this.state.collection.place.long>0 ? "N" : "S")
-                          // + ' (' + this.state.collection.place.long.toFixed(6) +')'
+                          + this.convertDMS(this.state.place.long, 'long') 
+                          + '' + (this.state.place.long>0 ? "N" : "S")
+                          // + ' (' + this.state.place.long.toFixed(6) +')'
                           )
-                        : this.state.collection.place.long
+                        : this.state.place.long
                       }
                     </Text>
                   </View>
@@ -1144,7 +1554,7 @@ console.log('LIST MOUNT');
     coll.push({
         name:'',
         protocole:'',
-        coord:{lat:0, lon:0},
+        place:{lat:'', long:''},
         date:now,
     });
 
@@ -1236,6 +1646,8 @@ console.log('LIST MOUNT');
 
                   <Text style={styles.listItemText}>
                   {value.date}</Text>
+
+               
 
                 </TouchableOpacity>
               )}
