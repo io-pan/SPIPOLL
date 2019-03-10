@@ -286,36 +286,33 @@ export default class App extends Component<Props> {
   componentWillMount() {
     StatusBar.setHidden(true);
 
-    // Get app available folders and set default.
+    // Get app available folders and set defaults.
     NativeModules.ioPan.getExternalStorages()
     .then((dirs) => {
       this.appDirs = JSON.parse(dirs);
 
-      // this.setState({storage:this.appDirs[0].path}, 
-      // function(){
-        for(i=0; i<this.appDirs.length; i++){
-          const curDir = this.appDirs[i].path;
-          RNFetchBlob.fs.isDir(curDir+'/collections')
-          .then((isDir) => {
-            if(!isDir){
-              RNFetchBlob.fs.mkdir(curDir+'/collections')
-              .then(() => { console.log('collection folder created') })
-              .catch((err) => { console.log('error collection folder created '+curDir, err) })
-            }
-          })
+      for(i=0; i<this.appDirs.length; i++){
+        const curDir = this.appDirs[i].path;
+        RNFetchBlob.fs.isDir(curDir+'/collections')
+        .then((isDir) => {
+          if(!isDir){
+            RNFetchBlob.fs.mkdir(curDir+'/collections')
+            .then(() => { console.log('collection folder created') })
+            .catch((err) => { console.log('error collection folder created '+curDir, err) })
+          }
+        })
 
-          // TODO: do this ALSO on collection / session create.
-          // Default thumb folder for freely taken videos.
-          RNFetchBlob.fs.isDir(curDir+'/thumb')
-          .then((isDir) => {
-            if(!isDir){
-              RNFetchBlob.fs.mkdir(curDir+'/thumb')
-              .then(() => { console.log('thumb folder created ') })
-              .catch((err) => { console.log('error thumb folder created '+curDir, err) })
-            }
-          })
-        }
-      // });
+        // TODO: do this on thumb Create, based on video path.
+        RNFetchBlob.fs.isDir(curDir+'/thumb')
+        .then((isDir) => {
+          if(!isDir){
+            RNFetchBlob.fs.mkdir(curDir+'/thumb')
+            .then(() => { console.log('thumb folder created ') })
+            .catch((err) => { console.log('error thumb folder created '+curDir, err) })
+          }
+        })
+      }
+
     })
     .catch((err) => { console.log('getExternalStorages', err) })
 
@@ -360,6 +357,17 @@ export default class App extends Component<Props> {
     });
   }
 
+  // TODO: lock SD or phone storage for a given collection / session
+  createCollectionFolders(collectionName) {
+    for(i=0; i<this.appDirs.length; i++){
+      const curDir = this.appDirs[i].path;
+      RNFetchBlob.fs.mkdir(curDir+'/collections/'+collectionName)
+      .then(() => { console.log('coll folder created ' + curDir+'/collections/'+collectionName ) })
+      .catch((err) => { console.log('error coll folder creation ' + curDir+'/collections/'+collectionName, err) })
+    }
+  }
+
+
   testBattery(){
     NativeModules.ioPan.getBatteryInfo()
     .then((battery) => {
@@ -382,7 +390,7 @@ export default class App extends Component<Props> {
     //   }
     // );
 
-    setInterval(() => {this.testBattery()}, 6000);
+    setInterval(() => {this.testBattery()}, 60000);
     KeepScreenOn.setKeepScreenOn(true);
 
     this.requestForPermission();
@@ -644,11 +652,16 @@ export default class App extends Component<Props> {
             var picture = await this.camera.takePictureAsync(options);
             console.log(picture);
 
-            // TODO: when we are on motion runnnig mode, set name based on collection name 
-            const filename = (this.state.cam=='free' ? this.formatedDate() : this.state.cam) + '.jpg';
+            // TODO: when we are on motion runnnig mode, 
+              // .. set name based on collection and SESSION name 
+            const filename = 
+              this.state.cam.indexOf('collection-') >= 0
+              ? 'collections/'+ this.state.cam.split('--')[1] + '/' + this.state.cam.split('--')[2] + '.jpg'
+              : '/'+ this.formatedDate() + '.jpg';            
+
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
-              this.state.storage + '/' + filename
+              this.state.storage  + '/' + filename
             ).then(() => {
               this.setState({ isTakingPicture: false });
 
@@ -671,13 +684,18 @@ export default class App extends Component<Props> {
                this.pictureRequested = false;
               }
 
-              // Send photo back to from.
-              if(this.state.cam=='collection-flower'){
+              // Send photo back to form.
+              if (this.state.cam.indexOf('collection-') >= 0){
+                const collId =  this.state.cam.split('--')[1];
+                const field =  this.state.cam.split('--')[2];
                 this.setState({
                   cam:'collection-form',
                 }, function(){
-                  this.refs['collectionList'].refs['collection-flower'].setSource(
-                      {uri:'file:///' + this.state.storage + '/' + filename});
+
+                  this.refs['collectionList'].setSource(
+                      collId,
+                      field,
+                      {uri:'file://' + this.state.storage + '/' + filename});
                 })
               }
               else if(this.state.cam=='collection-environment'){
@@ -1223,8 +1241,7 @@ export default class App extends Component<Props> {
           onPress = {() => this.takePicture()}
         /></View>
 
-        { this.state.cam != 'collection-flower'
-        && this.state.cam != 'collection-environment'
+        { this.state.cam.indexOf('collection-') < 0
           ?
           <React.Fragment>
           <View style={styles.iconButton}>
@@ -1851,7 +1868,7 @@ export default class App extends Component<Props> {
   }
 
   render() {
-    console.log('render');
+    console.log(this.state.cam);
     return (
       <View style={styles.container}>
 
@@ -1959,12 +1976,16 @@ export default class App extends Component<Props> {
           </View>
         )}
 
-
-        { this.state.cam=="collection-form"
-        ? <CollectionList
-            ref="collectionList"
-         />
-        : null
+        { this.state.cam.indexOf('collection-') >= 0
+          ? <View style={this.state.cam!='collection-form'? {height:0}:{}}>
+            <CollectionList
+              ref="collectionList"
+              filePath={this.state.storage}
+              pickPhoto = {(view) => this.pickPhoto(view)}
+              createCollectionFolders =  {(collectionName) => this.createCollectionFolders(collectionName)}
+           />
+           </View>
+          : null
         }
 
 

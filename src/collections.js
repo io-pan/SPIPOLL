@@ -17,9 +17,9 @@ import {
 } from 'react-native'
 
 import {
-  Button,
+
   CheckBox,
-  ListItem,
+
 } from 'react-native-elements';
 
 import ImageView from './imageView';
@@ -34,7 +34,7 @@ const green = "#d2e284";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
-const formatedDate = function(type){
+const formatedDate = function(){
     now = new Date();
     year = "" + now.getFullYear();
     month = "" + (now.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
@@ -43,12 +43,7 @@ const formatedDate = function(type){
     minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
     second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
 
-    if(type=='filename'){
-      return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;  
-    }
-    else{
-      return year + "." + month + "." + day + " " + hour + ":" + minute + ":" + second; 
-    }
+    return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second
   };
 
 //-----------------------------------------------------------------------------------------
@@ -77,7 +72,7 @@ class ImagePicker extends Component {
       ? source.uri.length
       : source.uri.indexOf('?t=')
       ) + '?t='+ new Date().getTime();
-    console.log(source);
+    console.log('ImagePicker setSource', source);
     this.setState({source:source});
   }
 
@@ -90,6 +85,7 @@ class ImagePicker extends Component {
   }
 
   render(){
+    console.log(this.state.source)
     if (this.state.source){
       return(
         <View style={[this.props.style, {
@@ -101,7 +97,7 @@ class ImagePicker extends Component {
             // title="0000000000000000"
             visible={this.state.visibleImageView}
             onCancel={this.hideImageView}
-            source={this.state.source }
+            source={this.state.source}
           />
 
           <View style={styles.iconButton2}>
@@ -481,6 +477,9 @@ class CollectionForm extends Component {
   }
 
   render () {
+    console.log(  this.props.data);
+    console.log( 'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg');
+
     return (
       <View>
 
@@ -541,53 +540,131 @@ class CollectionForm extends Component {
 
             <ScrollView>
 
-            <TouchableOpacity 
-              style={{flexDirection:'row', flex:1, justifyContent:'center'}}
-              onPress = {() => this.help('protocole')} 
-              >
-              <Text style={{
-                fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
-                padding:10,color:greenFlash, backgroundColor:'transparent'}}>
-              PROTOCOLE</Text>
-              <MaterialCommunityIcons
-                name="help-circle-outline" 
-                style={[{color:greenFlash, paddingTop:10, width:50, backgroundColor:'transparent'} ]}
-                size={15}
-                backgroundColor = 'transparent'
-              />
-            </TouchableOpacity>
-            
+              <TouchableOpacity 
+                style={{flexDirection:'row', flex:1, justifyContent:'center'}}
+                onPress = {() => this.help('protocole')} 
+                >
+                <Text style={{
+                  fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
+                  padding:10,color:greenFlash, backgroundColor:'transparent'}}>
+                PROTOCOLE</Text>
+                <MaterialCommunityIcons
+                  name="help-circle-outline" 
+                  style={[{color:greenFlash, paddingTop:10, backgroundColor:'transparent'} ]}
+                  size={15}
+                  backgroundColor = 'transparent'
+                />
+              </TouchableOpacity>
+  
+              <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, padding:10}]}>
+                      
+                <TouchableOpacity 
+                  style={{ marginRight:5, 
+                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                    borderColor:this.state.protocole=='flash'?greenFlash:'grey',
+                  }}
+                  onPress = {() => this.store('protocole','flash')} 
+                  >
+                  <MaterialCommunityIcons
+                    name="flash" 
+                    style={{
+                      backgroundColor:'transparent',
+                      color:this.state.protocole=='flash'?greenFlash:'grey',
+                    }}
+                    size={25}
+                  />
+                  <Text style={{fontSize:16,
+                    color:this.state.protocole=='flash'?greenFlash:'grey'
+                    }}>
+                  Flash</Text>
+                </TouchableOpacity>
 
+                <TouchableOpacity 
+                  style={{ marginLeft:5,
+                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                    borderColor:this.state.protocole=='long'?greenFlash:'grey',
+                    }}
+                  onPress = {() => this.store('protocole','long')} 
+                  >
+                  <MaterialCommunityIcons
+                    name="timer-sand" 
+                    style={{
+                      backgroundColor:'transparent',
+                      color:this.state.protocole=='long'?greenFlash:'grey',
+                    }}
+                    size={25}
+                  />
+                  <Text style={{ fontSize:14,
+                    color:this.state.protocole=='long'?greenFlash:'grey',
+                    }}>
+                  Long</Text>
+                </TouchableOpacity>
 
-            <View style={styles.collection_grp}>
-          
-              <View style={styles.collection_subgrp}>
-              <CheckBox
-                containerStyle={styles.collection_input_container}
-                textStyle={styles.collection_input_text}
-                checkedColor = {greenFlash}
-                uncheckedColor = {greenDark}
-                title={'Flash'}
-                checkedIcon='dot-circle-o'
-                uncheckedIcon='circle-o'
-                checked={this.state.collection.protocole == 'Flash'}
-                onPress = {() => this.upd_protocole('Flash')}
-              />
-
-              <CheckBox
-                containerStyle={styles.collection_input_container}
-                textStyle={styles.collection_input_text}
-                checkedColor = {greenFlash}
-                uncheckedColor = {greenDark}
-                title={'Long'}
-                checkedIcon='dot-circle-o'
-                uncheckedIcon='circle-o'
-                checked={this.state.collection.protocole != 'Flash'}
-                onPress = {() => this.upd_protocole('Long')}
-              />
-       
-              </View>
             </View>
+
+
+
+              <TouchableOpacity 
+                style={{flexDirection:'row', flex:1, justifyContent:'center'}}
+                onPress = {() => this.help('protocole')} 
+                >
+                <Text style={{
+                  fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
+                  padding:10,color:greenFlash, backgroundColor:'transparent'}}>
+                Station Florale</Text>
+                <MaterialCommunityIcons
+                  name="help-circle-outline" 
+                  style={[{color:greenFlash, paddingTop:10, backgroundColor:'transparent'} ]}
+                  size={15}
+                  backgroundColor = 'transparent'
+                />
+              </TouchableOpacity>
+
+                                  <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, padding:10}]}>
+                                            
+                                      <TouchableOpacity 
+                                        style={{ marginRight:5, 
+                                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                                          borderColor:this.state.protocole=='flash'?greenFlash:'grey',
+                                        }}
+                                        onPress = {() => this.store('protocole','flash')} 
+                                        >
+                                        <MaterialCommunityIcons
+                                          name="flash" 
+                                          style={{
+                                            backgroundColor:'transparent',
+                                            color:this.state.protocole=='flash'?greenFlash:'grey',
+                                          }}
+                                          size={25}
+                                        />
+                                        <Text style={{fontSize:16,
+                                          color:this.state.protocole=='flash'?greenFlash:'grey'
+                                          }}>
+                                        Flash</Text>
+                                      </TouchableOpacity>
+
+                                      <TouchableOpacity 
+                                        style={{ marginLeft:5,
+                                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                                          borderColor:this.state.protocole=='long'?greenFlash:'grey',
+                                          }}
+                                        onPress = {() => this.store('protocole','long')} 
+                                        >
+                                        <MaterialCommunityIcons
+                                          name="timer-sand" 
+                                          style={{
+                                            backgroundColor:'transparent',
+                                            color:this.state.protocole=='long'?greenFlash:'grey',
+                                          }}
+                                          size={25}
+                                        />
+                                        <Text style={{ fontSize:14,
+                                          color:this.state.protocole=='long'?greenFlash:'grey',
+                                          }}>
+                                        Long</Text>
+                                      </TouchableOpacity>
+
+                                  </View>
 
             <View style={styles.collection_grp}>
               <Text style={styles.coll_title}>
@@ -605,12 +682,10 @@ class CollectionForm extends Component {
                     // width:150,
                     // height:150,
                   }}
-                  onPress = {() => this.props.pickPhoto('collection-flower')}
+                  onPress = {() => this.props.pickPhoto('flower')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  source={{uri:'file://' +this.props.filePath + '/collection-flower.jpg'}}
-                  // source={{uri:'file://'+'/storage/6465-6631/DCIM/Camera/PICT0357.JPG'}}
-
+                  source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg'}}
                 />
                 </View>
 
@@ -690,7 +765,7 @@ class CollectionForm extends Component {
                     // width:150,
                     // height:150,
                   }}
-                  onPress = {() => this.props.pickPhoto('collection-environment')}
+                  onPress = {() => this.props.pickPhoto('environment')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
                   source={{uri:'file://' +this.props.filePath + '/collection-environment.jpg'}}
@@ -1030,6 +1105,7 @@ export default class CollectionList extends Component {
 
   componentWillMount(){
  
+console.log('LIST MOUNT');
     AsyncStorage.getItem('collections', (err, collections) => {
       if (err) {
         Alert.alert('ERROR getting collections '+ JSON.stringify(err));
@@ -1043,14 +1119,33 @@ export default class CollectionList extends Component {
     });
   }
 
+
+  componentWillUnmount(){
+    console.log('LIST UN-MOUNT');
+  }
+
+  setSource(collection, field, source){
+    // this.setState({
+    //   editing:collection,
+    // }, function(){
+
+    //   console.log(field,source)
+
+      this.refs['collection-form'].refs['collection-'+field].setSource(source);
+    // });
+  }
+
   newCollection(){
+    
+    const now = formatedDate();
+    this.props.createCollectionFolders(now);
+
     let coll = this.state.collections;
     coll.push({
         name:'',
         protocole:'',
         coord:{lat:0, lon:0},
-
-        date:formatedDate(),
+        date:now,
     });
 
     this.setState({ 
@@ -1102,8 +1197,26 @@ export default class CollectionList extends Component {
                 style={styles.listItem}
                 onPress = {() => this.selectCollection(index)}
                 >
-                <Text style={styles.listItemText}>
+
+                <MaterialCommunityIcons
+                  name={ value.protocole == 'flash' 
+                  ? 'flash-outline' 
+                  : value.protocole == 'long' 
+                    ? 'timer-sand'
+                    : 'help-circle-outline'
+                  }
+                  style={{
+                    backgroundColor:'transparent',
+                    color:'grey',
+                    width:20,
+                    marginRight:5,
+                  }}
+                  size={20}
+                />
+
+                <Text style={[styles.listItemText, {fontWeight:'bold'}]}>
                 {value.name}</Text>
+
                 <Text style={styles.listItemText}>
                 {value.date}</Text>
 
@@ -1114,8 +1227,12 @@ export default class CollectionList extends Component {
 
           : <React.Fragment>
               <CollectionForm 
+                ref="collection-form"
                 data={this.state.collections[this.state.editing]}
                 valueChanged={(key,val) => this.collectionChanged(key,val)}
+
+                filePath={this.props.filePath}
+                pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.state.collections[this.state.editing].date+'--'+field)}
               />
             </React.Fragment>
 
@@ -1155,9 +1272,7 @@ const styles = StyleSheet.create({
     padding:10,
   },
   listItem:{
-    padding:20,
-    paddingTop:10,
-    paddingBottom:10,
+    padding:10,
     flexDirection:'row',
     borderBottomWidth:1,
     borderBottomColor:greenFlash,
@@ -1165,6 +1280,7 @@ const styles = StyleSheet.create({
   listItemText:{
     color:'grey',
     fontSize:14,
+    paddingRight:10,
   },
   listItemNew:{
     backgroundColor:greenFlash,
