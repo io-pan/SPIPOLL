@@ -15,7 +15,7 @@ import {
   AsyncStorage,
   Modal,
   BackHandler,
-
+  NetInfo,
 } from 'react-native'
 
 import {
@@ -29,6 +29,7 @@ import ModalFilterPicker from './filterSelect';
 import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView from 'react-native-maps';
+import { GOOGLE_APIKEY } from './googleAPIKEY.js';
 
 // Spipoll
 import { flowerList } from './flowers.js';
@@ -37,35 +38,77 @@ const green = "#d2e284";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
-const formatedDate = function(){
-    now = new Date();
-    year = "" + now.getFullYear();
-    month = "" + (now.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
-    day = "" + now.getDate(); if (day.length == 1) { day = "0" + day; }
-    hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
-    minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
-    second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
+const date2folderName = function(){
+  now = new Date();
+  year = "" + now.getFullYear();
+  month = "" + (now.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
+  day = "" + now.getDate(); if (day.length == 1) { day = "0" + day; }
+  hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
+  minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
+  second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
 
-    return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second
-  };
+  return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;
+};
 
+const formatFolderName = function(str, sec){
+  const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
+  str = str.split('_');
+  d = str[0].split('-');
+  t = str[1].split('-');
+  return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0] + ', ' + t[0]+':'+ t[1] + (sec?':'+t[2] : '');
+}
+
+const deg2dms = function(deg, latlon) {
+  var card = '';
+  if(latlon=='lat'){
+    card = deg > 0 ? "N" : "S"
+  }
+  else {
+    card = deg > 0 ? "E" : "W"
+  }
+
+  deg=Math.abs(deg);
+  var d = Math.floor(deg);
+  var minfloat = (deg-d)*60;
+  var m = Math.floor(minfloat);
+  var secfloat = (minfloat-m)*60;
+  var s = Math.round(secfloat);
+  // After rounding, the seconds might become 60. These two
+  // if-tests are not necessary if no rounding is done.
+  if (s==60) {
+    m++;
+    s=0;
+  }
+  if (m==60) {
+    d++;
+    m=0;
+  }
+
+
+  return "" + d + ":" + m + ":" + s + ":" + card;
+}
+const dmsFormat = function(dms){
+  dms = dms.split(':');
+  return "" + dms[0] + "°" +dms[1] + "'" + dms[2] + "''" + dms[3];
+}
 
 //-----------------------------------------------------------------------------------------
 class ModalPlace extends Component {
+//-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
     this.state = {
       visible: this.props.visible,
 
-      name: this.props.location.name,
-      lat: this.props.location.lat,
-      lon: this.props.location.lon,
+      name: this.props.location&&this.props.location.name?this.props.location.name:'',
+      lat: this.props.location&&this.props.location.lat?this.props.location.lat:46.77735,
+      lon: this.props.location&&this.props.location.lon?this.props.location.lon:2.97499,
 
       region:{
-        latitude: this.props.location.lat,
-        longitude: this.props.location.lon,
-        latitudeDelta: 0.002,
-        longitudeDelta: 0.002,
+        latitude: this.props.location&&this.props.location.lat?this.props.location.lat:46.77735,
+        longitude: this.props.location&&this.props.location.lon?this.props.location.lon:2.97499,
+        latitudeDelta: 8,
+        longitudeDelta: 8,
       },
     }    
 
@@ -88,12 +131,16 @@ class ModalPlace extends Component {
   }
 
   onSearchInput(text) {
+    console.log('onSearchInput', text);
     if (text) {
       fetch('https://maps.googleapis.com/maps/api/geocode/json'
         +'?address='+text
         +'&key='+GOOGLE_APIKEY)
       .then((response) => response.json())
       .then((responseJson) => {
+
+        // console.log(responseJson);
+
         if(responseJson.status=="OK") {
           // console.log('geocode', responseJson.results[0].geometry.location);
           this.setState({ 
@@ -109,98 +156,38 @@ class ModalPlace extends Component {
             });
           });
 
-          // Get timezone
-          var summerDate = new Date();
-          summerDate.setFullYear(summerDate.getFullYear()-1);
-          summerDate.setMonth(6);
-          summerDate = summerDate.getTime()/1000;
-          fetch('https://maps.googleapis.com/maps/api/timezone/json'
-            +'?location='
-            +responseJson.results[0].geometry.location.lat+','
-            +responseJson.results[0].geometry.location.lng
-            +'&timestamp='+summerDate
-            +'&key='+GOOGLE_APIKEY)
-          .then((response) => response.json())
-          .then((responseJson) => {
-            // console.log('timezone', responseJson);
-            if(responseJson.status=="OK") {
-              this.setState({ 
-                gmt: responseJson.rawOffset,
-                dst: responseJson.dstOffset,
-              });
-            }
-            else {
-              this.setState({ 
-                gmt: 0,
-                dst: 0,
-              });
-            }
-          })
-          .catch((error) => { }); 
+        
         }
         else {
           // console.log('api geocode ERROR:');
           // console.log(responseJson);
           this.setState({ 
-            name: strings.unknownplace,
-            lat: 0,
-            lon: 0,
-            gmt: 0,
-            dst: 0,
+            name: 'Lieu inconnu',
+            lat: 46.77735,
+            lon: 2.97499,
           })
         }
       })
       .catch((error) => { 
-        // console.log(error);
+        console.log(error);
       }); 
     }
   }
-
-
-
-  _renderSearchInput(){
-    if (this.props.location.id>=0) return null;
-    return (
-      <View style={{margin:10}}>
-        <MaterialCommunityIcons.Button   
-          name="magnify"
-          size={30}
-        >
-          <TextInput
-            underlineColorAndroid='transparent'
-            ref='searchText'
-            style={{ 
-              backgroundColor:'white', 
-              flex:1,
-              margin:0, 
-              padding:3,
-            }}
-            onEndEditing =    {(event) => this.onSearchInput( event.nativeEvent.text) } 
-            onSubmitEditing = {(event) => this.onSearchInput( event.nativeEvent.text) } 
-          />
-        </MaterialCommunityIcons.Button>
-      </View>
-    );
-  }
-
-  // onRegionChange(region) {
-
-  // }
 
   onRegionChangeComplete(region) {
     this.setState({ 
       lat: region.latitude,
       lon: region.longitude,
-      latitudeDelta: region.latitudeDelta,
-      longitudeDelta: region.longitudeDelta,
+      latitudeDelta: 0.002,
+      longitudeDelta: 0.002,
     }); 
 
-    if (this.props.location.id < 0 && region.latitude && region.longitude) {
+    if (region.latitude && region.longitude) {
       // Get place name
       fetch('https://maps.googleapis.com/maps/api/geocode/json?'
           +'latlng=' + region.latitude + ',' + region.longitude
           +'&location_type=APPROXIMATE&result_type=political'
-          +'&language='+strings.getLanguage()
+          +'&language=fr'
           +'&key='+GOOGLE_APIKEY)
       .then((response) => response.json())
       .then((responseJson) => {
@@ -237,106 +224,117 @@ class ModalPlace extends Component {
         // console.log(error);  
       }); 
 
-      // Get timezone
-      var summerDate = new Date();
-      summerDate.setFullYear(summerDate.getFullYear()-1);
-      summerDate.setMonth(6);
-      summerDate = summerDate.getTime()/1000;
-      fetch('https://maps.googleapis.com/maps/api/timezone/json?location='+region.latitude+','+region.longitude+'&timestamp='+summerDate+'&key='+GOOGLE_APIKEY)
-      .then((response) => response.json())
-      .then((responseJson) => {
-        if(responseJson.status=="OK") {
-          this.setState({
-            gmt: responseJson.rawOffset,
-            dst: responseJson.dstOffset,
-          });
-        }
-      })
-      .catch((error) => {});
     }
   }
 
-  _renderMap(){
-    return(
-      <View style={styles.map_container}  >
 
-        <MapView style={styles.map} 
-          ref="lamap"
-          mapType="hybrid"
-          initialRegion={{
-            latitude: this.props.location.lat,
-            longitude: this.props.location.lon,
-            latitudeDelta: 0.002,
-            longitudeDelta: 0.002,
-          }} 
-          // region={this.region}
-          // onRegionChange={this.onRegionChange.bind(this)}
-          onRegionChangeComplete = { (region) => this.onRegionChangeComplete(region) } 
- 
-        />
-        <View style={styles.target_h}  ></View>
-        <View style={styles.target_v}  ></View>
-      </View>   
-    );
-  }
+  // componentDidUpdate() {
+  // }
 
-  componentDidMount() {
-    if (this.props.location.id < 0 ) {
+  // componentWillUnmount() {
+  // }
+
+  textLayout(){
+    if(!this.props.lat||!this.props.lon){
       this.refs.searchText.focus(); 
     }
   }
 
-  componentWillUnmount() {
-    if (this.geocodeAddressPromise){
-      this.geocodeAddressPromise.cancel();
-    }
+  sendData = () => {
+    this.props.onCancel({lat:this.state.lat,long:this.state.lon, name:this.state.name});
   }
 
   render() {
     return (
-       <Modal
-        // onRequestClose={onCancel}
-   
+      <Modal
+        onRequestClose={this.sendData}
         visible={this.props.visible}
       >
+        <View style={{flex:1}} >
 
-      <View style={styles.editLocation} >
+          <Text style={{ textAlign:'center',
+            backgroundColor:greenFlash, paddingTop:30,paddingBottom:20, 
+            color:'white', fontWeight:'bold', fontSize:18,
+          }}>
+          {this.props.title}
+          </Text>
+          <MaterialCommunityIcons.Button   
+            name="magnify"
+            backgroundColor={greenFlash}
+            size={30}
+            style={{marginLeft:5, marginBottom:20}}
+          >
+            <TextInput
+              onLayout = {(event) => this.textLayout() } 
+              autofocus={true}
+              underlineColorAndroid='transparent'
+              ref='searchText'
+              style={{ 
+                backgroundColor:'white', 
+                flex:1,
+                margin:0, 
+                marginRight:20,
+                padding:3,
+              }}
+              onEndEditing =    {(event) => this.onSearchInput( event.nativeEvent.text) } 
+              onSubmitEditing = {(event) => this.onSearchInput( event.nativeEvent.text) } 
+            />
+          </MaterialCommunityIcons.Button>
 
-        <ScrollView style={{marginTop:50}}>
+          <View style={{
+              height:Dimensions.get('window').width,
+              width:Dimensions.get('window').width,
+            }}>
+    
+            <MapView
+              ref="lamap"
+              style={{
+                height:Dimensions.get('window').width,
+                width:Dimensions.get('window').width,
+              }}
+              mapType="hybrid"
+              initialRegion={{
+                latitude: this.props.lat?this.props.lat:46.77735,
+                longitude: this.props.lon?this.props.lon:2.97499,
+                latitudeDelta: this.props.lat&&this.props.lat?0.002:8,
+                longitudeDelta: this.props.lat&&this.props.lat?0.002:8,
+              }} 
 
-          {this._renderSearchInput()}
-
-          <TextInput
-            underlineColorAndroid = 'transparent'
-            defaultValue = {this.props.location.name}
-            value = {this.state.name}
-            onChangeText = {(text) => this.setState({name:text})}
-            multiline = {true}
-            numberOfLines = {2}
-            style = {{ 
-              backgroundColor:'white', 
-              fontSize:22,
-              margin:10, 
-              padding:5,
-            }}
-          />
-
-          {this._renderMap()}
+              onRegionChangeComplete = { (region) => this.onRegionChangeComplete(region) } 
 
 
-        </ScrollView>
+            />
+            <View style={styles.target_h}  ></View>
+            <View style={styles.target_v}  ></View>
+          </View>
 
-        <View style = {{position:'absolute', top:0, left:0, right:0, margin:0, flexDirection:'row', flex:1,}} >
-     
+          <View style={{flex:1, alignItems:'center'}}>
 
-            <View style={{flexDirection:'row', flex:1, justifyContent: 'flex-end'}} >
-              
-              <Text>dfgdfgdfgdfg</Text>
+            <Text style={{fontSize:16}}>{this.state.name}</Text>
 
-            </View>
-        </View> 
+            <View style={{flexDirection:'row', alignItems:'space-between'}}>
+             
+              <Text style={{fontSize:16, marginRight:5,
+                color:'grey'
+                }}
+                >
+                { dmsFormat(deg2dms(this.state.lat, 'lat')) + '   ' + dmsFormat(deg2dms(this.state.lon, 'lon')) }
+              </Text>
+              <Text style={{fontSize:16}}> </Text>
+            </View> 
 
-      </View>
+          </View> 
+
+          <View style={{flexDirection:'row'}}>
+            <TouchableOpacity
+              style={{flex:1,backgroundColor:greenFlash, borderRightWidth:1, borderRightColor:'white'}}
+              onPress={this.sendData}
+              ><Text style={{textAlign:'center', padding:10,fontWeight:'bold', fontSize:16, color:'white'}}>
+              OK</Text>
+            </TouchableOpacity>
+          
+          </View>
+        </View>
       </Modal>
     )
   }
@@ -483,12 +481,13 @@ class CollectionForm extends Component {
 
     this.state = {
       gpsOpacity:new Animated.Value(1),
-
+      connected:false,
       name: this.props.data.name,
       protocole: this.props.data.protocole,
       place:{
         long: this.props.data.place.long,
         lat: this.props.data.place.lat,
+        name: this.props.data.place.name,
       },
       placeModalVisible: false,
 
@@ -609,6 +608,15 @@ class CollectionForm extends Component {
   }
 
   componentWillMount(){
+    NetInfo.addEventListener(
+      'connectionChange',
+      this._handleConnectivityChange
+    );
+    NetInfo.isConnected.fetch().done(
+        (isConnected) => { 
+          this.setState({'connected':isConnected}); }
+    );
+  
     // Load flower, sessions ...
   }
 
@@ -624,9 +632,19 @@ class CollectionForm extends Component {
   }
 
   componentWillUnmount(){
-     this.backHandler.remove();
+    this.backHandler.remove();
     BackHandler.removeEventListener('hardwareBackPress', this.backButton);
+    NetInfo.removeEventListener(
+        'connectionChange',
+        this._handleConnectivityChange
+    );
   }
+
+  _handleConnectivityChange = (isConnected) => {
+    console.log(isConnected);
+    this.setState({'connected':isConnected});
+  }
+
 
   upd_protocole(type){
     this.setState({collection:{
@@ -705,9 +723,13 @@ class CollectionForm extends Component {
           // }}, function(){
           //   console.log(this.state.collection);
           // });
+
+// TODO: ioio get place name
+
           this.store('place',{
             lat:position.coords.latitude,
             long:position.coords.longitude, 
+            name:'',
           });
         },
         (error) => {
@@ -723,24 +745,6 @@ class CollectionForm extends Component {
     }
   }
 
-  convertDMS(deg) {
-    var d = Math.floor (deg);
-    var minfloat = (deg-d)*60;
-    var m = Math.floor(minfloat);
-    var secfloat = (minfloat-m)*60;
-    var s = Math.round(secfloat);
-    // After rounding, the seconds might become 60. These two
-    // if-tests are not necessary if no rounding is done.
-    if (s==60) {
-      m++;
-      s=0;
-    }
-    if (m==60) {
-      d++;
-      m=0;
-    }
-    return "" + d + "° " + m + "' " + s + "'' ";
-  }
 
   gpsAnimation() {
     if (!this.gpsSearching && this.toValue==1){
@@ -778,7 +782,9 @@ class CollectionForm extends Component {
   showPlaceModal(){
     this.setState({placeModalVisible:true});
   }
-  hidePlaceModal(){
+
+  hidePlaceModal(placeData){
+    this.store('place', placeData);
     this.setState({placeModalVisible:false});
   }
 
@@ -815,16 +821,12 @@ class CollectionForm extends Component {
 
           <ModalPlace
             visible = {this.state.placeModalVisible}
-            location = {this.state.lat && this.state.lon
-              ? {
-                  id:this.state.editing, 
-                  name:this.state.name,  
-                  lat:this.state.lat, lon:this.state.lon 
-                }
-              : {id:-1, name:'', lat:0, lon:0} 
-            }
+            title={this.state.name}
+            lat={this.state.place.lat}
+            lon={this.state.place.long}
+            
             locationChanged = {this._updateLocation}
-            onCancel={() => this.hidePlaceModal()} 
+            onCancel={(data) => this.hidePlaceModal(data)} 
 
             // closeMe = {this._closeModal}
             // connected = {this.state.connected}
@@ -952,38 +954,20 @@ class CollectionForm extends Component {
                 LIEU</Text>
               </TouchableOpacity>
 
-              <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, justifyContent: 'space-between'}]}>
-                <Text style={{fontSize:16}}> </Text>
+              <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, justifyContent: 'center'}]}>
+                <Text style={{fontSize:16,
+                  color:'grey'
+                  }}
+                  >{this.state.place.name}
+                </Text>
+              </View>
+              <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, justifyContent: 'center'}]}>
                 <Text style={{fontSize:16,
                   color:'grey'
                   }}
                   >
-                  { typeof this.state.place.lat == 'number'
-                    ? ( ' '
-                      + this.convertDMS(this.state.place.lat) 
-                      + '' + (this.state.place.lat>0 ? "E" : "W")
-                      // + ' (' + this.state.place.lat.toFixed(6) +')'
-                      )
-                    : this.state.place.lat
-                  }
+                  { dmsFormat(deg2dms(this.state.place.lat, 'lat')) + '   ' + dmsFormat(deg2dms(this.state.place.long, 'lon'))}
                 </Text>
-                <Text style={{fontSize:16}}> / </Text>
-
-                <Text style={{ fontSize:16,
-                  color:'grey',
-                  }}
-                  >
-                  {
-                    typeof this.state.place.long == 'number'
-                    ? ( ' '
-                      + this.convertDMS(this.state.place.long, 'long') 
-                      + '' + (this.state.place.long>0 ? "N" : "S")
-                      // + ' (' + this.state.place.long.toFixed(6) +')'
-                      )
-                    : this.state.place.long
-                  }
-                </Text>
-                <Text style={{fontSize:16}}> </Text>
               </View>
 
                                   <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, padding:10}]}>
@@ -1042,27 +1026,29 @@ class CollectionForm extends Component {
 
                                       </TouchableOpacity>
 
-                                      <TouchableOpacity 
-                                        style={{ marginLeft:5,
-                                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                                          borderColor:this.state.protocole=='long'?greenFlash:'grey',
-                                          }}
-                                        onPress = {() => this.editLocation()} 
-                                        >
-                                        <MaterialCommunityIcons
-                                          name="magnify"  // search-web  magnify  map-search
-                                          style={{
-                                            backgroundColor:'transparent',
-                                            color:this.state.protocole=='long'?greenFlash:'grey',
-                                          }}
-                                          size={25}
-                                        />
-                                        <Text style={{ fontSize:16,
-                                          color:this.state.protocole=='long'?greenFlash:'grey',
-                                          }}>
-                                        Chercher</Text>
-                                      </TouchableOpacity>
-
+                                      { this.state.connected && this.state.connected.type != 'none'
+                                        ? <TouchableOpacity 
+                                            style={{ marginLeft:5,
+                                              flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                                              borderColor:this.state.protocole=='long'?greenFlash:'grey',
+                                              }}
+                                            onPress = {() => this.showPlaceModal()} 
+                                            >
+                                            <MaterialCommunityIcons
+                                              name="magnify"  // search-web  magnify  map-search
+                                              style={{
+                                                backgroundColor:'transparent',
+                                                color:this.state.protocole=='long'?greenFlash:'grey',
+                                              }}
+                                              size={25}
+                                            />
+                                            <Text style={{ fontSize:16,
+                                              color:this.state.protocole=='long'?greenFlash:'grey',
+                                              }}>
+                                            Chercher</Text>
+                                          </TouchableOpacity>
+                                        : null
+                                      }
                                   </View>
 
               <View 
@@ -1412,85 +1398,8 @@ class CollectionForm extends Component {
                 </View>
 
             </View>
-            <View style={styles.collection_grp}>
-                <Text style={styles.coll_title}>
-                LOCALISATION
-                </Text>
+          
 
-                <TouchableOpacity 
-                  style={styles.row}
-                  onPress ={ () => this.geoLoc() }
-                  >
-                  <View style={{
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding:10,
-                    }}
-                    >
-                    <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
-                      <MaterialCommunityIcons
-                        name="crosshairs-gps" 
-                        size={30}
-                        height={40}
-                        width={60}
-                        // style={styles.iconButton}
-                        // borderRadius={0}
-                        // padding={10}
-                        // paddingLeft={0}
-                        margin={0}
-                        // marginLeft={2}
-                        color={greenFlash}
-                        backgroundColor = 'transparent'
-                      />
-                    </Animated.View>
-                    <MaterialCommunityIcons
-                      name="crosshairs"
-                      size={30}
-                      height={40}
-                      width={60}
-                      // style={styles.iconButton}
-                      // borderRadius={0}
-                      // padding={10}
-                      // paddingLeft={0}
-                      margin={0}
-                      // marginLeft={2}
-                      color={greenFlash}
-                      backgroundColor = 'transparent'
-                      
-                    />
-                  </View>
-
-                  <View style={{paddingTop:5}}>
-                    <Text>Latitude: 
-                      { typeof this.state.place.lat == 'number'
-                        ? ( ' '
-                          + this.convertDMS(this.state.place.lat) 
-                          + '' + (this.state.place.lat>0 ? "E" : "W")
-                          // + ' (' + this.state.place.lat.toFixed(6) +')'
-                          )
-                        : this.state.place.lat
-                      }
-                    </Text>
-                    <Text>Longitude: 
-                      {
-                        typeof this.state.place.long == 'number'
-                        ? ( ' '
-                          + this.convertDMS(this.state.place.long, 'long') 
-                          + '' + (this.state.place.long>0 ? "N" : "S")
-                          // + ' (' + this.state.place.long.toFixed(6) +')'
-                          )
-                        : this.state.place.long
-                      }
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-
-                <TextInput
-
-                  style={styles.collection_input_text}
-                  placeholder='Code postale'
-                />
-            </View>
 
 
       </ScrollView>
@@ -1515,7 +1424,7 @@ export default class CollectionList extends Component {
 
   componentWillMount(){
  
-console.log('LIST MOUNT');
+    console.log('LIST MOUNT');
     AsyncStorage.getItem('collections', (err, collections) => {
       if (err) {
         Alert.alert('ERROR getting collections '+ JSON.stringify(err));
@@ -1528,7 +1437,6 @@ console.log('LIST MOUNT');
       }
     });
   }
-
 
   componentWillUnmount(){
     console.log('LIST UN-MOUNT');
@@ -1547,14 +1455,14 @@ console.log('LIST MOUNT');
 
   newCollection(){
     
-    const now = formatedDate();
+    const now = date2folderName();
     this.props.createCollectionFolders(now);
 
     let coll = this.state.collections;
     coll.push({
         name:'',
         protocole:'',
-        place:{lat:'', long:''},
+        place:{lat:'', long:'', name:''},
         date:now,
     });
 
@@ -1610,44 +1518,50 @@ console.log('LIST MOUNT');
 
                   <Image
                     style={{ 
-                      width:50,
-                      height:50,
+                      width:80,
+                      height:80,
                     }}
                     resizeMode="contain"
                     source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/flower.jpg' + '?t='+ new Date().getTime() }}
                   />
                   <Image
                     style={{ 
-                      width:50,
-                      height:50,
+                      width:80,
+                      height:80,
                     }}
                     resizeMode="contain"
                     source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/environment.jpg' + '?t='+ new Date().getTime() }}
                   />
 
-                  <MaterialCommunityIcons
-                    name={ value.protocole == 'flash' 
-                    ? 'flash-outline' 
-                    : value.protocole == 'long' 
-                      ? 'timer-sand'
-                      : 'help-circle-outline'
-                    }
-                    style={{
-                      backgroundColor:'transparent',
-                      color:'grey',
-                      width:20,
-                      marginRight:5,
-                    }}
-                    size={18}
-                  />
+                  <View>
+                    <View style={{flexDirection:'row'}}>
+                      <MaterialCommunityIcons
+                        name={ value.protocole == 'flash' 
+                        ? 'flash-outline' 
+                        : value.protocole == 'long' 
+                          ? 'timer-sand'
+                          : 'help-circle-outline'
+                        }
+                        style={{
+                          backgroundColor:'transparent',
+                          color:'grey',
+                          width:20,
+                          marginRight:5,
+                        }}
+                        size={18}
+                      />
 
-                  <Text style={[styles.listItemText, {fontWeight:'bold'}]}>
-                  {value.name}</Text>
+                      <Text style={[styles.listItemText, {fontWeight:'bold', fontsize:18}]}>
+                      {value.name}</Text>
+                    </View>
+                    <View>
+                      <Text style={styles.listItemText}>
+                      {formatFolderName(value.date, false)}</Text>
 
-                  <Text style={styles.listItemText}>
-                  {value.date}</Text>
-
-               
+                      <Text style={styles.listItemText}>
+                      {value.place.name}</Text>
+                    </View>
+                </View>
 
                 </TouchableOpacity>
               )}
@@ -1717,6 +1631,37 @@ const styles = StyleSheet.create({
     backgroundColor:greenFlash,
   },
 
-  collection_input_text:
-  {padding:10, fontSize:16},
+  collection_input_text:{
+    padding:10, fontSize:16
+  },
+
+  // MapView
+
+  map_container: {
+    // ...StyleSheet.absoluteFillObject,
+    height: 100,
+    width: 100,
+    },
+  map: {
+        height: 100,
+    width: 10,
+    // ...StyleSheet.absoluteFillObject,
+  },
+  target_h: {
+    position: 'absolute',
+    top:Dimensions.get('window').width/2,
+    left: 0,
+    right:0,
+    height:1,
+    backgroundColor:'red',
+  },
+  target_v: {
+    position: 'absolute',
+    top: 0,
+    left:Dimensions.get('window').width/2,
+    bottom:0,
+    width:1,
+    backgroundColor:'red',
+  },
+
 });
