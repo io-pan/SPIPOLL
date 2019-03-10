@@ -714,23 +714,55 @@ class CollectionForm extends Component {
           navigator.geolocation.clearWatch(this.watchID);
           this.gpsSearching = false;
 
-          // this.setState({collection:{
-          //   ...this.state.collection,
-          //   place:{
-          //     lat:position.coords.latitude,
-          //     long:position.coords.longitude, 
-          //   },
-          // }}, function(){
-          //   console.log(this.state.collection);
-          // });
-
-// TODO: ioio get place name
-
           this.store('place',{
+            ...this.state.place,
             lat:position.coords.latitude,
             long:position.coords.longitude, 
-            name:'',
+            
           });
+
+            // Get place name
+            fetch('https://maps.googleapis.com/maps/api/geocode/json?'
+                +'latlng=' +position.coords.latitude + ',' + position.coords.longitude
+                +'&location_type=APPROXIMATE&result_type=political'
+                +'&language=fr'
+                +'&key='+GOOGLE_APIKEY)
+            .then((response) => response.json())
+            .then((responseJson) => {
+              if(responseJson.status=="OK") {
+                var storableLocation = {city:'',state:'',country:''};
+                for (var ac = 0; ac < responseJson.results[0].address_components.length; ac++) {
+                  var component = responseJson.results[0].address_components[ac];
+
+                  switch(component.types[0]) {
+                      case 'locality':
+                          storableLocation.city = component.long_name;
+                          break;
+                      case 'administrative_area_level_1':
+                          storableLocation.state = component.short_name;
+                          break;
+                      case 'country':
+                          storableLocation.country = component.long_name;
+                          break;
+                  }
+                }
+                // console.log('geo code', responseJson.results[0]);
+                this.store('place', { 
+                  ...this.state.place,
+                  name: (storableLocation.city
+                        ? storableLocation.city : storableLocation.state)
+                        + ', '+ storableLocation.country,
+                });
+              }
+              else {
+                // console.log('api geocode ERROR:');
+                // console.log(responseJson);
+              }
+            })
+            .catch((error) => { 
+              // console.log(error);  
+            }); 
+
         },
         (error) => {
           this.gpsSearching = false;
@@ -1038,13 +1070,11 @@ class CollectionForm extends Component {
                                               name="magnify"  // search-web  magnify  map-search
                                               style={{
                                                 backgroundColor:'transparent',
-                                                color:this.state.protocole=='long'?greenFlash:'grey',
+                                                color:greenFlash,
                                               }}
                                               size={25}
                                             />
-                                            <Text style={{ fontSize:16,
-                                              color:this.state.protocole=='long'?greenFlash:'grey',
-                                              }}>
+                                            <Text style={{ fontSize:16, color:'grey'}}>
                                             Chercher</Text>
                                           </TouchableOpacity>
                                         : null
@@ -1551,7 +1581,7 @@ export default class CollectionList extends Component {
                         size={18}
                       />
 
-                      <Text style={[styles.listItemText, {fontWeight:'bold', fontsize:18}]}>
+                      <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18}]}>
                       {value.name}</Text>
                     </View>
                     <View>
