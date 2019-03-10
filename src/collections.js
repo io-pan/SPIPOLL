@@ -481,7 +481,7 @@ class CollectionForm extends Component {
     console.log( 'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg');
 
     return (
-      <View>
+      <View style={{flex:1}}>
 
           <ModalHelp
             visible={this.state.help.visible}
@@ -492,7 +492,7 @@ class CollectionForm extends Component {
           />
 
 
-          <View style={styles.collection}>
+          <View style={{flex:1}}>
             <View style={styles.collection_grp}>
               { this.state.name
                 ? <View style={{flexDirection:'row'}}>
@@ -768,7 +768,7 @@ class CollectionForm extends Component {
                   onPress = {() => this.props.pickPhoto('environment')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  source={{uri:'file://' +this.props.filePath + '/collection-environment.jpg'}}
+                  source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
                 />
 
                 </View>
@@ -1175,55 +1175,72 @@ console.log('LIST MOUNT');
 
   render(){
     return(
-      <View>
+       <View style={{flex:1}}>
         { this.state.editing === false
-          ? <React.Fragment>
-            <TouchableOpacity  
-              style={[styles.listItem,styles.listItemNew]}
-              onPress = {() => this.newCollection()}
-              >
-              <MaterialCommunityIcons   
-                name='plus-circle-outline'
-                style={{fontSize:24, paddingRight:10, color:'white'}}
-              />
-              <Text style={{color: 'white', fontSize:16,}}>
-              Nouvelle Collection</Text>
-            </TouchableOpacity>
-
-            <ScrollView>
-            { this.state.collections.map((value, index) => 
+          ? <View style={{flex:1}}>
               <TouchableOpacity  
-                key={index}
-                style={styles.listItem}
-                onPress = {() => this.selectCollection(index)}
+                style={[styles.listItem,styles.listItemNew]}
+                onPress = {() => this.newCollection()}
                 >
-
-                <MaterialCommunityIcons
-                  name={ value.protocole == 'flash' 
-                  ? 'flash-outline' 
-                  : value.protocole == 'long' 
-                    ? 'timer-sand'
-                    : 'help-circle-outline'
-                  }
-                  style={{
-                    backgroundColor:'transparent',
-                    color:'grey',
-                    width:20,
-                    marginRight:5,
-                  }}
-                  size={20}
+                <MaterialCommunityIcons   
+                  name='plus-circle-outline'
+                  style={{fontSize:24, paddingRight:10, color:'white'}}
                 />
-
-                <Text style={[styles.listItemText, {fontWeight:'bold'}]}>
-                {value.name}</Text>
-
-                <Text style={styles.listItemText}>
-                {value.date}</Text>
-
+                <Text style={{color: 'white', fontSize:16,}}>
+                Créer une collection</Text>
               </TouchableOpacity>
-            )}
-            </ScrollView>
-            </React.Fragment>
+
+              <ScrollView>
+              { this.state.collections.map((value, index) => 
+                <TouchableOpacity  
+                  key={index}
+                  style={styles.listItem}
+                  onPress = {() => this.selectCollection(index)}
+                  >
+
+                  <Image
+                    style={{ 
+                      width:50,
+                      height:50,
+                    }}
+                    resizeMode="contain"
+                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/flower.jpg' + '?t='+ new Date().getTime() }}
+                  />
+                  <Image
+                    style={{ 
+                      width:50,
+                      height:50,
+                    }}
+                    resizeMode="contain"
+                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/environment.jpg' + '?t='+ new Date().getTime() }}
+                  />
+
+                  <MaterialCommunityIcons
+                    name={ value.protocole == 'flash' 
+                    ? 'flash-outline' 
+                    : value.protocole == 'long' 
+                      ? 'timer-sand'
+                      : 'help-circle-outline'
+                    }
+                    style={{
+                      backgroundColor:'transparent',
+                      color:'grey',
+                      width:20,
+                      marginRight:5,
+                    }}
+                    size={18}
+                  />
+
+                  <Text style={[styles.listItemText, {fontWeight:'bold'}]}>
+                  {value.name}</Text>
+
+                  <Text style={styles.listItemText}>
+                  {value.date}</Text>
+
+                </TouchableOpacity>
+              )}
+              </ScrollView>           
+            </View>
 
           : <React.Fragment>
               <CollectionForm 
@@ -1275,7 +1292,9 @@ const styles = StyleSheet.create({
     padding:10,
     flexDirection:'row',
     borderBottomWidth:1,
+    alignItems:'center',
     borderBottomColor:greenFlash,
+    // height:50,
   },
   listItemText:{
     color:'grey',

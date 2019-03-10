@@ -369,14 +369,18 @@ export default class App extends Component<Props> {
 
 
   testBattery(){
-    NativeModules.ioPan.getBatteryInfo()
-    .then((battery) => {
-      this.setState({battery:battery});
-      console.log(battery.level);
-      if (battery.level < 15) {
-        // TODO send alert to distant.
-      }
-    })
+
+      NativeModules.ioPan.getBatteryInfo()
+      .then((battery) => {
+        if(!this.state.bigBlackMask){
+          this.setState({battery:battery});
+        }
+        console.log(battery.level);
+        if (battery.level < 15) {
+          // TODO send alert (to distant).
+        }
+      })
+
   }
   // getBatteryLevel = (callback) => {
   //   NativeModules.ioPan.getBatteryStatus(callback);
@@ -1977,7 +1981,7 @@ export default class App extends Component<Props> {
         )}
 
         { this.state.cam.indexOf('collection-') >= 0
-          ? <View style={this.state.cam!='collection-form'? {height:0}:{}}>
+          ? <View style={this.state.cam!='collection-form'? {height:0}:{flex:1}}>
             <CollectionList
               ref="collectionList"
               filePath={this.state.storage}
