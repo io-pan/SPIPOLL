@@ -54,7 +54,7 @@ export default class ImageView extends Component {
 
     const renderedTitle = (!title) ? null : (
       <Text 
-      // style={titleTextStyle || styles.titleTextStyle}
+      style={titleTextStyle || styles.titleTextStyle}
       >{title}</Text>
     )
 
