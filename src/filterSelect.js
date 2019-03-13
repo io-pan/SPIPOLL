@@ -60,6 +60,7 @@ export default class ModalFilterPicker extends Component {
         visible={visible}
         supportedOrientations={['portrait', 'landscape']}
       >
+        <View style={{flex:1}} >
         <KeyboardAvoidingView
           behavior="padding"
           // style={overlayStyle || styles.overlay}
@@ -84,6 +85,7 @@ export default class ModalFilterPicker extends Component {
 
         </View>
         </KeyboardAvoidingView>
+        </View>
       </Modal>
     )
   }

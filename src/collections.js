@@ -454,6 +454,13 @@ class ModalHelp extends Component {
         visible={this.props.visible}
         >
         <Text style={styles.titleTextStyle}>{this.props.title}</Text>
+        <ScrollView>
+          <View style={{padding:15}}>
+          <Text>yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov </Text>
+          </View>
+          <Text style={styles.titleTextStyle}></Text>
+        </ScrollView>
+        
       </Modal>
     );
   }
@@ -504,10 +511,10 @@ class CollectionForm extends Component {
 
         environment:{
           photo:'',
-          flowerKind:'',
-          habitat:'',
-          ruche:'',
-          culture50m:'',
+          occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
+          locAttr_2:'',                 //  ruche
+          locAttr_1:[],                 //  habitat
+          locAttr_3:false,                 //  grande culture en fleur
         },
       },
 /*
@@ -607,7 +614,7 @@ class CollectionForm extends Component {
         Alert.alert('ERROR getting collection ' + this.props.data.date+'_collection ... ' + JSON.stringify(err));
       }
       else {
-        console.log('localStorege '+ this.props.data.date+'_collection', JSON.parse(collection));
+        console.log('localStorage '+ this.props.data.date+'_collection', JSON.parse(collection));
         if(collection){
           console.log(this.props.data.date+'_collection', JSON.parse(collection));
           this.setState({collection:JSON.parse(collection)});
@@ -681,9 +688,20 @@ class CollectionForm extends Component {
   }
  
   storeEnvironment(field, value){
-  if(field=='id_flower_unknown')
-    
-   this.setState({
+    if(field=='locAttr_1') {
+      // Multiselect.
+      array = this.state.collection.environment.locAttr_1;
+      var index = array.indexOf(value);
+      if (index !== -1) {
+        array.splice(index, 1);
+      }
+      else{
+        array.push(value);
+      }
+      value = array;
+    }
+
+    this.setState({
       collection:{
         ...this.state.collection,
         environment:{
@@ -694,6 +712,7 @@ class CollectionForm extends Component {
     }, function(){
       this.storeCollection();
     })
+  
   }
 
   selectTaxon = (picked) => {
@@ -913,6 +932,15 @@ class CollectionForm extends Component {
             // closeMe = {this._closeModal}
             // connected = {this.state.connected}
           />
+    
+          <ModalFilterPicker
+            visible={this.state.visibleTaxonModal}
+            title='Fleur'
+            titleTextStyle={styles.titleTextStyle}
+            options={flowerList}
+            onSelect={this.selectTaxon}
+            onCancel={this.hideTaxonModal}
+          />
 
           <View style={{flex:1}}>
             <View>
@@ -938,7 +966,7 @@ class CollectionForm extends Component {
                       style={{flexDirection:'row', flex:1}}
                       onPress = {() => this.edit('name')} 
                       >
-                      <Text style={styles.titleTextStyle}>{this.state.collection.name}</Text>
+                      <Text style={[styles.titleTextStyle,{flex:1}]}>{this.state.collection.name}</Text>
                       <MaterialCommunityIcons
                         name="pencil" 
                         style={[{color:'white', paddingTop:10, width:50, backgroundColor:greenFlash} ]}
@@ -1031,14 +1059,14 @@ class CollectionForm extends Component {
               </View>
 
               <View style={styles.collection_grp}>
-                <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, justifyContent: 'center'}]}>
+                <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
                   <Text style={{fontSize:16,
                     color:'grey'
                     }}
                     >{this.state.collection.place.name}
                   </Text>
                 </View>
-                <View style={[styles.collection_subgrp, {flexDirection:'row', flex:1, justifyContent: 'center'}]}>
+                <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
                   <Text style={{fontSize:16,
                     color:'grey'
                     }}
@@ -1048,7 +1076,7 @@ class CollectionForm extends Component {
                 </View>
               </View>
 
-              <View style={[styles.collection_grp, {flexDirection:'row', flex:1}]}>           
+              <View style={[styles.collection_grp, {flexDirection:'row', flex:1, paddingTop:0}]}>           
                 <TouchableOpacity 
                   style={{ marginRight:5, 
                     flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
@@ -1134,10 +1162,8 @@ class CollectionForm extends Component {
 
               <ImagePicker 
                 ref="collection-flower"
-                style={{
-                  // borderWidth:1, borderColor:greenLight,
-                  // width:150,
-                  // height:150,
+                style={{margin:15, marginTop:0,
+                  // borderWidth:1, borderColor:'lightgrey',
                 }}
                 title={'Gros plan de la fleur'}
                 onPress = {() => this.props.pickPhoto('flower')}
@@ -1147,6 +1173,7 @@ class CollectionForm extends Component {
               />
 
               <View style={styles.collection_grp}>
+
                 {/* TODO ... one day maybe               
                 <CheckBox
                                     textStyle={styles.collection_input_text}
@@ -1159,7 +1186,6 @@ class CollectionForm extends Component {
                   onPress = {() => this.upd_protocole('Long')}
                 />
                 */}
-
               
                 <TouchableOpacity 
                   style={{ marginBottom:10,
@@ -1210,15 +1236,6 @@ class CollectionForm extends Component {
                         </Text>
                         </View>
                       </TouchableOpacity>      
-                      
-                      <ModalFilterPicker
-                        visible={this.state.visibleTaxonModal}
-                        title='Fleur'
-                        titleTextStyle={styles.titleTextStyle}
-                        options={flowerList}
-                        onSelect={this.selectTaxon}
-                        onCancel={this.hideTaxonModal}
-                      />
 
                       <TextInput
                         placeholder='Je connais une dénomination plus précise'
@@ -1235,7 +1252,7 @@ class CollectionForm extends Component {
                 }
 
                 <TextInput
-                  placeholder='Commentaires'
+                  placeholder='Commentaire'
                   // multiline={true}
                   // numberOfLines={3} 
                   placeholderTextColor='grey'        
@@ -1254,230 +1271,266 @@ class CollectionForm extends Component {
                 Environnement de la fleur</Text>
               </View>
 
-              <ImagePicker 
-                // TODO ? multiple photos before user choose at the end ?
-                title={'Fleur à 2-3 mètres de distance'}
-                ref="collection-environment"
-                style={{
-                  // borderWidth:1, borderColor:greenLight,
-                  // width:150,
-                  // height:150,
-                }}
-                onPress = {() => this.props.pickPhoto('environment')}
-                crop={{w:150,h:150}}
-                size={{w:150,h:150}}
-                source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
-              />
+                <ImagePicker 
+                  // TODO ? multiple photos before user choose at the end ?
+                  title={'Fleur à 2-3 mètres de distance'}
+                  ref="collection-environment"
+                  style={{margin:15, marginTop:0,
+                    // borderWidth:1, borderColor:'lightgrey', 
+                  }}
+                  onPress = {() => this.props.pickPhoto('environment')}
+                  crop={{w:150,h:150}}
+                  size={{w:150,h:150}}
+                  source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
+                />
 
               <View style={styles.collection_grp}>
+              <View style={styles.collection_subgrp}>
                 <Text style={styles.coll_subtitle}>
                 La plante est</Text>
 
-                <CheckBox
-                                      textStyle={styles.collection_input_text}
-                  checkedColor = {greenFlash}
-                  uncheckedColor = {greenDark}
-                  title={'spontanée.'}
-                  checkedIcon='dot-circle-o'
-                  uncheckedIcon='circle-o'
-                  checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.upd_protocole('Long')}
-                />
-                <CheckBox
-                                      textStyle={styles.collection_input_text}
-                  checkedColor = {greenFlash}
-                  uncheckedColor = {greenDark}
-                  title={'plantée.'}
-                  checkedIcon='dot-circle-o'
-                  uncheckedIcon='circle-o'
-                  checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.upd_protocole('Long')}
-                />
-                <CheckBox
-                                      textStyle={styles.collection_input_text}
-                  checkedColor = {greenFlash}
-                  uncheckedColor = {greenDark}
-                  title={'ne sais pas.'}
-                  checkedIcon='dot-circle-o'
-                  uncheckedIcon='circle-o'
-                  checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.upd_protocole('Long')}
-                />
+                <View style={{
+                  flexDirection:'row',
+                 alignItems:'space-between',
+                 justifyContent:'center',
+                   // alignItems: 'flex-start',
+                }}>
+                  <TouchableOpacity
+                    style={{borderWidth:1, margin:5, padding:5,
+                      borderColor:greenFlash 
+                    }}
+                    onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
+                    ><Text style={{fontSize:14,
+                      color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                    }}>
+                    Spontanée</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash
+                    }}
+                    onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                    ><Text style={{fontSize:14,
+                      color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                    }}>
+                    Plantée</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash,
+                    }}
+                    onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                    ><Text style={{fontSize:14,
+                      color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                    }}>
+                    Ne sais pas</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
 
-
-              <View style={styles.collection_grp}>
+              <View style={styles.collection_subgrp}>
                 <Text style={styles.coll_subtitle}>
-                Distance approximative entre votre fleur et la ruche d'abeilles domestiques la plus proche (en mètres; par exemple : 150)</Text>
+                Distance approximative entre votre fleur et la ruche d'abeilles domestiques la plus proche en mètres.</Text>
+                <Text style={styles.coll_subtitle}>
+                Par exemple : 150</Text>
+                <View style={{alignItems:'center', margin:0, padding:0}}>
                 <TextInput
                   keyboardType="number-pad"
-                  style={styles.collection_input_text}
-                  placeholder='0'
-                />
-
-                <Text style={styles.coll_subtitle}>
-                Présence dans un rayon de 50m d'une grande culture en fleur</Text>
-
-                <CheckBox
-                                      textStyle={styles.collection_input_text}
-                  checkedColor = {greenFlash}
-                  uncheckedColor = {greenDark}
-                  title={'oui'}
-                  checkedIcon='dot-circle-o'
-                  uncheckedIcon='circle-o'
-                  checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.upd_protocole('Long')}
-                />
-                <CheckBox
-                                      textStyle={styles.collection_input_text}
-                  checkedColor = {greenFlash}
-                  uncheckedColor = {greenDark}
-                  title={'non'}
-                  checkedIcon='dot-circle-o'
-                  uncheckedIcon='circle-o'
-                  checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.upd_protocole('Long')}
-                />
-                <CheckBox
-                                      textStyle={styles.collection_input_text}
-                  checkedColor = {greenFlash}
-                  uncheckedColor = {greenDark}
-                  title={'ne sais pas'}
-                  checkedIcon='dot-circle-o'
-                  uncheckedIcon='circle-o'
-                  checked={this.state.collection.protocole != 'Flash'}
-                  onPress = {() => this.upd_protocole('Long')}
-                />
+                  style={{ margin:5,borderWidth:1, width:50, padding:0,
+                    textAlign:'center',
+                    fontSize:16,
+                    color:greenFlash,
+                    borderColor:'lightgrey', }} 
+                  defaultValue={''+this.state.collection.environment.locAttr_2}
+                  onEndEditing =    {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10)?0:parseInt(event.nativeEvent.text),10)} 
+                  onSubmitEditing = {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10)?0:parseInt(event.nativeEvent.text),10)}               
+                /></View>
               </View>
 
-                <View style={styles.collection_grp}>
-                  <Text style={styles.coll_subtitle}>
-                  Type d'habitat</Text>
-
-                  {/* multi select */}
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'urbain'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'péri-urbain'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'rural'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'grande(s) culture(s)'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'forêt'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'prairie'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'littoral'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'parc ou jardin public'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'jardin privé'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'rochers'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'bord de route'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
-                  <CheckBox
-                                        textStyle={styles.collection_input_text}
-                    checkedColor = {greenFlash}
-                    uncheckedColor = {greenDark}
-                    title={'bord de l\'eau'}
-                    checkedIcon='dot-circle-o'
-                    uncheckedIcon='circle-o'
-                    checked={this.state.collection.protocole != 'Flash'}
-                    onPress = {() => this.upd_protocole('Long')}
-                  />
+              <View style={styles.collection_subgrp}>
+                <Text style={styles.coll_subtitle}>
+                Présence dans un rayon de 50m d'une grande culture en fleur</Text>
+                <View style={{
+                  flexDirection:'row',
+                  alignItems:'space-between',
+                  justifyContent:'center',
+                   // alignItems: 'flex-start',
+                }}>
+                  <TouchableOpacity
+                    style={{borderWidth:1, margin:5, padding:5,
+                      borderColor:greenFlash 
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_3',140)}
+                    ><Text style={{fontSize:14,
+                      color: this.state.collection.environment.locAttr_3==140 ? greenFlash : 'grey',
+                    }}>
+                    Oui</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_3',141)}
+                    ><Text style={{fontSize:14,
+                      color: this.state.collection.environment.locAttr_3==141 ? greenFlash : 'grey',
+                    }}>
+                    Non</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash,
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_3',142)}
+                    ><Text style={{fontSize:14,
+                      color: this.state.collection.environment.locAttr_3==142 ? greenFlash : 'grey',
+                    }}>
+                    Ne sais pas</Text>
+                  </TouchableOpacity>
                 </View>
+              </View>
+
+              <View style={styles.collection_subgrp}>
+                <Text style={styles.coll_subtitle}>
+                Type d'habitat</Text>
+
+                {/* multi select */}
+                <View style={{
+                  flex:1,
+                  flexWrap: 'wrap',
+                  flexDirection:'row',
+                  justifyContent:'center',
+                  alignItems: 'flex-start',
+                }}>
+                  <TouchableOpacity
+                    style={{borderWidth:1, margin:5, padding:5,
+                      borderColor:greenFlash ,
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',111)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(111)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    urbain</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',112)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(112)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    péri-urbain</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash,
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',113)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(113)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    rural</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1, margin:5, padding:5,
+                      borderColor:greenFlash 
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',114)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(114)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    grande culture</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',115)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(115)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    forêt</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash,
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',116)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(116)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    prairie</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={{borderWidth:1, margin:5, padding:5,
+                      borderColor:greenFlash 
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',117)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(117)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    littoral</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',118)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(118)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    parc, jardin public</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash,
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',119)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(119)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    jardin privé</Text>
+                  </TouchableOpacity>
+                    <TouchableOpacity
+                    style={{borderWidth:1, margin:5, padding:5,
+                      borderColor:greenFlash 
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',120)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(120)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    rochers</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',121)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(121)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    bord de route</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{borderWidth:1,margin:5, padding:5,
+                      borderColor:greenFlash,
+                    }}
+                    onPress = {() => this.storeEnvironment('locAttr_1',122)}
+                    ><Text style={{fontSize:14,
+                      color:this.state.collection.environment.locAttr_1.indexOf(122)!==-1 ? greenFlash : 'grey',
+                    }}>
+                    bord de l'eau</Text>
+                  </TouchableOpacity>
+
+                </View>
+              </View>
+            </View>
 
 
+            <View style={styles.collSectionTitle}>
+              <Text style={styles.collSectionTitleText}> </Text>
+            </View>
 
       </ScrollView>
       </View>
@@ -1552,8 +1605,22 @@ export default class CollectionList extends Component {
         name:'',
         protocole:'',
         place:{lat:0,long:0,name:''}, 
-        flower:{}, 
-        environment:{},
+        flower:{
+          photo:'',
+          id_flower_unknown:false,
+          taxon_list_id_list:false,     // flower:taxa_taxon_list_id_list[]
+          taxon_name:'',                // just for display on app.
+          taxon_extra_info:'',
+          comment:'',
+        },
+
+        environment:{
+          photo:'',
+          occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
+          locAttr_2:'',                 //  ruche
+          locAttr_1:[],                 //  habitat
+          locAttr_3:false,                 //  grande culture en fleur
+        },
       }));
       AsyncStorage.setItem(now+'_sessions', JSON.stringify({
         date:'',
@@ -1606,12 +1673,15 @@ export default class CollectionList extends Component {
               { this.state.collections.map((value, index) => 
                 <TouchableOpacity  
                   key={index}
-                  style={styles.listItem}
+                  style={[styles.listItem,  this.state.collections.length-1==index 
+                    ? {borderBottomWidth:15}
+                    : null
+                  ]}
                   onPress = {() => this.selectCollection(index)}
                   >
-
                   <Image
                     style={{ 
+                      margin:1,
                       width:80,
                       height:80,
                     }}
@@ -1620,6 +1690,7 @@ export default class CollectionList extends Component {
                   />
                   <Image
                     style={{ 
+                      margin:1,
                       width:80,
                       height:80,
                     }}
@@ -1627,8 +1698,8 @@ export default class CollectionList extends Component {
                     source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/environment.jpg' + '?t='+ new Date().getTime() }}
                   />
 
-                  <View>
-                    <View style={{flexDirection:'row'}}>
+                  <View style={{padding:5, overflow:'hidden'}}>
+                    <View style={{flexDirection:'row', flex:1}}>
                       <MaterialCommunityIcons
                         name={ value.protocole == 'flash' 
                         ? 'flash-outline' 
@@ -1636,12 +1707,10 @@ export default class CollectionList extends Component {
                           ? 'timer-sand'
                           : 'help-circle-outline'
                         }
-                        style={{
-                          backgroundColor:'transparent',
-                          color:'grey',
-                          width:20,
-                          marginRight:5,
-                        }}
+                        style={[styles.listItemText,{
+                                                margin:0,
+                                                  marginTop:7,
+                                                }]}
                         size={18}
                       />
 
@@ -1683,8 +1752,13 @@ export default class CollectionList extends Component {
 
 
 const styles = StyleSheet.create({ 
+
+  collection_grp:{
+    padding:15,
+    paddingTop:10,
+  },
   collSectionTitle:{
-    flexDirection:'row', flex:1, justifyContent:'center', marginTop:20, marginBottom:10,
+    flexDirection:'row', flex:1, justifyContent:'center', marginTop:20, marginBottom:1,
   },
   collSectionTitleText:{
     fontSize:18, 
@@ -1695,10 +1769,17 @@ const styles = StyleSheet.create({
     color:'white',
     backgroundColor:greenFlash,
   },
-                  
+
+  collection_subgrp:{
+    borderWidth:1, borderColor:'lightgrey', padding:10, marginBottom:20,
+  },
+  coll_subtitle:{
+    fontSize:16,
+    color:'grey',
+    textAlign:'center',
+  },
                 
   titleTextStyle:{
-    flex:1,
     backgroundColor:greenFlash, 
     color:'white', 
     fontSize:18, 
@@ -1723,7 +1804,7 @@ const styles = StyleSheet.create({
     padding:10,
   },
   listItem:{
-    padding:10,
+    padding:5,
     flexDirection:'row',
     borderBottomWidth:1,
     alignItems:'center',
@@ -1733,16 +1814,12 @@ const styles = StyleSheet.create({
   listItemText:{
     color:'grey',
     fontSize:14,
-    paddingRight:10,
+    paddingRight:5,
   },
   listItemNew:{
     backgroundColor:greenFlash,
   },
 
-  collection_grp:{
-    padding:15,
-    paddingTop:10,
-  },
   collection_input_text:{
     padding:10, fontSize:16
   },
