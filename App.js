@@ -391,6 +391,7 @@ export default class App extends Component<Props> {
 
   componentDidMount() {
     console.log('DidMount');
+
     // this.getBatteryLevel(
     //   (batteryLevel) => {
     //     console.log(batteryLevel);

@@ -20,6 +20,10 @@ import  android.support.v4.content.ContextCompat;
 
 import java.io.IOException;
 import java.io.File;
+import java.util.Locale;
+import java.util.List;
+import android.location.Address;
+import android.location.Geocoder;
 
 public class IopanModule extends ReactContextBaseJavaModule {
 
@@ -41,6 +45,45 @@ public class IopanModule extends ReactContextBaseJavaModule {
   public String getName() {
     return "ioPan";
   }
+
+
+  @ReactMethod
+  public void getLocationName(double lat, double lng, final Promise promise) {
+    try {
+
+      Geocoder geocoder = new Geocoder(mContext, Locale.FRENCH);
+      List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+      Address obj = addresses.get(0);
+
+      String add = obj.getLocality();//getAddressLine(0);
+      // add = add + "," + obj.getAdminArea();
+      // add = add + "," + obj.getCountryName();
+
+      promise.resolve(add);
+
+    } catch (Exception e) {
+      promise.reject(e);
+    }
+  }
+
+  @ReactMethod
+  public void getLocationCoord(String locationName, final Promise promise) {
+    try {
+
+      Geocoder geocoder = new Geocoder(mContext, Locale.FRENCH);
+      List<Address> addresses = geocoder.getFromLocationName(locationName,1);
+      Address obj = addresses.get(0);
+
+      WritableNativeMap rv = new WritableNativeMap();
+      rv.putDouble("lat", obj.getLatitude());
+      rv.putDouble("lng", obj.getLongitude());
+      promise.resolve(rv);
+
+    } catch (Exception e) {
+      promise.reject(e);
+    }
+  }
+
 
   @ReactMethod
   public void getBatteryInfo(final Promise promise) {
