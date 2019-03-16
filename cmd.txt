@@ -19,7 +19,22 @@ npm i react-native-camera --save
 npm i react-native-view-shot --save
 npm i react-native-image-pan-zoom  --save
 npm install react-native-thumbnail --save
+npm install --save react-native-modal-datetime-picker
 npm i react-native-maps --save
+	/app/build.gradle
+	android {
+	    defaultConfig {
+	        multiDexEnabled true
+	/build.gradle
+	ext {
+	    compileSdkVersion   = 26
+	    targetSdkVersion    = 26
+	    buildToolsVersion   = "26.0.2"
+	    supportLibVersion   = "26.1.0"
+	    googlePlayServicesVersion = "11.8.0"
+	    androidMapsUtilsVersion = "0.5+"
+	}
+
 
 react-native run-android
 react-native run-android --variant=release 
@@ -30,3 +45,6 @@ adb reverse tcp:8097 tcp:8097
 
 
 https://react-native-training.github.io/react-native-elements/docs/input.html
+
+keytool -list -v -keystore "%USERPROFILE%\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+00:FF:E1:B5:..............:92:E2:76:D9:14:92:F5
