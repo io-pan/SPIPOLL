@@ -105,7 +105,7 @@ export default class ModalFilterPicker extends Component {
       return (
         <FlatList
           {...FlatListProps}
-          keyExtractor ={(item, index) => item.value}
+          keyExtractor ={(item, index) => ''+item.value}
           data={ds}
           extraData={ds}
           renderItem={this.renderOption}
@@ -180,10 +180,12 @@ export default class ModalFilterPicker extends Component {
     // apply filter to incoming data
     const filtered = (!filter.length)
       ? options
-      : options.filter(({ searchKey, label, key }) => (
-        0 <= label.toLowerCase().indexOf(filter) ||
+      : options.filter(({ searchKey, label, espece, key }) => (
+        (    0 <= label.toLowerCase().indexOf(filter) 
+          || espece&&0  <= espece.toLowerCase().indexOf(filter)) ||
           (searchKey && 0 <= searchKey.toLowerCase().indexOf(filter))
       ))
+
 
     this.setState({
       filter: text.toLowerCase(),
