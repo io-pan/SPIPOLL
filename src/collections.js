@@ -504,16 +504,19 @@ class Timer extends Component {
     this.countdown = false;
     const now = new Date(),
           time = props.time.split(':').map(Number);
-    
+
+
+console.log(now);
+console.log(props.time);
     let data;
     if(props.time > pad2(now.getHours())+':'+pad2(now.getMinutes())+':'+pad2(now.getSeconds())){
       this.countdown = true;
       data = subTime(time , [now.getHours(), now.getMinutes(), now.getSeconds()] );
     }
     else{
-      data = subTime(time,[now.getHours(), now.getMinutes(), now.getSeconds()]);
+      data = subTime([now.getHours(), now.getMinutes(), now.getSeconds()], time);
     }
-
+console.log(data);
     this.state = {
       days: 0,
       hour: data[0],
@@ -1015,13 +1018,17 @@ class SessionForm extends Component {
       date: now.getFullYear() + '-' + pad2(now.getMonth()+1) + '-' + pad2(now.getDate()),
       time_start: pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()),
     };
-    
+    this.props.valueChanged('date', data['date']);
+    this.props.valueChanged('time_start', data['time_start']);
+
     if(this.props.protocole=='flash'){
       let end = new Date(now.getTime() + flashSessionTime*1000);
       data['time_end'] = pad2(end.getHours()) + ':' + pad2(end.getMinutes()) + ':' + pad2(end.getSeconds())
+
+      this.props.valueChanged('time_end', data['time_end']);
     }
 
-    console.log('launchSession',data);
+
     this.setState({
       session:{
         ...this.state.session,
@@ -2137,6 +2144,9 @@ class CollectionForm extends Component {
             <ScrollView>
               { this.state.tab!='collection' ? null :
               <React.Fragment>
+
+                { this.state.collection.protocole ? null :
+                <React.Fragment>
                 <TouchableOpacity 
                   style={{flexDirection:'row', flex:1, justifyContent:'center', marginTop:20,}}
                   onPress = {() => this.help('Protocole')} 
@@ -2197,7 +2207,8 @@ class CollectionForm extends Component {
                   </TouchableOpacity>
 
                 </View>
-
+                </React.Fragment>
+                }
 
                 <View style={styles.collSectionTitle}>
                   <Text style={styles.collSectionTitleText}>
@@ -2753,7 +2764,7 @@ export class SessionList extends Component {
 
     this.state = {
       sessions:[],
-      editing:false,
+      editing: false,
     };
   }
 
@@ -2766,8 +2777,11 @@ export class SessionList extends Component {
       }
       else {
         if(sessions){
-          console.log(JSON.parse(sessions));
-          this.setState({sessions:JSON.parse(sessions)});
+          console.log('sessions',JSON.parse(sessions));
+          this.setState({
+            sessions: JSON.parse(sessions),
+            editing: this.props.protocole == 'flash' ? 0 : false,
+          });
         }
       }
     });
@@ -2852,8 +2866,10 @@ export class SessionList extends Component {
        <View style={{flex:1}}>
         { this.state.editing === false
           ? <View style={{flex:1}}>
+
+              { this.props.protocole == 'flash' ? null : // default session is created and flash has only one.
               <TouchableOpacity  
-                style={[styles.listItem,styles.listItemNew]}
+                style={[styles.listItem,styles.listItemNew, {height:50}]}
                 onPress = {() => this.newSession()}
                 >
                 <MaterialCommunityIcons   
@@ -2863,6 +2879,7 @@ export class SessionList extends Component {
                 <Text style={{color: 'white', fontSize:16,}}>
                 Créer une session</Text>
               </TouchableOpacity>
+              }
 
               <ScrollView>
               { this.state.sessions.map((value, index) => 
@@ -2913,10 +2930,11 @@ export class SessionList extends Component {
                                           size={18}
                                         />
                   */}
+
                                       <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18}]}>
-                                        {value.date}</Text>
+                                        {index}- {formatDate(value.date)}</Text>
                                       </View>
-                                      <View>
+                                      <View> 
                                         <Text style={styles.listItemText}>
                                         {value.time_start}</Text>
                   
