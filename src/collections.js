@@ -501,16 +501,17 @@ class Timer extends Component {
     super(props)
 
     this.timer = null;
+    this.countdown = false;
     const now = new Date(),
-          start = props.time_start.split(':').map(Number);
+          time = props.time.split(':').map(Number);
+    
     let data;
-    if(props.time_end){
-      // Countdown.
-      const end = props.time_end.split(':').map(Number);
-      data = subTime(end,[now.getHours(), now.getMinutes(), now.getSeconds()]);
+    if(props.time > pad2(now.getHours())+':'+pad2(now.getMinutes())+':'+pad2(now.getSeconds())){
+      this.countdown = true;
+      data = subTime(time , [now.getHours(), now.getMinutes(), now.getSeconds()] );
     }
     else{
-      data = subTime([now.getHours(), now.getMinutes(), now.getSeconds()], start);
+      data = subTime(time,[now.getHours(), now.getMinutes(), now.getSeconds()]);
     }
 
     this.state = {
@@ -542,8 +543,9 @@ class Timer extends Component {
   }
 
   onTime(){
-    if(this.props.time_end){
-      // Countdown.
+    const now = new Date();
+
+    if(this.countdown){
       if(this.state.sec == 0){
         if(this.state.min == 0){
           if(this.state.hour == 0){
@@ -930,7 +932,15 @@ class SessionForm extends Component {
   }
 
   _showDateTime(value) { 
-    this.setState({ isDateTimeVisible: value }) 
+    let now = new Date();
+    now = now.getFullYear() +'-'+ now.getMonth() +'-'+ now.getDate();
+    this.setState({ 
+      isDateTimeVisible: value,
+      session:{
+        ...this.state.session, 
+        date: !this.state.session.date ? now : this.state.session.date,
+      }
+    }) 
   };
   _showTimePicker = (field) => this.setState({ isTimePickerVisible: field });
   _showDatePicker = () => this.setState({ isDatePickerVisible: true });
@@ -965,9 +975,13 @@ class SessionForm extends Component {
     date = pad2(date.getHours()) + ':' + pad2(date.getMinutes()) + ':' + pad2(date.getSeconds());
 
     if(date > now){
-      
-      if( (this.state.isTimePickerVisible=='end'  && this.state.session.time_start && date > this.state.session.time_start)
-      ||  (this.state.isTimePickerVisible=='start' && this.state.session.time_end  && date < this.state.session.time_end)
+      console.log(this.state.isTimePickerVisible);
+      console.log(this.state.session.time_start);
+      console.log(this.state.session.time_end);
+      console.log(date);
+
+      if( (this.state.isTimePickerVisible=='end'  && (!this.state.session.time_start || date > this.state.session.time_start))
+      ||  (this.state.isTimePickerVisible=='start' && (!this.state.session.time_end || date < this.state.session.time_end))
       ){
         this.storeSession('time_'+this.state.isTimePickerVisible, date);
       }
@@ -1012,15 +1026,19 @@ class SessionForm extends Component {
   }
 
   cancelSession(){
-    this.setState({session:{
+    this.setState({
+      isDateTimeVisible:false,
+      session:{
       ...this.state.session,
-        time_start:''
+        time_start:'',
+        time_end:'',
       }
     })
   }
 
   storeSession(field,value){
     this.setState({
+      isTimePickerVisible:false,
       session:{
         ...this.state.session,
         [field]:value,
@@ -1038,286 +1056,295 @@ class SessionForm extends Component {
 
               { this.isSessionScheduled() 
               ? 
-                <View style={styles.collection_grp}>
+              <View style={styles.collection_grp}>
 
-                    <View style={{flexDirection:'row', flex:1}}>
-                      <View
-                        style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                          borderRightWidth:1, borderRightColor:'white',
-                          flex:1,
-                        }}
-                        // onPress = {() => this.launchSession()}
-                        >
-                        <MaterialCommunityIcons
-                          name="alarm" 
-                          style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                          size={25}
-                          backgroundColor = 'transparent'
-                        />
-                        <Timer
-                          style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
-                          onTimeout={() => this.launchSession()}
-                          time_start={this.state.session.time_start}
-                          time_end={this.state.session.time_end}
-                        />
-                      </View>
-
-                      <TouchableOpacity
-                        style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                          backgroundColor:this.state.isDateTimeVisible ? 'white' :  greenFlash,
-                          borderWidth: 1, borderColor: greenFlash,
-                        }}
-                        onPress = {() => this.cancelSession()}
-                        >
-                        <MaterialCommunityIcons
-                          name="close-circle" 
-                          style={{padding:10, backgroundColor:'transparent',
-                            color: this.state.isDateTimeVisible ? greenFlash : 'white',  }}
-                          size={25}
-                          backgroundColor = 'transparent'
-                        />
-                      </TouchableOpacity>
+                  <View style={{flexDirection:'row', flex:1}}>
+                    <View
+                      style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                        borderRightWidth:1, borderRightColor:'white',
+                        flex:1,
+                      }}
+                      // onPress = {() => this.launchSession()}
+                      >
+                      <MaterialCommunityIcons
+                        name="alarm" 
+                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                      <Timer
+                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
+                        onTimeout={() => this.launchSession()}
+                        time={this.state.session.time_start}
+                      />
                     </View>
 
-                </View>
-                : null
-              }
+                    <TouchableOpacity
+                      style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                        backgroundColor: greenFlash,
+                      }}
+                      onPress = {() => this.cancelSession()}
+                      >
+                      <MaterialCommunityIcons
+                        name="close-circle" 
+                        style={{padding:10, backgroundColor:'transparent',
+                          color:'white',  }}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                    </TouchableOpacity>
+                  </View>
 
-              { this.isSessionRunning() 
+              </View>
+              : this.isSessionRunning() 
+              ?
+              <View style={styles.collection_grp}>
+
+                  <View style={{flexDirection:'row', flex:1}}>
+                    <View
+                      style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                        borderRightWidth:1, borderRightColor:'white',
+                        flex:1,
+                      }}
+                      // onPress = {() => this.launchSession()}
+                      >
+                      <MaterialCommunityIcons
+                        name="play-circle-outline" 
+                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                      <Timer
+                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
+                        onTimeout={()=>{alert('Session over')}}
+                        time={this.state.session.time_end?this.state.session.time_end:this.state.session.time_start}
+                      />
+                    </View>
+
+                    <TouchableOpacity
+                      style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                        backgroundColor: greenFlash,
+                      }}
+                      onPress = {() => this.cancelSession()}
+                      >
+                      <MaterialCommunityIcons
+                        name="close-circle" 
+                        style={{padding:10, backgroundColor:'transparent',
+                          color: 'white',  }}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                    </TouchableOpacity>
+                  </View>
+
+              </View>
+
+              : this.isSessionRunning() 
               ? 
-                <View style={styles.collection_grp}>
+              <View style={styles.collection_grp}>
 
+                <View style={{flexDirection:'row', flex:1}}>
+                  <View
+                    style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                      borderRightWidth:1, borderRightColor:'white',
+                      flex:1,
+                    }}
+                    // onPress = {() => this.launchSession()}
+                    >
+                    <MaterialCommunityIcons
+                      name="play-circle-outline" 
+                      style={{color:'white', padding:10, backgroundColor:'transparent'}}
+                      size={25}
+                      backgroundColor = 'transparent'
+                    />
+                    <Timer
+                      style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
+                      onTimeout={()=>{alert('Session over')}}
+                      time={this.state.session.time_end?this.state.session.time_end:this.state.session.time_start}
+                    />
+                  </View>
+
+                  <TouchableOpacity
+                    style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                      backgroundColor: greenFlash,
+                    }}
+                    onPress = {() => this.cancelSession()}
+                    >
+                    <MaterialCommunityIcons
+                      name="close-circle" 
+                      style={{padding:10, backgroundColor:'transparent',
+                        color: 'white',  }}
+                      size={25}
+                      backgroundColor = 'transparent'
+                    />
+                  </TouchableOpacity>
+                </View>
+
+              </View>
+
+              : this.isSessionOver() 
+              ? 
+              <View 
+                style={{flexDirection:'row', flex:1, justifyContent:'center', marginTop:20,}}
+                // onPress = {() => this.help('Protocole')} 
+                >
+                <Text style={{
+                  fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
+                  padding:5, color:greenFlash, backgroundColor:'transparent'}}>
+                {formatDate(this.state.session.date)}, {this.state.session.time_start}</Text>
+       
+              </View>
+
+              :  
+              <View style={styles.collection_grp}>
+
+                  { !this.state.isDateTimeVisible
+                  ?
+                  <View style={{flexDirection:'row', flex:1}}>
+
+                    <TouchableOpacity
+                      style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                        borderRightWidth:1, borderRightColor:'white',
+                        flex:1,
+                      }}
+                      onPress = {() => this.launchSession()}
+                      >
+                      <MaterialCommunityIcons
+                        name="play-circle-outline" 
+                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                      <Text style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}>
+                      Lancer la session</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                        backgroundColor:this.state.isDateTimeVisible ? 'white' :  greenFlash,
+                        borderWidth: 1, borderColor: greenFlash,
+                      }}
+                      onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
+                      >
+                      <MaterialCommunityIcons
+                        name="alarm" 
+                        style={{padding:10, backgroundColor:'transparent',
+                          color: this.state.isDateTimeVisible ? greenFlash : 'white',  }}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                    </TouchableOpacity>
+                  </View>
+                  : 
+                  <View>
                     <View style={{flexDirection:'row', flex:1}}>
-                      <View
+
+                      <TouchableOpacity
                         style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
                           borderRightWidth:1, borderRightColor:'white',
                           flex:1,
                         }}
-                        // onPress = {() => this.launchSession()}
+                        onPress = {() => this.launchSession()}
                         >
-                        <MaterialCommunityIcons
-                          name="play-circle-outline" 
-                          style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                          size={25}
-                          backgroundColor = 'transparent'
-                        />
-                        <Timer
-                          style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
-                          // onTimeout={()=>{alert('timeout')}}
-                          time_start={this.state.session.time_start}
-                          time_end={this.state.session.time_end}
-                        />
-                      </View>
+                        <Text style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}>
+                        Lancement planifié 
+                        </Text>
+                      </TouchableOpacity>
 
                       <TouchableOpacity
                         style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                          backgroundColor:this.state.isDateTimeVisible ? 'white' :  greenFlash,
-                          borderWidth: 1, borderColor: greenFlash,
+                          backgroundColor:greenFlash
                         }}
-                        onPress = {() => this.cancelSession()}
+                        onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
                         >
                         <MaterialCommunityIcons
                           name="close-circle" 
                           style={{padding:10, backgroundColor:'transparent',
-                            color: this.state.isDateTimeVisible ? greenFlash : 'white',  }}
+                            color:'white',  }}
                           size={25}
                           backgroundColor = 'transparent'
                         />
                       </TouchableOpacity>
+
                     </View>
+                    <View style={[styles.collection_subgrp,{backgroundColor:'white', marginTop:0,marginBottom:0, borderTopWidth:0}]}>
+                      <Text style={styles.coll_subtitle}
 
-                </View>
-                : null
-              }
-  
-              { this.isSessionOver() 
-                ? <View 
-                    style={{flexDirection:'row', flex:1, justifyContent:'center', marginTop:20,}}
-                    // onPress = {() => this.help('Protocole')} 
-                    >
-                    <Text style={{
-                      fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
-                      padding:5, color:greenFlash, backgroundColor:'transparent'}}>
-                    {formatDate(this.state.session.date)}, {this.state.session.time_start}</Text>
-           
-                  </View>
-                : null
-              }
+                      // TODO: check 
+                      // si prot flash: fin pas editable (deb+20min)
+                      // si prot long deb < fin et >20min
 
-              
-                <View style={styles.collection_grp}>
+                      >
+                      Date, Heure de début { this.props.protocole=='flash' ? '' : 'et de fin'}</Text>
+                      <View style={{
+                        flexDirection:'row',
+                        alignItems:'space-between',
+                        justifyContent:'center',
+                         // alignItems: 'flex-start',
+                      }}>
+                        <TouchableOpacity
+                          style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
+                            borderColor:greenFlash, flex:0.6,
+                          }}
+                          onPress={this._showDatePicker}
+                          ><Text style={{fontSize:14,backgroundColor:'white', flex:1, textAlign:'center',
+                            // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                          }}>
+                          {formatDate(this.state.session.date)}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
+                            borderColor:greenFlash, flex: 0.2,
+                          }}
+                          onPress = {() => this._showTimePicker('start')}
+                          ><Text style={{fontSize:14, flex:1, textAlign:'center',
+                            // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                          }}>
+                          { this.state.session.time_start
+                            ? this.state.session.time_start.split(':')[0] 
+                              +':' +this.state.session.time_start.split(':')[1]
+                            : ''
+                          }</Text>
+                        </TouchableOpacity>
 
-                    { !this.state.isDateTimeVisible
-                      ?
-                         <View style={{flexDirection:'row', flex:1}}>
+                        { this.props.protocole=='flash' ? null :
+                        <TouchableOpacity
+                          style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
+                            borderColor:greenFlash, flex:0.2,
+                          }}
+                          onPress = {() => this._showTimePicker('end')}
+                          ><Text style={{fontSize:14, flex:1, textAlign:'center',
+                            // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                          }}>
+                          { this.state.session.time_end
+                            ? this.state.session.time_end.split(':')[0] 
+                              +':' +this.state.session.time_end.split(':')[1]
+                            : ''
+                          }</Text>
+                        </TouchableOpacity>
+                        }
+                      </View>
+                    </View>
+      
+                    <DateTimePicker
+                      isVisible={this.state.isDatePickerVisible}
+                      onConfirm={(date) => this._handleDatePicked(date)}
+                      onCancel={this._hideDateTimePicker}
+                    />
 
-                            <TouchableOpacity
-                              style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                                borderRightWidth:1, borderRightColor:'white',
-                                flex:1,
-                              }}
-                              onPress = {() => this.launchSession()}
-                              >
-                              <MaterialCommunityIcons
-                                name="play-circle-outline" 
-                                style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                                size={25}
-                                backgroundColor = 'transparent'
-                              />
-                              <Text style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}>
-                              Lancer la session</Text>
-                            </TouchableOpacity>
-
-                            <TouchableOpacity
-                              style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                                backgroundColor:this.state.isDateTimeVisible ? 'white' :  greenFlash,
-                                borderWidth: 1, borderColor: greenFlash,
-                              }}
-                              onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
-                              >
-                              <MaterialCommunityIcons
-                                name="alarm" 
-                                style={{padding:10, backgroundColor:'transparent',
-                                  color: this.state.isDateTimeVisible ? greenFlash : 'white',  }}
-                                size={25}
-                                backgroundColor = 'transparent'
-                              />
-                            </TouchableOpacity>
-                          </View>
-                        : 
-                          <View>
-                          <View style={{flexDirection:'row', flex:1}}>
-
-                            <TouchableOpacity
-                              style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                                borderRightWidth:1, borderRightColor:'white',
-                                flex:1,
-                              }}
-                              onPress = {() => this.launchSession()}
-                              >
-                              <Text style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}>
-                              Programmation 
-                              </Text>
-                            </TouchableOpacity>
-
-                            { this.state.session.date && this.state.session.time_start
-                                && (this.props.protocole=='flash' || this.state.session.time_end)
-                              ?
-                                <TouchableOpacity
-                                  style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                                    backgroundColor:this.state.isDateTimeVisible ? 'white' :  greenFlash,
-                                    marginLeft:5,
-                                    borderWidth: 1, borderColor: greenFlash,
-                                  }}
-                                  onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
-                                  >
-                                  <MaterialCommunityIcons
-                                    name="delete" 
-                                    style={{padding:10, backgroundColor:'transparent',
-                                      color: this.state.isDateTimeVisible ? greenFlash : 'white',  }}
-                                    size={25}
-                                    backgroundColor = 'transparent'
-                                  />
-                                </TouchableOpacity>
-                              : null
-                            }
-                            <TouchableOpacity
-                              style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                                backgroundColor:this.state.isDateTimeVisible ? 'white' :  greenFlash,
-                                marginLeft:5,
-                                borderWidth: 1, borderColor: greenFlash,
-                              }}
-                              onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
-                              >
-                              <MaterialCommunityIcons
-                                name="alarm" 
-                                style={{padding:10, backgroundColor:'transparent',
-                                  color: this.state.isDateTimeVisible ? greenFlash : 'white',  }}
-                                size={25}
-                                backgroundColor = 'transparent'
-                              />
-                            </TouchableOpacity>
-
-                          </View>
-                          <View style={[styles.collection_subgrp,{backgroundColor:'white', marginTop:0,marginBottom:0, borderTopWidth:0}]}>
-                            <Text style={styles.coll_subtitle}
-
-                            // TODO: check 
-                            // si prot flash: fin pas editable (deb+20min)
-                            // si prot long deb < fin et >20min
-
-                            >
-                            Date, Heure de début { this.props.protocole=='flash' ? '' : 'et de fin'}</Text>
-                            <View style={{
-                              flexDirection:'row',
-                              alignItems:'space-between',
-                              justifyContent:'center',
-                               // alignItems: 'flex-start',
-                            }}>
-                              <TouchableOpacity
-                                style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                                  borderColor:greenFlash, flex:0.6,
-                                }}
-                                onPress={this._showDatePicker}
-                                ><Text style={{fontSize:14,backgroundColor:'white', flex:1, textAlign:'center',
-                                  // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
-                                }}>
-                                {formatDate(this.state.session.date)}</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity
-                                style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                                  borderColor:greenFlash, flex: 0.2,
-                                }}
-                                onPress = {() => this._showTimePicker('start')}
-                                ><Text style={{fontSize:14, flex:1, textAlign:'center',
-                                  // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
-                                }}>
-                                { this.state.session.time_start
-                                  ? this.state.session.time_start.split(':')[0] 
-                                    +':' +this.state.session.time_start.split(':')[1]
-                                  : ''
-                                }</Text>
-                              </TouchableOpacity>
-
-                              { this.props.protocole=='flash' ? null :
-                              <TouchableOpacity
-                                style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                                  borderColor:greenFlash, flex:0.2,
-                                }}
-                                onPress = {() => this._showTimePicker('end')}
-                                ><Text style={{fontSize:14, flex:1, textAlign:'center',
-                                  // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
-                                }}>
-                                { this.state.session.time_end
-                                  ? this.state.session.time_end.split(':')[0] 
-                                    +':' +this.state.session.time_end.split(':')[1]
-                                  : ''
-                                }</Text>
-                              </TouchableOpacity>
-                              }
-                            </View>
-                          </View>
-            
-                          <DateTimePicker
-                            isVisible={this.state.isDatePickerVisible}
-                            onConfirm={(date) => this._handleDatePicked(date)}
-                            onCancel={this._hideDateTimePicker}
-                          />
-
-                          <DateTimePicker
-                            mode="time"
-                            isVisible={this.state.isTimePickerVisible!=false}
-                            onConfirm={this._handleTimePicked}
-                            onCancel={this._hideDateTimePicker}
-                          />
-                          </View>      
-                    
- 
-
+                    <DateTimePicker
+                      mode="time"
+                      isVisible={this.state.isTimePickerVisible!=false}
+                      onConfirm={this._handleTimePicked}
+                      onCancel={this._hideDateTimePicker}
+                    />
+                  </View>      
                   }
-                  </View>
-                
-                
+                </View>
+              }
+
+          
+              
 
               <View style={styles.collection_grp}>
                 <View style={styles.collection_subgrp}>
