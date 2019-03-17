@@ -57,7 +57,7 @@ const date2folderName = function(){
 
 
 const formatFolderName = function(str, sec){
-  const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
+  const mois = ['', 'janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
   str = str.split('_');
   d = str[0].split('-');
   t = str[1].split('-');
@@ -66,7 +66,7 @@ const formatFolderName = function(str, sec){
 
 const formatDate = function(str){
   if(str){
-    const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
+    const mois = ['', 'janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
     d = str.split('-');
     return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0]   
   }
@@ -515,6 +515,7 @@ class Timer extends Component {
     }
 
     this.state = {
+      days: 0,
       hour: data[0],
       min:  data[1],
       sec: data[2],
@@ -860,15 +861,17 @@ class SessionForm extends Component {
       isDateTimeVisible:false,
       isTimePickerVisible:false,
       isDatePickerVisible:false,
-      session:{
-        date:'', //yyyy-mm-dd //id:cc-3-session-date-1 , cc-3-session-date-2   
-        time_start:'',  // hh:mm //smpAttr:22
-        time_end:'',  // hh:mm //smpAttr:23
-        weather:'',
-        temperature:'',
-        wind:'',
-        shadow:'',
-      },
+      session:props.data,
+      // session:{
+      //   date:'', //yyyy-mm-dd //id:cc-3-session-date-1 , cc-3-session-date-2   
+      //   time_start:'',    // hh:mm //smpAttr:22
+      //   time_end:'',      // hh:mm //smpAttr:23
+      //   smpAttr_24:'',    // couverture nuageuse
+      //   smpAttr_25:'',    // températuere
+      //   smpAttr_26:'',          // vent
+      //   shadow:'',
+      // },
+
     };
   }
 
@@ -916,6 +919,7 @@ class SessionForm extends Component {
   }
 
   isSessionScheduled(){
+    console.log('isSessionScheduled');
     if(this.state.session.date && this.state.session.time_start
        && (this.props.protocole=='flash' || this.state.session.time_end)){
       const now = date2folderName(new Date()),
@@ -936,10 +940,11 @@ class SessionForm extends Component {
     now = now.getFullYear() +'-'+ now.getMonth() +'-'+ now.getDate();
     this.setState({ 
       isDateTimeVisible: value,
-      session:{
-        ...this.state.session, 
-        date: !this.state.session.date ? now : this.state.session.date,
-      }
+      // should store session
+      // session:{
+      //   ...this.state.session, 
+      //   date: !this.state.session.date ? now : this.state.session.date,
+      // }
     }) 
   };
   _showTimePicker = (field) => this.setState({ isTimePickerVisible: field });
@@ -969,21 +974,23 @@ class SessionForm extends Component {
     this._hideDateTimePicker();
   };
 
-  _handleTimePicked = (date) => {
+  _handleTimePicked = (time) => {
     now = new Date();
-    now = pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
-    date = pad2(date.getHours()) + ':' + pad2(date.getMinutes()) + ':' + pad2(date.getSeconds());
+    now = now.getFullYear() + '-' + pad2((now.getMonth()+1)) + '-' + pad2(now.getDate())
+      + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+    time = pad2(time.getHours()) + ':' + pad2(time.getMinutes()) + ':' + pad2(time.getSeconds());
+    date = this.state.session.date + ' ' + time;
 
     if(date > now){
       console.log(this.state.isTimePickerVisible);
       console.log(this.state.session.time_start);
       console.log(this.state.session.time_end);
-      console.log(date);
+    
 
-      if( (this.state.isTimePickerVisible=='end'  && (!this.state.session.time_start || date > this.state.session.time_start))
-      ||  (this.state.isTimePickerVisible=='start' && (!this.state.session.time_end || date < this.state.session.time_end))
+      if( (this.state.isTimePickerVisible=='end'  && (!this.state.session.time_start || time > this.state.session.time_start))
+      ||  (this.state.isTimePickerVisible=='start' && (!this.state.session.time_end || time < this.state.session.time_end))
       ){
-        this.storeSession('time_'+this.state.isTimePickerVisible, date);
+        this.storeSession('time_'+this.state.isTimePickerVisible, time);
       }
       else {
         Alert.alert("l'heure de début doit être antérieure à l'heure de fin.");
@@ -1008,7 +1015,7 @@ class SessionForm extends Component {
       date: now.getFullYear() + '-' + pad2(now.getMonth()+1) + '-' + pad2(now.getDate()),
       time_start: pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()),
     };
-
+    
     if(this.props.protocole=='flash'){
       let end = new Date(now.getTime() + flashSessionTime*1000);
       data['time_end'] = pad2(end.getHours()) + ':' + pad2(end.getMinutes()) + ':' + pad2(end.getSeconds())
@@ -1030,13 +1037,17 @@ class SessionForm extends Component {
       isDateTimeVisible:false,
       session:{
       ...this.state.session,
+        date:'',
         time_start:'',
         time_end:'',
       }
     })
+    this.props.valueChanged('date', '');
+    this.props.valueChanged('time_start', '');
+    this.props.valueChanged('time_end', '');
   }
 
-  storeSession(field,value){
+  storeSession(field, value){
     this.setState({
       isTimePickerVisible:false,
       session:{
@@ -1044,6 +1055,7 @@ class SessionForm extends Component {
         [field]:value,
       }
     },function(){
+      this.props.valueChanged(field, value);
        // TODO: AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
     });
   }
@@ -1106,7 +1118,6 @@ class SessionForm extends Component {
                         borderRightWidth:1, borderRightColor:'white',
                         flex:1,
                       }}
-                      // onPress = {() => this.launchSession()}
                       >
                       <MaterialCommunityIcons
                         name="play-circle-outline" 
@@ -1149,7 +1160,6 @@ class SessionForm extends Component {
                       borderRightWidth:1, borderRightColor:'white',
                       flex:1,
                     }}
-                    // onPress = {() => this.launchSession()}
                     >
                     <MaterialCommunityIcons
                       name="play-circle-outline" 
@@ -1361,9 +1371,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
                         borderColor:greenFlash 
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
+                      onPress = {() => this.storeSession('smpAttr_24',123)}
                       ><Text style={{fontSize:14,backgroundColor:'white',
-                        // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_24==123 ? greenFlash : 'grey',
                       }}>
                       0-25%</Text>
                     </TouchableOpacity>
@@ -1371,9 +1381,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                      onPress = {() => this.storeSession('smpAttr_24',124)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_24==124 ? greenFlash : 'grey',
                       }}>
                       25-50%</Text>
                     </TouchableOpacity>
@@ -1381,9 +1391,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeSession('smpAttr_24',125)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_24==125 ? greenFlash : 'grey',
                       }}>
                       50-75%</Text>
                     </TouchableOpacity>
@@ -1391,9 +1401,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeSession('smpAttr_24',126)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_24==126 ? greenFlash : 'grey',
                       }}>
                       75-100%</Text>
                     </TouchableOpacity>
@@ -1414,9 +1424,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
                         borderColor:greenFlash 
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
+                      onPress = {() => this.storeSession('smpAttr_25',127)}
                       ><Text style={{fontSize:14,backgroundColor:'white',
-                        // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_25==127 ? greenFlash : 'grey',
                       }}>
                       {'< 10ºC'}</Text>
                     </TouchableOpacity>
@@ -1424,9 +1434,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                      onPress = {() => this.storeSession('smpAttr_25',128)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_25==128 ? greenFlash : 'grey',
                       }}>
                       10-20ºC</Text>
                     </TouchableOpacity>
@@ -1434,9 +1444,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeSession('smpAttr_25',129)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_25==129 ? greenFlash : 'grey',
                       }}>
                       20-30ºC</Text>
                     </TouchableOpacity>
@@ -1444,9 +1454,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeSession('smpAttr_25',130)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_25==130 ? greenFlash : 'grey',
                       }}>
                       {'> 30ºC'}</Text>
                     </TouchableOpacity>
@@ -1470,9 +1480,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
                         borderColor:greenFlash 
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
+                      onPress = {() => this.storeSession('smpAttr_26',131)}
                       ><Text style={{fontSize:14,backgroundColor:'white',
-                        // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_26==131 ? greenFlash : 'grey',
                       }}>
                       Nul</Text>
                     </TouchableOpacity>
@@ -1488,9 +1498,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                      onPress = {() => this.storeSession('smpAttr_26',132)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_26==132 ? greenFlash : 'grey',
                       }}>
                       Faible, irrégulier</Text>
                     </TouchableOpacity>
@@ -1498,9 +1508,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeSession('smpAttr_26',133)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_26==133 ? greenFlash : 'grey',
                       }}>
                       Faible, continu</Text>
                     </TouchableOpacity>
@@ -1516,9 +1526,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                      onPress = {() => this.storeSession('smpAttr_26',134)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_26==134 ? greenFlash : 'grey',
                       }}>
                       Fort, irrégulier</Text>
                     </TouchableOpacity>
@@ -1526,9 +1536,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeSession('smpAttr_26',135)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_26==135 ? greenFlash : 'grey',
                       }}>
                       Fort, continu</Text>
                     </TouchableOpacity>
@@ -1549,9 +1559,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
                         borderColor:greenFlash 
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
+                      onPress = {() => this.storeSession('smpAttr_27',1)} 
                       ><Text style={{fontSize:14,backgroundColor:'white',
-                        // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_27==1 ? greenFlash : 'grey',
                       }}>
                       Oui</Text>
                     </TouchableOpacity>
@@ -1559,9 +1569,9 @@ class SessionForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                      onPress = {() => this.storeSession('smpAttr_27',0)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                        color: this.state.session.smpAttr_27==0 ? greenFlash : 'grey',
                       }}>
                       Non</Text>
                     </TouchableOpacity>
@@ -2667,32 +2677,13 @@ class CollectionForm extends Component {
 
             { 
               this.state.tab=='sessions'
-              ? this.state.collection.protocole=='flash'
+              // TODO: ? this.state.collection.protocole=='flash'
                 ? // Only one session: display form.
                   <View style={{flex:1}}>
-                    <SessionForm
+                    <SessionList
                       collection_id = {this.props.data.date}
                       protocole = {this.props.data.protocole}
                     />
-                  </View>
-                : // Session list.
-                  <View style={{flex:1}}>
-                                      <SessionForm
-                      collection_id = {this.props.data.date}
-                      protocole = {this.props.data.protocole}
-                    />
-
-                    <TouchableOpacity  
-                      style={[styles.listItem,styles.listItemNew]}
-                      onPress = {() => this.newSession()}
-                      >
-                      <MaterialCommunityIcons   
-                        name='plus-circle-outline'
-                        style={{fontSize:24, paddingRight:10, color:'white'}}
-                      />
-                      <Text style={{color: 'white', fontSize:16,}}>
-                      Créer une session</Text>
-                    </TouchableOpacity>
                   </View>
               : null
             }
@@ -2751,6 +2742,216 @@ class CollectionForm extends Component {
     );
   }
 }
+
+
+
+//=========================================================================================
+export class SessionList extends Component {
+//-----------------------------------------------------------------------------------------
+ constructor(props) {
+    super(props);
+
+    this.state = {
+      sessions:[],
+      editing:false,
+    };
+  }
+
+  componentWillMount(){
+ 
+    console.log('session LIST MOUNT');
+    AsyncStorage.getItem(this.props.collection_id+'_sessions', (err, sessions) => {
+      if (err) {
+        Alert.alert('ERROR getting sessions '+ JSON.stringify(err));
+      }
+      else {
+        if(sessions){
+          console.log(JSON.parse(sessions));
+          this.setState({sessions:JSON.parse(sessions)});
+        }
+      }
+    });
+
+    this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      this.back();
+      return true;
+    });
+  
+  }
+
+  back(){
+    if(this.state.editing!==false) {
+      this.setState({editing:false});   
+    }
+    else {
+      // TODO: back to collection list
+      // alert();
+    }
+  }
+
+  componentWillUnmount(){
+    this.backHandler.remove();
+    console.log('session LIST UN-MOUNT');
+  }
+
+  setSource(collection, field, source){
+    // this.setState({
+    //   editing:collection,
+    // }, function(){
+
+    //   console.log(field,source)
+
+      // this.refs['collection-form'].refs['collection-'+field].setSource(source);
+    // });
+  }
+
+
+  newSession(){
+    
+    const now = date2folderName();
+    
+    let sess = this.state.sessions;
+    sess.push({
+        date:'',
+        time_start:'',
+        time_end:'',
+        smpAttr_24:'',
+        smpAttr_25:'',
+        smpAttr_26:'',
+        shadow:'',
+    });
+
+    this.setState({ 
+      sessions: sess,
+      editing:sess.length-1,
+    }, function(){
+     
+    });
+  }
+
+  selectSession(index){
+    this.setState({editing:index});
+  }
+
+  sessionChanged(key, val){
+    if(key=='editing'){
+      this.setState({[key]:val});
+    }
+    else{
+      let sess = this.state.sessions;
+      sess[this.state.editing][key] = val;
+      this.setState({sessions:sess}, function(){
+        AsyncStorage.setItem(this.props.collection_id + '_sessions', JSON.stringify( this.state.sessions ));   
+      })
+    }
+  }
+
+
+  render(){
+    return(
+       <View style={{flex:1}}>
+        { this.state.editing === false
+          ? <View style={{flex:1}}>
+              <TouchableOpacity  
+                style={[styles.listItem,styles.listItemNew]}
+                onPress = {() => this.newSession()}
+                >
+                <MaterialCommunityIcons   
+                  name='plus-circle-outline'
+                  style={{fontSize:24, paddingRight:10, color:'white'}}
+                />
+                <Text style={{color: 'white', fontSize:16,}}>
+                Créer une session</Text>
+              </TouchableOpacity>
+
+              <ScrollView>
+              { this.state.sessions.map((value, index) => 
+                <TouchableOpacity  
+                  key={index}
+                  style={[styles.listItem,  this.state.sessions.length-1==index 
+                    ? {borderBottomWidth:15}
+                    : null
+                  ]}
+                  onPress = {() => this.selectSession(index)}
+                  >
+                  {/*  
+                                  <Image
+                                    style={{ 
+                                      margin:1,
+                                      width:80,
+                                      height:80,
+                                    }}
+                                    resizeMode="contain"
+                                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/flower.jpg' + '?t='+ new Date().getTime() }}
+                                  />
+                                  <Image
+                                    style={{ 
+                                      margin:1,
+                                      width:80,
+                                      height:80,
+                                    }}
+                                    resizeMode="contain"
+                                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/environment.jpg' + '?t='+ new Date().getTime() }}
+                                  />
+                  */}
+              
+                                    <View style={{padding:5, overflow:'hidden'}}>
+                                      <View style={{flexDirection:'row', flex:1}}>
+                                        
+{/*
+                                        <MaterialCommunityIcons
+                                          name={ value.protocole == 'flash' 
+                                          ? 'flash-outline' 
+                                          : value.protocole == 'long' 
+                                            ? 'timer-sand'
+                                            : 'help-circle-outline'
+                                          }
+                                          style={[styles.listItemText,{
+                                              margin:0,
+                                              marginTop:7,
+                                            }]}
+                                          size={18}
+                                        />
+                  */}
+                                      <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18}]}>
+                                        {value.date}</Text>
+                                      </View>
+                                      <View>
+                                        <Text style={styles.listItemText}>
+                                        {value.time_start}</Text>
+                  
+                                        <Text style={styles.listItemText}>
+                                        {value.time_end}</Text>
+                                      </View>
+                                  </View>
+                  
+                </TouchableOpacity>
+              )}
+              </ScrollView>           
+            </View>
+
+          : <React.Fragment>
+              <SessionForm 
+                ref="session-form"
+                protocole={this.props.protocole}
+                // collection_id = s{this.props.data.date}
+
+                data={this.state.sessions[this.state.editing]}
+                valueChanged={(key,val) => this.sessionChanged(key,val)}
+
+                // filePath={this.props.filePath}
+                // pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.state.collections[this.state.editing].date+'--'+field)}
+              />
+            </React.Fragment>
+
+        }
+
+      </View>
+    );
+  }
+
+} // Session List
+
 
 
 //=========================================================================================
@@ -2836,11 +3037,15 @@ export default class CollectionList extends Component {
           locAttr_3:false,                 //  grande culture en fleur
         },
       }));
-      AsyncStorage.setItem(now+'_sessions', JSON.stringify({
+      AsyncStorage.setItem(now+'_sessions', JSON.stringify([{
         date:'',
         time_start:'',
         time_end:'',
-      }));
+        smpAttr_24:'',
+        smpAttr_25:'',
+        smpAttr_26:'',
+        shadow:'',
+      }]));
       AsyncStorage.setItem(now+'_insects', JSON.stringify({
         date:'',
         time_start:'',
