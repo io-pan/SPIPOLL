@@ -18,13 +18,7 @@ import {
   NetInfo,
   CheckBox,
   NativeModules,
-
 } from 'react-native'
-
-import {
-
-
-} from 'react-native-elements';
 
 import ImageView from './imageView';
 import ModalFilterPicker from './filterSelect';
@@ -64,14 +58,44 @@ const formatFolderName = function(str, sec){
   return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0] + ', ' + t[0]+':'+ t[1] + (sec?':'+t[2] : '');
 }
 
-const formatDate = function(str){
-  if(str){
-    const mois = ['', 'janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
-    d = str.split('-');
-    return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0]   
+const formatDate = function(timestamp){
+  // 2 janv. 2019
+  console.log('formatDate', timestamp)
+  if(timestamp){
+    date = new Date(timestamp);
+    const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
+    return date.getDate() + ' ' + mois[date.getMonth()] + ' ' + date.getFullYear();
+  }
+  return 'Date';
+}
+
+const formatDateSpipoll = function(timestamp){
+  // yyyy-mm-dd
+  if(timestamp){
+    date = new Date(timestamp);
+    return date.getFullYear() + '-' + (date.getMonth() + 1)  + '-' + date.getDate();
   }
   return '';
 }
+
+const formatTime = function(timestamp){
+  // hh:mm
+  console.log('formatTime', timestamp);
+  if(timestamp){
+    date = new Date(timestamp);
+    return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
+  }
+  return '';
+}
+
+// const formatDate = function(str){
+//   if(str){
+//     const mois = ['', 'janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
+//     const d = str.split('-');
+//     return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0]   
+//   }
+//   return '';
+// }
 
 const pad2 = function(num){
   return num<10 ? '0'+num : ''+num;
@@ -95,7 +119,15 @@ const subTime = function(t1, t2){
     final[1] = t1[1] -t2[1];
   }
 
-  final[0] = t1[0] - t2[0];
+  if(t1[0] < t2[0]){
+    final[0] =  24-t2[0] + t1[0];
+    t2[3]++;
+  }
+  else{
+    final[0] = t1[0] -t2[0];
+  }
+
+  final[3] = t1[3] - t2[3];
 
   return final;
 }
@@ -114,7 +146,7 @@ const deg2dms = function(deg, latlon) {
   var minfloat = (deg-d)*60;
   var m = Math.floor(minfloat);
   var secfloat = (minfloat-m)*60;
-  var s = Math.round(secfloat);
+  var s = Math.round(secfloat * 100) / 100;
   // After rounding, the seconds might become 60. These two
   // if-tests are not necessary if no rounding is done.
   if (s==60) {
@@ -541,6 +573,9 @@ console.log(data);
   pause(){
     clearInterval(this.timer);
   }
+  clear(){
+    clearInterval(this.timer);
+  }
 
   formatTime(date) {
     return(date.getHours() + ':' + date.getMinutes() + ':' + date.getSeconds());
@@ -858,13 +893,17 @@ class SessionForm extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx);
-
+console.log(props);
     this.state = {
       remainingTime:false,
       isDateTimeVisible:false,
       isTimePickerVisible:false,
       isDatePickerVisible:false,
-      session:props.data,
+      session:{...props.data,
+        date: props.data.date ? new Date(props.data.date) : false,
+        time_start: props.data.time_start ? new Date(props.data.time_start) : false,
+        time_end: props.data.time_end ? new Date(props.data.time_end) : false,
+      },
       // session:{
       //   date:'', //yyyy-mm-dd //id:cc-3-session-date-1 , cc-3-session-date-2   
       //   time_start:'',    // hh:mm //smpAttr:22
@@ -885,62 +924,122 @@ class SessionForm extends Component {
   }
 
   isSessionRunning(){
+    console.log('isSessionRunning');
     if(this.state.session.date && this.state.session.time_start){
 
-      const now = date2folderName(new Date()),
-            time_d = this.state.session.date +'_'+ this.state.session.time_start.replace(/:/gi, '-'),
-            time_f = this.state.session.date +'_'+ this.state.session.time_end.replace(/:/gi, '-'),
+      const now = new Date();
+      now.setSeconds(0);
+      now.setMilliseconds(0);
 
             isRunning = !this.state.session.time_end 
-              ? now >= time_d
-              : now >= time_d && now <= time_f
+              ? now >= this.state.session.time_start
+              : now >= this.state.session.time_start && now <= this.state.session.time_end
             ;
 
-      console.log(now >= time_d);
-      console.log(time_d);
-      console.log(time_f);
+      console.log(now);
+      console.log(this.state.session.time_start);
+      console.log(this.state.session.time_end);
       console.log(isRunning);
 
       return isRunning;
     }
     return false;
   }
+  // isSessionRunning(){
+  //   console.log('isSessionRunning');
+  //   if(this.state.session.date && this.state.session.time_start){
+
+  //     const now = new Date(),
+  //           time_d = this.state.session.date +'_'+ this.state.session.time_start.replace(/:/gi, '-'),
+  //           time_f = this.state.session.date +'_'+ this.state.session.time_end.replace(/:/gi, '-'),
+
+  //           isRunning = !this.state.session.time_end 
+  //             ? now >= time_d
+  //             : now >= time_d && now <= time_f
+  //           ;
+
+  //     console.log(now);
+  //     console.log(time_d);
+  //     console.log(time_f);
+  //     console.log(isRunning);
+
+  //     return isRunning;
+  //   }
+  //   return false;
+  // }
 
   isSessionOver(){
+    console.log('isSessionOver');
     if(this.state.session.date && this.state.session.time_end){
-      const now = date2folderName(new Date()),
-            time_f = this.state.session.date +'_'+ this.state.session.time_end.replace(/:/gi, '-');
-            isOver = now > time_f;
+      const now = new Date();
+      now.setSeconds(0);
+      now.setMilliseconds(0);
+
+      isOver = now > this.state.session.time_end;
 
       console.log(now);
-      console.log(time_f);
-      console.log(now > time_f);
+      console.log(this.state.session.time_end);
+      console.log(isOver);
 
       return isOver;
     }
     return false;
   }
+  // isSessionOver(){
+  //   console.log('isSessionOver');
+  //   if(this.state.session.date && this.state.session.time_end){
+  //     const now = date2folderName(new Date()),
+  //           time_f = this.state.session.date +'_'+ this.state.session.time_end.replace(/:/gi, '-');
+  //           isOver = now > time_f;
+
+  //     console.log(now);
+  //     console.log(time_f);
+  //     console.log(now > time_f);
+
+  //     return isOver;
+  //   }
+  //   return false;
+  // }
 
   isSessionScheduled(){
-    console.log('isSessionScheduled');
-    if(this.state.session.date && this.state.session.time_start
-       && (this.props.protocole=='flash' || this.state.session.time_end)){
-      const now = date2folderName(new Date()),
-            time_d = this.state.session.date +'_'+ this.state.session.time_start.replace(/:/gi, '-'),
-            isScheduled = now < time_d;
+    // console.log('isSessionScheduled');
+    if (this.state.session.date && this.state.session.time_start
+    && (this.props.protocole=='flash' || this.state.session.time_end)){
 
-      console.log(now);
-      console.log(time_d);
-      console.log(now < time_d);
+      const now = new Date();
+      now.setSeconds(0);
+      now.setMilliseconds(0);
+
+      isScheduled = now < this.state.session.time_start;
+
+      // console.log(now);
+      // console.log(time_d);
+      // console.log(now < time_d);
 
       return isScheduled;
     }
     return false;
   }
+  // isSessionScheduled(){
+  //   // console.log('isSessionScheduled');
+  //   if(this.state.session.date && this.state.session.time_start
+  //      && (this.props.protocole=='flash' || this.state.session.time_end)){
+  //     const now = date2folderName(new Date()),
+  //           time_d = this.state.session.date +'_'+ this.state.session.time_start.replace(/:/gi, '-'),
+  //           isScheduled = now < time_d;
+
+  //     // console.log(now);
+  //     // console.log(time_d);
+  //     // console.log(now < time_d);
+
+  //     return isScheduled;
+  //   }
+  //   return false;
+  // }
 
   _showDateTime(value) { 
-    let now = new Date();
-    now = now.getFullYear() +'-'+ now.getMonth() +'-'+ now.getDate();
+    // let now = new Date();
+    // now = now.getFullYear() +'-'+ now.getMonth() +'-'+ now.getDate();
     this.setState({ 
       isDateTimeVisible: value,
       // should store session
@@ -955,23 +1054,29 @@ class SessionForm extends Component {
   _hideDateTimePicker = () => this.setState({ isTimePickerVisible: false, isDatePickerVisible:false });
 
   _handleDatePicked(date){
-    console.log(date);
-    now = new Date();
-    now = now.getFullYear() 
-      + '-' + pad2(now.getMonth()+1)
-      + '-' + pad2(now.getDate())
-    ; 
+    console.log('date',date);
+    // TODO: <= 3 jours
 
-    date = date.getFullYear() 
-      + '-' + pad2(date.getMonth()+1)
-      + '-' + pad2(date.getDate())
-    ; 
+    now = new Date();
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    console.log('now',now);
+    // now = now.getFullYear() 
+    //   + '-' + pad2(now.getMonth()+1)
+    //   + '-' + pad2(now.getDate())
+    // ; 
+
+    // date = date.getFullYear() 
+    //   + '-' + pad2(date.getMonth()+1)
+    //   + '-' + pad2(date.getDate())
+    // ; 
 
     if(date >= now){
-      this.storeSession('date', date);
+      this.storeSession('date', date.getTime());
     }
     else{
-      Alert.alert('Date passée.');
+      Alert.alert('Date passée', 'Lancez la session ou programmez la session dans les 3 jours à venir.'
+      );
       this.setState({session:{...this.state.session,date:''}});
     }
     this._hideDateTimePicker();
@@ -979,17 +1084,31 @@ class SessionForm extends Component {
 
   _handleTimePicked = (time) => {
     now = new Date();
-    now = now.getFullYear() + '-' + pad2((now.getMonth()+1)) + '-' + pad2(now.getDate())
-      + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
-    time = pad2(time.getHours()) + ':' + pad2(time.getMinutes()) + ':' + pad2(time.getSeconds());
-    date = this.state.session.date + ' ' + time;
+    now.setSeconds(0);
+    now.setMilliseconds(0);
 
-    if(date > now){
+    session_date = new Date(this.state.session.date);
+    time = new Date(
+      session_date.getFullYear(),
+      session_date.getMonth(),
+      session_date.getDate(),
+      time.getHours(),
+      time.getMinutes(),
+      time.getSeconds(),
+      0,
+    );
+    time = time.getTime();
+
+    // now = now.getFullYear() + '-' + pad2((now.getMonth()+1)) + '-' + pad2(now.getDate())
+    //   + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
+    // time = pad2(time.getHours()) + ':' + pad2(time.getMinutes()) + ':' + pad2(time.getSeconds());
+    // date = this.state.session.date + ' ' + time;
+
+    if(time > now){
       console.log(this.state.isTimePickerVisible);
       console.log(this.state.session.time_start);
       console.log(this.state.session.time_end);
     
-
       if( (this.state.isTimePickerVisible=='end'  && (!this.state.session.time_start || time > this.state.session.time_start))
       ||  (this.state.isTimePickerVisible=='start' && (!this.state.session.time_end || time < this.state.session.time_end))
       ){
@@ -998,7 +1117,7 @@ class SessionForm extends Component {
       else {
         Alert.alert("l'heure de début doit être antérieure à l'heure de fin.");
         this.setState({
-          session:{...this.state.session, ['time_'+this.state.isTimePickerVisible]:''},
+          session:{...this.state.session, ['time_'+this.state.isTimePickerVisible] : ''},
           isTimePickerVisible:false,
         });;
       }  
@@ -1006,7 +1125,7 @@ class SessionForm extends Component {
     else{
       Alert.alert('Heure passée.');
       this.setState({
-        session:{...this.state.session, ['time_'+this.state.isTimePickerVisible]:''},
+        session:{...this.state.session, ['time_'+this.state.isTimePickerVisible] : ''},
         isTimePickerVisible:false,
       });
     }
@@ -1014,10 +1133,10 @@ class SessionForm extends Component {
 
   launchSession(){
     const now = new Date();
-    const data = {
-      date: now.getFullYear() + '-' + pad2(now.getMonth()+1) + '-' + pad2(now.getDate()),
-      time_start: pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()),
-    };
+    // const data = {
+    //   date: now.getFullYear() + '-' + pad2(now.getMonth()+1) + '-' + pad2(now.getDate()),
+    //   time_start: pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()),
+    // };
     this.props.valueChanged('date', data['date']);
     this.props.valueChanged('time_start', data['time_start']);
 
@@ -1040,6 +1159,9 @@ class SessionForm extends Component {
   }
 
   cancelSession(){
+
+    // Warn user about 20min.
+
     this.setState({
       isDateTimeVisible:false,
       session:{
@@ -1052,6 +1174,25 @@ class SessionForm extends Component {
     this.props.valueChanged('date', '');
     this.props.valueChanged('time_start', '');
     this.props.valueChanged('time_end', '');
+  }
+
+  stopSession(){
+    // TODO: Warn user about 20min.
+
+    const now = new Date();
+
+
+    now.setSeconds(now.getSeconds()-1);
+
+    this.refs['running-timer'].clear();
+    this.setState({
+      isDateTimeVisible:false,
+      session:{
+      ...this.state.session,
+        time_end: pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()),
+      }
+    })
+    this.props.valueChanged('time_end', pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()));
   }
 
   storeSession(field, value){
@@ -1068,6 +1209,7 @@ class SessionForm extends Component {
   }
 
   render(){
+    console.log('render session form',this.state.session)
     return(
       <View>
 
@@ -1133,9 +1275,14 @@ class SessionForm extends Component {
                         backgroundColor = 'transparent'
                       />
                       <Timer
+                        ref="running-timer"
                         style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
                         onTimeout={()=>{alert('Session over')}}
-                        time={this.state.session.time_end?this.state.session.time_end:this.state.session.time_start}
+                        time={
+                          this.state.session.time_end
+                          ? this.state.session.time_end // has been set to start + 20min for flash protocole.
+                          : this.state.session.time_start
+                        }
                       />
                     </View>
 
@@ -1143,10 +1290,18 @@ class SessionForm extends Component {
                       style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
                         backgroundColor: greenFlash,
                       }}
-                      onPress = {() => this.cancelSession()}
+                      onPress = {this.props.protocole=="flash"
+                        ? () => this.cancelSession()
+                        : () => this.stopSession()
+                      }
                       >
                       <MaterialCommunityIcons
-                        name="close-circle" 
+                        name={ 
+                          this.props.protocole=="flash"
+                          ? "close-circle" 
+                          : "stop-circle"
+                        }
+
                         style={{padding:10, backgroundColor:'transparent',
                           color: 'white',  }}
                         size={25}
@@ -1157,47 +1312,6 @@ class SessionForm extends Component {
 
               </View>
 
-              : this.isSessionRunning() 
-              ? 
-              <View style={styles.collection_grp}>
-
-                <View style={{flexDirection:'row', flex:1}}>
-                  <View
-                    style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                      borderRightWidth:1, borderRightColor:'white',
-                      flex:1,
-                    }}
-                    >
-                    <MaterialCommunityIcons
-                      name="play-circle-outline" 
-                      style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                      size={25}
-                      backgroundColor = 'transparent'
-                    />
-                    <Timer
-                      style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
-                      onTimeout={()=>{alert('Session over')}}
-                      time={this.state.session.time_end?this.state.session.time_end:this.state.session.time_start}
-                    />
-                  </View>
-
-                  <TouchableOpacity
-                    style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                      backgroundColor: greenFlash,
-                    }}
-                    onPress = {() => this.cancelSession()}
-                    >
-                    <MaterialCommunityIcons
-                      name="close-circle" 
-                      style={{padding:10, backgroundColor:'transparent',
-                        color: 'white',  }}
-                      size={25}
-                      backgroundColor = 'transparent'
-                    />
-                  </TouchableOpacity>
-                </View>
-
-              </View>
 
               : this.isSessionOver() 
               ? 
@@ -1208,7 +1322,16 @@ class SessionForm extends Component {
                 <Text style={{
                   fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
                   padding:5, color:greenFlash, backgroundColor:'transparent'}}>
-                {formatDate(this.state.session.date)}, {this.state.session.time_start}</Text>
+                    {formatDate(this.state.session.date)}  {
+                      this.state.session.time_start
+                      ? pad2(this.state.session.time_start.getHours()) + ':' + pad2(this.state.session.time_start.getMinutes())
+                      : ''
+                    }  -  { 
+                      this.state.session.time_end
+                      ? pad2(this.state.session.time_end.getHours()) + ':' + pad2(this.state.session.time_end.getMinutes())
+                      : ''
+                    }
+                </Text>
        
               </View>
 
@@ -1317,11 +1440,7 @@ class SessionForm extends Component {
                           ><Text style={{fontSize:14, flex:1, textAlign:'center',
                             // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
                           }}>
-                          { this.state.session.time_start
-                            ? this.state.session.time_start.split(':')[0] 
-                              +':' +this.state.session.time_start.split(':')[1]
-                            : ''
-                          }</Text>
+                          { formatTime(this.state.session.time_start) }</Text>
                         </TouchableOpacity>
 
                         { this.props.protocole=='flash' ? null :
@@ -1333,11 +1452,7 @@ class SessionForm extends Component {
                           ><Text style={{fontSize:14, flex:1, textAlign:'center',
                             // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
                           }}>
-                          { this.state.session.time_end
-                            ? this.state.session.time_end.split(':')[0] 
-                              +':' +this.state.session.time_end.split(':')[1]
-                            : ''
-                          }</Text>
+                          { formatTime(this.state.session.time_end) }</Text>
                         </TouchableOpacity>
                         }
                       </View>
@@ -2855,11 +2970,47 @@ export class SessionList extends Component {
       let sess = this.state.sessions;
       sess[this.state.editing][key] = val;
       this.setState({sessions:sess}, function(){
+        // TODO: check we don't do this twice (storeSession).
         AsyncStorage.setItem(this.props.collection_id + '_sessions', JSON.stringify( this.state.sessions ));   
       })
     }
   }
 
+  renderDateTime(index, value){
+    console.log()
+    const date  = value.date ? new Date(value.date) : '',
+          time_start = value.time_start ? new Date(value.time_start) : '',
+          time_end = value.time_end ? new Date(value.time_end) : '';
+
+    return (
+      <View style={{padding:5, overflow:'hidden'}}>
+        <View style={{flexDirection:'row', flex:1}}>
+          {/*
+          <MaterialCommunityIcons
+            name={ value.protocole == 'flash' 
+            ? 'flash-outline' 
+            : value.protocole == 'long' 
+              ? 'timer-sand'
+              : 'help-circle-outline'
+            }
+            style={[styles.listItemText,{
+                margin:0,
+                marginTop:7,
+              }]}
+            size={18}
+          />
+          */}
+
+          <Text style={[styles.listItemText, {fontWeight:'normal', fontSize:16}]}>
+          {index}- {formatDate(date)}</Text>
+        </View>
+        <View> 
+          <Text style={styles.listItemText}>
+          { formatTime(time_start) } - { formatTime(time_end) }</Text>
+        </View>
+      </View>   
+    );
+  }
 
   render(){
     return(
@@ -2912,36 +3063,9 @@ export class SessionList extends Component {
                                   />
                   */}
               
-                                    <View style={{padding:5, overflow:'hidden'}}>
-                                      <View style={{flexDirection:'row', flex:1}}>
-                                        
-{/*
-                                        <MaterialCommunityIcons
-                                          name={ value.protocole == 'flash' 
-                                          ? 'flash-outline' 
-                                          : value.protocole == 'long' 
-                                            ? 'timer-sand'
-                                            : 'help-circle-outline'
-                                          }
-                                          style={[styles.listItemText,{
-                                              margin:0,
-                                              marginTop:7,
-                                            }]}
-                                          size={18}
-                                        />
-                  */}
 
-                                      <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18}]}>
-                                        {index}- {formatDate(value.date)}</Text>
-                                      </View>
-                                      <View> 
-                                        <Text style={styles.listItemText}>
-                                        {value.time_start}</Text>
-                  
-                                        <Text style={styles.listItemText}>
-                                        {value.time_end}</Text>
-                                      </View>
-                                  </View>
+                  { this.renderDateTime(index, value) }
+
                   
                 </TouchableOpacity>
               )}
@@ -2952,7 +3076,7 @@ export class SessionList extends Component {
               <SessionForm 
                 ref="session-form"
                 protocole={this.props.protocole}
-                // collection_id = s{this.props.data.date}
+                // collection_id = {this.props.data.date}
 
                 data={this.state.sessions[this.state.editing]}
                 valueChanged={(key,val) => this.sessionChanged(key,val)}
@@ -3050,8 +3174,8 @@ export default class CollectionList extends Component {
         environment:{
           photo:'',
           occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
-          locAttr_2:0,                 //  ruche
-          locAttr_1:[],                 //  habitat
+          locAttr_2:0,     // NOT MANDATORY            //  ruche
+          locAttr_1:[],   // NOT MANDATORY              //  habitat
           locAttr_3:false,                 //  grande culture en fleur
         },
       }));
