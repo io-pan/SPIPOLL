@@ -36,7 +36,7 @@ const green = "#bcd151";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
-const flashSessionTime = 10;// 20*60;
+const flashSessionTime = 61 // 20*60;
 const date2folderName = function(){
   now = new Date();
   year = "" + now.getFullYear();
@@ -66,7 +66,7 @@ const formatDate = function(timestamp){
     const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
     return date.getDate() + ' ' + mois[date.getMonth()] + ' ' + date.getFullYear();
   }
-  return 'Date';
+  return '';
 }
 
 const formatDateSpipoll = function(timestamp){
@@ -101,36 +101,36 @@ const pad2 = function(num){
   return num<10 ? '0'+num : ''+num;
 }
 
-const subTime = function(t1, t2){
-  const final = [];
-  if(t1[2] < t2[2]){
-    final[2] =  60-t2[2] + t1[2];
-    t2[1]++;
-  }
-  else{
-    final[2] = t1[2] -t2[2];
-  }
+// const subTime = function(t1, t2){
+//   const final = [];
+//   if(t1[2] < t2[2]){
+//     final[2] =  60-t2[2] + t1[2];
+//     t2[1]++;
+//   }
+//   else{
+//     final[2] = t1[2] -t2[2];
+//   }
 
-  if(t1[1] < t2[1]){
-    final[1] =  60-t2[1] + t1[1];
-    t2[0]++;
-  }
-  else{
-    final[1] = t1[1] -t2[1];
-  }
+//   if(t1[1] < t2[1]){
+//     final[1] =  60-t2[1] + t1[1];
+//     t2[0]++;
+//   }
+//   else{
+//     final[1] = t1[1] -t2[1];
+//   }
 
-  if(t1[0] < t2[0]){
-    final[0] =  24-t2[0] + t1[0];
-    t2[3]++;
-  }
-  else{
-    final[0] = t1[0] -t2[0];
-  }
+//   if(t1[0] < t2[0]){
+//     final[0] =  24-t2[0] + t1[0];
+//     t2[3]++;
+//   }
+//   else{
+//     final[0] = t1[0] -t2[0];
+//   }
 
-  final[3] = t1[3] - t2[3];
+//   final[3] = t1[3] - t2[3];
 
-  return final;
-}
+//   return final;
+// }
 
 const deg2dms = function(deg, latlon) {
   var card = '';
@@ -532,32 +532,51 @@ class Timer extends Component {
   constructor (props) {
     super(props)
 
+    console.log('TIMER', new Date(props.time));
+console.log( props.index);
+
     this.timer = null;
     this.countdown = false;
-    const now = new Date(),
-          time = props.time.split(':').map(Number);
+    const now = new Date();
+    now.setSeconds(0);
+    now.setMilliseconds(0);
+    let diff;
+   
+    console.log('now', now);
 
-
-console.log(now);
-console.log(props.time);
-    let data;
-    if(props.time > pad2(now.getHours())+':'+pad2(now.getMinutes())+':'+pad2(now.getSeconds())){
+    if(props.time > now){
       this.countdown = true;
-      data = subTime(time , [now.getHours(), now.getMinutes(), now.getSeconds()] );
+      diff = (props.time - now) /1000;
     }
     else{
-      data = subTime([now.getHours(), now.getMinutes(), now.getSeconds()], time);
+      diff = (now - props.time) /1000;
     }
-console.log(data);
+
+    console.log('countdown', this.countdown);
+    console.log('diff', diff);
+
+
+    d = Math.floor(diff / (60*60*24));
+    h = Math.floor((diff - (d*60*60*24)) / (60*60));
+    m = Math.floor((diff - (d*60*60*24) - (h*60*60)) / 60);
+    s = diff - (d*60*60*24) - (h*60*60) - (m*60);
+
     this.state = {
-      days: 0,
-      hour: data[0],
-      min:  data[1],
-      sec: data[2],
+      day: d,
+      hour: h,
+      min:  m,
+      sec:  s,
     }
+
+    console.log(this.state)
   }
 
+componentWillReceiveProps(){
+    console.log('TIMER componentWillReceiveProps');
+}
+
   componentWillMount(){
+    console.log('TIMER componentWillMount');
     this.timer = setInterval(() => {this.onTime()}, 1000);
   }
 
@@ -582,18 +601,25 @@ console.log(data);
   }
 
   onTime(){
-    const now = new Date();
-
     if(this.countdown){
       if(this.state.sec == 0){
         if(this.state.min == 0){
           if(this.state.hour == 0){
-            // Reached
-            clearInterval(this.timer);
-            if (this.props.onTimeout){
-              this.props.onTimeout();
+            if(this.state.day == 0){
+              // Reached
+              clearInterval(this.timer);
+              if (this.props.onTimeout){
+                this.props.onTimeout();
+              }
             }
-
+            else {
+              this.setState({
+                sec:59,
+                min:59,
+                hour:23,
+                day:this.state.day-1,
+              });
+            }
           }
           else{
             this.setState({
@@ -618,11 +644,21 @@ console.log(data);
       // Increment.
       if(this.state.sec == 59){
         if(this.state.min == 59){
-          this.setState({
-            sec:0,
-            min:0,
-            hour:this.state.hour+1,
-          });
+          if(this.state.hour == 23){
+            this.setState({
+              sec:0,
+              min:0,
+              hour:0,
+              day:this.state.day+1,
+            });
+          }
+          else {
+            this.setState({
+              sec:0,
+              min:0,
+              hour:this.state.hour+1,
+            });
+          }
         }
         else{
           this.setState({
@@ -632,7 +668,9 @@ console.log(data);
         }
       }
       else{
-        this.setState({sec:this.state.sec+1});
+        this.setState({
+          sec:this.state.sec+1
+        });
       }
     }
   }
@@ -645,7 +683,15 @@ console.log(data);
             backgroundColor:'transparent', paddingTop:0,paddingBottom:20, 
             color:'white', fontWeight:'bold', fontSize:18,
           }}>
-          {(this.state.hour? (this.state.hour + ' : ') : '') + pad2(this.state.min) + ' : ' + pad2(this.state.sec)}
+          {(
+            this.state.day 
+            ? this.state.day > 1
+               ? this.state.day + ' jours '
+               : this.state.day + ' jour '
+            : ''
+            )
+          + (this.state.hour? (this.state.hour + ' : ') : '') 
+          + pad2(this.state.min) + ' : ' + pad2(this.state.sec)}
           </Text>
         </View>
     );
@@ -893,7 +939,7 @@ class SessionForm extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx);
-console.log(props);
+
     this.state = {
       remainingTime:false,
       isDateTimeVisible:false,
@@ -923,119 +969,65 @@ console.log(props);
     }
   }
 
+  sessionStatus(){
+    let status = false;
+    if(this.isSessionOver()){
+      status = 'over';
+    }
+    else if(this.isSessionRunning()){
+      status = 'running';
+    }
+    else if(this.isSessionScheduled()){
+      status = 'scheduled';
+    }
+    else {
+      status = 'unset';
+    }
+    console.log('sessionStatus', status);
+    return status;
+  }
+
   isSessionRunning(){
-    console.log('isSessionRunning');
     if(this.state.session.date && this.state.session.time_start){
+      const now = new Date(),
+            isSessionRunning = (!this.state.session.time_end 
+              ? now.getTime() >= this.state.session.time_start
+              : now.getTime() >= this.state.session.time_start 
+                && now.getTime() <= this.state.session.time_end
+            );
 
-      const now = new Date();
-      now.setSeconds(0);
-      now.setMilliseconds(0);
-
-            isRunning = !this.state.session.time_end 
-              ? now >= this.state.session.time_start
-              : now >= this.state.session.time_start && now <= this.state.session.time_end
-            ;
-
-      console.log(now);
-      console.log(this.state.session.time_start);
-      console.log(this.state.session.time_end);
-      console.log(isRunning);
-
-      return isRunning;
+      // console.log('isSessionRunning',isSessionRunning);
+      return isSessionRunning;
     }
     return false;
   }
-  // isSessionRunning(){
-  //   console.log('isSessionRunning');
-  //   if(this.state.session.date && this.state.session.time_start){
-
-  //     const now = new Date(),
-  //           time_d = this.state.session.date +'_'+ this.state.session.time_start.replace(/:/gi, '-'),
-  //           time_f = this.state.session.date +'_'+ this.state.session.time_end.replace(/:/gi, '-'),
-
-  //           isRunning = !this.state.session.time_end 
-  //             ? now >= time_d
-  //             : now >= time_d && now <= time_f
-  //           ;
-
-  //     console.log(now);
-  //     console.log(time_d);
-  //     console.log(time_f);
-  //     console.log(isRunning);
-
-  //     return isRunning;
-  //   }
-  //   return false;
-  // }
 
   isSessionOver(){
     console.log('isSessionOver');
     if(this.state.session.date && this.state.session.time_end){
-      const now = new Date();
-      now.setSeconds(0);
-      now.setMilliseconds(0);
+      const now = new Date(),
+            isSessionOver = now.getTime() > this.state.session.time_end;
 
-      isOver = now > this.state.session.time_end;
-
-      console.log(now);
-      console.log(this.state.session.time_end);
-      console.log(isOver);
-
-      return isOver;
+      // console.log('isSessionOver', isSessionOver)
+      return isSessionOver;
     }
     return false;
   }
-  // isSessionOver(){
-  //   console.log('isSessionOver');
-  //   if(this.state.session.date && this.state.session.time_end){
-  //     const now = date2folderName(new Date()),
-  //           time_f = this.state.session.date +'_'+ this.state.session.time_end.replace(/:/gi, '-');
-  //           isOver = now > time_f;
-
-  //     console.log(now);
-  //     console.log(time_f);
-  //     console.log(now > time_f);
-
-  //     return isOver;
-  //   }
-  //   return false;
-  // }
 
   isSessionScheduled(){
-    // console.log('isSessionScheduled');
+    console.log('isSessionScheduled');
+
     if (this.state.session.date && this.state.session.time_start
     && (this.props.protocole=='flash' || this.state.session.time_end)){
 
-      const now = new Date();
-      now.setSeconds(0);
-      now.setMilliseconds(0);
+      const now = new Date(),
+            isSessionScheduled = now.getTime() < this.state.session.time_start;
 
-      isScheduled = now < this.state.session.time_start;
-
-      // console.log(now);
-      // console.log(time_d);
-      // console.log(now < time_d);
-
-      return isScheduled;
+      // console.log(isSessionScheduled)
+      return isSessionScheduled;
     }
     return false;
   }
-  // isSessionScheduled(){
-  //   // console.log('isSessionScheduled');
-  //   if(this.state.session.date && this.state.session.time_start
-  //      && (this.props.protocole=='flash' || this.state.session.time_end)){
-  //     const now = date2folderName(new Date()),
-  //           time_d = this.state.session.date +'_'+ this.state.session.time_start.replace(/:/gi, '-'),
-  //           isScheduled = now < time_d;
-
-  //     // console.log(now);
-  //     // console.log(time_d);
-  //     // console.log(now < time_d);
-
-  //     return isScheduled;
-  //   }
-  //   return false;
-  // }
 
   _showDateTime(value) { 
     // let now = new Date();
@@ -1058,6 +1050,8 @@ console.log(props);
     // TODO: <= 3 jours
 
     now = new Date();
+    now.setHours(0);
+    now.setMinutes(0);
     now.setSeconds(0);
     now.setMilliseconds(0);
     console.log('now',now);
@@ -1094,7 +1088,7 @@ console.log(props);
       session_date.getDate(),
       time.getHours(),
       time.getMinutes(),
-      time.getSeconds(),
+      0,
       0,
     );
     time = time.getTime();
@@ -1132,29 +1126,29 @@ console.log(props);
   };
 
   launchSession(){
-    const now = new Date();
-    // const data = {
-    //   date: now.getFullYear() + '-' + pad2(now.getMonth()+1) + '-' + pad2(now.getDate()),
-    //   time_start: pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()),
-    // };
-    this.props.valueChanged('date', data['date']);
-    this.props.valueChanged('time_start', data['time_start']);
+    let now = new Date();
+    // now.setSeconds(0)
+    // now.setMilliseconds(0);
+    now = now.getTime();
+    let end = false;
+
+    this.props.valueChanged('date', now);
+    this.props.valueChanged('time_start', now);
 
     if(this.props.protocole=='flash'){
-      let end = new Date(now.getTime() + flashSessionTime*1000);
-      data['time_end'] = pad2(end.getHours()) + ':' + pad2(end.getMinutes()) + ':' + pad2(end.getSeconds())
-
-      this.props.valueChanged('time_end', data['time_end']);
+      end = now + flashSessionTime * 1000;
+      this.props.valueChanged('time_end', end);
     }
-
-
+    console.log( end + ' ' + new Date(end));
     this.setState({
       session:{
         ...this.state.session,
-        ...data,
+        date:now,
+        time_start:now,
+        time_end:end,
       }
     }, function(){
-      // setInterval(() => {this.testEndSession()}, 60000);
+      // done vie timer countdown callback. setInterval(() => {this.testEndSession()}, 60000);
     });
   }
 
@@ -1180,8 +1174,7 @@ console.log(props);
     // TODO: Warn user about 20min.
 
     const now = new Date();
-
-
+    now.setMilliseconds(0);
     now.setSeconds(now.getSeconds()-1);
 
     this.refs['running-timer'].clear();
@@ -1189,10 +1182,10 @@ console.log(props);
       isDateTimeVisible:false,
       session:{
       ...this.state.session,
-        time_end: pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()),
+        time_end: now.getTime(),
       }
     })
-    this.props.valueChanged('time_end', pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds()));
+    this.props.valueChanged('time_end', now.getTime());
   }
 
   storeSession(field, value){
@@ -1208,6 +1201,9 @@ console.log(props);
     });
   }
 
+
+
+
   render(){
     console.log('render session form',this.state.session)
     return(
@@ -1215,8 +1211,26 @@ console.log(props);
 
         <ScrollView>
 
-              { this.isSessionScheduled() 
-              ? 
+  <TouchableOpacity
+  style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+  borderRightWidth:1, borderRightColor:'white',
+  flex:1,
+  }}
+  onPress = {() => alert(this.sessionStatus())}
+  >
+  <MaterialCommunityIcons
+  name="sd" 
+  style={{color:'white', padding:10, backgroundColor:'transparent'}}
+  size={25}
+  backgroundColor = 'transparent'
+  />
+  <Text style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}>
+  status </Text>
+  </TouchableOpacity>
+
+
+          { this.sessionStatus() == 'scheduled'
+            ?
               <View style={styles.collection_grp}>
 
                   <View style={{flexDirection:'row', flex:1}}>
@@ -1225,7 +1239,6 @@ console.log(props);
                         borderRightWidth:1, borderRightColor:'white',
                         flex:1,
                       }}
-                      // onPress = {() => this.launchSession()}
                       >
                       <MaterialCommunityIcons
                         name="alarm" 
@@ -1233,11 +1246,15 @@ console.log(props);
                         size={25}
                         backgroundColor = 'transparent'
                       />
+
                       <Timer
+                        index="0"
+                        ref="scheduling-timer"
                         style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
                         onTimeout={() => this.launchSession()}
                         time={this.state.session.time_start}
                       />
+
                     </View>
 
                     <TouchableOpacity
@@ -1257,8 +1274,9 @@ console.log(props);
                   </View>
 
               </View>
-              : this.isSessionRunning() 
-              ?
+
+            : this.sessionStatus() == 'running'
+            ?
               <View style={styles.collection_grp}>
 
                   <View style={{flexDirection:'row', flex:1}}>
@@ -1275,9 +1293,10 @@ console.log(props);
                         backgroundColor = 'transparent'
                       />
                       <Timer
+                        index={this.state.session.time_end?'end':'start'}
                         ref="running-timer"
                         style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
-                        onTimeout={()=>{alert('Session over')}}
+                        onTimeout={()=>{alert('Session over TODO:setstate to refresh')}}
                         time={
                           this.state.session.time_end
                           ? this.state.session.time_end // has been set to start + 20min for flash protocole.
@@ -1312,9 +1331,9 @@ console.log(props);
 
               </View>
 
-
-              : this.isSessionOver() 
-              ? 
+            : this.sessionStatus() == 'over'
+            ?
+           
               <View 
                 style={{flexDirection:'row', flex:1, justifyContent:'center', marginTop:20,}}
                 // onPress = {() => this.help('Protocole')} 
@@ -1322,20 +1341,13 @@ console.log(props);
                 <Text style={{
                   fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
                   padding:5, color:greenFlash, backgroundColor:'transparent'}}>
-                    {formatDate(this.state.session.date)}  {
-                      this.state.session.time_start
-                      ? pad2(this.state.session.time_start.getHours()) + ':' + pad2(this.state.session.time_start.getMinutes())
-                      : ''
-                    }  -  { 
-                      this.state.session.time_end
-                      ? pad2(this.state.session.time_end.getHours()) + ':' + pad2(this.state.session.time_end.getMinutes())
-                      : ''
-                    }
+                    {formatDate(this.state.session.date)}  {formatTime(this.state.session.time_start)}  -  {formatTime(this.state.session.time_end)}
                 </Text>
        
               </View>
 
-              :  
+            : this.sessionStatus() != 'unset'
+            ? null :
               <View style={styles.collection_grp}>
 
                   { !this.state.isDateTimeVisible
@@ -1378,18 +1390,16 @@ console.log(props);
                   : 
                   <View>
                     <View style={{flexDirection:'row', flex:1}}>
-
-                      <TouchableOpacity
+                      <View
                         style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
                           borderRightWidth:1, borderRightColor:'white',
                           flex:1,
                         }}
-                        onPress = {() => this.launchSession()}
                         >
                         <Text style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}>
                         Lancement planifié 
                         </Text>
-                      </TouchableOpacity>
+                      </View>
 
                       <TouchableOpacity
                         style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
@@ -1405,22 +1415,15 @@ console.log(props);
                           backgroundColor = 'transparent'
                         />
                       </TouchableOpacity>
-
                     </View>
+
                     <View style={[styles.collection_subgrp,{backgroundColor:'white', marginTop:0,marginBottom:0, borderTopWidth:0}]}>
-                      <Text style={styles.coll_subtitle}
-
-                      // TODO: check 
-                      // si prot flash: fin pas editable (deb+20min)
-                      // si prot long deb < fin et >20min
-
-                      >
+                      <Text style={styles.coll_subtitle}>
                       Date, Heure de début { this.props.protocole=='flash' ? '' : 'et de fin'}</Text>
                       <View style={{
                         flexDirection:'row',
                         alignItems:'space-between',
                         justifyContent:'center',
-                         // alignItems: 'flex-start',
                       }}>
                         <TouchableOpacity
                           style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
@@ -1474,9 +1477,6 @@ console.log(props);
                   }
                 </View>
               }
-
-          
-              
 
               <View style={styles.collection_grp}>
                 <View style={styles.collection_subgrp}>
@@ -3105,6 +3105,7 @@ export default class CollectionList extends Component {
     this.state = {
       collections:[],
       editing:false,
+      selectItems:false,
     };
   }
 
@@ -3141,10 +3142,12 @@ export default class CollectionList extends Component {
 
 
   newCollection(){
-    
     const now = date2folderName();
+    
+    // Create Folder.
     this.props.createCollectionFolders(now);
 
+    // Create stored data.
     let coll = this.state.collections;
     coll.push({
         name:'',
@@ -3197,7 +3200,20 @@ export default class CollectionList extends Component {
   }
 
   selectCollection(index){
-    this.setState({editing:index});
+    if(this.state.selectItems!==false){
+      let selectItems = this.state.selectItems;
+      const i = selectItems.indexOf(index);
+      if(i<0){
+        selectItems.push(index);
+      }
+      else{
+        selectItems.splice(i, 1);
+      }
+      this.setState({selectItems:selectItems}); 
+    }
+    else{
+      this.setState({editing:index});   
+    }
   }
 
   collectionChanged(key, val){
@@ -3213,14 +3229,73 @@ export default class CollectionList extends Component {
     }
   }
 
+  selectItems(index) {
+    if(index===false){
+      this.setState({selectItems:false});
+    }
+    else {
+      this.setState({selectItems:[index]});
+    }
+  }
+
+  deleteSelected(){
+    // TODO: confirm delete.
+    Alert.alert(
+      'Effacer les collections sélectionées ?',
+      'Toutes les informations et photos associées seront définitivement perdues.',
+      [
+        {
+          text: 'Annuler',
+          onPress: () => console.log('Cancel Pressed'),
+        },
+        {
+          text: 'Effacer', 
+          onPress: () => {
+            const selected = this.state.selectItems,
+                  collections = this.state.collections;
+
+            // Backward loop to avoid re-index issue.
+            for (var i = selected.length - 1; i >= 0; i--) {
+              const collection_name = this.state.collections[selected[i]].date;
+              console.log(selected[i] + '  ' + collection_name);
+
+              // Delete stored data.
+              AsyncStorage.removeItem(collection_name+'_collection');
+              AsyncStorage.removeItem(collection_name+'_sessions');
+              AsyncStorage.removeItem(collection_name+'_insects');
+
+              // Delete folder.
+              this.props.deleteCollectionFolders(collection_name);
+
+              // Remove from collection list.
+              collections.splice(selected[i], 1);
+              
+            }
+            // Store purged collection list.
+            this.setState({
+              collections:collections,
+              selectItems:false,
+            }, function(){
+               AsyncStorage.setItem('collections', JSON.stringify( this.state.collections ));
+            });
+          }
+        },
+      ],
+    );
+
+
+  }
 
   render(){
     return(
        <View style={{flex:1}}>
         { this.state.editing === false
           ? <View style={{flex:1}}>
+
+              { this.state.selectItems === false 
+              ?
               <TouchableOpacity  
-                style={[styles.listItem,styles.listItemNew]}
+                style={{backgroundColor:greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
                 onPress = {() => this.newCollection()}
                 >
                 <MaterialCommunityIcons   
@@ -3231,6 +3306,34 @@ export default class CollectionList extends Component {
                 Créer une collection</Text>
               </TouchableOpacity>
 
+              :
+              <View  
+                style={{alignItems:'center', backgroundColor:greenFlash,
+                 height:50, flexDirection:'row'}}
+                >
+                <TouchableOpacity style={{flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',
+                 borderRightWidth:1, borderRightColor:'white'}}
+                  onPress = {() => this.deleteSelected()}
+                  >
+                  <MaterialCommunityIcons   
+                    name='delete-circle'
+                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                  /><Text style={{color: 'white', fontSize:16,}}>
+                  Suprimer</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={{flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',}}
+                  onPress = {() => this.selectItems(false)}
+                  >
+                  <MaterialCommunityIcons   
+                    name='close-circle'
+                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                  /><Text style={{color: 'white', fontSize:16,}}>
+                  Annuler</Text>
+                </TouchableOpacity>
+              </View>
+              }
+
               <ScrollView>
               { this.state.collections.map((value, index) => 
                 <TouchableOpacity  
@@ -3240,7 +3343,24 @@ export default class CollectionList extends Component {
                     : null
                   ]}
                   onPress = {() => this.selectCollection(index)}
+                  onLongPress = {() => this.selectItems(index)}
                   >
+                  { this.state.selectItems === false ? null :
+                    <View style={{
+                      // borderRadius:10,
+                      margin:10, marginLeft:20,
+                      height:20, width:20, borderWidth:1, borderColor:greenFlash, padding:1, 
+                      
+                    }}>
+                       <View style={{
+                        // borderRadius:10,
+                        height:16, width:16,
+                        backgroundColor: this.state.selectItems.indexOf(index)>=0
+                          ? greenFlash
+                          : 'transparent'
+                      }}></View>
+                    </View>
+                  }
                   <Image
                     style={{ 
                       margin:1,
