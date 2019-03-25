@@ -1168,7 +1168,6 @@ class SessionForm extends Component {
         this.props.valueChanged('date', now);
         this.props.valueChanged('time_start', now);
         this.props.valueChanged('time_end', end);
-        // done vie timer countdown callback. setInterval(() => {this.testEndSession()}, 60000);
       });
     // }
 
@@ -1176,7 +1175,7 @@ class SessionForm extends Component {
 
   cancelSession(){
 
-    // Warn user about 20min.
+    // TODO: Warn user about 20min.
 
     this.setState({
       isDateTimeVisible:false,
@@ -2098,7 +2097,6 @@ class CollectionForm extends Component {
 
   storeListItem(key, value){
     if(value){
-      // TODO: if protocole hide panel + si flash create unique collection
       this.setState({collection:{...this.state.collection, 
           [key]:value,
         }}, function(){

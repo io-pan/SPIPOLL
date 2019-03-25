@@ -44,16 +44,7 @@ import SpipolLogin from  "./src/spipoll-login-form"
 import CollectionList from "./src/collections"
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import RNThumbnail from 'react-native-thumbnail';
-// TODO:
-//  . deal with back button
-//    . mask
-//    . setup sliders
-//    . collection form take picture
-//  
-
-import Svg,{
-    Ellipse,
-} from 'react-native-svg';
+import Svg,{ Ellipse,} from 'react-native-svg';
 
 let source;
 let motionMask;
@@ -241,10 +232,13 @@ export default class App extends Component<Props> {
     this.photoNumber=false;
     this.videoMotion=false;
     this.motionActionRunning=false;
+
+    this.init();
   }
 
-  // TODO: rewthink permissions.
+  // TODO: re-think permissions.
   requestForPermission = async () => {
+
     try{
       const granted = await PermissionsAndroid.requestMultiple([
         PermissionsAndroid.PERMISSIONS.CAMERA,
@@ -256,18 +250,19 @@ export default class App extends Component<Props> {
         PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION,
         PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
       ])
-      // if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-      // &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
-      // // &&  granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
-      // // &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
-      // // &&  granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
-      // // &&  granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
-      // ){
-        
-      // }
-      // else {
-      //   // Exit app.
-      // }
+      if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+      &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
+      // &&  granted['android.permission.RECORD_AUDIO'] === PermissionsAndroid.RESULTS.GRANTED
+      ){
+        // alert('PERMiSSION OK');
+      }
+      else {
+        // alert('NO EPRMiSSION');
+        // Exit app.
+      }
 
       SplashScreen.hide();
       // LDPI: Portrait: 200x320px. 
@@ -281,7 +276,8 @@ export default class App extends Component<Props> {
     }
   }
 
-  componentDidMount() {
+  // TODO: fix that out componentWillMount.
+  init() {
     StatusBar.setHidden(true);
 
     // Get app available folders and set defaults.
@@ -323,6 +319,8 @@ export default class App extends Component<Props> {
         if(motion_parameters){
           motion_parameters = JSON.parse(motion_parameters);
           this.setState({
+            // TODO set default on app install or ask user.
+            // pb that phone/SD button not visible until setstate.
             storage: motion_parameters.storage ? motion_parameters.storage : this.appDirs[0].path,
             motionAction:{
               type: motion_parameters.motionAction.type ? motion_parameters.motionAction.type : false,
@@ -408,6 +406,7 @@ export default class App extends Component<Props> {
     //   }
     // );
 
+    // TODO move this to specific component.
     setInterval(() => {this.testBattery()}, 60000);
     KeepScreenOn.setKeepScreenOn(true);
 
@@ -1438,7 +1437,8 @@ export default class App extends Component<Props> {
                   Prendre une vidéo</Text>
                 </TouchableOpacity>
 
-              // TODO: Send alert to connected device.
+              // TODO: Send alert to connected device ?
+
             }
           </View>
         </View>        
