@@ -36,7 +36,7 @@ const green = "#bcd151";
 const greenLight = "#e0ecb2";
 const greenSuperLight ="#ecf3cd"
 const greenFlash ="#92c83e";
-const flashSessionTime = 61 // 20*60;
+const flashSessionTime = 120; // 20*60;
 const date2folderName = function(){
   now = new Date();
   year = "" + now.getFullYear();
@@ -60,7 +60,6 @@ const formatFolderName = function(str, sec){
 
 const formatDate = function(timestamp){
   // 2 janv. 2019
-  console.log('formatDate', timestamp)
   if(timestamp){
     date = new Date(timestamp);
     const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
@@ -80,7 +79,6 @@ const formatDateSpipoll = function(timestamp){
 
 const formatTime = function(timestamp){
   // hh:mm
-  console.log('formatTime', timestamp);
   if(timestamp){
     date = new Date(timestamp);
     return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
@@ -532,13 +530,12 @@ class Timer extends Component {
   constructor (props) {
     super(props)
 
-    console.log('TIMER', new Date(props.time));
-console.log( props.index);
+    console.log('TIMER - ', new Date(props.time));
 
     this.timer = null;
     this.countdown = false;
     const now = new Date();
-    now.setSeconds(0);
+    // now.setSeconds(0);
     now.setMilliseconds(0);
     let diff;
    
@@ -571,11 +568,7 @@ console.log( props.index);
     console.log(this.state)
   }
 
-componentWillReceiveProps(){
-    console.log('TIMER componentWillReceiveProps');
-}
-
-  componentWillMount(){
+  componentDidMount(){
     console.log('TIMER componentWillMount');
     this.timer = setInterval(() => {this.onTime()}, 1000);
   }
@@ -719,7 +712,7 @@ class InsectForm extends Component {
     };
   }
 
-  componentWillMount(){
+  componentDidMount(){
 
   }
 
@@ -963,11 +956,6 @@ class SessionForm extends Component {
     };
   }
 
-  componentWillMount(){
-    if(this.props.collection_id){
-
-    }
-  }
 
   sessionStatus(){
     let status = false;
@@ -983,18 +971,27 @@ class SessionForm extends Component {
     else {
       status = 'unset';
     }
-    console.log('sessionStatus', status);
+
+    console.log('SESSION status', status);
+    console.log('  now:' + new Date());
+    console.log('  deb:' + new Date( this.state.session.time_start))
+    console.log('  fin:' + new Date( this.state.session.time_end))
+
     return status;
   }
 
   isSessionRunning(){
     if(this.state.session.date && this.state.session.time_start){
-      const now = new Date(),
-            isSessionRunning = (!this.state.session.time_end 
-              ? now.getTime() >= this.state.session.time_start
-              : now.getTime() >= this.state.session.time_start 
-                && now.getTime() <= this.state.session.time_end
-            );
+      const now = new Date();
+      // now.setMilliseconds(0);
+      // now.setSeconds(0);
+
+      isSessionRunning = 
+      !this.state.session.time_end 
+      ? now.getTime() >= this.state.session.time_start
+      : now.getTime() >= this.state.session.time_start 
+        && now.getTime() < this.state.session.time_end
+      ;
 
       // console.log('isSessionRunning',isSessionRunning);
       return isSessionRunning;
@@ -1003,24 +1000,33 @@ class SessionForm extends Component {
   }
 
   isSessionOver(){
-    console.log('isSessionOver');
+    // console.log('isSessionOver');
     if(this.state.session.date && this.state.session.time_end){
-      const now = new Date(),
-            isSessionOver = now.getTime() > this.state.session.time_end;
+      const now = new Date();
+      // now.setMilliseconds(0);
+      // now.setSeconds(0);
 
-      // console.log('isSessionOver', isSessionOver)
+      // const end = new Date(this.state.session.time_end);
+      // end.setSeconds(0);
+      // end.setMilliseconds(0);
+
+      isSessionOver = now.getTime() >= this.state.session.time_end;
+
       return isSessionOver;
     }
     return false;
   }
 
   isSessionScheduled(){
-    console.log('isSessionScheduled');
+    // console.log('isSessionScheduled');
 
     if (this.state.session.date && this.state.session.time_start
     && (this.props.protocole=='flash' || this.state.session.time_end)){
 
-      const now = new Date(),
+      const now = new Date();
+    //     now.setMilliseconds(0);
+    // now.setSeconds(0);
+
             isSessionScheduled = now.getTime() < this.state.session.time_start;
 
       // console.log(isSessionScheduled)
@@ -1041,8 +1047,23 @@ class SessionForm extends Component {
       // }
     }) 
   };
-  _showTimePicker = (field) => this.setState({ isTimePickerVisible: field });
-  _showDatePicker = () => this.setState({ isDatePickerVisible: true });
+
+  _showTimePicker = (field) => {
+    if (field == 'start') {
+      const start = new Date();
+      this.initialTimeStart =  new Date(start.getTime() + 60000);
+    }
+    else {
+      this.initialTimeEnd = new Date( this.initialTimeStart + ((flashSessionTime+1)*1000));
+    }
+    this.setState({ isTimePickerVisible: field });
+  };
+
+  _showDatePicker = () => { 
+    this.initialDate = new Date();
+    this.setState({ isDatePickerVisible: true })
+  };
+
   _hideDateTimePicker = () => this.setState({ isTimePickerVisible: false, isDatePickerVisible:false });
 
   _handleDatePicked(date){
@@ -1098,10 +1119,8 @@ class SessionForm extends Component {
     // time = pad2(time.getHours()) + ':' + pad2(time.getMinutes()) + ':' + pad2(time.getSeconds());
     // date = this.state.session.date + ' ' + time;
 
+    // Check time validity.
     if(time > now){
-      console.log(this.state.isTimePickerVisible);
-      console.log(this.state.session.time_start);
-      console.log(this.state.session.time_end);
     
       if( (this.state.isTimePickerVisible=='end'  && (!this.state.session.time_start || time > this.state.session.time_start))
       ||  (this.state.isTimePickerVisible=='start' && (!this.state.session.time_end || time < this.state.session.time_end))
@@ -1126,30 +1145,35 @@ class SessionForm extends Component {
   };
 
   launchSession(){
-    let now = new Date();
-    // now.setSeconds(0)
-    // now.setMilliseconds(0);
-    now = now.getTime();
-    let end = false;
+    // if(!this.state.session.date){
+      let now = new Date();
+      now.setMilliseconds(0);
+      // now.setSeconds(0)
+      now = now.getTime();
 
-    this.props.valueChanged('date', now);
-    this.props.valueChanged('time_start', now);
 
-    if(this.props.protocole=='flash'){
-      end = now + flashSessionTime * 1000;
-      this.props.valueChanged('time_end', end);
-    }
-    console.log( end + ' ' + new Date(end));
-    this.setState({
-      session:{
-        ...this.state.session,
-        date:now,
-        time_start:now,
-        time_end:end,
+      let end = this.state.session.time_end; 
+
+      if(this.props.protocole=='flash'){
+        end = now + flashSessionTime * 1000;
       }
-    }, function(){
-      // done vie timer countdown callback. setInterval(() => {this.testEndSession()}, 60000);
-    });
+      console.log( end + ' ' + new Date(end));
+      this.setState({
+        session:{
+          ...this.state.session,
+          date:now,
+          time_start:now,
+          time_end:end,
+        }
+      }, function(){
+        // TODO: check if really needed
+        this.props.valueChanged('date', now);
+        this.props.valueChanged('time_start', now);
+        this.props.valueChanged('time_end', end);
+        // done vie timer countdown callback. setInterval(() => {this.testEndSession()}, 60000);
+      });
+    // }
+
   }
 
   cancelSession(){
@@ -1175,7 +1199,7 @@ class SessionForm extends Component {
 
     const now = new Date();
     now.setMilliseconds(0);
-    now.setSeconds(now.getSeconds()-1);
+    now.setSeconds(0) ;// now.setSeconds(now.getSeconds()-1);
 
     this.refs['running-timer'].clear();
     this.setState({
@@ -1202,34 +1226,19 @@ class SessionForm extends Component {
   }
 
 
-
+  initDatePicker(){
+    return new Date();
+  }
 
   render(){
-    console.log('render session form',this.state.session)
+
+    const sessionStatus = this.sessionStatus();
+
     return(
       <View>
-
         <ScrollView>
 
-  <TouchableOpacity
-  style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-  borderRightWidth:1, borderRightColor:'white',
-  flex:1,
-  }}
-  onPress = {() => alert(this.sessionStatus())}
-  >
-  <MaterialCommunityIcons
-  name="sd" 
-  style={{color:'white', padding:10, backgroundColor:'transparent'}}
-  size={25}
-  backgroundColor = 'transparent'
-  />
-  <Text style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}>
-  status </Text>
-  </TouchableOpacity>
-
-
-          { this.sessionStatus() == 'scheduled'
+          { sessionStatus == 'scheduled'
             ?
               <View style={styles.collection_grp}>
 
@@ -1248,7 +1257,7 @@ class SessionForm extends Component {
                       />
 
                       <Timer
-                        index="0"
+                        key="scheduling-timer"
                         ref="scheduling-timer"
                         style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
                         onTimeout={() => this.launchSession()}
@@ -1275,8 +1284,8 @@ class SessionForm extends Component {
 
               </View>
 
-            : this.sessionStatus() == 'running'
-            ?
+            : sessionStatus == 'running' ?
+
               <View style={styles.collection_grp}>
 
                   <View style={{flexDirection:'row', flex:1}}>
@@ -1293,7 +1302,7 @@ class SessionForm extends Component {
                         backgroundColor = 'transparent'
                       />
                       <Timer
-                        index={this.state.session.time_end?'end':'start'}
+                        key="running-timer"
                         ref="running-timer"
                         style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
                         onTimeout={()=>{alert('Session over TODO:setstate to refresh')}}
@@ -1331,8 +1340,7 @@ class SessionForm extends Component {
 
               </View>
 
-            : this.sessionStatus() == 'over'
-            ?
+            : sessionStatus == 'over' ?
            
               <View 
                 style={{flexDirection:'row', flex:1, justifyContent:'center', marginTop:20,}}
@@ -1346,8 +1354,8 @@ class SessionForm extends Component {
        
               </View>
 
-            : this.sessionStatus() != 'unset'
-            ? null :
+            : sessionStatus != 'unset' ? null :
+
               <View style={styles.collection_grp}>
 
                   { !this.state.isDateTimeVisible
@@ -1462,6 +1470,7 @@ class SessionForm extends Component {
                     </View>
       
                     <DateTimePicker
+                      date = { this.initialDate }
                       isVisible={this.state.isDatePickerVisible}
                       onConfirm={(date) => this._handleDatePicked(date)}
                       onCancel={this._hideDateTimePicker}
@@ -1469,6 +1478,9 @@ class SessionForm extends Component {
 
                     <DateTimePicker
                       mode="time"
+                      date = { this.state.isTimePickerVisible == 'start'
+                        ? this.initialTimeStart : this.initialTimeEnd
+                      }
                       isVisible={this.state.isTimePickerVisible!=false}
                       onConfirm={this._handleTimePicked}
                       onCancel={this._hideDateTimePicker}
@@ -1716,7 +1728,6 @@ class CollectionForm extends Component {
 
     // TODO create  / sessions folders
 
-
     this.state = {
       gpsOpacity:new Animated.Value(1),
       connected:false,
@@ -1845,7 +1856,7 @@ class CollectionForm extends Component {
     this.toValue = 1;
   }
 
-  componentWillMount(){
+  componentDidMount(){
     NetInfo.addEventListener(
       'connectionChange',
       this._handleConnectivityChange
@@ -1868,9 +1879,7 @@ class CollectionForm extends Component {
         }
       }
     });
-  }
 
-  componentDidMount(){
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       this.back();
       return true;
@@ -2862,8 +2871,6 @@ class CollectionForm extends Component {
             content={this.state.help.content}
             onCancel={() => this.hideHelpModal()} 
           />
-
-
       </View>
     );
   }
@@ -2883,7 +2890,7 @@ export class SessionList extends Component {
     };
   }
 
-  componentWillMount(){
+  componentDidMount(){
  
     console.log('session LIST MOUNT');
     AsyncStorage.getItem(this.props.collection_id+'_sessions', (err, sessions) => {
@@ -2923,16 +2930,16 @@ export class SessionList extends Component {
     console.log('session LIST UN-MOUNT');
   }
 
-  setSource(collection, field, source){
-    // this.setState({
-    //   editing:collection,
-    // }, function(){
+  // setSource(collection, field, source){
+  //   // this.setState({
+  //   //   editing:collection,
+  //   // }, function(){
 
-    //   console.log(field,source)
+  //   //   console.log(field,source)
 
-      // this.refs['collection-form'].refs['collection-'+field].setSource(source);
-    // });
-  }
+  //     // this.refs['collection-form'].refs['collection-'+field].setSource(source);
+  //   // });
+  // }
 
 
   newSession(){
@@ -3109,9 +3116,9 @@ export default class CollectionList extends Component {
     };
   }
 
-  componentWillMount(){
- 
+  componentDidMount(){
     console.log('LIST MOUNT');
+
     AsyncStorage.getItem('collections', (err, collections) => {
       if (err) {
         Alert.alert('ERROR getting collections '+ JSON.stringify(err));
@@ -3129,17 +3136,16 @@ export default class CollectionList extends Component {
     console.log('LIST UN-MOUNT');
   }
 
-  setSource(collection, field, source){
-    // this.setState({
-    //   editing:collection,
-    // }, function(){
+  // setSource(collection, field, source){
+  //   // this.setState({
+  //   //   editing:collection,
+  //   // }, function(){
 
-    //   console.log(field,source)
+  //   //   console.log(field,source)
 
-      this.refs['collection-form'].refs['collection-'+field].setSource(source);
-    // });
-  }
-
+  //     this.refs['collection-form'].refs['collection-'+field].setSource(source);
+  //   // });
+  // }
 
   newCollection(){
     const now = date2folderName();
@@ -3239,9 +3245,8 @@ export default class CollectionList extends Component {
   }
 
   deleteSelected(){
-    // TODO: confirm delete.
     Alert.alert(
-      'Effacer les collections sélectionées ?',
+      'Supprimer les collections sélectionées ?',
       'Toutes les informations et photos associées seront définitivement perdues.',
       [
         {
@@ -3249,7 +3254,7 @@ export default class CollectionList extends Component {
           onPress: () => console.log('Cancel Pressed'),
         },
         {
-          text: 'Effacer', 
+          text: 'Supprimer', 
           onPress: () => {
             const selected = this.state.selectItems,
                   collections = this.state.collections;
@@ -3282,8 +3287,6 @@ export default class CollectionList extends Component {
         },
       ],
     );
-
-
   }
 
   render(){
