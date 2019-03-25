@@ -1049,14 +1049,19 @@ class SessionForm extends Component {
   };
 
   _showTimePicker = (field) => {
-    if (field == 'start') {
-      const start = new Date();
-      this.initialTimeStart =  new Date(start.getTime() + 60000);
+    if(!this.state.session.date){
+      this._showDatePicker();
     }
-    else {
-      this.initialTimeEnd = new Date( this.initialTimeStart + ((flashSessionTime+1)*1000));
+    else{
+      if (field == 'start') {
+        const start = new Date();
+        this.initialTimeStart =  new Date(start.getTime() + 60000);
+      }
+      else {
+        this.initialTimeEnd = new Date( this.initialTimeStart + ((flashSessionTime+1)*1000));
+      }
+      this.setState({ isTimePickerVisible: field });
     }
-    this.setState({ isTimePickerVisible: field });
   };
 
   _showDatePicker = () => { 
@@ -1067,27 +1072,25 @@ class SessionForm extends Component {
   _hideDateTimePicker = () => this.setState({ isTimePickerVisible: false, isDatePickerVisible:false });
 
   _handleDatePicked(date){
-    console.log('date',date);
-    // TODO: <= 3 jours
+    date = date.getTime();
 
-    now = new Date();
+    let now = new Date();
     now.setHours(0);
     now.setMinutes(0);
     now.setSeconds(0);
     now.setMilliseconds(0);
-    console.log('now',now);
-    // now = now.getFullYear() 
-    //   + '-' + pad2(now.getMonth()+1)
-    //   + '-' + pad2(now.getDate())
-    // ; 
+    now = now.getTime();
 
-    // date = date.getFullYear() 
-    //   + '-' + pad2(date.getMonth()+1)
-    //   + '-' + pad2(date.getDate())
-    // ; 
+    let day3 = new Date();
+    day3.setHours(0);
+    day3.setMinutes(0);
+    day3.setSeconds(0);
+    day3.setMilliseconds(0);
+    day3 = day3.getTime();
+    day3 += 24*3 *60*60 * 1000;
 
-    if(date >= now){
-      this.storeSession('date', date.getTime());
+    if(date >= now && date < day3){
+      this.storeSession('date', date);
     }
     else{
       Alert.alert('Date passée', 'Lancez la session ou programmez la session dans les 3 jours à venir.'
@@ -1114,21 +1117,18 @@ class SessionForm extends Component {
     );
     time = time.getTime();
 
-    // now = now.getFullYear() + '-' + pad2((now.getMonth()+1)) + '-' + pad2(now.getDate())
-    //   + ' ' + pad2(now.getHours()) + ':' + pad2(now.getMinutes()) + ':' + pad2(now.getSeconds());
-    // time = pad2(time.getHours()) + ':' + pad2(time.getMinutes()) + ':' + pad2(time.getSeconds());
-    // date = this.state.session.date + ' ' + time;
-
     // Check time validity.
     if(time > now){
     
-      if( (this.state.isTimePickerVisible=='end'  && (!this.state.session.time_start || time > this.state.session.time_start))
-      ||  (this.state.isTimePickerVisible=='start' && (!this.state.session.time_end || time < this.state.session.time_end))
+      if((this.state.isTimePickerVisible=='end'  
+          && (!this.state.session.time_start || time > flashSessionTime*1000 + this.state.session.time_start))
+      || (this.state.isTimePickerVisible=='start' 
+          && (!this.state.session.time_end   || time+flashSessionTime*1000 < this.state.session.time_end))
       ){
         this.storeSession('time_'+this.state.isTimePickerVisible, time);
       }
       else {
-        Alert.alert("l'heure de début doit être antérieure à l'heure de fin.");
+        Alert.alert("la session doit durer plus de 20 minutes.");
         this.setState({
           session:{...this.state.session, ['time_'+this.state.isTimePickerVisible] : ''},
           isTimePickerVisible:false,
@@ -1148,9 +1148,7 @@ class SessionForm extends Component {
     // if(!this.state.session.date){
       let now = new Date();
       now.setMilliseconds(0);
-      // now.setSeconds(0)
       now = now.getTime();
-
 
       let end = this.state.session.time_end; 
 
@@ -1425,9 +1423,11 @@ class SessionForm extends Component {
                       </TouchableOpacity>
                     </View>
 
-                    <View style={[styles.collection_subgrp,{backgroundColor:'white', marginTop:0,marginBottom:0, borderTopWidth:0}]}>
+                    <View style={[styles.collection_subgrp,{marginTop:0,marginBottom:0, borderTopWidth:0}]}>
+                      {/*
                       <Text style={styles.coll_subtitle}>
                       Date, Heure de début { this.props.protocole=='flash' ? '' : 'et de fin'}</Text>
+                      */}
                       <View style={{
                         flexDirection:'row',
                         alignItems:'space-between',
@@ -1438,20 +1438,30 @@ class SessionForm extends Component {
                             borderColor:greenFlash, flex:0.6,
                           }}
                           onPress={this._showDatePicker}
-                          ><Text style={{fontSize:14,backgroundColor:'white', flex:1, textAlign:'center',
+                          >
+                          <Text style={{fontSize:14,backgroundColor:'white', flex:1, textAlign:'center',
                             // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
-                          }}>
-                          {formatDate(this.state.session.date)}</Text>
+                            }}>
+                            { this.state.session.date
+                              ? formatDate(this.state.session.date)
+                              : 'Date'
+                            }
+                          </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                             borderColor:greenFlash, flex: 0.2,
                           }}
                           onPress = {() => this._showTimePicker('start')}
-                          ><Text style={{fontSize:14, flex:1, textAlign:'center',
+                          >
+                          <Text style={{fontSize:14, flex:1, textAlign:'center',
                             // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
                           }}>
-                          { formatTime(this.state.session.time_start) }</Text>
+                          { this.state.session.time_start
+                            ? formatTime(this.state.session.time_start) 
+                            : 'Début'
+                          }
+                          </Text>
                         </TouchableOpacity>
 
                         { this.props.protocole=='flash' ? null :
@@ -1460,10 +1470,15 @@ class SessionForm extends Component {
                             borderColor:greenFlash, flex:0.2,
                           }}
                           onPress = {() => this._showTimePicker('end')}
-                          ><Text style={{fontSize:14, flex:1, textAlign:'center',
+                          >
+                          <Text style={{fontSize:14, flex:1, textAlign:'center',
                             // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
                           }}>
-                          { formatTime(this.state.session.time_end) }</Text>
+                            { this.state.session.time_end
+                              ? formatTime(this.state.session.time_end) 
+                              : 'Fin'
+                            }
+                          </Text>
                         </TouchableOpacity>
                         }
                       </View>
