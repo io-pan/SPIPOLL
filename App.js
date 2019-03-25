@@ -96,9 +96,7 @@ class Draggable extends Component {
       opacity: new Animated.Value(1)
     };
     this.initialPos = props.initialPos ? props.initialPos : {x:0,y:0};
-  }
 
-  componentWillMount() {
     this._val = { x:0, y:0 }
 
     this.state.pan.addListener((value) => {
@@ -283,7 +281,7 @@ export default class App extends Component<Props> {
     }
   }
 
-  componentWillMount() {
+  componentDidMount() {
     StatusBar.setHidden(true);
 
     // Get app available folders and set defaults.
@@ -360,6 +358,7 @@ export default class App extends Component<Props> {
     });
   }
 
+  // Create / Delete  collection folder on each available storage.
   // TODO: lock SD or phone storage for a given collection / session
   createCollectionFolders(collectionName) {
     for(i=0; i<this.appDirs.length; i++){
@@ -369,7 +368,18 @@ export default class App extends Component<Props> {
       .catch((err) => { console.log('error coll folder creation ' + curDir+'/collections/'+collectionName, err) })
     }
   }
-
+  deleteCollectionFolders(collectionName) {
+    for(i=0; i<this.appDirs.length; i++){
+      const curDir = this.appDirs[i].path;
+      RNFetchBlob.fs.unlink(curDir+'/collections/'+collectionName)
+      .then(() => { 
+        console.log('coll folder deleted ' + curDir+'/collections/'+collectionName )
+      })
+      .catch((err) => {
+        console.log('error coll folder detetion ' + curDir+'/collections/'+collectionName, err)
+      });
+    }
+  }
 
   testBattery(){
 
@@ -699,22 +709,16 @@ export default class App extends Component<Props> {
                 this.setState({
                   cam:'collection-form',
                 }, function(){
-
-                  this.refs['collectionList'].setSource(
-                      collId,
-                      field,
-                      {uri:'file://' + this.state.storage + '/' + filename});
+                  this.refs['collectionList'].refs['collection-form'].refs['collection-'+field].setSource(
+                    {uri:'file://' + this.state.storage + '/' + filename}
+                  );
+                  // this.refs['collectionList'].setSource(
+                  //   collId,
+                  //   field,
+                  //   {uri:'file://' + this.state.storage + '/' + filename}
+                  // );
                 })
               }
-              else if(this.state.cam=='collection-environment'){
-                this.setState({
-                  cam:'collection-form',
-                }, function(){
-                  this.refs['collectionList'].refs['collection-environment'].setSource(
-                      {uri:'file:///' + this.state.storage + '/' + filename});
-                })
-              }
-
             }).catch((err) => { 
               this.setState({ isTakingPicture: false }); 
               console.log(err) 
@@ -1991,6 +1995,7 @@ export default class App extends Component<Props> {
               filePath={this.state.storage}
               pickPhoto = {(view) => this.pickPhoto(view)}
               createCollectionFolders =  {(collectionName) => this.createCollectionFolders(collectionName)}
+              deleteCollectionFolders =  {(collectionName) => this.deleteCollectionFolders(collectionName)}
            />
            </View>
           : null
