@@ -26,143 +26,110 @@ import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView from 'react-native-maps';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 
-// Spipoll
+// Spipoll data.
 import { flowerList } from './flowers.js';
 import { insectList } from './insects.js';
 
-const greenDark = "#231f20";
-const green = "#bcd151";
-const greenLight = "#e0ecb2";
-const greenSuperLight ="#ecf3cd"
-const greenFlash ="#92c83e";
-const flashSessionTime = 120; // 20*60;
-const date2folderName = function(){
-  now = new Date();
-  year = "" + now.getFullYear();
-  month = "" + (now.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
-  day = "" + now.getDate(); if (day.length == 1) { day = "0" + day; }
-  hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
-  minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
-  second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
+const 
+  greenDark = "#231f20",
+  green = "#bcd151",
+  greenLight = "#bcd151",
+  greenSuperLight ="#ecf3cd",
+  greenFlash = "#92c83e", // "#92c83e"; // b7d432 // bcd151
+  purple = "#9d218b",
+  flashSessionTime = 120, // 20*60;
 
-  return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;
-};
+  date2folderName = function(){
+    now = new Date();
+    year = "" + now.getFullYear();
+    month = "" + (now.getMonth() + 1); if (month.length == 1) { month = "0" + month; }
+    day = "" + now.getDate(); if (day.length == 1) { day = "0" + day; }
+    hour = "" + now.getHours(); if (hour.length == 1) { hour = "0" + hour; }
+    minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
+    second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
 
+    return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;
+  },
 
-const formatFolderName = function(str, sec){
-  const mois = ['', 'janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
-  str = str.split('_');
-  d = str[0].split('-');
-  t = str[1].split('-');
-  return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0] + ', ' + t[0]+':'+ t[1] + (sec?':'+t[2] : '');
-}
+  formatFolderName = function(str, sec){
+    const mois = ['', 'janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
+    str = str.split('_');
+    d = str[0].split('-');
+    t = str[1].split('-');
+    return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0] + ', ' + t[0]+':'+ t[1] + (sec?':'+t[2] : '');
+  },
 
-const formatDate = function(timestamp){
-  // 2 janv. 2019
-  if(timestamp){
-    date = new Date(timestamp);
-    const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
-    return date.getDate() + ' ' + mois[date.getMonth()] + ' ' + date.getFullYear();
-  }
-  return '';
-}
+  formatDate = function(timestamp){
+    // 2 janv. 2019
+    if(timestamp){
+      date = new Date(timestamp);
+      const mois = ['janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
+      return date.getDate() + ' ' + mois[date.getMonth()] + ' ' + date.getFullYear();
+    }
+    return '';
+  },
 
-const formatDateSpipoll = function(timestamp){
-  // yyyy-mm-dd
-  if(timestamp){
-    date = new Date(timestamp);
-    return date.getFullYear() + '-' + (date.getMonth() + 1)  + '-' + date.getDate();
-  }
-  return '';
-}
+  formatDateSpipoll = function(timestamp){
+    // yyyy-mm-dd
+    if(timestamp){
+      date = new Date(timestamp);
+      return date.getFullYear() + '-' + (date.getMonth() + 1)  + '-' + date.getDate();
+    }
+    return '';
+  },
 
-const formatTime = function(timestamp){
-  // hh:mm
-  if(timestamp){
-    date = new Date(timestamp);
-    return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
-  }
-  return '';
-}
+  formatTime = function(timestamp){
+    // hh:mm
+    if(timestamp){
+      date = new Date(timestamp);
+      return pad2(date.getHours()) + ':' + pad2(date.getMinutes());
+    }
+    return '';
+  },
 
-// const formatDate = function(str){
-//   if(str){
-//     const mois = ['', 'janv.', 'fév.', 'mars', 'avril', 'mai', 'juin', 'juil.', 'août', 'sept.', 'nov.', 'déc.']
-//     const d = str.split('-');
-//     return d[2] +  ' ' + mois[parseInt(d[1])] +  ' ' + d[0]   
-//   }
-//   return '';
-// }
+  pad2 = function(num){
+    return num<10 ? '0'+num : ''+num;
+  },
+  
+  deg2dms = function(deg, latlon) {
+    if (isNaN(deg)) return false;
 
-const pad2 = function(num){
-  return num<10 ? '0'+num : ''+num;
-}
+    var card = '';
+    if(latlon=='lat'){
+      card = deg > 0 ? "N" : "S"
+    }
+    else {
+      card = deg > 0 ? "E" : "W"
+    }
 
-// const subTime = function(t1, t2){
-//   const final = [];
-//   if(t1[2] < t2[2]){
-//     final[2] =  60-t2[2] + t1[2];
-//     t2[1]++;
-//   }
-//   else{
-//     final[2] = t1[2] -t2[2];
-//   }
+    deg=Math.abs(deg);
+    var d = Math.floor(deg);
+    var minfloat = (deg-d)*60;
+    var m = Math.floor(minfloat);
+    var secfloat = (minfloat-m)*60;
+    var s = Math.round(secfloat * 100) / 100;
+    // After rounding, the seconds might become 60. These two
+    // if-tests are not necessary if no rounding is done.
+    if (s==60) {
+      m++;
+      s=0;
+    }
+    if (m==60) {
+      d++;
+      m=0;
+    }
+    return "" + d + ":" + m + ":" + s + ":" + card;
+  },
 
-//   if(t1[1] < t2[1]){
-//     final[1] =  60-t2[1] + t1[1];
-//     t2[0]++;
-//   }
-//   else{
-//     final[1] = t1[1] -t2[1];
-//   }
+  dmsFormat = function(dms){
+    if (!dms) return '';
 
-//   if(t1[0] < t2[0]){
-//     final[0] =  24-t2[0] + t1[0];
-//     t2[3]++;
-//   }
-//   else{
-//     final[0] = t1[0] -t2[0];
-//   }
+    dms = dms.split(':');
+    return "" + dms[0] + "°" +dms[1] + "'" + dms[2] + "''" + dms[3];
+  };
 
-//   final[3] = t1[3] - t2[3];
-
-//   return final;
-// }
-
-const deg2dms = function(deg, latlon) {
-  var card = '';
-  if(latlon=='lat'){
-    card = deg > 0 ? "N" : "S"
-  }
-  else {
-    card = deg > 0 ? "E" : "W"
-  }
-
-  deg=Math.abs(deg);
-  var d = Math.floor(deg);
-  var minfloat = (deg-d)*60;
-  var m = Math.floor(minfloat);
-  var secfloat = (minfloat-m)*60;
-  var s = Math.round(secfloat * 100) / 100;
-  // After rounding, the seconds might become 60. These two
-  // if-tests are not necessary if no rounding is done.
-  if (s==60) {
-    m++;
-    s=0;
-  }
-  if (m==60) {
-    d++;
-    m=0;
-  }
-
-
-  return "" + d + ":" + m + ":" + s + ":" + card;
-}
-const dmsFormat = function(dms){
-  dms = dms.split(':');
-  return "" + dms[0] + "°" +dms[1] + "'" + dms[2] + "''" + dms[3];
-}
 
 //-----------------------------------------------------------------------------------------
 class ModalPlace extends Component {
@@ -419,15 +386,19 @@ class ImagePicker extends Component {
     this.setState({visibleImageView: false});
   }
 
+  onLayout = (e) => {
+    this.setState({
+      width: e.nativeEvent.layout.width,
+      height: e.nativeEvent.layout.height,
+    })
+  }
+  
   render(){
-   
       return(
-        <View style={[this.props.style, {
-          flex:1,
-          flexDirection:'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-        }]}>
+
+        <View style={[ this.props.style,{}]}
+          
+          >
           <ImageView
             title={this.props.title}
             visible={this.state.visibleImageView}
@@ -438,30 +409,42 @@ class ImagePicker extends Component {
           />
 
           <TouchableOpacity 
-            style={{alignItems:'center', justifyContent:'center', flex:1}}
+            style={{
+              flex:1,
+              alignItems:'center', 
+              justifyContent: 'center',
+            }}
             onPress = {() => this.props.onPress()}
+            onLayout = {this.onLayout} 
             >
-            <Text style={{textAlign:'center', fontSize:16, color:'grey'}}>
-              {this.props.title}</Text>
-            <MaterialCommunityIcons   
-              name='camera'
-              size={50}
-              backgroundColor='transparent'
-              color="lightgrey"           
+            <Text style={{ fontSize:14, color:'grey', height:50, textAlign:'center',
+                padding:2,}}>
+            {this.props.title}</Text>
+            <MaterialCommunityIcons
+              name="camera"
+              style={{
+                backgroundColor:'transparent',
+                marginBottom:5,
+                color:greenFlash,
+              }}
+              size={30}
             />
           </TouchableOpacity>
 
           { this.state.source
             ? <TouchableOpacity 
               style={{
+                alignItems:'center', 
+                justifyContent: 'center',
+                flex:0.5,
                 // borderColor:greenLight, borderWidth:1,
               }} 
               onPress={this.showImageView}
               >
               <Image
                 style={{ 
-                  width:150,
-                  height:150,
+                  width:this.state.width,
+                  height:this.state.width,
                 }}
                 resizeMode="contain"
                 source={this.state.source }
@@ -475,6 +458,44 @@ class ImagePicker extends Component {
 
 } // ImagePicker
 
+
+//-----------------------------------------------------------------------------------------
+class FooterImage extends Component {
+//-----------------------------------------------------------------------------------------
+  constructor (props) {
+    super(props)
+    this.state = {
+      width:0,
+    };
+
+    if (__DEV__) {
+      this.footer_source = { uri: `${resolveAssetSource(require('../img/footer.png')).uri}` };
+    } else {
+      this.footer_source = {uri: 'asset:/img/footer.png'};
+    }
+  }
+
+  onLayout = (e) => {
+    this.setState({
+      width: e.nativeEvent.layout.width,
+      // height: e.nativeEvent.layout.height,
+    })
+  }
+
+  render(){
+    return(
+      <View
+        onLayout={this.onLayout}
+      >
+      <Image 
+        style={{width:this.state.width, height:this.state.width*0.65}}
+        source={this.footer_source} 
+      />
+      </View>
+    );
+  }
+
+}
 
 //-----------------------------------------------------------------------------------------
 class ModalHelp extends Component {
@@ -501,10 +522,12 @@ class ModalHelp extends Component {
          
           <View style={{flex:1, alignItems:'center'}}>
           <ScrollView>
-            <View style={{padding:15}}>
-            <Text>yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov </Text>
-            </View>
-            <Text style={styles.titleTextStyle}></Text>
+
+            <Text style={{padding:15}}>
+            yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov yxcyxcyxcyx cy csdl fhfsod vsdov
+            </Text>
+
+            <FooterImage/>
           </ScrollView>
           </View> 
 
@@ -756,7 +779,6 @@ class InsectForm extends Component {
 
         <ScrollView>
 
-    
               <View style={styles.collection_grp}>
                 <Image
                 // map photos
@@ -910,17 +932,16 @@ class InsectForm extends Component {
 
               </View>
 
+              <ModalFilterPicker
+                visible={this.state.visibleTaxonModal}
+                title='Insecte'
+                titleTextStyle={styles.titleTextStyle}
+                options={insectList}
+                onSelect={(picked) => this.storeInsect('taxon',picked)}
+                onCancel={this.hideTaxonModal}
+              />
+
         </ScrollView>
-
-        <ModalFilterPicker
-          visible={this.state.visibleTaxonModal}
-          title='Insecte'
-          titleTextStyle={styles.titleTextStyle}
-          options={insectList}
-          onSelect={(picked) => this.storeInsect('taxon',picked)}
-          onCancel={this.hideTaxonModal}
-        />
-
       </View>
     )
   }
@@ -1784,7 +1805,7 @@ class CollectionForm extends Component {
         environment:{
           photo:'',
           occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
-          locAttr_2:0,                 //  ruche
+          locAttr_2:'',                 //  ruche
           locAttr_1:[],                 //  habitat
           locAttr_3:false,                 //  grande culture en fleur
         },
@@ -2205,8 +2226,8 @@ class CollectionForm extends Component {
             { this.state.collection.name && this.state.collection.protocole
               ? 
                 /*<ScrollView horizontal={true}  style={{  borderBottomWidth:1, borderBottomColor:'#dddddd'}}  >*/
-                <View style={{flexDirection:'row', alignItems:'center', justifyContent:'center',
-                 // borderBottomWidth:1, borderBottomColor:'#dddddd'
+                <View style={{margin:10,flexDirection:'row', alignItems:'center', justifyContent:'center',
+                 // borderBottomWidth:1, borderBottomColor:'#dddddd',
                }}>
 
                   { this.state.tab=='collection' ? null :
@@ -2227,7 +2248,7 @@ class CollectionForm extends Component {
                       size={25}
                     />
                     <Text style={{ fontSize:16, color:'grey'}}>
-                    Collection</Text>
+                    Station Florale</Text>
                   </TouchableOpacity>
                   }
 
@@ -2346,123 +2367,47 @@ class CollectionForm extends Component {
                 </View>
                 </React.Fragment>
                 }
-
-                <View style={styles.collSectionTitle}>
-                  <Text style={styles.collSectionTitleText}>
-                  Lieu</Text>
-                </View>
-
-                <View style={styles.collection_grp}>
-                  <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                    <Text style={{fontSize:16,
-                      color:'grey'
-                      }}
-                      >{this.state.collection.place.name}
-                    </Text>
-                  </View>
-                  <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                    <Text style={{fontSize:16,
-                      color:'grey'
-                      }}
-                      >
-                      { dmsFormat(deg2dms(this.state.collection.place.lat, 'lat')) + '   ' + dmsFormat(deg2dms(this.state.collection.place.long, 'lon'))}
-                    </Text>
-                  </View>
-                </View>
-
-                <View style={[styles.collection_grp, {flexDirection:'row', flex:1, paddingTop:0}]}>           
-                  <TouchableOpacity 
-                    style={{ marginRight:5, 
-                      flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                      borderColor:this.state.protocole=='flash'?greenFlash:'grey',
-                    }}
-                     
-
-                    onPress ={ () => this.geoLoc() }
-                    >
-                    <View style={{
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding:0,
-                      }}
-                      >
-                      <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
-                        <MaterialCommunityIcons
-                          name="crosshairs-gps" 
-                          size={20}
-                          height={40}
-                          width={60}
-                          margin={0}
-                          color={greenFlash}
-                          backgroundColor = 'transparent'
-                        />
-                      </Animated.View>
-                      <MaterialCommunityIcons
-                        name="crosshairs"
-                        size={0}
-                        height={40}
-                        width={60}
-                        margin={0}
-                        color={greenFlash}
-                        backgroundColor = 'transparent'
-                        
-                      />
-                    </View>
-                    <Text style={{fontSize:16, marginLeft:15,
-                      color: this.gpsSearching  ? greenFlash:'grey'
-                      }}>
-                    Localiser</Text>
-
-                  </TouchableOpacity>
-
-                  { this.state.connected && this.state.connected.type != 'none'
-                    ? <TouchableOpacity 
-                        style={{ marginLeft:5,
-                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                          borderColor:'grey',
-                          }}
-                        onPress = {() => this.showPlaceModal()} 
-                        >
-                        <MaterialCommunityIcons
-                          name="magnify"  // search-web  magnify  map-search
-                          style={{
-                            backgroundColor:'transparent',
-                            color:greenFlash,
-                          }}
-                          size={25}
-                        />
-                        <Text style={{ fontSize:16, color:'grey'}}>
-                        Chercher</Text>
-                      </TouchableOpacity>
-                    : <View 
-                        style={{ marginLeft:5,
-                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                          borderColor:'lightgrey',
-                          }}
-                        >
-                        <Text style={{ fontSize:14, color:'lightgrey'}}>
-                        Pas de réseau</Text>
-                      </View>
-                  }
-                </View>
-
-
+                {/*
                 <View style={styles.collSectionTitle}>
                   <Text style={styles.collSectionTitleText}>
                   Station Florale</Text>
                 </View>
 
-                <ImagePicker 
-                  ref="collection-flower"
-                  style={{margin:15, marginTop:0,
-                    // borderWidth:1, borderColor:'lightgrey',
-                  }}
-                  title={'Fleur en gros plan'}
-                  onPress = {() => this.props.pickPhoto('flower')}
-                  crop={{w:150,h:150}}
-                  size={{w:150,h:150}}
-                  source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg'}}
-                />
+                */}
+
+                <View style={{flexDirection:'row', flex:1,
+                               marginTop:20,
+                            // flexDirection:'row',
+                            justifyContent: 'flex-start',
+                            alignItems: 'center',
+                            margin:15,
+                  }}>
+                  <ImagePicker 
+                    ref="collection-flower"
+                    style={{marginRight:5, flex:0.5,
+                      borderWidth:1, borderColor:'lightgrey',
+                    }}
+                    title={'Fleur en\ngros plan'}
+                    onPress = {() => this.props.pickPhoto('flower')}
+                    crop={{w:150,h:150}}
+                    size={{w:150,h:150}}
+                    source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg'}}
+                  />
+
+
+                  <ImagePicker 
+                    // TODO ? multiple photos before user choose at the end ?
+                    title={'Fleur à 2-3 mètres\nde distance'}
+                    ref="collection-environment"
+                    style={{marginLeft:5, flex:0.5,
+                      borderWidth:1, borderColor:'lightgrey',
+                    }}
+                    onPress = {() => this.props.pickPhoto('environment')}
+                    crop={{w:150,h:150}}
+                    size={{w:150,h:150}}
+                    source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
+                  />
+                </View>
 
                 <View style={styles.collection_grp}>
 
@@ -2561,21 +2506,116 @@ class CollectionForm extends Component {
 
                 <View style={styles.collSectionTitle}>
                   <Text style={styles.collSectionTitleText}>
-                  Environnement de la fleur</Text>
+                  Lieu</Text>
                 </View>
 
-                  <ImagePicker 
-                    // TODO ? multiple photos before user choose at the end ?
-                    title={'Fleur à 2-3 mètres de distance'}
-                    ref="collection-environment"
-                    style={{margin:15, marginTop:0,
-                      // borderWidth:1, borderColor:'lightgrey', 
+                <View style={styles.collection_grp}>
+                  { this.state.collection.place.lat && this.state.collection.place.long
+                    ?
+                    <React.Fragment>
+                    <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+                      <Text style={{fontSize:16,
+                        color:'grey'
+                        }}
+                        >{this.state.collection.place.name}
+                      </Text>
+                    </View>
+                    <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+                      <Text style={{fontSize:16,
+                        color:'grey'
+                        }}
+                        >
+                        { 
+                          dmsFormat(deg2dms(this.state.collection.place.lat, 'lat')) 
+                          + '   ' + 
+                          dmsFormat(deg2dms(this.state.collection.place.long, 'lon'))
+                        }
+                      </Text>
+                    </View>
+                    </React.Fragment>
+                    : null
+                  }
+                </View>
+
+                <View style={[styles.collection_grp, {flexDirection:'row', flex:1, paddingTop:0}]}>           
+                  <TouchableOpacity 
+                    style={{ marginRight:5, 
+                      flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                      borderColor:this.state.protocole=='flash'?greenFlash:'grey',
                     }}
-                    onPress = {() => this.props.pickPhoto('environment')}
-                    crop={{w:150,h:150}}
-                    size={{w:150,h:150}}
-                    source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
-                  />
+                    onPress ={ () => this.geoLoc() }
+                    >
+                    <View style={{
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding:0,
+                      }}
+                      >
+                      <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
+                        <MaterialCommunityIcons
+                          name="crosshairs-gps" 
+                          size={20}
+                          height={40}
+                          width={60}
+                          margin={0}
+                          color={greenFlash}
+                          backgroundColor = 'transparent'
+                        />
+                      </Animated.View>
+                      <MaterialCommunityIcons
+                        name="crosshairs"
+                        size={0}
+                        height={40}
+                        width={60}
+                        margin={0}
+                        color={greenFlash}
+                        backgroundColor = 'transparent'
+                        
+                      />
+                    </View>
+                    <Text style={{fontSize:16, marginLeft:15,
+                      color: this.gpsSearching  ? greenFlash:'grey'
+                      }}>
+                    Localiser</Text>
+
+                  </TouchableOpacity>
+
+                  { this.state.connected && this.state.connected.type != 'none'
+                    ? <TouchableOpacity 
+                        style={{ marginLeft:5,
+                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                          borderColor:'grey',
+                          }}
+                        onPress = {() => this.showPlaceModal()} 
+                        >
+                        <MaterialCommunityIcons
+                          name="magnify"  // search-web  magnify  map-search
+                          style={{
+                            backgroundColor:'transparent',
+                            color:greenFlash,
+                          }}
+                          size={25}
+                        />
+                        <Text style={{ fontSize:16, color:'grey'}}>
+                        Chercher</Text>
+                      </TouchableOpacity>
+                    : <View 
+                        style={{ marginLeft:5,
+                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                          borderColor:'lightgrey',
+                          }}
+                        >
+                        <Text style={{ fontSize:14, color:'lightgrey'}}>
+                        Pas de réseau</Text>
+                      </View>
+                  }
+                </View>
+
+
+                <View style={styles.collSectionTitle}>
+                  <Text style={styles.collSectionTitleText}>
+                  Environnement de la fleur</Text>
+                </View>
 
                 <View style={styles.collection_grp}>
                 <View style={styles.collection_subgrp}>
@@ -2636,8 +2676,8 @@ class CollectionForm extends Component {
                       color:greenFlash,
                       borderColor:greenFlash, }} 
                     defaultValue={''+this.state.collection.environment.locAttr_2}
-                    onEndEditing =    {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10)?0:parseInt(event.nativeEvent.text),10)} 
-                    onSubmitEditing = {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10)?0:parseInt(event.nativeEvent.text),10)}               
+                    onEndEditing = {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10) ? '' : parseInt(event.nativeEvent.text),10)} 
+                    onSubmitEditing = {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10) ? '' : parseInt(event.nativeEvent.text),10)}               
                   /></View>
                 </View>
 
@@ -2846,15 +2886,14 @@ class CollectionForm extends Component {
                 
               : null
             }
+            {/*
             <View style={styles.collSectionTitle}>
               <Text style={styles.collSectionTitleText}> </Text>
             </View>
-
+            */}
+        <FooterImage/>
       </ScrollView>
      
-
-
-
           <ModalPlace
             visible = {this.state.visiblePlaceModal}
             title={this.state.collection.name}
@@ -3183,7 +3222,7 @@ export default class CollectionList extends Component {
       AsyncStorage.setItem(now+'_collection', JSON.stringify({
         name:'',
         protocole:'',
-        place:{lat:0,long:0,name:''}, 
+        place:{lat:false,long:false,name:''}, 
         flower:{
           photo:'',
           id_flower_unknown:false,
@@ -3196,7 +3235,7 @@ export default class CollectionList extends Component {
         environment:{
           photo:'',
           occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
-          locAttr_2:0,     // NOT MANDATORY            //  ruche
+          locAttr_2:'',     // NOT MANDATORY            //  ruche
           locAttr_1:[],   // NOT MANDATORY              //  habitat
           locAttr_3:false,                 //  grande culture en fleur
         },
