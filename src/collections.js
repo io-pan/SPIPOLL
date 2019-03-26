@@ -39,7 +39,7 @@ const
   greenSuperLight ="#ecf3cd",
   greenFlash = "#92c83e", // "#92c83e"; // b7d432 // bcd151
   purple = "#9d218b",
-  flashSessionTime = 120, // 20*60;
+  flashSessionDuration = 10, // 20*60;
 
   date2folderName = function(){
     now = new Date();
@@ -562,7 +562,7 @@ class Timer extends Component {
     now.setMilliseconds(0);
     let diff;
    
-    console.log('now', now);
+    // console.log('now', now);
 
     if(props.time > now){
       this.countdown = true;
@@ -572,9 +572,8 @@ class Timer extends Component {
       diff = (now - props.time) /1000;
     }
 
-    console.log('countdown', this.countdown);
-    console.log('diff', diff);
-
+    // console.log('countdown', this.countdown);
+    // console.log('diff', diff);
 
     d = Math.floor(diff / (60*60*24));
     h = Math.floor((diff - (d*60*60*24)) / (60*60));
@@ -587,12 +586,9 @@ class Timer extends Component {
       min:  m,
       sec:  s,
     }
-
-    console.log(this.state)
   }
 
   componentDidMount(){
-    console.log('TIMER componentWillMount');
     this.timer = setInterval(() => {this.onTime()}, 1000);
   }
 
@@ -1079,7 +1075,7 @@ class SessionForm extends Component {
         this.initialTimeStart =  new Date(start.getTime() + 60000);
       }
       else {
-        this.initialTimeEnd = new Date( this.initialTimeStart + ((flashSessionTime+1)*1000));
+        this.initialTimeEnd = new Date( this.initialTimeStart + ((flashSessionDuration+1)*1000));
       }
       this.setState({ isTimePickerVisible: field });
     }
@@ -1142,9 +1138,9 @@ class SessionForm extends Component {
     if(time > now){
     
       if((this.state.isTimePickerVisible=='end'  
-          && (!this.state.session.time_start || time > flashSessionTime*1000 + this.state.session.time_start))
+          && (!this.state.session.time_start || time > flashSessionDuration*1000 + this.state.session.time_start))
       || (this.state.isTimePickerVisible=='start' 
-          && (!this.state.session.time_end   || time+flashSessionTime*1000 < this.state.session.time_end))
+          && (!this.state.session.time_end   || time+flashSessionDuration*1000 < this.state.session.time_end))
       ){
         this.storeSession('time_'+this.state.isTimePickerVisible, time);
       }
@@ -1174,7 +1170,7 @@ class SessionForm extends Component {
       let end = this.state.session.time_end; 
 
       if(this.props.protocole=='flash'){
-        end = now + flashSessionTime * 1000;
+        end = now + flashSessionDuration * 1000;
       }
       console.log( end + ' ' + new Date(end));
       this.setState({
@@ -1195,9 +1191,26 @@ class SessionForm extends Component {
   }
 
   cancelSession(){
+      // TODO: warn only if insect has been shot.
+    Alert.alert(
+      'Annuler la session ?',
+      "Si vous annulez la session, toutes les photos associées seront définitivement perdues.",
+      [
+        {
+          text: 'Poursuivre la session',
+          onPress: () => {}
+        },
+        {
+          text: 'Annuler la session', 
+          onPress: () => {
+            this.reallyCancelSession();
+          }
+        },
+      ],
+    );
+  }
 
-    // TODO: Warn user about 20min.
-
+  reallyCancelSession(){
     this.setState({
       isDateTimeVisible:false,
       session:{
@@ -1210,24 +1223,55 @@ class SessionForm extends Component {
     this.props.valueChanged('date', '');
     this.props.valueChanged('time_start', '');
     this.props.valueChanged('time_end', '');
+
+    // TODO: Delete photos.
   }
 
   stopSession(){
-    // TODO: Warn user about 20min.
-
     const now = new Date();
-    now.setMilliseconds(0);
-    now.setSeconds(0) ;// now.setSeconds(now.getSeconds()-1);
+
+    if(now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000){
+      // TODO: warn only if insect has been shot.
+      Alert.alert(
+        'Annuler la session ?',
+        "La session doit durer plus de 20 minutes. \n"
+         + "Si vous l'annulez, toutes les photos associées seront définitivement perdues.",
+        [
+          {
+            text: 'Poursuivre la session',
+            onPress: () => {
+
+            }
+          },
+          {
+            text: 'Annuler la session', 
+            onPress: () => {
+              this.reallyCancelSession();
+              // TODO: delete photos.
+            }
+          },
+        ],
+      );
+    }
+
+    else {
+      this.closeSession(now);
+    }
+  }
+
+  closeSession(date){
+    date.setSeconds(0); // .setSeconds(now.getSeconds()-1);
+    date.setMilliseconds(0);
 
     this.refs['running-timer'].clear();
     this.setState({
       isDateTimeVisible:false,
       session:{
       ...this.state.session,
-        time_end: now.getTime(),
+        time_end: date.getTime(),
       }
     })
-    this.props.valueChanged('time_end', now.getTime());
+    this.props.valueChanged('time_end', date.getTime());
   }
 
   storeSession(field, value){
@@ -1288,7 +1332,7 @@ class SessionForm extends Component {
                       style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
                         backgroundColor: greenFlash,
                       }}
-                      onPress = {() => this.cancelSession()}
+                      onPress = {() => this.reallyCancelSession()}
                       >
                       <MaterialCommunityIcons
                         name="close-circle" 
@@ -1338,14 +1382,18 @@ class SessionForm extends Component {
                       }}
                       onPress = {this.props.protocole=="flash"
                         ? () => this.cancelSession()
-                        : () => this.stopSession()
+                        // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+                        //   ? () => this.cancelSession()
+                          : () => this.stopSession()
                       }
                       >
                       <MaterialCommunityIcons
                         name={ 
                           this.props.protocole=="flash"
                           ? "close-circle" 
-                          : "stop-circle"
+                          // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+                          //   ? "close-circle"
+                            : "stop-circle"
                         }
 
                         style={{padding:10, backgroundColor:'transparent',
@@ -2969,7 +3017,12 @@ export class SessionList extends Component {
 
   back(){
     if(this.state.editing!==false) {
-      this.setState({editing:false});   
+      if(this.props.protocole=='flash'){
+        // TODO: back to flower or collection list
+      }
+      else{
+        this.setState({editing:false});     
+      }
     }
     else {
       // TODO: back to collection list
@@ -3182,9 +3235,18 @@ export default class CollectionList extends Component {
         }
       }
     });
+
+    this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (this.state.selectItems!==false){
+        this.setState({selectItems:false});
+      }
+      return true;      
+    });
   }
 
   componentWillUnmount(){
+    this.backHandler.remove();
+    BackHandler.removeEventListener('hardwareBackPress', this.backButton);
     console.log('LIST UN-MOUNT');
   }
 
