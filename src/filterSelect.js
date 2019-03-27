@@ -105,7 +105,7 @@ export default class ModalFilterPicker extends Component {
     } else {
       return (
         <View>
-        <Text style={{textAlign:'center'}}>{ds.length} résultat{ds.length>1 ?'s':''}</Text>
+        <Text style={{textAlign:'center', marginBottom:10}}>{ds.length} résultat{ds.length>1 ?'s':''}</Text>
         <FlatList
           {...FlatListProps}
           keyExtractor ={(item, index) => ''+item.value}
@@ -153,46 +153,61 @@ export default class ModalFilterPicker extends Component {
   	      }}
           onPress={() => this.props.onSelect(rowData.item)}
           >
-          { true  // !this.state.filter
+          { !this.state.filter
             ?
             <View>
               <Text style={{fontSize:14, color:'#333333'}}>{label}</Text>
               <Text style={{fontSize:12, color:'#888888'}}>{espece}</Text>
             </View>
             :
-            [this.renderLabel(label, this.props.resultLabelStyle),
-            this.renderLabel(espece, this.props.resultEspeceStyle)]
+            [this.renderLabel(label, this.props.resultLabelStyle, 0),
+            this.renderLabel(espece, this.props.resultEspeceStyle, 1)]
           }
         </TouchableOpacity>
       )
     }
   }
 
-  renderLabel(label, style){
-     let _label = label.split(this.state.filter);
-     // _label ? str.split(this.state.filter).split(this.state.filter. /)
+  renderLabel(label, style, key){
+      var startIndex = 0, 
+          index,
+          spited = [],
+          source_lower = label.toLowerCase(),
+          search = this.state.filter.toLowerCase();
+      const searchLen = search.length;
 
-    return(
-      <View style={{flexDirection:'row'}}>
-      { _label.map((value, index) => 
+      while ((index = source_lower.indexOf(search, startIndex)) > -1) {
+
+        spited.push({
+          nomatch:label.substring(startIndex, index),
+          filter:label.substring(index, index+searchLen),
+        });
+
+        startIndex = index + searchLen;
+      }
+
+      spited.push({
+         nomatch:label.substring(startIndex),
+         filter:'',
+      })
+
+      return(
         <View 
-          key={index}
-          style={{flexDirection:'row'}}>
-
-          { index == 0 ? null :
-            <Text style={[style,this.props.resultHilightStyle]}>
-            {this.state.filter}
-            </Text>
-          }
-
+          key={key}
+          style={{flexDirection:'row',
+                    }}
+          >
           <Text style={style}>
-          {value}
+          { spited.map((substr, index) => 
+            <Text key={index}>
+              {substr.nomatch}
+              <Text style={this.props.resultHilightStyle}>
+              {substr.filter}</Text>
+            </Text>
+          )}
           </Text>
-
         </View>
-      )}
-      </View>
-    );
+      );
   }
 
   renderCancelButton = () => {
