@@ -35,6 +35,7 @@ export default class ModalFilterPicker extends Component {
     }
   }
 
+// TODO: flex on voit pas la fin de la liste
   render () {
     const {
       title,
@@ -60,7 +61,7 @@ export default class ModalFilterPicker extends Component {
         visible={visible}
         supportedOrientations={['portrait', 'landscape']}
       >
-        <View style={{flex:1}} >
+        <View style={{flex:1, backgroundColor:'#fafaff'}} >
         <KeyboardAvoidingView
           behavior="padding"
           // style={overlayStyle || styles.overlay}
@@ -71,7 +72,7 @@ export default class ModalFilterPicker extends Component {
 
           <TextInput
             ref="filter"
-            style={filterTextInputStyle}
+            // style={filterTextInputStyle}
             onChangeText={this.onFilterChange}
             autoCorrect={false}
             blurOnSubmit={true}
@@ -79,7 +80,7 @@ export default class ModalFilterPicker extends Component {
             keyboardType="default"
             autoCapitalize="none"
             placeholder={' Filtrer ...'}
-            // style={filterTextInputStyle || styles.filterTextInput} 
+            style={filterTextInputStyle || styles.filterTextInput} 
           />
           {this.renderOptionList()}
 
@@ -103,6 +104,8 @@ export default class ModalFilterPicker extends Component {
       return <Text style={{textAlign:'center'}}>{noResultsText}</Text>
     } else {
       return (
+        <View>
+        <Text style={{textAlign:'center'}}>{ds.length} résultat{ds.length>1 ?'s':''}</Text>
         <FlatList
           {...FlatListProps}
           keyExtractor ={(item, index) => ''+item.value}
@@ -111,6 +114,7 @@ export default class ModalFilterPicker extends Component {
           renderItem={this.renderOption}
           // keyboardShouldPersistTaps={keyboardShouldPersistTaps}
         />
+        </View>
       )
     }
   }
@@ -136,6 +140,9 @@ export default class ModalFilterPicker extends Component {
     if (renderOption) {
       return renderOption(rowData, key === selectedOption)
     } else {
+
+
+
       return (
         <TouchableOpacity activeOpacity={0.7}
   		    key={key}
@@ -146,11 +153,46 @@ export default class ModalFilterPicker extends Component {
   	      }}
           onPress={() => this.props.onSelect(rowData.item)}
           >
-          <Text style={{fontSize:14, color:'#333333'}}>{label}</Text>
-          <Text style={{fontSize:12, color:'#888888'}}>{espece}</Text>
+          { true  // !this.state.filter
+            ?
+            <View>
+              <Text style={{fontSize:14, color:'#333333'}}>{label}</Text>
+              <Text style={{fontSize:12, color:'#888888'}}>{espece}</Text>
+            </View>
+            :
+            [this.renderLabel(label, this.props.resultLabelStyle),
+            this.renderLabel(espece, this.props.resultEspeceStyle)]
+          }
         </TouchableOpacity>
       )
     }
+  }
+
+  renderLabel(label, style){
+     let _label = label.split(this.state.filter);
+     // _label ? str.split(this.state.filter).split(this.state.filter. /)
+
+    return(
+      <View style={{flexDirection:'row'}}>
+      { _label.map((value, index) => 
+        <View 
+          key={index}
+          style={{flexDirection:'row'}}>
+
+          { index == 0 ? null :
+            <Text style={[style,this.props.resultHilightStyle]}>
+            {this.state.filter}
+            </Text>
+          }
+
+          <Text style={style}>
+          {value}
+          </Text>
+
+        </View>
+      )}
+      </View>
+    );
   }
 
   renderCancelButton = () => {
@@ -233,5 +275,19 @@ ModalFilterPicker.defaultProps = {
   visible: true,
   showFilter: true,
   keyboardShouldPersistTaps: 'never',
-  filterTextInputStyle:{fontSize:18},
+  filterTextInputStyle:{fontSize:18, backgroundColor:'white', 
+    margin:5, padding:3, 
+    // borderWidth:1, borderColor:'#92c83e', 
+    borderBottomWidth:1, borderBottomColor:'#92c83e', 
+    textAlign:'center'
+  },
+  resultLabelStyle:{
+    fontSize:14, color:'#333333',
+  },
+  resultEspeceStyle:{
+    fontSize:12, color:'#888888',
+  },
+  resultHilightStyle:{
+    fontWeight:'bold', color:'#92c83e',
+  },
 }

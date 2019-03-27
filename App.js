@@ -340,6 +340,9 @@ export default class App extends Component<Props> {
                 height: motion_parameters.motionInputAreaStyle&&motion_parameters.motionInputAreaStyle.height ? motion_parameters.motionInputAreaStyle.height : Dimensions.get('window').width*4/3 - 60 - 60,
               },
           }, function(){
+
+    console.log('Storage: ', this.appDirs);
+
             this.handles = [{
               x:this.state.motionInputAreaStyle.left,
               y:this.state.motionInputAreaStyle.top,
@@ -1354,7 +1357,7 @@ export default class App extends Component<Props> {
 
   renderMotionSetupTodoForm(){
     return(
-      <View style={{height:200, padding:10, backgroundColor: '#F5FCFF',}}>
+      <View style={{height:200, padding:10, backgroundColor: '#fafaff',}}>
         {/*<Text style={{padding:10, fontSize:16, textAlign:'center', color:greenFlash,}}>Lorsqu'un mouvement est détecté</Text>*/}
         <Text style={{paddingTop:10, fontSize:18, fontWeight: 'bold', textAlign:'center', color:greenFlash,}}>
           Action en cas de mouvement
