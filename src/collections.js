@@ -747,20 +747,27 @@ class InsectForm extends Component {
               <View style={styles.collection_grp}>
                 <TouchableOpacity 
                   style={{
-                    overflow:'hidden', marginBottom:10, padding:1,
-                    flexDirection:'row', flex:1, alignItems:'center',
-                    backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
+                    marginBottom:10,
+                    padding:1,
+                    flexDirection:'row',
+                    backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}}
                   onPress={this.showTaxonModal}
                   >
+                  <View
+                    style={{ justifyContent:'center', alignItems:'center',
+                      backgroundColor:greenFlash,
+                       padding:5, marginRight:5,
+                      }}
+                    >
                     <MaterialCommunityIcons
                       name="chevron-down" 
-                      style={{ color:'white', padding:5, marginRight:5,
-                      backgroundColor:greenFlash,
-                      }}
+                      style={{ color:'white',backgroundColor:greenFlash }}
                       size={22}
                     />
-                  <View style={{overflow:'hidden',flex:1}}>
-                  <Text style={{padding:5,
+                  </View>
+                  <Text style={{
+                    flex:1,
+                    padding:5,
                     fontSize:14,
                     backgroundColor:'white',
                     color:this.state.insect.taxon_list_id_list?greenFlash:'grey'
@@ -770,7 +777,6 @@ class InsectForm extends Component {
                       : 'Je choisis dans la liste'
                     }
                   </Text>
-                  </View>
                 </TouchableOpacity>      
 
                 <TextInput
@@ -2472,22 +2478,28 @@ class CollectionForm extends Component {
                       : <React.Fragment>
                           <TouchableOpacity 
                             style={{
-                              overflow:'hidden', marginBottom:10,
+                              marginBottom:10,
                               padding:1,
-                              flexDirection:'row', flex:1, alignItems:'center',
+                              flexDirection:'row',
                               backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
                             onPress={this.showTaxonModal}
                             >
+                            <View
+                              style={{ justifyContent:'center', alignItems:'center',
+                                backgroundColor:greenFlash,
+                                 padding:5, marginRight:5,
+                                }}
+                            >
                             <MaterialCommunityIcons
                               name="chevron-down" 
-                              style={{ color:'white', padding:5, marginRight:5,
-                              backgroundColor:greenFlash,
-                              }}
+                              style={{ color:'white',backgroundColor:greenFlash }}
                               size={22}
                             />
+                            </View>
                             <Text 
-                              numberOfLines={1}
+                              // numberOfLines={1}
                               style={{
+                                flex:1,
                                 padding:5,
                                 fontSize:14,
                                 backgroundColor:'white',
@@ -2503,7 +2515,7 @@ class CollectionForm extends Component {
                           <TextInput
                             placeholder='Je connais une dénomination plus précise'
                             placeholderTextColor='grey'
-                            style={{padding:5, marginBottom:5,borderWidth:1, 
+                            style={{padding:4, paddingLeft:10, marginBottom:5,borderWidth:1, 
                               fontSize:14,
                               backgroundColor:'white',
                               color:greenFlash,
