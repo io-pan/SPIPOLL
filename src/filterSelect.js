@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
   Text,
   TextInput,
-  KeyboardAvoidingView,
-  Platform
+  // KeyboardAvoidingView,
+  // Platform,
+  ScrollView
 } from 'react-native'
 
-
-
+import FooterImage from './footerimage';
 
 export default class ModalFilterPicker extends Component {
   constructor (props, ctx) {
@@ -22,6 +22,7 @@ export default class ModalFilterPicker extends Component {
       filter: '',
       ds: props.options,
     }
+    this.sizeAdjust={scr:0, cont:0}
   }
 
   componentWillReceiveProps (newProps) {
@@ -35,7 +36,6 @@ export default class ModalFilterPicker extends Component {
     }
   }
 
-// TODO: flex on voit pas la fin de la liste
   render () {
     const {
       title,
@@ -60,19 +60,19 @@ export default class ModalFilterPicker extends Component {
         {...modal}
         visible={visible}
         supportedOrientations={['portrait', 'landscape']}
-      >
-        <View style={{flex:1, backgroundColor:'#fafaff'}} >
+        >
+        {renderedTitle}
+          
+        {/*
         <KeyboardAvoidingView
           behavior="padding"
           // style={overlayStyle || styles.overlay}
           enabled={Platform.OS === 'ios'}
         >
-          {renderedTitle}
-          <View style={{padding:10}}>
-
+        */}
+      
           <TextInput
             ref="filter"
-            // style={filterTextInputStyle}
             onChangeText={this.onFilterChange}
             autoCorrect={false}
             blurOnSubmit={true}
@@ -82,11 +82,9 @@ export default class ModalFilterPicker extends Component {
             placeholder={' Filtrer ...'}
             style={filterTextInputStyle || styles.filterTextInput} 
           />
+           
           {this.renderOptionList()}
-
-        </View>
-        </KeyboardAvoidingView>
-        </View>
+        {/*</KeyboardAvoidingView>*/}
       </Modal>
     )
   }
@@ -103,17 +101,32 @@ export default class ModalFilterPicker extends Component {
     if (1 > ds.length) {
       return <Text style={{textAlign:'center'}}>{noResultsText}</Text>
     } else {
+
       return (
-        <View>
-        <Text style={{textAlign:'center', marginBottom:10}}>{ds.length} résultat{ds.length>1 ?'s':''}</Text>
-        <FlatList
-          {...FlatListProps}
-          keyExtractor ={(item, index) => ''+item.value}
-          data={ds}
-          extraData={ds}
-          renderItem={this.renderOption}
-          // keyboardShouldPersistTaps={keyboardShouldPersistTaps}
-        />
+        <View style={{flex:1, backgroundColor:'#fafaff'}} >
+          <Text style={{textAlign:'center', marginBottom:10}}>
+          {ds.length} résultat{ds.length>1 ?'s':''}</Text>
+        
+          <View style={{flex:1, backgroundColor:'#92c83e'}}>
+          <ScrollView>
+         
+            <View  style={{ padding:10, paddingBottom:50, backgroundColor:'#fafaff'}}>
+            <FlatList
+              {...FlatListProps}
+              keyExtractor ={(item, index) => ''+item.value}
+              data={ds}
+              extraData={ds}
+              renderItem={this.renderOption}
+              // keyboardShouldPersistTaps={keyboardShouldPersistTaps}
+            />
+            </View>
+      
+            <View style={{backgroundColor:'#fafaff'}}>
+              <FooterImage/>
+            </View>
+         
+          </ScrollView>
+           </View>
         </View>
       )
     }
@@ -132,21 +145,19 @@ export default class ModalFilterPicker extends Component {
     // let style = styles.optionStyle
     // let textStyle = optionTextStyle||styles.optionTextStyle
 
-    if (key === selectedOption) {
+    // if (key === selectedOption) {
       // style = styles.selectedOptionStyle
       // textStyle = selectedOptionTextStyle ||styles.selectedOptionTextStyle
-    }
+    // }
 
     if (renderOption) {
       return renderOption(rowData, key === selectedOption)
     } else {
-
-
-
       return (
         <TouchableOpacity activeOpacity={0.7}
-  		    key={key}
+  		    key={value}
   	      style={{
+            flex:1,
   	      	padding:5,
   	      	borderBottomWidth:1,
   	      	borderBottomColor:'#92c83e',
@@ -177,12 +188,10 @@ export default class ModalFilterPicker extends Component {
       const searchLen = search.length;
 
       while ((index = source_lower.indexOf(search, startIndex)) > -1) {
-
         spited.push({
           nomatch:label.substring(startIndex, index),
           filter:label.substring(index, index+searchLen),
         });
-
         startIndex = index + searchLen;
       }
 
@@ -194,8 +203,7 @@ export default class ModalFilterPicker extends Component {
       return(
         <View 
           key={key}
-          style={{flexDirection:'row',
-                    }}
+          style={{flexDirection:'row'}}
           >
           <Text style={style}>
           { spited.map((substr, index) => 
@@ -291,8 +299,9 @@ ModalFilterPicker.defaultProps = {
   showFilter: true,
   keyboardShouldPersistTaps: 'never',
   filterTextInputStyle:{fontSize:18, backgroundColor:'white', 
-    margin:5, padding:3, 
-    // borderWidth:1, borderColor:'#92c83e', 
+    margin:10, 
+    marginBottom:1, 
+    padding:3,
     borderBottomWidth:1, borderBottomColor:'#92c83e', 
     textAlign:'center'
   },
