@@ -2413,7 +2413,7 @@ class CollectionForm extends Component {
                     }}>
                     <ImagePicker 
                       ref="collection-flower"
-                      style={{marginRight:5, flex:0.5,
+                      style={{marginRight:5, flex:0.5, padding:5,
                         borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
                       }}
                       title={'Fleur en\ngros plan'}
@@ -2428,8 +2428,8 @@ class CollectionForm extends Component {
                       // TODO ? multiple photos before user choose at the end ?
                       title={'Fleur à 2-3 mètres\nde distance'}
                       ref="collection-environment"
-                      style={{marginLeft:5, flex:0.5, backgroundColor:'white',
-                        borderWidth:1, borderColor:'lightgrey',
+                      style={{marginLeft:5, flex:0.5,  padding:5,
+                        borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
                       }}
                       onPress = {() => this.props.pickPhoto('environment')}
                       crop={{w:150,h:150}}
@@ -2549,109 +2549,108 @@ class CollectionForm extends Component {
                   <View style={styles.collection_grp}>
                     { this.state.collection.place.lat && this.state.collection.place.long
                       ?
-                      <React.Fragment>
-                      <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                        <Text style={{fontSize:16,
-                          color:'grey'
-                          }}
-                          >{this.state.collection.place.name}
-                        </Text>
+                      <View style={[styles.collection_subgrp,{marginBottom:5, backgroundColor:'white'}]}>
+                        <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+                          <Text style={{fontSize:16,
+                            color:'grey'
+                            }}
+                            >{this.state.collection.place.name}
+                          </Text>
+                        </View>
+                        <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+                          <Text style={{fontSize:16,
+                            color:'grey'
+                            }}
+                            >
+                            { 
+                              dmsFormat(deg2dms(this.state.collection.place.lat, 'lat')) 
+                              + '   ' + 
+                              dmsFormat(deg2dms(this.state.collection.place.long, 'lon'))
+                            }
+                          </Text>
+                        </View>
                       </View>
-                      <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                        <Text style={{fontSize:16,
-                          color:'grey'
-                          }}
-                          >
-                          { 
-                            dmsFormat(deg2dms(this.state.collection.place.lat, 'lat')) 
-                            + '   ' + 
-                            dmsFormat(deg2dms(this.state.collection.place.long, 'lon'))
-                          }
-                        </Text>
-                      </View>
-                      </React.Fragment>
                       : null
                     }
-                  </View>
-
-                  <View style={[styles.collection_grp, {flexDirection:'row', flex:1, paddingTop:0}]}>           
-                    <TouchableOpacity 
-                      style={{ marginRight:5, 
-                        flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                        borderColor:this.state.protocole=='flash'?greenFlash:'grey',
-                      }}
-                      onPress ={ () => this.geoLoc() }
-                      >
-                      <View style={{
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        padding:0,
+                  
+                    <View style={[{flexDirection:'row', flex:1, paddingTop:0}]}>           
+                      <TouchableOpacity 
+                        style={{ marginRight:5, 
+                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                          borderColor: 'lightgrey',
                         }}
+                        onPress ={ () => this.geoLoc() }
                         >
-                        <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
+                        <View style={{
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding:0,
+                          }}
+                          >
+                          <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
+                            <MaterialCommunityIcons
+                              name="crosshairs-gps" 
+                              size={20}
+                              height={40}
+                              width={60}
+                              margin={0}
+                              color={greenFlash}
+                              backgroundColor = 'transparent'
+                            />
+                          </Animated.View>
                           <MaterialCommunityIcons
-                            name="crosshairs-gps" 
-                            size={20}
+                            name="crosshairs"
+                            size={0}
                             height={40}
                             width={60}
                             margin={0}
                             color={greenFlash}
                             backgroundColor = 'transparent'
+                            
                           />
-                        </Animated.View>
-                        <MaterialCommunityIcons
-                          name="crosshairs"
-                          size={0}
-                          height={40}
-                          width={60}
-                          margin={0}
-                          color={greenFlash}
-                          backgroundColor = 'transparent'
-                          
-                        />
-                      </View>
-                      <Text style={{fontSize:16, marginLeft:15,
-                        color: this.gpsSearching  ? greenFlash:'grey'
-                        }}>
-                      Localiser</Text>
-
-                    </TouchableOpacity>
-
-                    { this.state.connected && this.state.connected.type != 'none'
-                      ? <TouchableOpacity 
-                          style={{ marginLeft:5,
-                            flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                            borderColor:'grey',
-                            }}
-                          onPress = {() => this.showPlaceModal()} 
-                          >
-                          <MaterialCommunityIcons
-                            name="magnify"  // search-web  magnify  map-search
-                            style={{
-                              backgroundColor:'transparent',
-                              color:greenFlash,
-                            }}
-                            size={25}
-                          />
-                          <Text style={{ fontSize:16, color:'grey'}}>
-                          Chercher</Text>
-                        </TouchableOpacity>
-                      : <View 
-                          style={{ marginLeft:5,
-                            flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                            borderColor:'lightgrey',
-                            }}
-                          >
-                          <Text style={{ fontSize:14, color:'lightgrey'}}>
-                          Pas de réseau</Text>
                         </View>
-                    }
-                  </View>
+                        <Text style={{fontSize:16, marginLeft:15,
+                          color: this.gpsSearching  ? greenFlash:'grey'
+                          }}>
+                        Localiser</Text>
 
+                      </TouchableOpacity>
+
+                      { this.state.connected && this.state.connected.type != 'none'
+                        ? <TouchableOpacity 
+                            style={{ marginLeft:5,
+                              flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                              borderColor: 'lightgrey',
+                              }}
+                            onPress = {() => this.showPlaceModal()} 
+                            >
+                            <MaterialCommunityIcons
+                              name="magnify"  // search-web  magnify  map-search
+                              style={{
+                                backgroundColor:'transparent',
+                                color:greenFlash,
+                              }}
+                              size={25}
+                            />
+                            <Text style={{ fontSize:16, color:'grey'}}>
+                            Chercher</Text>
+                          </TouchableOpacity>
+                        : <View 
+                            style={{ marginLeft:5,
+                              flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                              borderColor:'lightgrey',
+                              }}
+                            >
+                            <Text style={{ fontSize:14, color:'lightgrey'}}>
+                            Pas de réseau</Text>
+                          </View>
+                      }
+                    </View>
+                  </View>
 
                   <View style={styles.collSectionTitle}>
                     <Text style={styles.collSectionTitleText}>
-                    Environnement de la fleur</Text>
+                    Environnement</Text>
                   </View>
 
                   <View style={styles.collection_grp}>
@@ -3542,13 +3541,18 @@ const styles = StyleSheet.create({
     flexDirection:'row', flex:1, justifyContent:'center', marginTop:20, marginBottom:1,
   },
   collSectionTitleText:{
+    // borderTopWidth:1,
+    // borderTopColor:greenFlash,
     fontSize:18, 
     fontWeight:'bold',
     flex:1, 
     textAlign:'center',
-    padding:5, 
-    color:'white',
-    backgroundColor:greenFlash,
+    padding:5, paddingTop:10,
+    marginRight:15, marginLeft:15,
+    // color:'white',
+    color:greenFlash,
+    // backgroundColor:greenSuperLight,
+    // backgroundColor:greenFlash,
   },
 
   collection_subgrp:{
