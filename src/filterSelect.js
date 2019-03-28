@@ -99,12 +99,21 @@ export default class ModalFilterPicker extends Component {
     const { ds } = this.state
 
     if (1 > ds.length) {
-      return <Text style={{textAlign:'center'}}>{noResultsText}</Text>
+      return (
+        <View style={{flex:1, backgroundColor:'#fafaff'}} >
+          <Text style={{textAlign:'center', marginTop:10, marginBottom:10}}>
+          {noResultsText}</Text>
+
+          <View style={{marginTop:50, backgroundColor:'#fafaff', flex:1, justifyContent:'flex-end'}}>
+            <FooterImage/>
+          </View>
+        </View>
+      );
     } else {
 
       return (
         <View style={{flex:1, backgroundColor:'#fafaff'}} >
-          <Text style={{textAlign:'center', marginBottom:10}}>
+          <Text style={{textAlign:'center', marginTop:10, marginBottom:10}}>
           {ds.length} résultat{ds.length>1 ?'s':''}</Text>
         
           <View style={{flex:1, backgroundColor:'#92c83e'}}>
@@ -180,42 +189,44 @@ export default class ModalFilterPicker extends Component {
   }
 
   renderLabel(label, style, key){
-      var startIndex = 0, 
-          index,
-          spited = [],
-          source_lower = label.toLowerCase(),
-          search = this.state.filter.toLowerCase();
-      const searchLen = search.length;
+    if(!label) return;
 
-      while ((index = source_lower.indexOf(search, startIndex)) > -1) {
-        spited.push({
-          nomatch:label.substring(startIndex, index),
-          filter:label.substring(index, index+searchLen),
-        });
-        startIndex = index + searchLen;
-      }
+    var startIndex = 0, 
+        index,
+        spited = [],
+        source_lower = label,//.toLowerCase(),
+        search = this.state.filter.toLowerCase();
+    const searchLen = search.length;
 
+    while ((index = source_lower.indexOf(search, startIndex)) > -1) {
       spited.push({
-         nomatch:label.substring(startIndex),
-         filter:'',
-      })
+        nomatch:label.substring(startIndex, index),
+        filter:label.substring(index, index+searchLen),
+      });
+      startIndex = index + searchLen;
+    }
 
-      return(
-        <View 
-          key={key}
-          style={{flexDirection:'row'}}
-          >
-          <Text style={style}>
-          { spited.map((substr, index) => 
-            <Text key={index}>
-              {substr.nomatch}
-              <Text style={this.props.resultHilightStyle}>
-              {substr.filter}</Text>
-            </Text>
-          )}
+    spited.push({
+       nomatch:label.substring(startIndex),
+       filter:'',
+    })
+
+    return(
+      <View 
+        key={key}
+        style={{flexDirection:'row'}}
+        >
+        <Text style={style}>
+        { spited.map((substr, index) => 
+          <Text key={index}>
+            {substr.nomatch}
+            <Text style={this.props.resultHilightStyle}>
+            {substr.filter}</Text>
           </Text>
-        </View>
-      );
+        )}
+        </Text>
+      </View>
+    );
   }
 
   renderCancelButton = () => {

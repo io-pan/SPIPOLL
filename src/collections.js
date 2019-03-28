@@ -20,14 +20,15 @@ import {
   NativeModules,
 } from 'react-native'
 
-import FooterImage from './footerimage';
-import ImageView from './imageView';
-import ModalFilterPicker from './filterSelect';
 import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView from 'react-native-maps';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
+
+import FooterImage from './footerimage';
+import ImageView from './imageView';
+import ModalFilterPicker from './filterSelect';
 
 // Spipoll data.
 import { flowerList } from './flowers.js';
@@ -746,7 +747,7 @@ class InsectForm extends Component {
               <View style={styles.collection_grp}>
                 <TouchableOpacity 
                   style={{
-                    overflow:'hidden', marginBottom:10,
+                    overflow:'hidden', marginBottom:10, padding:1,
                     flexDirection:'row', flex:1, alignItems:'center',
                     backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
                   onPress={this.showTaxonModal}
@@ -2472,35 +2473,37 @@ class CollectionForm extends Component {
                           <TouchableOpacity 
                             style={{
                               overflow:'hidden', marginBottom:10,
+                              padding:1,
                               flexDirection:'row', flex:1, alignItems:'center',
                               backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
                             onPress={this.showTaxonModal}
                             >
-                              <MaterialCommunityIcons
-                                name="chevron-down" 
-                                style={{ color:'white', padding:5, marginRight:5,
-                                backgroundColor:greenFlash,
-                                }}
-                                size={22}
-                              />
-                            <View style={{overflow:'hidden',flex:1}}>
-                            <Text style={{padding:5,
-                              fontSize:14,
-                              backgroundColor:'white',
-                              color:this.state.collection.flower.taxon_list_id_list?greenFlash:'grey'
-                              }}>
+                            <MaterialCommunityIcons
+                              name="chevron-down" 
+                              style={{ color:'white', padding:5, marginRight:5,
+                              backgroundColor:greenFlash,
+                              }}
+                              size={22}
+                            />
+                            <Text 
+                              numberOfLines={1}
+                              style={{
+                                padding:5,
+                                fontSize:14,
+                                backgroundColor:'white',
+                                color:this.state.collection.flower.taxon_list_id_list?greenFlash:'grey'
+                                }}>
                               { this.state.collection.flower.taxon_list_id_list
                                 ? this.state.collection.flower.taxon_name
                                 : 'Je choisis dans la liste'
                               }
                             </Text>
-                            </View>
                           </TouchableOpacity>      
 
                           <TextInput
                             placeholder='Je connais une dénomination plus précise'
                             placeholderTextColor='grey'
-                            style={{ flex:1, padding:5, marginBottom:5,borderWidth:1, 
+                            style={{padding:5, marginBottom:5,borderWidth:1, 
                               fontSize:14,
                               backgroundColor:'white',
                               color:greenFlash,
