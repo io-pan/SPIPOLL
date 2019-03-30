@@ -711,21 +711,17 @@ export default class App extends Component<Props> {
                 this.setState({
                   cam:'collection-form',
                 }, function(){
-                  this.refs['collectionList'].refs['collection-form'].refs['collection-'+field].setSource(
-                    {uri:'file://' + this.state.storage + '/' + filename}
-                  );
-                  // this.refs['collectionList'].setSource(
-                  //   collId,
-                  //   field,
-                  //   {uri:'file://' + this.state.storage + '/' + filename}
-                  // );
+                  this.refs['collectionList']
+                      .refs['collections']
+                      .refs['collection-form']
+                      .refs['collection-'+field]
+                      .setSource({uri:'file://' + this.state.storage + '/' + filename});
                 })
               }
             }).catch((err) => { 
               this.setState({ isTakingPicture: false }); 
               console.log(err) 
             });
-
           } 
           catch (err) {
             console.log('takePictureAsync ERROR: ', err);

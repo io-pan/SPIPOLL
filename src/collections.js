@@ -2185,11 +2185,75 @@ class CollectionForm extends Component {
     this.setState({tab:value});
   }
 
+  renderSessionListItem(value, index){
+    return(
+      <View style={{padding:5, overflow:'hidden'}}>
+        <View style={{flexDirection:'row', flex:1}}>
+          {/*
+          // TODO: météo
+          <MaterialCommunityIcons
+            name={ value.protocole == 'flash' 
+            ? 'flash-outline' 
+            : value.protocole == 'long' 
+              ? 'timer-sand'
+              : 'help-circle-outline'
+            }
+            style={[styles.listItemText,{
+                margin:0,
+                marginTop:7,
+              }]}
+            size={18}
+          />
+          */}
+
+        <Text style={[styles.listItemText, {fontWeight:'normal', fontSize:16}]}>
+          {index} - {formatDate(value.date)}</Text>
+        </View>
+        <View> 
+          <Text style={styles.listItemText}>
+          { formatTime(value.time_start) } - { formatTime(value.time_end) }</Text>
+        </View>
+      </View>  
+    );
+  }
+
+  sessionChanged(key, val){
+    if(key=='editing'){
+      this.refs['session-list'].selectItem(false);
+    }
+    else {
+      this.refs['session-list'].storeItemField(key,val);
+    }
+  }
+
+  renderSessionForm(data){
+    return(
+      <SessionForm 
+        ref="session-form"
+        protocole={this.props.data.protocole}
+        data={data}
+        valueChanged={(key,val) => this.sessionChanged(key,val)}
+      />
+    );
+  }
+
+  newSession(){
+    return {
+        date:'',
+        time_start:'',
+        time_end:'',
+        smpAttr_24:'',
+        smpAttr_25:'',
+        smpAttr_26:'',
+        shadow:'',
+    };
+  }
+
+  deleteSession(){
+
+  }
 
   renderCollMenu(){
-    /*
-
-            */
     return(
       <View style={{margin:10, flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
         {/*<ScrollView horizontal={true}>*/}
@@ -2262,7 +2326,6 @@ class CollectionForm extends Component {
   }
 
   render () {
-    console.log('render CollectionForm state', this.state);
     return (
       <View style={{flex:1}}>
 
@@ -2895,10 +2958,21 @@ class CollectionForm extends Component {
             : this.state.tab=='sessions'
             ?
               <View style={{flex:1}}>
+                <AdvancedList
+                  ref="session-list"
+                  localStorage = {this.props.data.date + "_sessions"}
+                  renderListItem = {(value, index) => this.renderSessionListItem(value, index)}
+                  renderDetailedItem = {(data) => this.renderSessionForm(data)}
+
+                  newItem = {() => this.newSession()}
+                  deleteItem = {() => this.deleteSession()}
+                />
+                {/*
                 <SessionList
                   collection_id = {this.props.data.date}
                   protocole = {this.props.data.protocole}
                 />
+                */}
               </View>
          
             : this.state.tab=='insectes' 
@@ -2946,580 +3020,6 @@ class CollectionForm extends Component {
   }
 }
 
-
-
-//=========================================================================================
-export class SessionList extends Component {
-//-----------------------------------------------------------------------------------------
- constructor(props) {
-    super(props);
-
-    this.state = {
-      sessions:[],
-      editing: false,
-    };
-  }
-
-  componentDidMount(){
- 
-    console.log('session LIST MOUNT');
-    AsyncStorage.getItem(this.props.collection_id+'_sessions', (err, sessions) => {
-      if (err) {
-        Alert.alert('ERROR getting sessions '+ JSON.stringify(err));
-      }
-      else {
-        if(sessions){
-          console.log('sessions',JSON.parse(sessions));
-          this.setState({
-            sessions: JSON.parse(sessions),
-            editing: this.props.protocole == 'flash' ? 0 : false,
-          });
-        }
-      }
-    });
-
-    // this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-    //   this.back();
-    //   return true;
-    // });
-  
-  }
-
-  back(){
-    if(this.state.editing!==false) {
-      if(this.props.protocole=='flash'){
-        // TODO: back to flower or collection list
-      }
-      else{
-        this.setState({editing:false});     
-      }
-    }
-    else {
-      // TODO: back to collection list
-      // alert();
-    }
-  }
-
-  componentWillUnmount(){
-    this.backHandler.remove();
-    console.log('session LIST UN-MOUNT');
-  }
-
-  // setSource(collection, field, source){
-  //   // this.setState({
-  //   //   editing:collection,
-  //   // }, function(){
-
-  //   //   console.log(field,source)
-
-  //     // this.refs['collection-form'].refs['collection-'+field].setSource(source);
-  //   // });
-  // }
-
-
-  newSession(){
-    
-    const now = date2folderName();
-    
-    let sess = this.state.sessions;
-    sess.push({
-        date:'',
-        time_start:'',
-        time_end:'',
-        smpAttr_24:'',
-        smpAttr_25:'',
-        smpAttr_26:'',
-        shadow:'',
-    });
-
-    this.setState({ 
-      sessions: sess,
-      editing:sess.length-1,
-    }, function(){
-     
-    });
-  }
-
-  selectSession(index){
-    this.setState({editing:index});
-  }
-
-  sessionChanged(key, val){
-    if(key=='editing'){
-      this.setState({[key]:val});
-    }
-    else{
-      let sess = this.state.sessions;
-      sess[this.state.editing][key] = val;
-      this.setState({sessions:sess}, function(){
-        // TODO: check we don't do this twice (storeSession).
-        AsyncStorage.setItem(this.props.collection_id + '_sessions', JSON.stringify( this.state.sessions ));   
-      })
-    }
-  }
-
-  renderDateTime(index, value){
-    console.log()
-    const date  = value.date ? new Date(value.date) : '',
-          time_start = value.time_start ? new Date(value.time_start) : '',
-          time_end = value.time_end ? new Date(value.time_end) : '';
-
-    return (
-      <View style={{padding:5, overflow:'hidden'}}>
-        <View style={{flexDirection:'row', flex:1}}>
-          {/*
-          <MaterialCommunityIcons
-            name={ value.protocole == 'flash' 
-            ? 'flash-outline' 
-            : value.protocole == 'long' 
-              ? 'timer-sand'
-              : 'help-circle-outline'
-            }
-            style={[styles.listItemText,{
-                margin:0,
-                marginTop:7,
-              }]}
-            size={18}
-          />
-          */}
-
-          <Text style={[styles.listItemText, {fontWeight:'normal', fontSize:16}]}>
-          {index}- {formatDate(date)}</Text>
-        </View>
-        <View> 
-          <Text style={styles.listItemText}>
-          { formatTime(time_start) } - { formatTime(time_end) }</Text>
-        </View>
-      </View>   
-    );
-  }
-
-  render(){
-    return(
-       <View style={{flex:1}}>
-        { this.state.editing === false
-          ? <View style={{flex:1}}>
-
-              { this.props.protocole == 'flash' ? null : // default session is created and flash has only one.
-              <TouchableOpacity  
-                style={[styles.listItem,styles.listItemNew, {height:50}]}
-                onPress = {() => this.newSession()}
-                >
-                <MaterialCommunityIcons   
-                  name='plus-circle-outline'
-                  style={{fontSize:24, paddingRight:10, color:'white'}}
-                />
-                <Text style={{color: 'white', fontSize:16,}}>
-                Créer une session</Text>
-              </TouchableOpacity>
-              }
-
-              <ScrollView>
-              { this.state.sessions.map((value, index) => 
-                <TouchableOpacity  
-                  key={index}
-                  style={[styles.listItem,  this.state.sessions.length-1==index 
-                    ? {borderBottomWidth:15}
-                    : null
-                  ]}
-                  onPress = {() => this.selectSession(index)}
-                  >
-                  {/*  
-                                  <Image
-                                    style={{ 
-                                      margin:1,
-                                      width:80,
-                                      height:80,
-                                    }}
-                                    resizeMode="contain"
-                                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/flower.jpg' + '?t='+ new Date().getTime() }}
-                                  />
-                                  <Image
-                                    style={{ 
-                                      margin:1,
-                                      width:80,
-                                      height:80,
-                                    }}
-                                    resizeMode="contain"
-                                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/environment.jpg' + '?t='+ new Date().getTime() }}
-                                  />
-                  */}
-              
-
-                  { this.renderDateTime(index, value) }
-
-                  
-                </TouchableOpacity>
-              )}
-              </ScrollView>           
-            </View>
-
-          : <React.Fragment>
-              <SessionForm 
-                ref="session-form"
-                protocole={this.props.protocole}
-                // collection_id = {this.props.data.date}
-
-                data={this.state.sessions[this.state.editing]}
-                valueChanged={(key,val) => this.sessionChanged(key,val)}
-
-                // filePath={this.props.filePath}
-                // pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.state.collections[this.state.editing].date+'--'+field)}
-              />
-            </React.Fragment>
-
-        }
-
-      </View>
-    );
-  }
-
-} // Session List
-
-
-
-//=========================================================================================
-class _CollectionList extends Component {
-//-----------------------------------------------------------------------------------------
- constructor(props) {
-    super(props);
-
-    this.state = {
-      collections:[],
-      editing:false,
-      selectItems:false,
-    };
-  }
-
-  componentDidMount(){
-    console.log('LIST MOUNT');
-
-    AsyncStorage.getItem('collections', (err, collections) => {
-      if (err) {
-        Alert.alert('ERROR getting collections '+ JSON.stringify(err));
-      }
-      else {
-        if(collections){
-          console.log(JSON.parse(collections));
-          this.setState({collections:JSON.parse(collections)});
-        }
-      }
-    });
-
-    // this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-    //   if (this.state.selectItems!==false){
-    //     this.setState({selectItems:false});
-    //   }
-    //   return true;      
-    // });
-  }
-
-  componentWillUnmount(){
-    this.backHandler.remove();
-    BackHandler.removeEventListener('hardwareBackPress', this.backButton);
-    console.log('LIST UN-MOUNT');
-  }
-
-  // setSource(collection, field, source){
-  //   // this.setState({
-  //   //   editing:collection,
-  //   // }, function(){
-
-  //   //   console.log(field,source)
-
-  //     this.refs['collection-form'].refs['collection-'+field].setSource(source);
-  //   // });
-  // }
-
-  newCollection(){
-    const now = date2folderName();
-    
-    // Create Folder.
-    this.props.createCollectionFolders(now);
-
-    // Create stored data.
-    let coll = this.state.collections;
-    coll.push({
-        name:'',
-        protocole:'',
-        place:{lat:'', long:'', name:''},
-        date:now,
-    });
-
-    this.setState({ 
-      collections: coll,
-      editing:coll.length-1,
-    }, function(){
-      AsyncStorage.setItem('collections', JSON.stringify( this.state.collections ));
-      AsyncStorage.setItem(now+'_collection', JSON.stringify({
-        name:'',
-        protocole:'',
-        place:{lat:false,long:false,name:''}, 
-        flower:{
-          photo:'',
-          id_flower_unknown:false,
-          taxon_list_id_list:false,     // flower:taxa_taxon_list_id_list[]
-          taxon_name:'',                // just for display on app.
-          taxon_extra_info:'',
-          comment:'',
-        },
-
-        environment:{
-          photo:'',
-          occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
-          locAttr_2:'',     // NOT MANDATORY            //  ruche
-          locAttr_1:[],   // NOT MANDATORY              //  habitat
-          locAttr_3:false,                 //  grande culture en fleur
-        },
-      }));
-      AsyncStorage.setItem(now+'_sessions', JSON.stringify([{
-        date:'',
-        time_start:'',
-        time_end:'',
-        smpAttr_24:'',
-        smpAttr_25:'',
-        smpAttr_26:'',
-        shadow:'',
-      }]));
-      AsyncStorage.setItem(now+'_insects', JSON.stringify({
-        date:'',
-        time_start:'',
-        time_end:'',
-      }));
-    });
-  }
-
-  selectCollection(index){
-    if(this.state.selectItems!==false){
-      let selectItems = this.state.selectItems;
-      const i = selectItems.indexOf(index);
-      if(i<0){
-        selectItems.push(index);
-      }
-      else{
-        selectItems.splice(i, 1);
-      }
-      this.setState({selectItems:selectItems}); 
-    }
-    else{
-      this.setState({editing:index});   
-    }
-  }
-
-  collectionChanged(key, val){
-    if(key=='editing'){
-      this.setState({[key]:val});
-    }
-    else{
-      let coll = this.state.collections;
-      coll[this.state.editing][key] = val;
-      this.setState({collections:coll}, function(){
-        AsyncStorage.setItem('collections', JSON.stringify( this.state.collections ));   
-      })
-    }
-  }
-
-  selectItems(index) {
-    if(index===false){
-      this.setState({selectItems:false});
-    }
-    else {
-      this.setState({selectItems:[index]});
-    }
-  }
-
-  deleteSelected(){
-    Alert.alert(
-      'Supprimer les collections sélectionées ?',
-      'Toutes les informations et photos associées seront définitivement perdues.',
-      [
-        {
-          text: 'Annuler',
-          onPress: () => console.log('Cancel Pressed'),
-        },
-        {
-          text: 'Supprimer', 
-          onPress: () => {
-            const selected = this.state.selectItems,
-                  collections = this.state.collections;
-
-            // Backward loop to avoid re-index issue.
-            for (var i = selected.length - 1; i >= 0; i--) {
-              const collection_name = this.state.collections[selected[i]].date;
-              console.log(selected[i] + '  ' + collection_name);
-
-              // Delete stored data.
-              AsyncStorage.removeItem(collection_name+'_collection');
-              AsyncStorage.removeItem(collection_name+'_sessions');
-              AsyncStorage.removeItem(collection_name+'_insects');
-
-              // Delete folder.
-              this.props.deleteCollectionFolders(collection_name);
-
-              // Remove from collection list.
-              collections.splice(selected[i], 1);
-              
-            }
-            // Store purged collection list.
-            this.setState({
-              collections:collections,
-              selectItems:false,
-            }, function(){
-               AsyncStorage.setItem('collections', JSON.stringify( this.state.collections ));
-            });
-          }
-        },
-      ],
-    );
-  }
-
-  render(){
-    return(
-       <View style={{flex:1}}>
-        { this.state.editing === false
-          ? <View style={{flex:1}}>
-
-              { this.state.selectItems === false 
-              ?
-              <TouchableOpacity  
-                style={{backgroundColor:greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
-                onPress = {() => this.newCollection()}
-                >
-                <MaterialCommunityIcons   
-                  name='plus-circle-outline'
-                  style={{fontSize:24, paddingRight:10, color:'white'}}
-                />
-                <Text style={{color: 'white', fontSize:16,}}>
-                Créer une collection</Text>
-              </TouchableOpacity>
-
-              :
-              <View  
-                style={{alignItems:'center', backgroundColor:greenFlash,
-                 height:50, flexDirection:'row'}}
-                >
-                <TouchableOpacity style={{flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',
-                 borderRightWidth:1, borderRightColor:'white'}}
-                  onPress = {() => this.deleteSelected()}
-                  >
-                  <MaterialCommunityIcons   
-                    name='delete-circle'
-                    style={{fontSize:24, paddingRight:10, color:'white'}}
-                  /><Text style={{color: 'white', fontSize:16,}}>
-                  Suprimer</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity style={{flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',}}
-                  onPress = {() => this.selectItems(false)}
-                  >
-                  <MaterialCommunityIcons   
-                    name='close-circle'
-                    style={{fontSize:24, paddingRight:10, color:'white'}}
-                  /><Text style={{color: 'white', fontSize:16,}}>
-                  Annuler</Text>
-                </TouchableOpacity>
-              </View>
-              }
-
-              <ScrollView>
-              { this.state.collections.map((value, index) => 
-                <TouchableOpacity  
-                  key={index}
-                  style={[styles.listItem,  this.state.collections.length-1==index 
-                    ? {borderBottomWidth:15}
-                    : null
-                  ]}
-                  onPress = {() => this.selectCollection(index)}
-                  onLongPress = {() => this.selectItems(index)}
-                  >
-                  { this.state.selectItems === false ? null :
-                    <View style={{
-                      // borderRadius:10,
-                      margin:10, marginLeft:20,
-                      height:20, width:20, borderWidth:1, borderColor:greenFlash, padding:1, 
-                      
-                    }}>
-                       <View style={{
-                        // borderRadius:10,
-                        height:16, width:16,
-                        backgroundColor: this.state.selectItems.indexOf(index)>=0
-                          ? greenFlash
-                          : 'transparent'
-                      }}></View>
-                    </View>
-                  }
-                  <Image
-                    style={{ 
-                      margin:1,
-                      width:80,
-                      height:80,
-                    }}
-                    resizeMode="contain"
-                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/flower.jpg' + '?t='+ new Date().getTime() }}
-                  />
-                  <Image
-                    style={{ 
-                      margin:1,
-                      width:80,
-                      height:80,
-                    }}
-                    resizeMode="contain"
-                    source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/environment.jpg' + '?t='+ new Date().getTime() }}
-                  />
-
-                  <View style={{padding:5, overflow:'hidden'}}>
-                    <View style={{flexDirection:'row', flex:1}}>
-                      <MaterialCommunityIcons
-                        name={ value.protocole == 'flash' 
-                        ? 'flash-outline' 
-                        : value.protocole == 'long' 
-                          ? 'timer-sand'
-                          : 'help-circle-outline'
-                        }
-                        style={[styles.listItemText,{
-                                                margin:0,
-                                                  marginTop:7,
-                                                }]}
-                        size={18}
-                      />
-
-                      <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18}]}>
-                      {value.name}</Text>
-                    </View>
-                    <View>
-                      <Text style={styles.listItemText}>
-                      {formatFolderName(value.date, false)}</Text>
-
-                      <Text style={styles.listItemText}>
-                      {value.place.name}</Text>
-                    </View>
-                </View>
-
-                </TouchableOpacity>
-              )}
-              </ScrollView>           
-            </View>
-
-          : <React.Fragment>
-              <CollectionForm 
-                ref="collection-form"
-                data={this.state.collections[this.state.editing]}
-                valueChanged={(key,val) => this.collectionChanged(key,val)}
-
-                filePath={this.props.filePath}
-                pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.state.collections[this.state.editing].date+'--'+field)}
-              />
-            </React.Fragment>
-
-        }
-
-      </View>
-    );
-  }
-
-} // Main CollectionList
-
-
 //=========================================================================================
 export default class CollectionList extends Component {
 //-----------------------------------------------------------------------------------------
@@ -3531,8 +3031,6 @@ export default class CollectionList extends Component {
       editing:false,
       selectItems:false,
     };
-
-
   }
 
   componentDidMount(){
@@ -3627,17 +3125,17 @@ export default class CollectionList extends Component {
     }
   }
 
-  deleteSelected(){
+  deleteCollection(collection_name){
     // Delete stored data.
-    // AsyncStorage.removeItem(collection_name+'_collection');
-    // AsyncStorage.removeItem(collection_name+'_sessions');
-    // AsyncStorage.removeItem(collection_name+'_insects');
+    AsyncStorage.removeItem(collection_name+'_collection');
+    AsyncStorage.removeItem(collection_name+'_sessions');
+    AsyncStorage.removeItem(collection_name+'_insects');
 
     // Delete folder.
-    // this.props.deleteCollectionFolders(collection_name);
+    this.props.deleteCollectionFolders(collection_name);
   }
 
-  collectionChanged(key,val){
+  collectionChanged(key, val){
     if(key=='editing'){
       this.refs['collections'].selectItem(false);
     }
@@ -3651,11 +3149,9 @@ export default class CollectionList extends Component {
       <CollectionForm 
         ref="collection-form"
         data={data}
-        back={()=>this.backToList()}
         valueChanged={(key,val) => this.collectionChanged(key,val)}
-
-  // filePath={this.props.filePath}
-  // pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.state.collections[this.state.editing].date+'--'+field)}
+        filePath={this.props.filePath}
+        pickPhoto = {(field) => this.props.pickPhoto('collection--'+data.date+'--'+field)}
       />
     );
   }
@@ -3723,6 +3219,7 @@ export default class CollectionList extends Component {
           renderDetailedItem = {(data) => this.renderCollectionForm(data)}
 
           newItem = {() => this.newCollection()}
+          deleteItem = {() => this.deleteCollection()}
         />
 
       </View>

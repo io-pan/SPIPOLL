@@ -50,7 +50,6 @@ export default class AdvancedList extends Component {
     });
 
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      alert(this.state.editing)
       if (this.state.selectItems!==false){
         this.setState({selectItems:false});
       }
@@ -142,31 +141,22 @@ export default class AdvancedList extends Component {
             // Backward loop to avoid re-index issue.
             for (var i = selected.length - 1; i >= 0; i--) {
               const collection_name = this.state.items[selected[i]].date;
-              console.log(selected[i] + '  ' + collection_name);
-
-
-
-              // Delete stored data.
-              // AsyncStorage.removeItem(collection_name+'_collection');
-              // AsyncStorage.removeItem(collection_name+'_sessions');
-              // AsyncStorage.removeItem(collection_name+'_insects');
-
-              // Delete folder.
-              // this.props.deleteCollectionFolders(collection_name);
+              
+              // Delete folders & co.
+              if(this.props.deleteItem) {
+                this.props.deleteItem(collection_name);
+              }
 
               // Remove from list.
               items.splice(selected[i], 1);
-              
             }
+
             // Store purged list.
             this.setState({
               items:items,
               selectItems:false,
             }, function(){
               AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
-              if(this.props.deleteItem) {
-                this.props.deleteItem(/**/);
-              }
             });
           }
         },
