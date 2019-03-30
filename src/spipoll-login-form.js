@@ -47,7 +47,7 @@ export default class SpipollLoginFrom extends Component {
     };
   }
 
-  componentWillMount() {
+  componentDidMount() {
 
     let name ='',
         pass ='';
@@ -83,188 +83,60 @@ export default class SpipollLoginFrom extends Component {
         pass:this.state.pass,
       }));
 
-        // website_id: 2
-        // location:centroid_sref: 0, 0
-        // location:centroid_geom: POINT(0 -7.08115455161362e-10)
-        // location:centroid_sref_system: 900913
-        // sample:survey_id: 2
+      return;
 
-        // location:name: reretest
-        // sample:location_name: reretest
-        // smpAttr:21: 106
-        // sample:date: 2010-01-01
+      // Submit data.
 
-        // smpAttr:20: 0
-        // smpAttr:18: 56810
+      // var callback = callback;
+      var data = new FormData();
+      data.append("locations_website", "2");
+      data.append("website_id", "2");
 
-        // smpAttr:8: lionel.rousseau@iopan.net
-        // smpAttr:19: ioPan
-        // locations_website:website_id: 2 
+      data.append("location:centroid_sref", "0, 0");
+      data.append("location:centroid_geom", "POINT(0 -7.08115455161362e-10)");
+      data.append("location:centroid_sref_system", "900913");
+      data.append("location:name", "testapp");
+           
+      data.append("sample:survey_id", "2");
+      data.append("sample:location_name", "testapp");
+      data.append("sample:date", "2010-01-01");
 
+      data.append("smpAttr:21", "106");
+      data.append("smpAttr:20", "0");
+      data.append("smpAttr:18", "56810");
+      data.append("smpAttr:8" , "lionel.rousseau@iopan.net");
+      data.append("smpAttr:19", "ioPan");
 
-// collection 86821 error.
-//  86829
- var callback = callback;
+      var xhr = new XMLHttpRequest();
+      xhr.withCredentials = true;
 
-    var data = new FormData();
-    data.append("locations_website", "2");
-    data.append("website_id", "2");
+      xhr.onreadystatechange = function() {
+        console.log(xhr);
+        if (xhr.readyState === 4) {
+          if (xhr.status === 200){
+            console.log(xhr.response);
+            // callback();
+            //_response: "{error:"iform_ajaxproxy Error: Indicia website_id not provided in POST."}"
 
-    data.append("location:centroid_sref", "0, 0");
-    data.append("location:centroid_geom", "POINT(0 -7.08115455161362e-10)");
-    data.append("location:centroid_sref_system", "900913");
-    data.append("location:name", "testapp");
-         
-    data.append("sample:survey_id", "2");
-    data.append("sample:location_name", "testapp");
-    data.append("sample:date", "2010-01-01");
-
-    data.append("smpAttr:21", "106");
-    data.append("smpAttr:20", "0");
-    data.append("smpAttr:18", "56810");
-    data.append("smpAttr:8" , "lionel.rousseau@iopan.net");
-    data.append("smpAttr:19", "ioPan");
-
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
-
-    xhr.onreadystatechange = function() {
-      console.log(xhr);
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200){
-          console.log(xhr.response);
-          //_response: "{error:"iform_ajaxproxy Error: Indicia website_id not provided in POST."}"
-
-        }
-        else{
-          Alert.alert('Connection error');
-          // callback(false);
+          }
+          else{
+            Alert.alert('Submission error');
+            // callback(false);
+          }
         }
       }
-    }
 
-    xhr.open("POST", "http://www.spipoll.org/ajaxproxy?node=50&index=loc-sample");
-    xhr.setRequestHeader("cache-control", "no-cache");
-    // xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-    xhr.send(data);
-
-        // fetch('http://www.spipoll.org/ajaxproxy?node=50&index=loc-sample', {
-        //   method: 'POST',
-        //   credentials: 'include',
-        //   headers: {
-        //     Accept: 'application/json',
-        //     'Content-Type': 'application/json',
-        //     "Access-Control-Origin": "*",
-        //   },
-        //   body: JSON.stringify({
-        //     locations_website:{'website_id':2},
-        //     website_id: 2,      
-        //     location:{
-        //       centroid_sref:"0, 0",
-        //       centroid_sref_system: 900913,
-        //       name: 'testapp'
-        //     },
-        //     sample:{
-        //       survey_id: 2,
-        //       location_name: 'testapp',
-        //       date: '2010-01-01'
-        //     },
-        //     smpAttr:{
-        //       '21':106,
-        //       '20':0,
-        //       '18':56810,
-        //       '8':'lionel.rousseau@iopan.net',
-        //       '19':'ioPan'
-        //     }
-
-       
+      xhr.open("POST", "http://www.spipoll.org/ajaxproxy?node=50&index=loc-sample");
+      xhr.setRequestHeader("cache-control", "no-cache");
+      xhr.send(data);
 
 
     }
-    else {
+    // Connection failed.
+    else { 
       AsyncStorage.setItem('cred', '');  
     }    
   }
-
-  treatlogFETCH = (connected) => {
-    console.log('connected',connected);
-    this.setState({connected:connected})
-    if(connected){
-      AsyncStorage.setItem('cred', JSON.stringify({
-        name:this.state.name,
-        pass:this.state.pass,
-      }));
-
-        // website_id: 2
-        // location:centroid_sref: 0, 0
-        // location:centroid_geom: POINT(0 -7.08115455161362e-10)
-        // location:centroid_sref_system: 900913
-        // sample:survey_id: 2
-
-        // location:name: reretest
-        // sample:location_name: reretest
-        // smpAttr:21: 106
-        // sample:date: 2010-01-01
-
-        // smpAttr:20: 0
-        // smpAttr:18: 56810
-
-        // smpAttr:8: lionel.rousseau@iopan.net
-        // smpAttr:19: ioPan
-        // locations_website:website_id: 2 
-
-        fetch('http://www.spipoll.org/ajaxproxy?node=50&index=loc-sample', {
-          //  => _bodyInit: "{error:"iform_ajaxproxy Error: no POST data."}"
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            "Access-Control-Origin": "*",
-          },
-          body: JSON.stringify({
-            locations_website:{'website_id':2},
-            website_id: 2,      
-            location:{
-              centroid_sref:"0, 0",
-              centroid_sref_system: 900913,
-              name: 'testapp'
-            },
-            sample:{
-              survey_id: 2,
-              location_name: 'testapp',
-              date: '2010-01-01'
-            },
-            smpAttr:{
-              '21':106,
-              '20':0,
-              '18':56810,
-              '8':'lionel.rousseau@iopan.net',
-              '19':'ioPan'
-            }
-
-            // smpAttr:21: 106
-            // smpAttr:20: 0
-            // smpAttr:18: 56810
-            // smpAttr:8: 'lionel.rousseau@iopan.net'
-            // smpAttr:19: 'ioPan'
-            // locations_website:website_id: 2
-          }),
-        })
-        // .then((response) => response.json())
-        .then((responseJson) => {
-          console.log(responseJson);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-
-    }
-    else {
-      AsyncStorage.setItem('cred', '');  
-    }    
-  }
-
 
   login(callback){
 
@@ -299,34 +171,34 @@ export default class SpipollLoginFrom extends Component {
         });
   }
 
-  loginXHR(callback){
-    var callback = callback;
+  // loginXHR(callback){
+  //   var callback = callback;
 
-    var data = new FormData();
-    data.append("name", this.state.name);
-    data.append("pass", this.state.pass);
-    data.append("form_id", "user_login");
+  //   var data = new FormData();
+  //   data.append("name", this.state.name);
+  //   data.append("pass", this.state.pass);
+  //   data.append("form_id", "user_login");
 
-    var xhr = new XMLHttpRequest();
-    xhr.withCredentials = true;
+  //   var xhr = new XMLHttpRequest();
+  //   xhr.withCredentials = true;
 
-    xhr.onreadystatechange = function() {
-      if (xhr.readyState === 4) {
-        if (xhr.status === 200
-        && xhr.responseText.indexOf("Se Connecter") < 0){
+  //   xhr.onreadystatechange = function() {
+  //     if (xhr.readyState === 4) {
+  //       if (xhr.status === 200
+  //       && xhr.responseText.indexOf("Se Connecter") < 0){
           
-        }
-        else{
-          Alert.alert('Connection error');
-          callback(false);
-        }
-      }
-    }
+  //       }
+  //       else{
+  //         Alert.alert('Connection error');
+  //         callback(false);
+  //       }
+  //     }
+  //   }
 
-    xhr.open("POST", "http://www.spipoll.org/mon-spipoll/creer-une-collection?login_popup=");
-    xhr.setRequestHeader("cache-control", "no-cache");
-    xhr.send(data);
-  }
+  //   xhr.open("POST", "http://www.spipoll.org/mon-spipoll/creer-une-collection?login_popup=");
+  //   xhr.setRequestHeader("cache-control", "no-cache");
+  //   xhr.send(data);
+  // }
 
   logout(){
     this.setState({connected:false});
