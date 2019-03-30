@@ -194,7 +194,7 @@ export default class ModalFilterPicker extends Component {
     var startIndex = 0, 
         index,
         spited = [],
-        source_lower = label,//.toLowerCase(),
+        source_lower = label.toLowerCase(),
         search = this.state.filter.toLowerCase();
     const searchLen = search.length;
 
