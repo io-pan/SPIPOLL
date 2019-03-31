@@ -694,22 +694,24 @@ class InsectForm extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx);
-
     this.state = {
       visibleTaxonModal:false,
       insect:{
-        taxon_list_id_list:false,
-        taxon_name:'',
-        comment:'',
-        session:false,
+        taxon_list_id_list:this.props.data.taxon_list_id_list,
+        taxon_name:this.props.data.taxon_name,
+        taxon_extra_info:this.props.data.taxon_extra_info,
+        comment:this.props.data.comment, 
+        session:this.props.data.session,
 
+        occAttr_4:this.props.data.occAttr_4, // Nombre maximum d'individus de cette espèce vus simultanément :
+        occAttr_5:this.props.data.occAttr_5, // Avez-vous photographié cet insecte ailleurs que sur la fleur de votre station florale:
+      
+        selectedPhotoPath:false,
       },
-
     };
   }
 
   componentDidMount(){
-
   }
 
   storeInsect(field,value){
@@ -722,20 +724,21 @@ class InsectForm extends Component {
         },
         visibleTaxonModal: false,
       },function(){
-         // TODO: AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
+        // Update list. ... TODO: multival
+        this.props.valueChanged('taxon_list_id_list', value.value);
+        this.props.valueChanged('taxon_name', value.label);
       });
     }
     else{
       this.setState({
         insect:{
-          ...this.state.session,
+          ...this.state.insect,
           [field]:value,
         }
       },function(){
-         // TODO: AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
+         this.props.valueChanged(field, value);
       });    
     }
-
   }
 
   showTaxonModal = () => {
@@ -744,7 +747,6 @@ class InsectForm extends Component {
   hideTaxonModal = () => {
     this.setState({visibleTaxonModal: false});
   }
-
 
   render(){
     return(
@@ -834,9 +836,9 @@ class InsectForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
                         borderColor:greenFlash 
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
-                      ><Text style={{fontSize:14,backgroundColor:'white',
-                        // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                      onPress = {() => this.storeInsect('occAttr_4',136)}
+                      ><Text style={{fontSize:14,
+                        color: this.state.insect.occAttr_4==136 ? greenFlash : 'grey',
                       }}>
                       1</Text>
                     </TouchableOpacity>
@@ -844,9 +846,9 @@ class InsectForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                      onPress = {() => this.storeInsect('occAttr_4',137)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                        color: this.state.insect.occAttr_4==137 ? greenFlash : 'grey',
                       }}>
                       Entre 2 et 5</Text>
                     </TouchableOpacity>
@@ -854,9 +856,9 @@ class InsectForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeInsect('occAttr_4',138)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.insect.occAttr_4==138 ? greenFlash : 'grey',
                       }}>
                       Plus de 5</Text>
                     </TouchableOpacity>
@@ -864,9 +866,9 @@ class InsectForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash,
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
+                      onPress = {() => this.storeInsect('occAttr_4',139)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
+                        color: this.state.insect.occAttr_4==139 ? greenFlash : 'grey',
                       }}>
                       Ne sais pas</Text>
                     </TouchableOpacity>
@@ -887,9 +889,9 @@ class InsectForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
                         borderColor:greenFlash 
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
-                      ><Text style={{fontSize:14,backgroundColor:'white',
-                        // color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
+                      onPress = {() => this.storeInsect('occAttr_5',0)}
+                      ><Text style={{fontSize:14,
+                        color: this.state.insect.occAttr_5==0 ? greenFlash : 'grey',
                       }}>
                       Oui</Text>
                     </TouchableOpacity>
@@ -897,9 +899,9 @@ class InsectForm extends Component {
                       style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
                         borderColor:greenFlash
                       }}
-                      // onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
+                      onPress = {() => this.storeInsect('occAttr_5',1)}
                       ><Text style={{fontSize:14,
-                        // color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
+                        color: this.state.insect.occAttr_5==1 ? greenFlash : 'grey',
                       }}>
                       Non</Text>
                     </TouchableOpacity>
@@ -929,7 +931,7 @@ class SessionForm extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx);
-console.log(props);
+    console.log(props);
 
     this.state = {
       remainingTime:false,
@@ -1205,6 +1207,7 @@ console.log(props);
         time_end:'',
       }
     })
+    // TODO make multiValueChange
     this.props.valueChanged('date', '');
     this.props.valueChanged('time_start', '');
     this.props.valueChanged('time_end', '');
@@ -1266,34 +1269,78 @@ console.log(props);
         [field]:value,
       }
     },function(){
+      // Store list.
       this.props.valueChanged(field, value);
     });
   }
 
-  renderRunningForm(){
+
+  newInsect(){
+    return {
+      taxon_list_id_list:false,
+      taxon_name:'',
+      comment:'',
+      session:false,
+    };
+  }
+
+
+  renderInsectForm(data){ // on running session
+      // No form here ... launch caméra.
+      // this.refs['insect-list'].selectItem(false);
+      console.log(this.props)
+    // this.props.pickPhoto('insect');
+  }
+
+  renderInsectListItem(value, index){ 
+    // on running session
+    console.log(value);
     return(
-      <View style={[styles.collection_subgrp,]} >
+      <View style={{flexDirection:'row', flex:1}}>
+          <Text>{index}</Text>
+          <Text>{value.taxon_name}</Text>
+      </View>
+    );
+  }
 
-                  <View style={{flexDirection:'row'}}>
-                    <View
-                      style={{flexDirection:'row', justifyContent:'center', textAlign:'center',
-                        
-                      }}
-                      >
+  renderRunningForm(sessionStatus){
+    return(
+      <View style={{flex:1, backgroundColor:'red'}} >
 
+                {/*                
+                <TouchableOpacity  
+                  style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
+                  onPress = {() => this.newItem()}
+                  >
+                  <MaterialCommunityIcons   
+                    name='plus-circle-outline'
+                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                  />
+                  <Text style={{color: 'white', fontSize:16,}}>
+                  {this.props.newItemLabel ? this.props.newItemLabel : 'Ajouter'}</Text>
+                </TouchableOpacity>
+                */}
 
-                      <ImageSlider
-                      />
+                { this.renderLaunchButton(sessionStatus)}
 
-                      <MaterialCommunityIcons
-                        name="ladybug" 
-                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                        size={25}
-                        backgroundColor = 'greenFlash'
-                      />
+                <AdvancedList
+                  key="running-insect-list"
+                  ref="running-insect-list"
+                  localStorage = {this.props.collection_id + "_insects"}
+                  renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
+                  renderDetailedItem = {(data) => this.renderInsectForm(data)}
 
-                    </View> 
-                  </View>   
+                  newItem = {() => this.newInsect()}
+                  newItemLabel = "Nouvelle espèce d'insecte"
+                  // deleteItem = {() => this.deleteInsect()}
+                />
+             
+                <MaterialCommunityIcons
+                  name="ladybug" 
+                  style={{color:'white', padding:10, backgroundColor:'green'}}
+                  size={25}
+                  backgroundColor = 'greenFlash'
+                />
       </View>
     );
   }
@@ -1308,7 +1355,8 @@ console.log(props);
 
                   <View style={{flexDirection:'row'}}>
                     <View
-                      style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
+                      style={{backgroundColor:greenFlash, padding:0, 
+                        flexDirection:'row', justifyContent:'center', textAlign:'center',
                         borderRightWidth:1, borderRightColor:'white',
                         flex:1,
                       }}
@@ -1350,12 +1398,9 @@ console.log(props);
 
             : sessionStatus == 'running' ?
 
-              <View style={[{height:55, margin:0, borderTopWidth:1, borderTopColor:'white',
-                    justifyContent:'center', alignItems:'center',
-                    backgroundColor:greenFlash, 
-                  }]}>
-
-                  <View style={{flexDirection:'row', flex:1}}>
+              <View style={[{height:55, margin:0, borderTopWidth:1, borderTopColor:'white'}]}>
+                  <View style={{height:55, backgroundColor:greenFlash, flexDirection:'row',
+                            justifyContent:'center', alignItems:'center',}}>
                     <View
                       style={{backgroundColor:greenFlash, padding:0, flexDirection:'row', 
                         justifyContent:'center', alignItems:'center',
@@ -1410,7 +1455,6 @@ console.log(props);
                       />
                     </TouchableOpacity>
                   </View>
-                  { this.renderRunningForm() }
               </View>
 
             : sessionStatus == 'over' ? null
@@ -1584,6 +1628,11 @@ console.log(props);
     const sessionStatus = this.sessionStatus();
     return(
       <View  style={{flex:1}}>
+
+      { sessionStatus == 'running'
+      ? this.renderRunningForm(sessionStatus)
+      :
+        <View style={{flex:1}}>
         <View  style={{flex:1}}>
         <ScrollView>
               <View style={styles.collection_grp}>
@@ -1601,6 +1650,7 @@ console.log(props);
          
                 </View>
                 }
+
 
                 <View style={styles.collection_subgrp}>
                   <Text style={styles.coll_subtitle}>
@@ -1827,8 +1877,9 @@ console.log(props);
         </ScrollView>
         </View>
 
-        {this.renderLaunchButton(sessionStatus)}
-
+        { this.renderLaunchButton(sessionStatus)}
+        </View>
+        }
       </View>
     )
   }
@@ -2189,24 +2240,45 @@ class CollectionForm extends Component {
         this.refs['session-list'].selectItem(0);
       });
     }
+
+    else if(value=='insectes' && this.state.tab=='insectes'){
+      this.refs['insect-list'].selectItem(false);
+    }
+
     else{
       this.setState({tab:value});
     }
   }
 
+  insectChanged(key, val){
+    if(key=='editing'){
+      this.refs['insect-list'].selectItem(false);
+    }
+    else {
+      this.refs['insect-list'].storeItemField(key,val);
+    }
+  }
+
   renderInsectListItem(value, index){
     return(
-      <View style={{flex:1}}>
-          <Text>{index}</Text>
+      <View style={{flex:1, flexDirection:'row'}}>
+          <Text>{index} </Text>
+          <Text>{value.taxon_name}</Text>
+
+          <ImageSlider/>
       </View>
     );
   }
 
-  renderInsectForm(value, index){
+  renderInsectForm(data){
     return(
       <View style={{flex:1}}>
         <InsectForm
           collection_id = {this.props.data.date}
+          data={data}
+          valueChanged={(key,val) => this.insectChanged(key,val)}
+          // session_id = data.time_start
+          // TODO: list of sessions
         />
       </View>
     );
@@ -2257,9 +2329,11 @@ class CollectionForm extends Component {
     return(
       <SessionForm 
         ref="session-form"
+        collection_id = {this.props.data.date}
         protocole={this.props.data.protocole}
         data={data}
         valueChanged={(key,val) => this.sessionChanged(key,val)}
+        // pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.props.data.date+'--'+field)}
       />
     );
   }
@@ -2277,8 +2351,13 @@ class CollectionForm extends Component {
   }
 
   deleteSession(){
-
+    // TODO: delete insects ( try recursive )
   }
+
+  deleteInsect(){
+    // TODO: delete photos
+  }
+  
 
   renderCollMenu(){
     return(
@@ -3006,13 +3085,14 @@ class CollectionForm extends Component {
             : this.state.tab=='insectes' 
             ?
               <AdvancedList
+                key="insect-list"
                 ref="insect-list"
                 localStorage = {this.props.data.date + "_insects"}
                 renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
                 renderDetailedItem = {(data) => this.renderInsectForm(data)}
 
                 newItem = {() => this.newInsect()}
-                //newItemLabel = "Nouvel Insect"
+                newItemLabel = {false}
                 deleteItem = {() => this.deleteInsect()}
               />
             : null

@@ -26,7 +26,8 @@ export default class AdvancedList extends Component {
       // localStorage
       // renderListItem
       // renderDetailedItem
-      // newItem
+      // renderNewItemButton
+      // newItem // callback
       // newItemLabel
       // deleteItem
 
@@ -39,22 +40,25 @@ export default class AdvancedList extends Component {
   }
 
   componentWillMount(){
+    console.log('AdvancedList storage:', this.props.localStorage)
     AsyncStorage.getItem(this.props.localStorage, (err, items) => {
       if (err) {
         Alert.alert('ERROR getting items ' + this.props.localStorage + ' ' + JSON.stringify(err));
       }
       else {
         if(items){
-          // console.log('storage: ' + this.props.localStorage, JSON.parse(items));
+          console.log('items: ', JSON.parse(items));
           this.setState({
             items:JSON.parse(items),
             editing: this.editingRequested,
           }, function(){
-            console.log(this.props.localStorage, JSON.parse(items));
+            this.editingRequested = false;
+            // console.log(this.props.localStorage, JSON.parse(items));
           });
         }
         else if(this.editingRequested !== false){
           this.newItem();
+          this.editingRequested = false;
         }
       }
     });
@@ -188,18 +192,19 @@ export default class AdvancedList extends Component {
 
               { this.state.selectItems === false 
               ?
+                this.props.newItemLabel ===false ? null :
                 <TouchableOpacity  
                   style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
                   onPress = {() => this.newItem()}
                   >
-                  <MaterialCommunityIcons   
-                    name='plus-circle-outline'
-                    style={{fontSize:24, paddingRight:10, color:'white'}}
-                  />
-                  <Text style={{color: 'white', fontSize:16,}}>
-                  {this.props.newItemLabel ? this.props.newItemLabel : 'Ajouter'}</Text>
+                    <MaterialCommunityIcons   
+                      name='plus-circle-outline'
+                      style={{fontSize:24, paddingRight:10, color:'white'}}
+                    />
+                    <Text style={{color: 'white', fontSize:16,}}>
+                    {this.props.newItemLabel ? this.props.newItemLabel : 'Ajouter'}</Text>
                 </TouchableOpacity>
-
+                
               :
               <View  
                 style={{alignItems:'center', backgroundColor:colors.greenFlash,
