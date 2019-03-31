@@ -27,6 +27,7 @@ export default class AdvancedList extends Component {
       // renderListItem
       // renderDetailedItem
       // newItem
+      // newItemLabel
       // deleteItem
 
     this.state = {
@@ -34,6 +35,7 @@ export default class AdvancedList extends Component {
       editing:false,
       selectItems:false,
     };
+    this.editingRequested = false;
   }
 
   componentWillMount(){
@@ -44,7 +46,15 @@ export default class AdvancedList extends Component {
       else {
         if(items){
           // console.log('storage: ' + this.props.localStorage, JSON.parse(items));
-          this.setState({items:JSON.parse(items)});
+          this.setState({
+            items:JSON.parse(items),
+            editing: this.editingRequested,
+          }, function(){
+            console.log(this.props.localStorage, JSON.parse(items));
+          });
+        }
+        else if(this.editingRequested !== false){
+          this.newItem();
         }
       }
     });
@@ -98,19 +108,25 @@ export default class AdvancedList extends Component {
   }
 
   selectItem(index){
-    if(this.state.selectItems!==false){
-      let selectItems = this.state.selectItems;
-      const i = selectItems.indexOf(index);
-      if(i<0){
-        selectItems.push(index);
+    if(this.state.items.length==0){
+      this.editingRequested = index;
+    }
+
+    else{
+      if(this.state.selectItems!==false){
+        let selectItems = this.state.selectItems;
+        const i = selectItems.indexOf(index);
+        if(i<0){
+          selectItems.push(index);
+        }
+        else{
+          selectItems.splice(i, 1);
+        }
+        this.setState({selectItems:selectItems}); 
       }
       else{
-        selectItems.splice(i, 1);
-      }
-      this.setState({selectItems:selectItems}); 
-    }
-    else{
-      this.setState({editing:index});   
+        this.setState({editing:index});   
+      } 
     }
   }
 
@@ -181,7 +197,7 @@ export default class AdvancedList extends Component {
                     style={{fontSize:24, paddingRight:10, color:'white'}}
                   />
                   <Text style={{color: 'white', fontSize:16,}}>
-                  Ajouter</Text>
+                  {this.props.newItemLabel ? this.props.newItemLabel : 'Ajouter'}</Text>
                 </TouchableOpacity>
 
               :

@@ -484,7 +484,6 @@ class ModalHelp extends Component {
   }
 
   render(){
-    console.log(this.props);
     return(
      <Modal
         onRequestClose={this.props.onCancel}
@@ -930,6 +929,7 @@ class SessionForm extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx);
+console.log(props);
 
     this.state = {
       remainingTime:false,
@@ -1267,10 +1267,8 @@ class SessionForm extends Component {
       }
     },function(){
       this.props.valueChanged(field, value);
-       // TODO: AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
     });
   }
-
 
   renderRunningForm(){
     return(
@@ -2182,7 +2180,36 @@ class CollectionForm extends Component {
   }
 
   setTab(value){
-    this.setState({tab:value});
+    // Back to sessions list.
+    if(value=='sessions' && this.state.tab=='sessions' && this.props.data.protocole=='long'){
+      this.refs['session-list'].selectItem(false);
+    }
+    else if(value=='sessions' && this.props.data.protocole=='flash'){
+      this.setState({tab:value}, function(){
+        this.refs['session-list'].selectItem(0);
+      });
+    }
+    else{
+      this.setState({tab:value});
+    }
+  }
+
+  renderInsectListItem(value, index){
+    return(
+      <View style={{flex:1}}>
+          <Text>{index}</Text>
+      </View>
+    );
+  }
+
+  renderInsectForm(value, index){
+    return(
+      <View style={{flex:1}}>
+        <InsectForm
+          collection_id = {this.props.data.date}
+        />
+      </View>
+    );
   }
 
   renderSessionListItem(value, index){
@@ -2381,8 +2408,8 @@ class CollectionForm extends Component {
         { // Collection Form.
         this.state.tab=='collection' 
         ? <View style={{flex:1}}>
-          
-              { !this.state.collection.protocole 
+              
+              { !this.state.collection.name || !this.state.collection.protocole 
               ? <View style={{flex:1}}>
                   <TouchableOpacity 
                     style={{flexDirection:'row', justifyContent:'center', marginTop:20,}}
@@ -2965,6 +2992,7 @@ class CollectionForm extends Component {
                   renderDetailedItem = {(data) => this.renderSessionForm(data)}
 
                   newItem = {() => this.newSession()}
+                  newItemLabel = "Nouvelle Session"
                   deleteItem = {() => this.deleteSession()}
                 />
                 {/*
@@ -2977,13 +3005,16 @@ class CollectionForm extends Component {
          
             : this.state.tab=='insectes' 
             ?
-              <View style={{flex:1}}>
-                    <InsectForm
-                      collection_id = {this.props.data.date}
+              <AdvancedList
+                ref="insect-list"
+                localStorage = {this.props.data.date + "_insects"}
+                renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
+                renderDetailedItem = {(data) => this.renderInsectForm(data)}
 
-                    />
-                </View>
-                
+                newItem = {() => this.newInsect()}
+                //newItemLabel = "Nouvel Insect"
+                deleteItem = {() => this.deleteInsect()}
+              />
             : null
             }
 
@@ -3101,20 +3132,23 @@ export default class CollectionList extends Component {
         locAttr_3:false,                 //  grande culture en fleur
       },
     }));
-    AsyncStorage.setItem(now+'_sessions', JSON.stringify([{
-      date:'',
-      time_start:'',
-      time_end:'',
-      smpAttr_24:'',
-      smpAttr_25:'',
-      smpAttr_26:'',
-      shadow:'',
-    }]));
-    AsyncStorage.setItem(now+'_insects', JSON.stringify({
-      date:'',
-      time_start:'',
-      time_end:'',
-    }));
+
+    // AsyncStorage.setItem(now+'_sessions', JSON.stringify([{
+    //   date:'',
+    //   time_start:'',
+    //   time_end:'',
+    //   smpAttr_24:'',
+    //   smpAttr_25:'',
+    //   smpAttr_26:'',
+    //   shadow:'',
+    // }]));
+
+
+    // AsyncStorage.setItem(now+'_insects', JSON.stringify({
+    //   date:'',
+    //   time_start:'',
+    //   time_end:'',
+    // }));
 
     // Return data to list.
     return {
@@ -3219,6 +3253,7 @@ export default class CollectionList extends Component {
           renderDetailedItem = {(data) => this.renderCollectionForm(data)}
 
           newItem = {() => this.newCollection()}
+          newItemLabel = "Nouvelle Collection"
           deleteItem = {() => this.deleteCollection()}
         />
 
