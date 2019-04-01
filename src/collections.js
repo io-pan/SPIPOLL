@@ -131,8 +131,91 @@ const
 
     dms = dms.split(':');
     return "" + dms[0] + "°" +dms[1] + "'" + dms[2] + "''" + dms[3];
-  };
+  }
+;// const
 
+
+//-----------------------------------------------------------------------------------------
+class Form extends Component {
+//-----------------------------------------------------------------------------------------
+  constructor(props) {
+    super(props);
+  }
+
+  makeMultiSelect(field, value){
+    // Multiselect.
+    let array = this.props.currentValues[field];
+    var index = array.indexOf(value);
+    if (index !== -1) {
+      array.splice(index, 1);
+    }
+    else{
+      array.push(value);
+    }
+    return array;
+  }
+
+  render(){
+    return (
+      this.props.fields.map((field, index) => 
+        <View key={index} style={this.props.styles.group}>
+          <Text style={this.props.styles.title}>{field.title}</Text>
+          { field.type=='int'
+
+          ? <View 
+              style={{
+                flexDirection:'row',
+                alignItems:'space-between',
+                justifyContent:'center',
+                 // alignItems: 'flex-start',
+              }}>
+              <TextInput
+                keyboardType="number-pad"
+                style={[
+                  this.props.styles.label,
+                  { 
+                    width:60, padding:0,
+                    textAlign:'center',             
+                    color:greenFlash,
+                   }
+                ]}
+                defaultValue={this.props.currentValues[field.name] ? this.props.currentValues[field.name]+'' : ''}
+                onEndEditing = {(event) => this.props.fieldChanged(field.name, isNaN(parseInt(event.nativeEvent.text),10) 
+                  ? '' : parseInt(event.nativeEvent.text),10)} 
+                onSubmitEditing = {(event) => this.props.fieldChanged(field.name, isNaN(parseInt(event.nativeEvent.text),10) 
+                  ? '' : parseInt(event.nativeEvent.text),10)}               
+              />
+            </View>
+
+          : field.type=='singleSelect' || field.type=='multiSelect'
+          ? <View 
+              style={{flexDirection:'row', justifyContent:'center',
+              flexWrap: 'wrap', alignItems:'flex-start'}}>
+              { field.values.map((value, value_index) => 
+                <TouchableOpacity
+                  key={field.title+'_'+value.value}
+                  style={this.props.styles.label}
+                  onPress = { field.type=='singleSelect'
+                    ? () => this.props.fieldChanged(field.name, value.value)
+                    : () => this.props.fieldChanged(field.name, this.makeMultiSelect(field.name, value.value))
+                  }
+                  >
+                  <Text style={[this.props.styles.labelText,{
+                    color: field.type=='singleSelect' 
+                    ? this.props.currentValues[field.name]==value.value ? greenFlash : 'grey'
+                    : this.props.currentValues[field.name].indexOf(value.value)!==-1 ? greenFlash : 'grey'
+                    }]}>
+                  {value.label}</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          : null
+          }
+        </View>
+      )
+    );
+  }
+}
 
 //-----------------------------------------------------------------------------------------
 class ModalPlace extends Component {
@@ -694,6 +777,33 @@ class InsectForm extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx);
+
+    this.form = {insect:[
+      {
+        name:'occAttr_4',
+        type:'singleSelect',
+        title:'Nombre maximum d\'individus de cette espèce vus simultanément',
+        values: [ 
+          {label:'0-25%',   value:123},
+          {label:'25-50%',  value:124},
+          {label:'50-75%',  value:125},
+          {label:'75-100%', value:126},
+        ],
+        callback:false,
+      },
+      {
+        name:'occAttr_5',
+        type:'singleSelect',
+        title:'Insecte photographié sur la fleur de votre station florale',
+        // Avez-vous photographié cet insecte AILLEURS que sur la fleur de votre station florale:
+        values: [ 
+          {label:'oui', value:0}, // Question
+          {label:'non', value:1},  //  inversée
+        ],
+        callback:false,
+      },
+    ]};
+
     this.state = {
       visibleTaxonModal:false,
       insect:{
@@ -753,7 +863,7 @@ class InsectForm extends Component {
         <ScrollView style={{flex:1}}>
 
               <View style={styles.collection_grp}>
-                <Image
+                <ImageSlider
                 // map photos
                   source={null}
                 />
@@ -807,108 +917,29 @@ class InsectForm extends Component {
                   onSubmitEditing = {(event) => this.storeInsect('taxon_extra_info', event.nativeEvent.text) }                        
                 />
 
-                  <TextInput
-                    placeholder='Commentaire'
-                    // multiline={true}
-                    // numberOfLines={3} 
-                    placeholderTextColor='grey'        
-                    style={{fontSize:14, color:'grey',
-                      padding:5, marginTop:15, borderColor:'lightgrey', borderWidth:1,}}
-                    defaultValue ={this.state.insect.comment}
-                    onEndEditing = {(event) => this.storeInsect('comment',event.nativeEvent.text) } 
-                    onSubmitEditing = {(event) => this.storeInsect('comment', event.nativeEvent.text) }  
-                  />
-              </View>
-
-              <View style={styles.collection_grp}>
-              
-                <View style={styles.collection_subgrp}>
-                  <Text style={styles.coll_subtitle}>
-                  Nombre maximum d'individus de cette espèce vus simultanément</Text>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                        borderColor:greenFlash 
-                      }}
-                      onPress = {() => this.storeInsect('occAttr_4',136)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.insect.occAttr_4==136 ? greenFlash : 'grey',
-                      }}>
-                      1</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash
-                      }}
-                      onPress = {() => this.storeInsect('occAttr_4',137)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.insect.occAttr_4==137 ? greenFlash : 'grey',
-                      }}>
-                      Entre 2 et 5</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeInsect('occAttr_4',138)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.insect.occAttr_4==138 ? greenFlash : 'grey',
-                      }}>
-                      Plus de 5</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeInsect('occAttr_4',139)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.insect.occAttr_4==139 ? greenFlash : 'grey',
-                      }}>
-                      Ne sais pas</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-     
-                <View style={styles.collection_subgrp}>
-                  <Text style={styles.coll_subtitle}>
-                  Insecte photographié ailleurs que sur la fleur de votre station florale</Text>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                        borderColor:greenFlash 
-                      }}
-                      onPress = {() => this.storeInsect('occAttr_5',0)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.insect.occAttr_5==0 ? greenFlash : 'grey',
-                      }}>
-                      Oui</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash
-                      }}
-                      onPress = {() => this.storeInsect('occAttr_5',1)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.insect.occAttr_5==1 ? greenFlash : 'grey',
-                      }}>
-                      Non</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-
+                <TextInput
+                  placeholder='Commentaire'
+                  // multiline={true}
+                  // numberOfLines={3} 
+                  placeholderTextColor='grey'        
+                  style={{fontSize:14, color:'grey',
+                    padding:5, marginTop:15, marginBottom:20, borderColor:'lightgrey', borderWidth:1,}}
+                  defaultValue ={this.state.insect.comment}
+                  onEndEditing = {(event) => this.storeInsect('comment',event.nativeEvent.text) } 
+                  onSubmitEditing = {(event) => this.storeInsect('comment', event.nativeEvent.text) }  
+                />
+   
+                <Form
+                  fields={this.form.insect}
+                  currentValues={this.state.insect}
+                  fieldChanged={(field, value) => this.storeInsect(field, value)}
+                  styles={{
+                    group:styles.collection_subgrp,
+                    title:styles.coll_subtitle,
+                    label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:greenFlash},
+                    labelText:{fontSize:14, backgroundColor:'white'}
+                  }}
+                />
               </View>
 
               <ModalFilterPicker
@@ -932,6 +963,54 @@ class SessionForm extends Component {
   constructor (props, ctx) {
     super(props, ctx);
     console.log(props);
+
+    this.form = { session: [
+        {
+          name:'smpAttr_24',
+          type:'singleSelect',
+          title:'Couverture nuageuse',
+          values: [ 
+            {label:'0-25%',   value:123},
+            {label:'25-50%',  value:124},
+            {label:'50-75%',  value:125},
+            {label:'75-100%', value:126},
+          ],
+          callback:false,
+        },{
+          name:'smpAttr_25',
+          type:'singleSelect',
+          title:'Température',
+          values: [ 
+            {label:'< 10ºC',  value:127},
+            {label:'10-20ºC', value:128},
+            {label:'20-30ºC', value:129},
+            {label:'>30ºC',   value:130},
+          ],
+          callback:false,
+        },{
+          name:'smpAttr_26',
+          type:'singleSelect',
+          title:'Vent',
+          values: [ 
+            {label:'Nul',                value:131},
+            {label:'Faible, irrégulier',  value:132},
+            {label:'Faible, continu',     value:133},
+            {label:'Fort, irrégulier',    value:134},
+            {label:'Fort, continu',       value:135},
+          ],
+          callback:false,
+        },{
+          name:'smpAttr_27',
+          type:'singleSelect',
+          title:'Fleur à l\'ombre',
+          values: [ 
+            {label:'Oui', value:1 },
+            {label:'Non', value:0 },
+          ],
+          callback:false,
+        }
+      ]
+    };
 
     this.state = {
       remainingTime:false,
@@ -1286,15 +1365,14 @@ class SessionForm extends Component {
 
 
   renderInsectForm(data){ // on running session
-      // No form here ... launch caméra.
-      // this.refs['insect-list'].selectItem(false);
-      console.log(this.props)
-    // this.props.pickPhoto('insect');
+    // No form here ... launch caméra.
+    // this.refs['insect-list'].selectItem(false);
+    console.log(this.props)
+    this.props.pickPhoto('insect');
   }
 
   renderInsectListItem(value, index){ 
-    // on running session
-    console.log(value);
+    // On running session.
     return(
       <View style={{flexDirection:'row', flex:1}}>
           <Text>{index}</Text>
@@ -1633,8 +1711,8 @@ class SessionForm extends Component {
       ? this.renderRunningForm(sessionStatus)
       :
         <View style={{flex:1}}>
-        <View  style={{flex:1}}>
-        <ScrollView>
+          <View  style={{flex:1}}>
+            <ScrollView>
               <View style={styles.collection_grp}>
 
                 {  sessionStatus != 'over' ? null :
@@ -1647,237 +1725,27 @@ class SessionForm extends Component {
                     padding:5, color:greenFlash, backgroundColor:'transparent'}}>
                       {formatDate(this.state.session.date)}  {formatTime(this.state.session.time_start)}  -  {formatTime(this.state.session.time_end)}
                   </Text>
-         
                 </View>
                 }
 
+                <Form
+                  fields={this.form.session}
+                  currentValues={this.state.session}
+                  fieldChanged={(field, value) => this.storeSession(field, value)}
+                  styles={{
+                    group:styles.collection_subgrp,
+                    title:styles.coll_subtitle,
+                    label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:greenFlash},
+                    labelText:{fontSize:14, backgroundColor:'white'}
+                  }}
+                />
 
-                <View style={styles.collection_subgrp}>
-                  <Text style={styles.coll_subtitle}>
-                  Couverture nuageuse</Text>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                        borderColor:greenFlash 
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_24',123)}
-                      ><Text style={{fontSize:14,backgroundColor:'white',
-                        color: this.state.session.smpAttr_24==123 ? greenFlash : 'grey',
-                      }}>
-                      0-25%</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_24',124)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_24==124 ? greenFlash : 'grey',
-                      }}>
-                      25-50%</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_24',125)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_24==125 ? greenFlash : 'grey',
-                      }}>
-                      50-75%</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_24',126)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_24==126 ? greenFlash : 'grey',
-                      }}>
-                      75-100%</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-     
-                <View style={styles.collection_subgrp}>
-                  <Text style={styles.coll_subtitle}>
-                  Température</Text>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                        borderColor:greenFlash 
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_25',127)}
-                      ><Text style={{fontSize:14,backgroundColor:'white',
-                        color: this.state.session.smpAttr_25==127 ? greenFlash : 'grey',
-                      }}>
-                      {'< 10ºC'}</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_25',128)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_25==128 ? greenFlash : 'grey',
-                      }}>
-                      10-20ºC</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_25',129)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_25==129 ? greenFlash : 'grey',
-                      }}>
-                      20-30ºC</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_25',130)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_25==130 ? greenFlash : 'grey',
-                      }}>
-                      {'> 30ºC'}</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-
-                <View style={styles.collection_subgrp}>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                  
-                    <Text style={styles.coll_subtitle}>
-                    Vent</Text>
-
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                        borderColor:greenFlash 
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_26',131)}
-                      ><Text style={{fontSize:14,backgroundColor:'white',
-                        color: this.state.session.smpAttr_26==131 ? greenFlash : 'grey',
-                      }}>
-                      Nul</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_26',132)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_26==132 ? greenFlash : 'grey',
-                      }}>
-                      Faible, irrégulier</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_26',133)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_26==133 ? greenFlash : 'grey',
-                      }}>
-                      Faible, continu</Text>
-                    </TouchableOpacity>
-                  </View>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_26',134)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_26==134 ? greenFlash : 'grey',
-                      }}>
-                      Fort, irrégulier</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash,
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_26',135)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_26==135 ? greenFlash : 'grey',
-                      }}>
-                      Fort, continu</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-
-                <View style={styles.collection_subgrp}>
-                  <Text style={styles.coll_subtitle}>
-                  Fleur à l'ombre</Text>
-
-                  <View style={{
-                    flexDirection:'row',
-                    alignItems:'space-between',
-                    justifyContent:'center',
-                     // alignItems: 'flex-start',
-                  }}>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                        borderColor:greenFlash 
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_27',1)} 
-                      ><Text style={{fontSize:14,backgroundColor:'white',
-                        color: this.state.session.smpAttr_27==1 ? greenFlash : 'grey',
-                      }}>
-                      Oui</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                        borderColor:greenFlash
-                      }}
-                      onPress = {() => this.storeSession('smpAttr_27',0)}
-                      ><Text style={{fontSize:14,
-                        color: this.state.session.smpAttr_27==0 ? greenFlash : 'grey',
-                      }}>
-                      Non</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
               </View>
-        <FooterImage/>
-        </ScrollView>
-        </View>
 
-        { this.renderLaunchButton(sessionStatus)}
+              <FooterImage/>
+            </ScrollView>
+          </View>
+          { this.renderLaunchButton(sessionStatus)}
         </View>
         }
       </View>
@@ -1891,7 +1759,56 @@ class CollectionForm extends Component {
   constructor (props, ctx) {
     super(props, ctx)
 
-    // TODO create  / sessions folders
+    this.form = {
+      environment:[
+        {
+          name:'occAttr_3_1528533',
+          type:'singleSelect',
+          title:'La plante est',
+          values: [ 
+            {label:'spontanée',   value:'108' },
+            {label:'plantée',     value:'109' },
+            {label:'Ne sais pas', value:'110' },
+          ],
+          callback:false,
+        },{
+          name: 'ocAttr_2',
+          type: 'int',
+          title: " Distance approximative de la plus proche ruche d'abeilles domestiques.\n\n En mètres; par exemple : 150",
+          callback:false,
+        },{
+          name:'locAttr_3',
+          type:'singleSelect',
+          title:'Grande culture en fleur à moins de 50m',
+          values: [ 
+            {label:'Oui', value:'140' },
+            {label:'Non', value:'141' },
+            {label:'Ne sais pas', value:'142' },
+            
+          ],
+          callback:false,
+        },{
+          name:'locAttr_1',
+          type:'multiSelect',
+          title:"Type d'habitat",
+          callback:false,
+          values: [ 
+            {label:'urbain', value:111},
+            {label:'péri-urbain', value:112},
+            {label:'rural', value:113},
+            {label:'grande culture', value:114},
+            {label:'forêt', value:115},
+            {label:'prairie', value:116},
+            {label:'littoral', value:117},
+            {label:'parc, jardin', value:118},
+            {label:'jardin privé', value:119},
+            {label:'rochers', value:120},
+            {label:'bord de route', value:121},
+            {label:'bord de l\'eau', value:122},
+          ],
+        }
+      ],
+    };
 
     this.state = {
       gpsOpacity:new Animated.Value(1),
@@ -2035,19 +1952,6 @@ class CollectionForm extends Component {
   }
  
   storeEnvironment(field, value){
-    if(field=='locAttr_1') {
-      // Multiselect.
-      array = this.state.collection.environment.locAttr_1;
-      var index = array.indexOf(value);
-      if (index !== -1) {
-        array.splice(index, 1);
-      }
-      else{
-        array.push(value);
-      }
-      value = array;
-    }
-
     this.setState({
       collection:{
         ...this.state.collection,
@@ -2059,7 +1963,6 @@ class CollectionForm extends Component {
     }, function(){
       this.storeCollection();
     })
-  
   }
 
   selectTaxon = (picked) => {
@@ -2325,6 +2228,11 @@ class CollectionForm extends Component {
     }
   }
 
+  pickPhoto(field){
+    console.log('pickPhoto',field);
+    this.props.pickInsectPhoto(field);
+  }
+
   renderSessionForm(data){
     return(
       <SessionForm 
@@ -2333,7 +2241,9 @@ class CollectionForm extends Component {
         protocole={this.props.data.protocole}
         data={data}
         valueChanged={(key,val) => this.sessionChanged(key,val)}
+        
         // pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.props.data.date+'--'+field)}
+        pickPhoto = {(field) => this.pickPhoto('collection--'+this.props.data.date+'--'+field)}
       />
     );
   }
@@ -2432,6 +2342,7 @@ class CollectionForm extends Component {
   }
 
   render () {
+    console.log('render CollectionForm');
     return (
       <View style={{flex:1}}>
 
@@ -2812,253 +2723,22 @@ class CollectionForm extends Component {
                   </View>
 
                   <View style={styles.collection_grp}>
-                  <View style={styles.collection_subgrp}>
-                    <Text style={styles.coll_subtitle}>
-                    La plante est</Text>
-
-                    <View style={{
-                      flexDirection:'row',
-                      alignItems:'space-between',
-                      justifyContent:'center',
-                       // alignItems: 'flex-start',
-                    }}>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                          borderColor:greenFlash 
-                        }}
-                        onPress = {() => this.storeEnvironment('occAttr_3_1528533',108)}
-                        ><Text style={{fontSize:14,backgroundColor:'white',
-                          color: this.state.collection.environment.occAttr_3_1528533==108 ? greenFlash : 'grey',
-                        }}>
-                        Spontanée</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash
-                        }}
-                        onPress = {() => this.storeEnvironment('occAttr_3_1528533',109)}
-                        ><Text style={{fontSize:14,
-                          color: this.state.collection.environment.occAttr_3_1528533==109 ? greenFlash : 'grey',
-                        }}>
-                        Plantée</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash,
-                        }}
-                        onPress = {() => this.storeEnvironment('occAttr_3_1528533',110)}
-                        ><Text style={{fontSize:14,
-                          color: this.state.collection.environment.occAttr_3_1528533==110 ? greenFlash : 'grey',
-                        }}>
-                        Ne sais pas</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <Form
+                      fields={this.form.environment}
+                      currentValues={this.state.collection.environment}
+                      fieldChanged={(field, value) => this.storeEnvironment(field, value)}
+                      styles={{
+                        group:styles.collection_subgrp,
+                        title:styles.coll_subtitle,
+                        label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:greenFlash},
+                        labelText:{fontSize:14, backgroundColor:'white'}
+                      }}
+                    />
                   </View>
 
-                  <View style={styles.collection_subgrp}>
-                    <Text style={styles.coll_subtitle}>
-                    Distance approximative de la plus proche ruche d'abeilles domestiques.</Text>
-                    <Text style={styles.coll_subtitle}>
-                    En mètres; par exemple : 150</Text>
-                    <View style={{alignItems:'center', margin:0, padding:0}}>
-                    <TextInput
-                      keyboardType="number-pad"
-                      style={{ margin:5,borderWidth:1, width:60, padding:0,
-                        textAlign:'center',
-                        fontSize:16,
-                        backgroundColor:'white',
-                        color:greenFlash,
-                        borderColor:greenFlash, }} 
-                      defaultValue={''+this.state.collection.environment.locAttr_2}
-                      onEndEditing = {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10) ? '' : parseInt(event.nativeEvent.text),10)} 
-                      onSubmitEditing = {(event) => this.storeEnvironment( 'locAttr_2', isNaN(parseInt(event.nativeEvent.text),10) ? '' : parseInt(event.nativeEvent.text),10)}               
-                    /></View>
-                  </View>
-
-                  <View style={styles.collection_subgrp}>
-                    <Text style={styles.coll_subtitle}>
-                    Grande culture en fleur à moins de 50m</Text>
-                    <View style={{
-                      flexDirection:'row',
-                      alignItems:'space-between',
-                      justifyContent:'center',
-                       // alignItems: 'flex-start',
-                    }}>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                          borderColor:greenFlash 
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_3',140)}
-                        ><Text style={{fontSize:14,
-                          color: this.state.collection.environment.locAttr_3==140 ? greenFlash : 'grey',
-                        }}>
-                        Oui</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_3',141)}
-                        ><Text style={{fontSize:14,
-                          color: this.state.collection.environment.locAttr_3==141 ? greenFlash : 'grey',
-                        }}>
-                        Non</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash,
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_3',142)}
-                        ><Text style={{fontSize:14,
-                          color: this.state.collection.environment.locAttr_3==142 ? greenFlash : 'grey',
-                        }}>
-                        Ne sais pas</Text>
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  <View style={styles.collection_subgrp}>
-                    <Text style={styles.coll_subtitle}>
-                    Type d'habitat</Text>
-
-                    {/* multi select */}
-                    <View style={{
-                      flex:1,
-                      flexWrap: 'wrap',
-                      flexDirection:'row',
-                      justifyContent:'center',
-                      alignItems: 'flex-start',
-                    }}>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                          borderColor:greenFlash ,
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',111)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(111)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        urbain</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity                  
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',112)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(112)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        péri-urbain</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash,
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',113)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(113)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        rural</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                          borderColor:greenFlash 
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',114)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(114)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        grande culture</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',115)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(115)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        forêt</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash,
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',116)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(116)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        prairie</Text>
-                      </TouchableOpacity>
-
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                          borderColor:greenFlash 
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',117)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(117)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        littoral</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',118)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(118)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        parc, jardin public</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash,
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',119)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(119)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        jardin privé</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                          borderColor:greenFlash 
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',120)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(120)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        rochers</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',121)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(121)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        bord de route</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                        style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                          borderColor:greenFlash,
-                        }}
-                        onPress = {() => this.storeEnvironment('locAttr_1',122)}
-                        ><Text style={{fontSize:14,
-                          color:this.state.collection.environment.locAttr_1.indexOf(122)!==-1 ? greenFlash : 'grey',
-                        }}>
-                        bord de l'eau</Text>
-                      </TouchableOpacity>
-
-                    </View>
-                  </View>
-                </View>
-                <FooterImage/>
-              </ScrollView>
+                  <FooterImage/>
+                </ScrollView>
               }
-              
-              
               </View>
             
             : this.state.tab=='sessions'
@@ -3184,6 +2864,16 @@ export default class CollectionList extends Component {
   //   // });
   // }
 
+shouldComponentUpdate(nextProps, nextState){
+  console.log('shouldComponentUpdate');
+  console.log(this.props);
+  console.log(nextProps);
+  console.log(this.state);
+  console.log(nextState);
+  return true;
+}
+
+
   newCollection(){
     const now = date2folderName();
 
@@ -3258,6 +2948,11 @@ export default class CollectionList extends Component {
     }
   };
 
+  pickInsectPhoto(field){
+    console.log('pickInsectPhoto CollectionList', field);
+    this.props.pickInsectPhoto('collection---'+field);
+  }
+
   renderCollectionForm(data){
     return(
       <CollectionForm 
@@ -3266,6 +2961,9 @@ export default class CollectionList extends Component {
         valueChanged={(key,val) => this.collectionChanged(key,val)}
         filePath={this.props.filePath}
         pickPhoto = {(field) => this.props.pickPhoto('collection--'+data.date+'--'+field)}
+
+        pickInsectPhoto= {(field) => this.pickInsectPhoto('collection--'+data.date+'--'+field)}
+
       />
     );
   }
@@ -3324,6 +3022,7 @@ export default class CollectionList extends Component {
   }
 
   render(){
+    console.log('render CollectionList');
     return(
        <View style={{flex:1}}>
         <AdvancedList
