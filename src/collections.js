@@ -2663,9 +2663,16 @@ class CollectionForm extends Component {
                         <View style={{
                           justifyContent: 'center',
                           alignItems: 'center',
-                          padding:0,
-                          }}
-                          >
+                          }}>
+                          <MaterialCommunityIcons
+                            name="crosshairs" 
+                            size={20}
+                            height={40}
+                            width={60}
+                            margin={0}
+                            color={greenFlash}
+                            backgroundColor = 'transparent'
+                          />
                           <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
                             <MaterialCommunityIcons
                               name="crosshairs-gps" 
@@ -2677,16 +2684,6 @@ class CollectionForm extends Component {
                               backgroundColor = 'transparent'
                             />
                           </Animated.View>
-                          <MaterialCommunityIcons
-                            name="crosshairs"
-                            size={0}
-                            height={40}
-                            width={60}
-                            margin={0}
-                            color={greenFlash}
-                            backgroundColor = 'transparent'
-                            
-                          />
                         </View>
                         <Text style={{fontSize:16, marginLeft:15,
                           color: this.gpsSearching  ? greenFlash:'grey'
