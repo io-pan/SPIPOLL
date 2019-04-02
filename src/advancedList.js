@@ -160,11 +160,12 @@ export default class AdvancedList extends Component {
 
             // Backward loop to avoid re-index issue.
             for (var i = selected.length - 1; i >= 0; i--) {
-              const collection_name = this.state.items[selected[i]].date;
+
+              // const collection_name = items[selected[i]].date;
               
               // Delete folders & co.
               if(this.props.deleteItem) {
-                this.props.deleteItem(collection_name);
+                this.props.deleteItem(items[selected[i]]);
               }
 
               // Remove from list.
@@ -246,14 +247,13 @@ export default class AdvancedList extends Component {
                   >
                   { this.state.selectItems === false ? null :
                     <View style={{
-                      // borderRadius:10,
+                      borderRadius:10,
                       margin:10, marginLeft:20,
-                      height:20, width:20, borderWidth:1, borderColor:colors.greenFlash, padding:1, 
-                      
+                      height:20, width:20, borderWidth:2, borderColor:colors.greenDark, padding:2, 
                     }}>
                        <View style={{
-                        // borderRadius:10,
-                        height:16, width:16,
+                        borderRadius:6,
+                        height:12, width:12,
                         backgroundColor: this.state.selectItems.indexOf(index)>=0
                           ? colors.greenFlash
                           : 'transparent'
