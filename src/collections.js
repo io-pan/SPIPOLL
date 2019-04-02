@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import PropTypes from 'prop-types'
 import {
   Alert,
   StyleSheet,
@@ -784,12 +783,11 @@ class InsectForm extends Component {
         type:'singleSelect',
         title:'Nombre maximum d\'individus de cette espèce vus simultanément',
         values: [ 
-          {label:'0-25%',   value:123},
-          {label:'25-50%',  value:124},
-          {label:'50-75%',  value:125},
-          {label:'75-100%', value:126},
+          {label:' 1 ',   value:123},
+          {label:'entre 2 et 5',  value:124},
+          {label:'plus de 5',  value:125},
+          {label:'Ne sais pas', value:126},
         ],
-        callback:false,
       },
       {
         name:'occAttr_5',
@@ -797,10 +795,9 @@ class InsectForm extends Component {
         title:'Insecte photographié sur la fleur de votre station florale',
         // Avez-vous photographié cet insecte AILLEURS que sur la fleur de votre station florale:
         values: [ 
-          {label:'oui', value:0}, // Question
-          {label:'non', value:1},  //  inversée
+          {label:'Oui', value:0},   // Question inversée ...
+          {label:'Non', value:1},   // ... pour plus de clareté.
         ],
-        callback:false,
       },
     ]};
 
@@ -819,9 +816,6 @@ class InsectForm extends Component {
         selectedPhotoPath:false,
       },
     };
-  }
-
-  componentDidMount(){
   }
 
   storeInsect(field,value){
@@ -907,7 +901,7 @@ class InsectForm extends Component {
                 <TextInput
                   placeholder='Je connais une dénomination plus précise'
                   placeholderTextColor='grey'
-                  style={{ flex:1, padding:5, marginBottom:5,borderWidth:1, 
+                  style={{ flex:1, padding:4, marginBottom:5, borderWidth:1, 
                     fontSize:14,
                     backgroundColor:'white',
                     color:greenFlash,
@@ -975,7 +969,7 @@ class SessionForm extends Component {
             {label:'50-75%',  value:125},
             {label:'75-100%', value:126},
           ],
-          callback:false,
+      
         },{
           name:'smpAttr_25',
           type:'singleSelect',
@@ -986,7 +980,7 @@ class SessionForm extends Component {
             {label:'20-30ºC', value:129},
             {label:'>30ºC',   value:130},
           ],
-          callback:false,
+      
         },{
           name:'smpAttr_26',
           type:'singleSelect',
@@ -998,7 +992,7 @@ class SessionForm extends Component {
             {label:'Fort, irrégulier',    value:134},
             {label:'Fort, continu',       value:135},
           ],
-          callback:false,
+      
         },{
           name:'smpAttr_27',
           type:'singleSelect',
@@ -1007,7 +1001,7 @@ class SessionForm extends Component {
             {label:'Oui', value:1 },
             {label:'Non', value:0 },
           ],
-          callback:false,
+      
         }
       ]
     };
@@ -1376,7 +1370,10 @@ class SessionForm extends Component {
     return(
       <View style={{flexDirection:'row', flex:1}}>
           <Text>{index}</Text>
-          <Text>{value.taxon_name}</Text>
+          <Text>{ value.taxon_extra_info 
+          ? value.taxon_extra_info 
+          : value.taxon_name ? value.taxon_name 
+          : 'Non identifié' }</Text>
       </View>
     );
   }
@@ -1739,7 +1736,6 @@ class SessionForm extends Component {
                     labelText:{fontSize:14, backgroundColor:'white'}
                   }}
                 />
-
               </View>
 
               <FooterImage/>
@@ -1766,16 +1762,14 @@ class CollectionForm extends Component {
           type:'singleSelect',
           title:'La plante est',
           values: [ 
-            {label:'spontanée',   value:'108' },
-            {label:'plantée',     value:'109' },
+            {label:'Spontanée',   value:'108' },
+            {label:'Plantée',     value:'109' },
             {label:'Ne sais pas', value:'110' },
           ],
-          callback:false,
         },{
           name: 'ocAttr_2',
           type: 'int',
           title: " Distance approximative de la plus proche ruche d'abeilles domestiques.\n\n En mètres; par exemple : 150",
-          callback:false,
         },{
           name:'locAttr_3',
           type:'singleSelect',
@@ -1784,27 +1778,24 @@ class CollectionForm extends Component {
             {label:'Oui', value:'140' },
             {label:'Non', value:'141' },
             {label:'Ne sais pas', value:'142' },
-            
           ],
-          callback:false,
         },{
           name:'locAttr_1',
           type:'multiSelect',
           title:"Type d'habitat",
-          callback:false,
           values: [ 
-            {label:'urbain', value:111},
-            {label:'péri-urbain', value:112},
-            {label:'rural', value:113},
-            {label:'grande culture', value:114},
-            {label:'forêt', value:115},
-            {label:'prairie', value:116},
-            {label:'littoral', value:117},
-            {label:'parc, jardin', value:118},
-            {label:'jardin privé', value:119},
-            {label:'rochers', value:120},
-            {label:'bord de route', value:121},
-            {label:'bord de l\'eau', value:122},
+            {label:'Urbain',          value:111},
+            {label:'Péri-urbain',     value:112},
+            {label:'Rural',           value:113},
+            {label:'Grande culture',  value:114},
+            {label:'Forêt',           value:115},
+            {label:'Prairie',         value:116},
+            {label:'Littoral',        value:117},
+            {label:'Parc, jardin',    value:118},
+            {label:'Jardin privé',    value:119},
+            {label:'Rochers',         value:120},
+            {label:'Bord de route',   value:121},
+            {label:'Bord de l\'eau',  value:122},
           ],
         }
       ],
@@ -2164,11 +2155,13 @@ class CollectionForm extends Component {
 
   renderInsectListItem(value, index){
     return(
-      <View style={{flex:1, flexDirection:'row'}}>
-          <Text>{index} </Text>
-          <Text>{value.taxon_name}</Text>
+      <View style={{flex:1, flexDirection:'row', padding:5}}>
+        <Text>{index} - </Text>
+        <Text>{ 
+          value.taxon_extra_info || value.taxon_name || 'Non identifié' 
+        }</Text>
 
-          <ImageSlider/>
+        <ImageSlider/>
       </View>
     );
   }
@@ -2208,12 +2201,30 @@ class CollectionForm extends Component {
           />
           */}
 
-        <Text style={[styles.listItemText, {fontWeight:'normal', fontSize:16}]}>
-          {index} - {formatDate(value.date)}</Text>
+          <Text style={[styles.listItemText, {fontWeight:'normal', fontSize:16}]}>
+            { value.time_start > new Date().getTime()
+            ? <MaterialCommunityIcons
+                  name="alarm" 
+                  style={{color:greenFlash}}
+                  size={20}
+                /> 
+            : ''
+            } {formatDate(value.date)}
+            </Text>
         </View>
         <View> 
           <Text style={styles.listItemText}>
-          { formatTime(value.time_start) } - { formatTime(value.time_end) }</Text>
+          { value.time_start
+              ? formatTime(value.time_start) + ' - '
+              : <Text style={{fontWeight:'bold', fontSize:16, color:greenFlash}}>En attente</Text>
+          }
+          { value.time_end 
+            ? formatTime(value.time_end)
+            : value.time_start
+              ? <Text style={{fontWeight:'bold', fontSize:16, color:greenFlash}}> En cours</Text>
+              : ''
+          }
+          </Text>
         </View>
       </View>  
     );
@@ -2260,15 +2271,14 @@ class CollectionForm extends Component {
     };
   }
 
-  deleteSession(){
-    // TODO: delete insects ( try recursive )
+  deleteSession(session){
+    // TODO: remove that session reference on insects.
   }
 
   deleteInsect(){
     // TODO: delete photos
   }
   
-
   renderCollMenu(){
     return(
       <View style={{margin:10, flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
@@ -2584,7 +2594,7 @@ class CollectionForm extends Component {
                           <TextInput
                             placeholder='Je connais une dénomination plus précise'
                             placeholderTextColor='grey'
-                            style={{padding:4, paddingLeft:10, marginBottom:5,borderWidth:1, 
+                            style={{padding:4, marginBottom:5, borderWidth:1, 
                               fontSize:14,
                               backgroundColor:'white',
                               color:greenFlash,
@@ -2816,63 +2826,7 @@ export default class CollectionList extends Component {
 //-----------------------------------------------------------------------------------------
  constructor(props) {
     super(props);
-
-    this.state = {
-      collections:[],
-      editing:false,
-      selectItems:false,
-    };
   }
-
-  componentDidMount(){
-    console.log('LIST MOUNT');
-
-    AsyncStorage.getItem('collections', (err, collections) => {
-      if (err) {
-        Alert.alert('ERROR getting collections '+ JSON.stringify(err));
-      }
-      else {
-        if(collections){
-          console.log(JSON.parse(collections));
-          this.setState({collections:JSON.parse(collections)});
-        }
-      }
-    });
-
-    // this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-    //   if (this.state.selectItems!==false){
-    //     this.setState({selectItems:false});
-    //   }
-    //   return true;      
-    // });
-  }
-
-  componentWillUnmount(){
-    // this.backHandler.remove();
-    // BackHandler.removeEventListener('hardwareBackPress', this.backButton);
-    // console.log('LIST UN-MOUNT');
-  }
-
-  // setSource(collection, field, source){
-  //   // this.setState({
-  //   //   editing:collection,
-  //   // }, function(){
-
-  //   //   console.log(field,source)
-
-  //     this.refs['collection-form'].refs['collection-'+field].setSource(source);
-  //   // });
-  // }
-
-shouldComponentUpdate(nextProps, nextState){
-  console.log('shouldComponentUpdate');
-  console.log(this.props);
-  console.log(nextProps);
-  console.log(this.state);
-  console.log(nextState);
-  return true;
-}
-
 
   newCollection(){
     const now = date2folderName();
@@ -2884,7 +2838,11 @@ shouldComponentUpdate(nextProps, nextState){
     AsyncStorage.setItem(now+'_collection', JSON.stringify({
       name:'',
       protocole:'',
-      place:{lat:false,long:false,name:''}, 
+      place:{
+        lat:false,
+        long:false,
+        name:''
+      }, 
       flower:{
         photo:'',
         id_flower_unknown:false,
@@ -2903,23 +2861,6 @@ shouldComponentUpdate(nextProps, nextState){
       },
     }));
 
-    // AsyncStorage.setItem(now+'_sessions', JSON.stringify([{
-    //   date:'',
-    //   time_start:'',
-    //   time_end:'',
-    //   smpAttr_24:'',
-    //   smpAttr_25:'',
-    //   smpAttr_26:'',
-    //   shadow:'',
-    // }]));
-
-
-    // AsyncStorage.setItem(now+'_insects', JSON.stringify({
-    //   date:'',
-    //   time_start:'',
-    //   time_end:'',
-    // }));
-
     // Return data to list.
     return {
       name:'',
@@ -2929,11 +2870,11 @@ shouldComponentUpdate(nextProps, nextState){
     }
   }
 
-  deleteCollection(collection_name){
+  deleteCollection(collection){
     // Delete stored data.
-    AsyncStorage.removeItem(collection_name+'_collection');
-    AsyncStorage.removeItem(collection_name+'_sessions');
-    AsyncStorage.removeItem(collection_name+'_insects');
+    AsyncStorage.removeItem(collection.date+'_collection');
+    AsyncStorage.removeItem(collection.date+'_sessions');
+    AsyncStorage.removeItem(collection.date+'_insects');
 
     // Delete folder.
     this.props.deleteCollectionFolders(collection_name);
@@ -2963,7 +2904,6 @@ shouldComponentUpdate(nextProps, nextState){
         pickPhoto = {(field) => this.props.pickPhoto('collection--'+data.date+'--'+field)}
 
         pickInsectPhoto= {(field) => this.pickInsectPhoto('collection--'+data.date+'--'+field)}
-
       />
     );
   }
@@ -3033,9 +2973,8 @@ shouldComponentUpdate(nextProps, nextState){
 
           newItem = {() => this.newCollection()}
           newItemLabel = "Nouvelle Collection"
-          deleteItem = {() => this.deleteCollection()}
+          deleteItem = {(item) => this.deleteCollection(item)}
         />
-
       </View>
     );
   }
