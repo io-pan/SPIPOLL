@@ -437,7 +437,9 @@ export default class SessionForm extends Component {
     // No form here ... launch caméra.
     // this.refs['insect-list'].selectItem(false);
     console.log(this.props)
-    this.props.pickPhoto('insect');
+    alert('damned');
+    // this.setState({o:'o'})
+    //this.props.pickInsectPhoto('insect');
   }
 
   renderInsectListItem(value, index){ 

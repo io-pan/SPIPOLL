@@ -369,16 +369,6 @@ export default class  CollectionForm extends Component {
     }
   }
 
-  edit(field){
-    this.tempValue = this.state.collection[field];
-
-      this.setState({collection:{...this.state.collection, 
-          [field]:'',
-        }}, function(){
-      this.refs[field].focus();
-    });
-  }
-
   showPlaceModal(){
     this.setState({visiblePlaceModal:true});
   }
@@ -386,10 +376,6 @@ export default class  CollectionForm extends Component {
   hidePlaceModal(placeData){
     this.storeListItem('place', placeData);
     this.setState({visiblePlaceModal:false});
-  }
-
-  back(){
-    this.props.valueChanged('editing',false);
   }
 
   help(topic){
@@ -414,390 +400,345 @@ export default class  CollectionForm extends Component {
   render () {
     return (
       <View style={{flex:1}}>
-
-        { // Main topbar: collection name.
-          this.state.collection.name
-          ? <View style={{flexDirection:'row', height:50, borderBottomWidth:1, borderBottomColor:'white', }}>
+        <View style={{flex:1}}>
+              
+          { !this.state.collection.protocole 
+          ? <View style={{flex:1}}>
               <TouchableOpacity 
-                style={[{
-                  padding:10,
-                  borderRightWidth:1, borderRightColor:'white', 
-                  backgroundColor:colors.greenFlash,
-                }]}
-                onPress = {() => this.back()} 
+                style={{flexDirection:'row', justifyContent:'center', marginTop:20,}}
+                onPress = {() => this.help('Protocole')} 
                 >
+                <Text style={{
+                  fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
+                  padding:5, color:colors.greenFlash, backgroundColor:'transparent'}}>
+                PROTOCOLE</Text>
                 <MaterialCommunityIcons
-                  name="chevron-left" 
-                  style={[{ color:'white',
-                  }]}
-                  size={30}
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={{flexDirection:'row', flex:1}}
-                onPress = {() => this.edit('name')} 
-                >
-                <Text style={[styles.titleTextStyle,{flex:1}]}>{this.state.collection.name}</Text>
-                <MaterialCommunityIcons
-                  name="pencil" 
-                  style={[{color:'white', paddingTop:10, width:50, backgroundColor:colors.greenFlash} ]}
-                  size={25}
+                  name="help-circle-outline" 
+                  style={{color:colors.greenFlash, paddingTop:10, backgroundColor:'transparent'}}
+                  size={15}
                   backgroundColor = 'transparent'
                 />
               </TouchableOpacity>
-            </View>
-
-          : <TextInput
-              ref="name"
-              style={styles.collection_input_text}
-              placeholder='Nom de la collection'
-              onEndEditing = {(event) => this.storeListItem('name', event.nativeEvent.text)} 
-              onSubmitEditing = {(event) => this.storeListItem('name', event.nativeEvent.text)} 
-            />
-        }
- 
-        <View style={{flex:1}}>
-              
-              { !this.state.collection.protocole 
-              ? <View style={{flex:1}}>
-                  <TouchableOpacity 
-                    style={{flexDirection:'row', justifyContent:'center', marginTop:20,}}
-                    onPress = {() => this.help('Protocole')} 
-                    >
-                    <Text style={{
-                      fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
-                      padding:5, color:colors.greenFlash, backgroundColor:'transparent'}}>
-                    PROTOCOLE</Text>
-                    <MaterialCommunityIcons
-                      name="help-circle-outline" 
-                      style={{color:colors.greenFlash, paddingTop:10, backgroundColor:'transparent'}}
-                      size={15}
-                      backgroundColor = 'transparent'
-                    />
-                  </TouchableOpacity>
-      
-                  <View style={[styles.collection_grp, {flexDirection:'row'}]}>      
-                    <TouchableOpacity 
-                      style={{ marginRight:5, padding:2,
-                        flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
-                        borderWidth:1, borderColor:this.state.collection.protocole=='flash'?colors.greenFlash:'grey',
-                      }}
-                      onPress = {() => this.storeListItem('protocole','flash')} 
-                      >
-                      <MaterialCommunityIcons
-                        name="flash" 
-                        style={{
-                          backgroundColor:'transparent',
-                          color:this.state.collection.protocole=='flash'?colors.greenFlash:'grey',
-                        }}
-                        size={25}
-                      />
-                      <Text style={{fontSize:16,
-                        color:this.state.collection.protocole=='flash'?colors.greenFlash:'grey'
-                        }}>
-                      Flash</Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity 
-                      style={{ marginLeft:5, padding:2,
-                        flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
-                        borderWidth:1, borderColor:this.state.collection.protocole=='long'?colors.greenFlash:'grey',
-                        }}
-                      onPress = {() => this.storeListItem('protocole','long')} 
-                      >
-                      <MaterialCommunityIcons
-                        name="timer-sand" 
-                        style={{
-                          backgroundColor:'transparent',
-                          color:this.state.collection.protocole=='long'?colors.greenFlash:'grey',
-                        }}
-                        size={25}
-                      />
-                      <Text style={{ fontSize:16,
-                        color:this.state.collection.protocole=='long'?colors.greenFlash:'grey',
-                        }}>
-                      Long</Text>
-                    </TouchableOpacity>
-
-                  </View>
-                  <View style={{flex:1}}></View>
-                  <FooterImage/>
-                </View>
-              : 
-                <ScrollView style={{flex:1}}>
-                  {/*
-                  <View style={styles.collSectionTitle}>
-                    <Text style={styles.collSectionTitleText}>
-                    Station Florale</Text>
-                  </View>
-
-                  */}
-                  <View style={{
-                    flexDirection:'row',
-                    marginTop:20,
-                    // flexDirection:'row',
-                    justifyContent: 'flex-start',
-                    alignItems: 'center',
-                    margin:15,
+  
+              <View style={[styles.collection_grp, {flexDirection:'row'}]}>      
+                <TouchableOpacity 
+                  style={{ marginRight:5, padding:2,
+                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
+                    borderWidth:1, borderColor:this.state.collection.protocole=='flash'?colors.greenFlash:'grey',
+                  }}
+                  onPress = {() => this.storeListItem('protocole','flash')} 
+                  >
+                  <MaterialCommunityIcons
+                    name="flash" 
+                    style={{
+                      backgroundColor:'transparent',
+                      color:this.state.collection.protocole=='flash'?colors.greenFlash:'grey',
+                    }}
+                    size={25}
+                  />
+                  <Text style={{fontSize:16,
+                    color:this.state.collection.protocole=='flash'?colors.greenFlash:'grey'
                     }}>
-                    <ImagePicker 
-                      ref="collection-flower"
-                      style={{marginRight:5, flex:0.5, padding:5,
-                        borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
-                      }}
-                      title={'Fleur en\ngros plan'}
-                      highlightColor={colors.greenFlash}
-                      onPress = {() => this.props.pickPhoto('flower')}
-                      crop={{w:150,h:150}}
-                      size={{w:150,h:150}}
-                      source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg'}}
-                    />
+                  Flash</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={{ marginLeft:5, padding:2,
+                    flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
+                    borderWidth:1, borderColor:this.state.collection.protocole=='long'?colors.greenFlash:'grey',
+                    }}
+                  onPress = {() => this.storeListItem('protocole','long')} 
+                  >
+                  <MaterialCommunityIcons
+                    name="timer-sand" 
+                    style={{
+                      backgroundColor:'transparent',
+                      color:this.state.collection.protocole=='long'?colors.greenFlash:'grey',
+                    }}
+                    size={25}
+                  />
+                  <Text style={{ fontSize:16,
+                    color:this.state.collection.protocole=='long'?colors.greenFlash:'grey',
+                    }}>
+                  Long</Text>
+                </TouchableOpacity>
+
+              </View>
+              <View style={{flex:1}}></View>
+              <FooterImage/>
+            </View>
+          : 
+            <ScrollView style={{flex:1}}>
+              {/*
+              <View style={styles.collSectionTitle}>
+                <Text style={styles.collSectionTitleText}>
+                Station Florale</Text>
+              </View>
+
+              */}
+              <View style={{
+                flexDirection:'row',
+                marginTop:20,
+                // flexDirection:'row',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                margin:15,
+                }}>
+                <ImagePicker 
+                  ref="collection-flower"
+                  style={{marginRight:5, flex:0.5, padding:5,
+                    borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
+                  }}
+                  title={'Fleur en\ngros plan'}
+                  highlightColor={colors.greenFlash}
+                  onPress = {() => this.props.pickPhoto('flower')}
+                  crop={{w:150,h:150}}
+                  size={{w:150,h:150}}
+                  source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg'}}
+                />
 
 
-                    <ImagePicker 
-                      // TODO ? multiple photos before user choose at the end ?
-                      title={'Fleur à 2-3 mètres\nde distance'}
-                      highlightColor={colors.greenFlash}
-                      ref="collection-environment"
-                      style={{marginLeft:5, flex:0.5,  padding:5,
-                        borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
-                      }}
-                      onPress = {() => this.props.pickPhoto('environment')}
-                      crop={{w:150,h:150}}
-                      size={{w:150,h:150}}
-                      source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
-                    />
-                  </View>
+                <ImagePicker 
+                  // TODO ? multiple photos before user choose at the end ?
+                  title={'Fleur à 2-3 mètres\nde distance'}
+                  highlightColor={colors.greenFlash}
+                  ref="collection-environment"
+                  style={{marginLeft:5, flex:0.5,  padding:5,
+                    borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
+                  }}
+                  onPress = {() => this.props.pickPhoto('environment')}
+                  crop={{w:150,h:150}}
+                  size={{w:150,h:150}}
+                  source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
+                />
+              </View>
 
-                  <View style={styles.collection_grp}>
+              <View style={styles.collection_grp}>
 
-                    {/* TODO ... one day maybe               
-                    <CheckBox
-                                        textStyle={styles.collection_input_text}
-                      checkedColor = {colors.greenFlash}
-                      uncheckedColor = {greenDark}
-                      title={'Faire confiance en l\'IA'}
-                      checkedIcon='dot-circle-o'
-                      uncheckedIcon='circle-o's
-                      checked={this.state.collection.protocole != 'Flash'}
-                      onPress = {() => this.upd_protocole('Long')}
-                    />
-                    */}
-                  
-                    <TouchableOpacity 
-                      style={{ marginBottom:10,
-                        flexDirection:'row', flex:1, 
-                        alignItems:'center',
-                        backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
-                      onPress={()=>this.storeFlower('id_flower_unknown', !this.state.collection.flower.id_flower_unknown)}
-                      >
-                      <MaterialCommunityIcons
-                        name= {this.state.collection.flower.id_flower_unknown ? "checkbox-marked" : "checkbox-blank-outline"}
-                        style={{ 
-                          color: colors.greenFlash, padding:5,
-                          backgroundColor:'transparent',
-                        }}
-                        size={25}
-                      />
-                      <Text style={{padding:5, fontSize:14, 
-                        color:'grey', backgroundColor:'white',}}>
-                      Je ne connais pas le nom de cette fleur</Text>
-                    </TouchableOpacity> 
+                {/* TODO ... one day maybe               
+                <CheckBox
+                                    textStyle={styles.collection_input_text}
+                  checkedColor = {colors.greenFlash}
+                  uncheckedColor = {greenDark}
+                  title={'Faire confiance en l\'IA'}
+                  checkedIcon='dot-circle-o'
+                  uncheckedIcon='circle-o's
+                  checked={this.state.collection.protocole != 'Flash'}
+                  onPress = {() => this.upd_protocole('Long')}
+                />
+                */}
+              
+                <TouchableOpacity 
+                  style={{ marginBottom:10,
+                    flexDirection:'row', flex:1, 
+                    alignItems:'center',
+                    backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
+                  onPress={()=>this.storeFlower('id_flower_unknown', !this.state.collection.flower.id_flower_unknown)}
+                  >
+                  <MaterialCommunityIcons
+                    name= {this.state.collection.flower.id_flower_unknown ? "checkbox-marked" : "checkbox-blank-outline"}
+                    style={{ 
+                      color: colors.greenFlash, padding:5,
+                      backgroundColor:'transparent',
+                    }}
+                    size={25}
+                  />
+                  <Text style={{padding:5, fontSize:14, 
+                    color:'grey', backgroundColor:'white',}}>
+                  Je ne connais pas le nom de cette fleur</Text>
+                </TouchableOpacity> 
 
-                    { this.state.collection.flower.id_flower_unknown
-                      ? null
-                      : <React.Fragment>
-                          <TouchableOpacity 
-                            style={{
-                              marginBottom:10,
-                              padding:1,
-                              flexDirection:'row',
-                              backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
-                            onPress={this.showTaxonModal}
-                            >
-                            <View
-                              style={{ justifyContent:'center', alignItems:'center',
-                                backgroundColor:colors.greenFlash,
-                                 padding:5, marginRight:5,
-                                }}
-                            >
-                            <MaterialCommunityIcons
-                              name="chevron-down" 
-                              style={{ color:'white',backgroundColor:colors.greenFlash }}
-                              size={22}
-                            />
-                            </View>
-                            <Text 
-                              // numberOfLines={1}
-                              style={{
-                                flex:1,
-                                padding:5,
-                                fontSize:14,
-                                backgroundColor:'white',
-                                color:this.state.collection.flower.taxon_list_id_list?colors.greenFlash:'grey'
-                                }}>
-                              { this.state.collection.flower.taxon_list_id_list
-                                ? this.state.collection.flower.taxon_name
-                                : 'Je choisis dans la liste'
-                              }
-                            </Text>
-                          </TouchableOpacity>      
-
-                          <TextInput
-                            placeholder='Je connais une dénomination plus précise'
-                            placeholderTextColor='grey'
-                            style={{padding:4, marginBottom:5, borderWidth:1, 
-                              fontSize:14,
-                              backgroundColor:'white',
-                              color:colors.greenFlash,
-                              borderColor:this.state.collection.flower.taxon_extra_info?colors.greenFlash:'lightgrey', }} 
-                            defaultValue ={this.state.collection.flower.taxon_extra_info}
-                            onEndEditing = {(event) => this.storeFlower('taxon_extra_info',event.nativeEvent.text) } 
-                            onSubmitEditing = {(event) => this.storeFlower('taxon_extra_info', event.nativeEvent.text) }                        
-                          />
-                        </React.Fragment>
-                    }
-
-                    <TextInput
-                      placeholder='Commentaire'
-                      // multiline={true}
-                      // numberOfLines={3} 
-                      placeholderTextColor='grey'        
-                      style={{fontSize:14, color:'grey',
-                        padding:5, marginTop:15, borderColor:'lightgrey', borderWidth:1,}}
-                      defaultValue ={this.state.collection.flower.comment}
-                      onEndEditing = {(event) => this.storeFlower('comment',event.nativeEvent.text) } 
-                      onSubmitEditing = {(event) => this.storeFlower('comment', event.nativeEvent.text) }  
-                    />
-                  </View>
-
-                  <Text style={styles.collSectionTitle}>
-                  Lieu</Text>
-
-                  <View style={styles.collection_grp}>
-                    { this.state.collection.place.lat && this.state.collection.place.long
-                      ?
-                      <View style={[styles.collection_subgrp,{marginBottom:5, backgroundColor:'white'}]}>
-                        <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                          <Text style={{fontSize:16,
-                            color:'grey'
-                            }}
-                            >{this.state.collection.place.name}
-                          </Text>
-                        </View>
-                        <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                          <Text style={{fontSize:16,
-                            color:'grey'
-                            }}
-                            >
-                            { 
-                              dmsFormat(deg2dms(this.state.collection.place.lat, 'lat')) 
-                              + '   ' + 
-                              dmsFormat(deg2dms(this.state.collection.place.long, 'lon'))
-                            }
-                          </Text>
-                        </View>
-                      </View>
-                      : null
-                    }
-                  
-                    <View style={[{flexDirection:'row', flex:1, paddingTop:0}]}>           
+                { this.state.collection.flower.id_flower_unknown
+                  ? null
+                  : <React.Fragment>
                       <TouchableOpacity 
-                        style={{ marginRight:5, 
-                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                          borderColor:'lightgrey',
-                        }}
-                        onPress ={ () => this.geoLoc() }
+                        style={{
+                          marginBottom:10,
+                          padding:1,
+                          flexDirection:'row',
+                          backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}} 
+                        onPress={this.showTaxonModal}
                         >
-                        <View style={{
-                          justifyContent:'center',
-                          alignItems:'center',
-                          }}>
-                          <MaterialCommunityIcons
-                            name="crosshairs" 
-                            size={20}
-                            height={40}
-                            width={60}
-                            margin={0}
-                            color={colors.greenFlash}
-                            backgroundColor = 'transparent'
-                          />
-                          <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
-                            <MaterialCommunityIcons
-                              name="crosshairs-gps" 
-                              size={20}
-                              height={40}
-                              width={60}
-                              margin={0}
-                              color={colors.greenFlash}
-                              backgroundColor = 'transparent'
-                            />
-                          </Animated.View>
+                        <View
+                          style={{ justifyContent:'center', alignItems:'center',
+                            backgroundColor:colors.greenFlash,
+                             padding:5, marginRight:5,
+                            }}
+                        >
+                        <MaterialCommunityIcons
+                          name="chevron-down" 
+                          style={{ color:'white',backgroundColor:colors.greenFlash }}
+                          size={22}
+                        />
                         </View>
-                        <Text style={{fontSize:16, marginLeft:15,
-                          color: this.gpsSearching  ? colors.greenFlash:'grey'
-                          }}>
-                        Localiser</Text>
-                      </TouchableOpacity>
+                        <Text 
+                          // numberOfLines={1}
+                          style={{
+                            flex:1,
+                            padding:5,
+                            fontSize:14,
+                            backgroundColor:'white',
+                            color:this.state.collection.flower.taxon_list_id_list?colors.greenFlash:'grey'
+                            }}>
+                          { this.state.collection.flower.taxon_list_id_list
+                            ? this.state.collection.flower.taxon_name
+                            : 'Je choisis dans la liste'
+                          }
+                        </Text>
+                      </TouchableOpacity>      
 
-                      { this.state.connected && this.state.connected.type != 'none'
-                        ? <TouchableOpacity 
-                            style={{ marginLeft:5,
-                              flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                              borderColor:'lightgrey',
-                              }}
-                            onPress = {() => this.showPlaceModal()} 
-                            >
-                            <MaterialCommunityIcons
-                              name="magnify"  // search-web  magnify  map-search
-                              style={{
-                                backgroundColor:'transparent',
-                                color:colors.greenFlash,
-                              }}
-                              size={25}
-                            />
-                            <Text style={{ fontSize:16, color:'grey'}}>
-                            Chercher</Text>
-                          </TouchableOpacity>
-                        : <View 
-                            style={{ marginLeft:5,
-                              flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                              borderColor:'lightgrey',
-                              }}
-                            >
-                            <Text style={{ fontSize:14, color:'lightgrey'}}>
-                            Pas de réseau</Text>
-                          </View>
-                      }
+                      <TextInput
+                        placeholder='Je connais une dénomination plus précise'
+                        placeholderTextColor='grey'
+                        style={{padding:4, marginBottom:5, borderWidth:1, 
+                          fontSize:14,
+                          backgroundColor:'white',
+                          color:colors.greenFlash,
+                          borderColor:this.state.collection.flower.taxon_extra_info?colors.greenFlash:'lightgrey', }} 
+                        defaultValue ={this.state.collection.flower.taxon_extra_info}
+                        onEndEditing = {(event) => this.storeFlower('taxon_extra_info',event.nativeEvent.text) } 
+                        onSubmitEditing = {(event) => this.storeFlower('taxon_extra_info', event.nativeEvent.text) }                        
+                      />
+                    </React.Fragment>
+                }
+
+                <TextInput
+                  placeholder='Commentaire'
+                  // multiline={true}
+                  // numberOfLines={3} 
+                  placeholderTextColor='grey'        
+                  style={{fontSize:14, color:'grey',
+                    padding:5, marginTop:15, borderColor:'lightgrey', borderWidth:1,}}
+                  defaultValue ={this.state.collection.flower.comment}
+                  onEndEditing = {(event) => this.storeFlower('comment',event.nativeEvent.text) } 
+                  onSubmitEditing = {(event) => this.storeFlower('comment', event.nativeEvent.text) }  
+                />
+              </View>
+
+              <Text style={styles.collSectionTitle}>
+              Lieu</Text>
+
+              <View style={styles.collection_grp}>
+                { this.state.collection.place.lat && this.state.collection.place.long
+                  ?
+                  <View style={[styles.collection_subgrp,{marginBottom:5, backgroundColor:'white'}]}>
+                    <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+                      <Text style={{fontSize:16,
+                        color:'grey'
+                        }}
+                        >{this.state.collection.place.name}
+                      </Text>
+                    </View>
+                    <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+                      <Text style={{fontSize:16,
+                        color:'grey'
+                        }}
+                        >
+                        { 
+                          dmsFormat(deg2dms(this.state.collection.place.lat, 'lat')) 
+                          + '   ' + 
+                          dmsFormat(deg2dms(this.state.collection.place.long, 'lon'))
+                        }
+                      </Text>
                     </View>
                   </View>
+                  : null
+                }
+              
+                <View style={[{flexDirection:'row', flex:1, paddingTop:0}]}>           
+                  <TouchableOpacity 
+                    style={{ marginRight:5, 
+                      flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                      borderColor:'lightgrey',
+                    }}
+                    onPress ={ () => this.geoLoc() }
+                    >
+                    <View style={{
+                      justifyContent:'center',
+                      alignItems:'center',
+                      }}>
+                      <MaterialCommunityIcons
+                        name="crosshairs" 
+                        size={20}
+                        height={40}
+                        width={60}
+                        margin={0}
+                        color={colors.greenFlash}
+                        backgroundColor = 'transparent'
+                      />
+                      <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
+                        <MaterialCommunityIcons
+                          name="crosshairs-gps" 
+                          size={20}
+                          height={40}
+                          width={60}
+                          margin={0}
+                          color={colors.greenFlash}
+                          backgroundColor = 'transparent'
+                        />
+                      </Animated.View>
+                    </View>
+                    <Text style={{fontSize:16, marginLeft:15,
+                      color: this.gpsSearching  ? colors.greenFlash:'grey'
+                      }}>
+                    Localiser</Text>
+                  </TouchableOpacity>
 
-                  <Text style={styles.collSectionTitle}>
-                  Environnement</Text>
-
-                  <View style={styles.collection_grp}>
-                    <Form
-                      fields={this.form.environment}
-                      currentValues={this.state.collection.environment}
-                      fieldChanged={(field, value) => this.storeEnvironment(field, value)}
-                      styles={{
-                        group:styles.collection_subgrp,
-                        title:styles.coll_subtitle,
-                        label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:colors.greenFlash},
-                        labelText:{fontSize:14, backgroundColor:'white'},
-                        highlightColor:colors.greenFlash,
-                      }}
-                    />
-                  </View>
-
-                  <FooterImage/>
-                </ScrollView>
-              }
+                  { this.state.connected && this.state.connected.type != 'none'
+                    ? <TouchableOpacity 
+                        style={{ marginLeft:5,
+                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                          borderColor:'lightgrey',
+                          }}
+                        onPress = {() => this.showPlaceModal()} 
+                        >
+                        <MaterialCommunityIcons
+                          name="magnify"  // search-web  magnify  map-search
+                          style={{
+                            backgroundColor:'transparent',
+                            color:colors.greenFlash,
+                          }}
+                          size={25}
+                        />
+                        <Text style={{ fontSize:16, color:'grey'}}>
+                        Chercher</Text>
+                      </TouchableOpacity>
+                    : <View 
+                        style={{ marginLeft:5,
+                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                          borderColor:'lightgrey',
+                          }}
+                        >
+                        <Text style={{ fontSize:14, color:'lightgrey'}}>
+                        Pas de réseau</Text>
+                      </View>
+                  }
+                </View>
               </View>
-            
-         
 
+              <Text style={styles.collSectionTitle}>
+              Environnement</Text>
+
+              <View style={styles.collection_grp}>
+                <Form
+                  fields={this.form.environment}
+                  currentValues={this.state.collection.environment}
+                  fieldChanged={(field, value) => this.storeEnvironment(field, value)}
+                  styles={{
+                    group:styles.collection_subgrp,
+                    title:styles.coll_subtitle,
+                    label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:colors.greenFlash},
+                    labelText:{fontSize:14, backgroundColor:'white'},
+                    highlightColor:colors.greenFlash,
+                  }}
+                />
+              </View>
+
+              <FooterImage/>
+            </ScrollView>
+          }
+          </View>
+            
           <ModalPlace
             visible = {this.state.visiblePlaceModal}
             title={this.state.collection.name}
@@ -873,14 +814,14 @@ const styles = StyleSheet.create({
     padding:10,
   },
 
-  collection_input_text:{
-    padding:5,
-    marginLeft:15,
-    marginRight:15,
-    fontSize:18,
-    textAlign:'center',
-    backgroundColor:'white',
-    borderColor:colors.greenFlash,
-    borderWidth:1,
-  },
+  // collection_input_text:{
+  //   padding:5,
+  //   marginLeft:15,
+  //   marginRight:15,
+  //   fontSize:18,
+  //   textAlign:'center',
+  //   backgroundColor:'white',
+  //   borderColor:colors.greenFlash,
+  //   borderWidth:1,
+  // },
 });

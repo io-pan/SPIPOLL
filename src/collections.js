@@ -50,6 +50,7 @@ class Collection extends Component {
     super(props);
     this.state = {
       tab: 'collection',//'collection', // TODO depending on collection state.
+      name: this.props.data.name,
     }
   }
 
@@ -145,7 +146,79 @@ class Collection extends Component {
     );
   }
 
-  //--------------------------------------------------------------------------------
+  edit(field){
+    this.tempValue = this.state[field];
+    this.setState({[field]:''}, function(){
+      this.refs[field].focus();
+    });
+  }
+
+  save(field, value){
+    if(value){
+      this.setState({[field]:value}, function(){
+        this.collectionChanged(field, value);
+      });
+    }
+    else{
+      this.setState({[field]:this.tempValue});
+    }
+  }
+
+  collectionChanged(key, val){
+    if(key=='editing'){
+      this.props.selectItem(false);
+    }
+    else {
+      this.props.storeItemField(key,val);
+    }
+  };
+
+  renderCollectionEditableName(){
+    return (
+      this.state.name
+      ? <View style={{flexDirection:'row', height:50, borderBottomWidth:1, borderBottomColor:'white', }}>
+          <TouchableOpacity 
+            style={[{
+              padding:10,
+              borderRightWidth:1, borderRightColor:'white', 
+              backgroundColor:colors.greenFlash,
+            }]}
+            onPress = {() => this.collectionChanged('editing', false)} 
+            >
+            <MaterialCommunityIcons
+              name="chevron-left" 
+              style={[{ color:'white',
+              }]}
+              size={30}
+            />
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={{flexDirection:'row', flex:1}}
+            onPress = {() => this.edit('name')} 
+            >
+            <Text style={[styles.titleTextStyle,{flex:1}]}>{this.state.name}</Text>
+            <MaterialCommunityIcons
+              name="pencil" 
+              style={[{color:'white', paddingTop:10, width:50, backgroundColor:colors.greenFlash} ]}
+              size={25}
+              backgroundColor = 'transparent'
+            />
+          </TouchableOpacity>
+        </View>
+
+      : <TextInput
+          ref="name"
+          style={styles.collection_input_text}
+          placeholder='Nom de la collection'
+          onEndEditing = {(event) => this.save('name', event.nativeEvent.text)} 
+          onSubmitEditing = {(event) => this.save('name', event.nativeEvent.text)} 
+        />
+    );
+  }
+
+  //========================================================================================
+
   renderInsectListItem(value, index){
     return(
       <View style={{flex:1, flexDirection:'row', padding:5}}>
@@ -166,8 +239,7 @@ class Collection extends Component {
           collection_id = {this.props.data.date}
           data={data}
           valueChanged={(key,val) => this.insectChanged(key,val)}
-          // session_id = data.time_start
-          // TODO: list of sessions
+          // session_id = data.time_start // TODO: list of sessions
         />
       </View>
     );
@@ -245,7 +317,7 @@ class Collection extends Component {
         data={data}
         valueChanged={(key,val) => this.sessionChanged(key,val)}
         
-        // pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.props.data.date+'--'+field)}
+        pickInsectPhoto = {(field) => this.props.pickInsectPhoto('collection--'+this.props.data.date+'--'+field)}
         pickPhoto = {(field) => this.pickPhoto('collection--'+this.props.data.date+'--'+field)}
       />
     );
@@ -276,28 +348,13 @@ class Collection extends Component {
     // TODO: remove that session reference on insects.
   }
 
-  collectionChanged(key, val){
-    if(key=='editing'){
-      this.props.selectItem(false);
-    }
-    else {
-      this.props.storeItemField(key,val);
-    }
-  };
-
   //--------------------------------------------------------------------------------
-
-  pickPhoto(field){
-    console.log('pickPhoto',field);
-    this.props.pickInsectPhoto(field);
-  }
-
   
   render(){
-      console.log(this.props.data);
     return(
       <View style={{flex:1}}>
         { this.renderCollectionTabs() }
+        { this.renderCollectionEditableName() }
 
         { this.state.tab=='collection' 
         ? <CollectionForm 
@@ -305,9 +362,7 @@ class Collection extends Component {
             data={this.props.data}
             valueChanged={(key,val) => this.collectionChanged(key,val)}
             filePath={this.props.filePath} // todo: remove
-            pickPhoto = {(field) => this.props.pickPhoto('collection--'+data.date+'--'+field)}
-
-            pickInsectPhoto= {(field) => this.pickInsectPhoto('collection--'+data.date+'--'+field)}
+            pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.props.data.date+'--'+field)}
           />
 
           : this.state.tab=='sessions'
@@ -388,6 +443,8 @@ export default class CollectionList extends Component {
       protocole:'',
       place:{lat:'', long:'', name:''},
       date:now,
+      flower:{},
+      environment:{},
     }
   }
 
@@ -401,17 +458,17 @@ export default class CollectionList extends Component {
     this.props.deleteCollectionFolders(collection_name);
   }
 
-  pickInsectPhoto(field){
-    console.log('pickInsectPhoto CollectionList', field);
-    this.props.pickInsectPhoto('collection---'+field);
-  }
-
   renderCollection(data){
     return(
       <Collection
+        ref="collection"
         data={data}
         selectItem={(index) => this.refs['collections'].selectItem(index)}
         storeItemField={(key,val) => this.refs['collections'].storeItemField(key,val)}
+
+        filePath={this.props.filePath}
+        pickPhoto = {(field) => this.props.pickPhoto(field)}
+        pickInsectPhoto = {(field) => this.props.pickInsectPhoto(field)}
       />
     );
   }
@@ -481,6 +538,8 @@ export default class CollectionList extends Component {
           newItem = {() => this.newCollection()}
           newItemLabel = "Nouvelle Collection"
           deleteItem = {(item) => this.deleteCollection(item)}
+
+          filePath={this.props.filePath}
         />
       </View>
     );
@@ -488,6 +547,24 @@ export default class CollectionList extends Component {
 
 } // Main CollectionList
 
-const styles = StyleSheet.create({ 
 
+const styles = StyleSheet.create({
+  collection_input_text:{
+    padding:5,
+    marginLeft:15,
+    marginRight:15,
+    fontSize:18,
+    textAlign:'center',
+    backgroundColor:'white',
+    borderColor:colors.greenFlash,
+    borderWidth:1,
+  },
+  titleTextStyle:{
+    backgroundColor:colors.greenFlash, 
+    color:'white', 
+    fontSize:18, 
+    fontWeight:'bold', 
+    textAlign:'center', 
+    padding:10,
+  },
 });
