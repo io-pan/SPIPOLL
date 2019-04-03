@@ -153,7 +153,7 @@ export default class  CollectionForm extends Component {
       'connectionChange',
       this._handleConnectivityChange
     );
-    
+
     NetInfo.isConnected.fetch().done(
         (isConnected) => { 
           this.setState({'connected':isConnected}); }
@@ -432,11 +432,10 @@ export default class  CollectionForm extends Component {
   render () {
     return (
       <View style={{flex:1}}>
-        <View style={{flex:1}}>
               
-          { !this.state.collection.protocole || !this.state.collection.storage.path
-          ? <View style={{flex:1}}>
-
+          { this.state.collection.storage.path
+          ? null 
+          : <View>
               <View 
                 style={{flexDirection:'row', justifyContent:'center', marginTop:20,}}
                 // onPress = {() => this.help('Protocole')} 
@@ -453,7 +452,7 @@ export default class  CollectionForm extends Component {
                     key={index}
                     style={{ marginRight:5, padding:2,
                       flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
-                      borderWidth:1, borderColor:this.state.collection.storage=='phone'?colors.greenFlash:'grey',
+                      borderWidth:1, borderColor:this.state.collection.storage.type=='phone'?colors.greenFlash:'grey',
                     }}
                     onPress = {() => this.storeListItem('storage', value)} 
                     >
@@ -472,8 +471,12 @@ export default class  CollectionForm extends Component {
                   </TouchableOpacity>
                 )}
               </View>
-        
+            </View>
+          }
 
+          { this.state.collection.protocole 
+          ? null
+          : <View>
               <TouchableOpacity 
                 style={{flexDirection:'row', justifyContent:'center', marginTop:20,}}
                 onPress = {() => this.help('Protocole')} 
@@ -533,11 +536,15 @@ export default class  CollectionForm extends Component {
                   Long</Text>
                 </TouchableOpacity>
               </View>
-
-              <View style={{flex:1}}></View>
-              <FooterImage/>
             </View>
-          
+          }
+
+          { !this.props.data.name || !this.state.collection.storage.path || !this.state.collection.protocole 
+          ? <View style={{flex:1}}>
+              <View style={{flex:1}}></View>
+              <FooterImage/> 
+            </View> 
+
           : // Flower.
             <ScrollView style={{flex:1}}>
               {/*
@@ -545,7 +552,6 @@ export default class  CollectionForm extends Component {
                 <Text style={styles.collSectionTitleText}>
                 Station Florale</Text>
               </View>
-
               */}
               <View style={{
                 flexDirection:'row',
@@ -808,8 +814,7 @@ export default class  CollectionForm extends Component {
               <FooterImage/>
             </ScrollView>
           }
-          </View>
-            
+
           <ModalPlace
             visible = {this.state.visiblePlaceModal}
             title={this.state.collection.name}
@@ -837,7 +842,7 @@ export default class  CollectionForm extends Component {
             titleTextStyle={styles.titleTextStyle}
             content={this.state.help.protocole}
             onCancel={() => this.hideHelpModal()} 
-          />
+          />         
       </View>
     );
   }

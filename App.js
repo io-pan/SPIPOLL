@@ -328,53 +328,6 @@ export default class App extends Component<Props> {
     });
   }
 
-  // No need that default folder.
-  // getAvailableStrages(){
-  //   // Get available storages.
-  //   NativeModules.ioPan.getExternalStorages()
-  //   .then((dirs) => {
-  //     this.availableDirectories = JSON.parse(dirs);
-
-  //     // Create default folders.
-  //     for(i=0; i<this.availableDirectories.length; i++){
-  //       const curDir = this.availableDirectories[i].path;
-  //       RNFetchBlob.fs.isDir(curDir+'/collections')
-  //       .then((isDir) => {
-  //         if(!isDir){
-  //           RNFetchBlob.fs.mkdir(curDir+'/collections')
-  //           .then(() => { 
-  //             console.log('collection folder created') 
-  //           })
-  //           .catch((err) => { 
-  //             console.log('error collection folder created '+curDir, err) 
-  //           })
-  //         }
-  //       })
-
-  //       // TODO: Free-cam folder ?
-
-  //       // Videos thumb folder.
-  //       //  TODO: do this on thumb Create, based on video path.
-  //       RNFetchBlob.fs.isDir(curDir+'/thumb')
-  //       .then((isDir) => {
-  //         if(!isDir){
-  //           RNFetchBlob.fs.mkdir(curDir+'/thumb')
-  //           .then(() => { 
-  //             console.log('thumb folder created ') 
-  //           })
-  //           .catch((err) => { 
-  //             console.log('error thumb folder created '+curDir, err) 
-  //           })
-  //         }
-  //       })
-  //     }
-  //   })
-  //   .catch((err) => { 
-  //     console.log('getExternalStorages', err) 
-  //   })
-  // }
-
-
   testBattery(){
       NativeModules.ioPan.getBatteryInfo()
       .then((battery) => {
@@ -1178,7 +1131,7 @@ export default class App extends Component<Props> {
             minimumTrackTintColor='#dddddd' 
             maximumTrackTintColor='#ffffff' 
             minimumValue={1}
-            maximumValue={parseInt(this.previewWidth/this.state.sampleSize,10)}
+            maximumValue={Math.min(98,parseInt(this.previewWidth/this.state.sampleSize,10))}
             step={1}
             value={this.state.minimumPixels}
             onValueChange={(value) => this.onMinimumPixels(value)} 
@@ -1186,36 +1139,6 @@ export default class App extends Component<Props> {
           </React.Fragment>
           :null
         }
-
-        {/* this.state.motionSetup == 'zoom'
-          ?
-          <React.Fragment>
-          <Text 
-            style={{
-              height:30,
-              color:'#ffffff', 
-              backgroundColor:'rgba(0, 0, 0, 0.4)',//this.state.motionInputAreaShape ? 'transparent' : 'rgba(0, 0, 0, 0.4)'
-              fontSize:16,
-              textAlign:'center',
-            }}
-          >{this.state.zoom}</Text>
-          <Slider  
-            ref="zoom"
-            style={styles.slider} 
-            thumbTintColor = {greenFlash} 
-            minimumTrackTintColor={greenFlash} 
-            maximumTrackTintColor={greenFlash}
-            minimumValue={0}
-            maximumValue={1}
-            step={0.1}
-            value={0}
-            onValueChange={
-              (value) => this.onZoom(value)
-            } 
-          />
-          </React.Fragment>
-          :null
-        */}
 
         { this.state.motionSetup=='action' || (!this.state.motionAction.type || (!this.state.motionAction.photoNumber && !this.state.motionAction.videoLength))
           ? this.renderMotionSetupTodoForm()
@@ -1884,21 +1807,6 @@ export default class App extends Component<Props> {
         <View style={styles.header}>
           <ScrollView horizontal={true}>
 
-            {/* // Storege: SD / Phone
-              this.availableDirectories.length > 1
-              ? this.availableDirectories.map((value, index) => 
-                  <TouchableOpacity  
-                    key={index}
-                    style={styles.button}
-                    onPress = {() => this.toggleStorage(index)}
-                    ><Text style={{color: this.state.storage==this.availableDirectories[index].path ? greenFlash : 'grey'}}>
-                    {value.type}
-                    </Text>
-                  </TouchableOpacity>
-                )
-              : null 
-            */}
-
             <Button 
               style={styles.button}
               color={ !this.state.bigBlackMask ?  'grey' : '#338433' }
@@ -1989,10 +1897,9 @@ export default class App extends Component<Props> {
           <View style={this.state.cam!='collection-form'? {height:0}:{flex:1}}>
             <CollectionList
               ref="collectionList"
-              filePath={this.state.storage}
+              
               pickPhoto = {(view) => this.pickPhoto(view)}
               pickInsectPhoto = {(view) => this.pickInsectPhoto(view)}
-              
             />
           </View>
        

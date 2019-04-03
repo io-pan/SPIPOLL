@@ -217,7 +217,7 @@ class Collection extends Component {
       : <TextInput
           ref="name"
           style={styles.collection_input_text}
-          placeholder='Nom de la collection'
+          placeholder={this.tempValue || 'Nom de la collection'}s
           onEndEditing = {(event) => this.save('name', event.nativeEvent.text)} 
           onSubmitEditing = {(event) => this.save('name', event.nativeEvent.text)} 
         />
@@ -351,7 +351,7 @@ class Collection extends Component {
   }
 
   deleteSession(session){
-    // TODO: remove that session reference on insects.
+    // TODO: remove session reference on insects.
   }
 
   //--------------------------------------------------------------------------------
@@ -493,7 +493,6 @@ export default class CollectionList extends Component {
         selectItem={(index) => this.refs['collections'].selectItem(index)}
         storeItemField={(key,val) => this.refs['collections'].storeItemField(key,val)}
 
-        filePath={this.props.filePath}
         pickPhoto = {(field) => this.props.pickPhoto(field)}
         pickInsectPhoto = {(field) => this.props.pickInsectPhoto(field)}
       />
@@ -583,8 +582,6 @@ export default class CollectionList extends Component {
           newItem = {() => this.newCollection()}
           newItemLabel = "Nouvelle Collection"
           deleteItem = {(item) => this.deleteCollection(item)}
-
-          filePath={this.props.filePath}
         />
       </View>
     );
