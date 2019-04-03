@@ -539,7 +539,7 @@ export default class  CollectionForm extends Component {
             </View>
           }
 
-          { !this.props.data.name || !this.state.collection.storage.path || !this.state.collection.protocole 
+          { !this.state.collection.name || !this.state.collection.storage.path || !this.state.collection.protocole 
           ? <View style={{flex:1}}>
               <View style={{flex:1}}></View>
               <FooterImage/> 

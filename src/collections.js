@@ -163,7 +163,7 @@ class Collection extends Component {
   save(field, value){
     if(value){
       this.setState({[field]:value}, function(){
-        this.collectionChanged(field, value);
+        this.refs['collection-form'].storeListItem(field, value);
       });
     }
     else{
