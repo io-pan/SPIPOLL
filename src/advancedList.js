@@ -159,17 +159,15 @@ export default class AdvancedList extends Component {
                   items = this.state.items;
 
             // Backward loop to avoid re-index issue.
-            for (var i = selected.length - 1; i >= 0; i--) {
-
-              // const collection_name = items[selected[i]].date;
-              
-              // Delete folders & co.
-              if(this.props.deleteItem) {
-                this.props.deleteItem(items[selected[i]]);
+            for (var i = items.length - 1; i >= 0; i--) {
+              if(selected.indexOf(items[i] !== -1)) {
+                // Delete folders & co.
+                if(this.props.deleteItem) {
+                  this.props.deleteItem(items[i]);
+                }
+                // Remove from list.
+                items.splice(i, 1);
               }
-
-              // Remove from list.
-              items.splice(selected[i], 1);
             }
 
             // Store purged list.
