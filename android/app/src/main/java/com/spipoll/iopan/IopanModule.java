@@ -140,11 +140,11 @@ public class IopanModule extends ReactContextBaseJavaModule {
           String type = "";
           if (Environment.isExternalStorageRemovable(aDirArray[i])){
             if (Environment.getExternalStorageState(aDirArray[i]).equals(Environment.MEDIA_MOUNTED)){
-              rv += "{\"type\":\"SD\", \"path\":\""+aDirArray[i].getAbsolutePath()+"\"}";
+              rv += "{\"type\":\"card\", \"path\":\""+aDirArray[i].getAbsolutePath()+"\"}";
             }
           }
           else{
-            rv += "{\"type\":\"Phone\", \"path\":\""+aDirArray[i].getAbsolutePath()+"\"}";
+            rv += "{\"type\":\"phone\", \"path\":\""+aDirArray[i].getAbsolutePath()+"\"}";
           }
 
           if(i<aDirArray.length-1){
