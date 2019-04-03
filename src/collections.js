@@ -54,6 +54,12 @@ class Collection extends Component {
     }
   }
 
+  componentDidMount(){
+    if(!this.state.name){
+      this.refs['name'].focus();
+    }
+  }
+
   setTab(value){
     // Back to sessions list.
     if(value=='sessions' && this.state.tab=='sessions' && this.props.data.protocole=='long'){
@@ -76,6 +82,7 @@ class Collection extends Component {
 
   renderCollectionTabs(){
     return(
+      !this.props.data.storage.path || !this.props.data.name || !this.props.data.protocole ? null :
       <View style={{margin:10, flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
         {/*<ScrollView horizontal={true}>*/}
          
@@ -118,7 +125,7 @@ class Collection extends Component {
             />
             <Text style={{ fontSize:16,
               color: this.state.tab=='sessions'? colors.greenFlash :'grey'}}>
-            Session{this.props.protocole=='flash'?'':'s'}</Text>
+            Session{this.props.data.protocole=='flash'?'':'s'}</Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -316,7 +323,6 @@ class Collection extends Component {
         protocole={this.props.data.protocole}
         data={data}
         valueChanged={(key,val) => this.sessionChanged(key,val)}
-        
         pickInsectPhoto = {(field) => this.props.pickInsectPhoto('collection--'+this.props.data.date+'--'+field)}
         pickPhoto = {(field) => this.pickPhoto('collection--'+this.props.data.date+'--'+field)}
       />
@@ -353,8 +359,9 @@ class Collection extends Component {
   render(){
     return(
       <View style={{flex:1}}>
-        { this.renderCollectionTabs() }
+      
         { this.renderCollectionEditableName() }
+        { this.renderCollectionTabs() }
 
         { this.state.tab=='collection' 
         ? <CollectionForm 
@@ -373,7 +380,7 @@ class Collection extends Component {
               renderDetailedItem = {(data) => this.renderSessionForm(data)}
 
               newItem = {() => this.newSession()}
-              newItemLabel = "Nouvelle Session"
+              newItemLabel = {this.props.data.protocole=='flash' ? false : "Nouvelle Session"}  
               deleteItem = {() => this.deleteSession()}
             />
        
@@ -396,29 +403,39 @@ class Collection extends Component {
   }
 }
 
+
 //=========================================================================================
 export default class CollectionList extends Component {
 //-----------------------------------------------------------------------------------------
  constructor(props) {
     super(props);
+    this.state = {
+      hasRemovalStorage:0,
+    };
   }
 
+  componentDidMount(){
+    NativeModules.ioPan.getExternalStorages()
+    .then((dirs) => {
+      this.setState({hasRemovalStorage:JSON.parse(dirs).length});
+    });
+  }
 
   newCollection(){
     const now = date2folderName();
 
-    // Create Folder.
-    this.props.createCollectionFolders(now);
-
     // Create stored data.
     AsyncStorage.setItem(now+'_collection', JSON.stringify({
+      storage:{type:false, path:false},
       name:'',
       protocole:'',
+
       place:{
         lat:false,
         long:false,
         name:''
       }, 
+
       flower:{
         photo:'',
         id_flower_unknown:false,
@@ -437,16 +454,16 @@ export default class CollectionList extends Component {
       },
     }));
 
-    // Return data to list.
+    // Return data required for list.
     return {
+      storage:{type:false, path:false},
       name:'',
       protocole:'',
       place:{lat:'', long:'', name:''},
       date:now,
-      flower:{},
-      environment:{},
     }
   }
+
 
   deleteCollection(collection){
     // Delete stored data.
@@ -455,7 +472,17 @@ export default class CollectionList extends Component {
     AsyncStorage.removeItem(collection.date+'_insects');
 
     // Delete folder.
-    this.props.deleteCollectionFolders(collection_name);
+    RNFetchBlob.fs.unlink(collection.storage.path+'/'+collection.date)
+    .then(() => { 
+      console.log('collection folder deleted ' + collection.storage.path+'/'+collection.date )
+    })
+    .catch((err) => {
+      Alert.alert(
+        'Erreur',
+        'Le dossier contenant les photos n\'a pu être supprimé.\n'
+        + collection.storage.path+'/'+collection.date
+      );
+    }); 
   }
 
   renderCollection(data){
@@ -498,6 +525,7 @@ export default class CollectionList extends Component {
       <View style={{padding:5, overflow:'hidden'}}>
         <View style={{flexDirection:'row', flex:1}}>
           <MaterialCommunityIcons
+            // TODO: number of insects.
             name={ value.protocole == 'flash' 
             ? 'flash-outline' 
             : value.protocole == 'long' 
@@ -505,11 +533,28 @@ export default class CollectionList extends Component {
               : 'help-circle-outline'
             }
             style={[styles.listItemText,{
-                                    margin:0,
-                                      marginTop:7,
-                                    }]}
+              margin:0,
+              marginTop:5,
+              }]}
             size={18}
           />
+
+          { !this.state.hasRemovalStorage ? null :
+            <MaterialCommunityIcons
+              name={ value.storage.type == 'phone' 
+              ? 'cellphone-android' 
+              : value.storage.type == 'card' 
+                ? 'micro-sd'
+                : 'help-circle-outline'
+              }
+              style={[styles.listItemText,{
+                margin:0,
+                marginTop:5,
+                marginRight:5,
+                }]}
+              size={18}
+            />
+          }
 
           <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18}]}>
           {value.name}</Text>
@@ -551,6 +596,7 @@ export default class CollectionList extends Component {
 const styles = StyleSheet.create({
   collection_input_text:{
     padding:5,
+    marginTop:5, marginBottom:5,
     marginLeft:15,
     marginRight:15,
     fontSize:18,

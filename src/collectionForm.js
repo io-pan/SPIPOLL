@@ -19,6 +19,7 @@ import {
   NativeModules,
 } from 'react-native'
 
+import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import FooterImage from './footerimage';
@@ -106,6 +107,7 @@ export default class  CollectionForm extends Component {
 
       collection://this.props.data,
       {
+        storage: this.props.data.storage,
         name: this.props.data.name,             // location:name   WTF !!
         protocole: this.props.data.protocole,
           // flash  name=smpAttr:21:464433 id=smpAttr:21:0  value=106
@@ -139,6 +141,11 @@ export default class  CollectionForm extends Component {
 
     this.gpsSearching = false;
     this.toValue = 1;
+
+    if(!this.state.collection.storage.path){
+      this.storages = [];
+      this.getAvailableStorages();
+    }
   }
 
   componentDidMount(){
@@ -146,20 +153,20 @@ export default class  CollectionForm extends Component {
       'connectionChange',
       this._handleConnectivityChange
     );
+    
     NetInfo.isConnected.fetch().done(
         (isConnected) => { 
           this.setState({'connected':isConnected}); }
     );
   
-    // Load data.
+    // Load data that are not part of list item.
     AsyncStorage.getItem(this.props.data.date+'_collection', (err, collection) => {
       if (err) {
         Alert.alert('ERROR getting collection ' + this.props.data.date+'_collection ... ' + JSON.stringify(err));
       }
       else {
-        console.log('localStorage '+ this.props.data.date+'_collection', JSON.parse(collection));
+        console.log('localStorage ' + this.props.data.date+'_collection', JSON.parse(collection));
         if(collection){
-          console.log(this.props.data.date+'_collection', JSON.parse(collection));
           this.setState({collection:JSON.parse(collection)});
         }
       }
@@ -169,10 +176,6 @@ export default class  CollectionForm extends Component {
     //   this.back();
     //   return true;
     // });
-  
-    if(!this.state.collection.name){
-      this.refs['name'].focus();
-    }
   }
 
   componentWillUnmount(){
@@ -190,16 +193,19 @@ export default class  CollectionForm extends Component {
     this.setState({'connected':isConnected});
   }
 
-/*
-  upd_protocole(type){
-    this.setState({collection:{
-      ...this.state.collection,
-      protocole:type,
-    }}, function(){
-      console.log(this.state.collection);
-    });
+  getAvailableStorages(){
+    NativeModules.ioPan.getExternalStorages()
+    .then((dirs) => {
+      this.storages = JSON.parse(dirs);
+      // console.log(this.storages);
+      if(this.storages.length == 1){
+        this.storeListItem('storage', this.storages[0]);
+      }
+    })
+    .catch((err) => { 
+      console.log('getExternalStorages', err) 
+    })
   }
-*/
 
   storeCollection(){
     AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
@@ -352,12 +358,38 @@ export default class  CollectionForm extends Component {
     ).start(() => this.gpsAnimation())  
   }
 
+  // TODO: check we don't do this 2X.
   storeListItem(key, value){
+    console.log(this.props)
+        console.log(this.state);
+
     if(value){
       this.setState({collection:{...this.state.collection, 
           [key]:value,
         }}, function(){
+
+          // Create Folder.
+          if(key=='storage'){
+          
+            const collectionName = this.props.data.date;
+
+            console.log(value.path +'/'+ collectionName)
+            RNFetchBlob.fs.mkdir(value.path +'/'+ collectionName)
+            .then(() => { 
+              // console.log('coll folder created ' + curDir+'/collections/'+collectionName ) 
+            })
+            .catch((err) => { 
+              Alert.alert(
+                'Erreur',
+                'Le dossier de stockage des photos n\'a pu être créé.\n'
+                + value.path +'/'+ collectionName
+              );
+            })
+          }
+          // Update list items.
           this.props.valueChanged(key,value);
+
+          // Store on device.
           this.storeCollection();
         }
       );
@@ -402,8 +434,46 @@ export default class  CollectionForm extends Component {
       <View style={{flex:1}}>
         <View style={{flex:1}}>
               
-          { !this.state.collection.protocole 
+          { !this.state.collection.protocole || !this.state.collection.storage.path
           ? <View style={{flex:1}}>
+
+              <View 
+                style={{flexDirection:'row', justifyContent:'center', marginTop:20,}}
+                // onPress = {() => this.help('Protocole')} 
+                >
+                <Text style={{
+                  fontSize:18, fontWeight:'bold',
+                  padding:5, color:colors.greenFlash, backgroundColor:'transparent'}}>
+                Stockage des photos</Text>
+              </View>
+
+              <View style={[styles.collection_grp, {flexDirection:'row'}]}>    
+                { this.storages.map((value, index) =>
+                  <TouchableOpacity 
+                    key={index}
+                    style={{ marginRight:5, padding:2,
+                      flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center',
+                      borderWidth:1, borderColor:this.state.collection.storage=='phone'?colors.greenFlash:'grey',
+                    }}
+                    onPress = {() => this.storeListItem('storage', value)} 
+                    >
+                    <MaterialCommunityIcons
+                      name={ value.type=='phone' ? "cellphone-android" : "micro-sd" }
+                      style={{
+                        backgroundColor:'transparent',
+                        color:this.state.collection.storage.path==value.path ? colors.greenFlash :'grey',
+                      }}
+                      size={25}
+                    />
+                    <Text style={{fontSize:16,
+                      color:this.state.collection.storage.path==value.path ? colors.greenFlash : 'grey'
+                      }}>
+                    { value.type=='phone' ? "Téléphone" : "Carte SD" }</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+        
+
               <TouchableOpacity 
                 style={{flexDirection:'row', justifyContent:'center', marginTop:20,}}
                 onPress = {() => this.help('Protocole')} 
@@ -462,12 +532,13 @@ export default class  CollectionForm extends Component {
                     }}>
                   Long</Text>
                 </TouchableOpacity>
-
               </View>
+
               <View style={{flex:1}}></View>
               <FooterImage/>
             </View>
-          : 
+          
+          : // Flower.
             <ScrollView style={{flex:1}}>
               {/*
               <View style={styles.collSectionTitle}>

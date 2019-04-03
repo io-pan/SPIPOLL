@@ -228,7 +228,7 @@ export default class App extends Component<Props> {
     //   'add41fbf38b95c65',  //  s9
     // ],
 
-    this.appDirs = [];
+    this.availableDirectories = [];
     this.photoNumber=false;
     this.videoMotion=false;
     this.motionActionRunning=false;
@@ -279,37 +279,6 @@ export default class App extends Component<Props> {
   // TODO: fix that out componentWillMount.
   init() {
     StatusBar.setHidden(true);
-
-    // Get app available folders and set defaults.
-    NativeModules.ioPan.getExternalStorages()
-    .then((dirs) => {
-      this.appDirs = JSON.parse(dirs);
-
-      for(i=0; i<this.appDirs.length; i++){
-        const curDir = this.appDirs[i].path;
-        RNFetchBlob.fs.isDir(curDir+'/collections')
-        .then((isDir) => {
-          if(!isDir){
-            RNFetchBlob.fs.mkdir(curDir+'/collections')
-            .then(() => { console.log('collection folder created') })
-            .catch((err) => { console.log('error collection folder created '+curDir, err) })
-          }
-        })
-
-        // TODO: do this on thumb Create, based on video path.
-        RNFetchBlob.fs.isDir(curDir+'/thumb')
-        .then((isDir) => {
-          if(!isDir){
-            RNFetchBlob.fs.mkdir(curDir+'/thumb')
-            .then(() => { console.log('thumb folder created ') })
-            .catch((err) => { console.log('error thumb folder created '+curDir, err) })
-          }
-        })
-      }
-
-    })
-    .catch((err) => { console.log('getExternalStorages', err) })
-
     // Get stored parameters.
     AsyncStorage.getItem('motion_parameters', (err, motion_parameters) => {
       if (err) {
@@ -321,7 +290,7 @@ export default class App extends Component<Props> {
           this.setState({
             // TODO set default on app install or ask user.
             // pb that phone/SD button not visible until setstate.
-            storage: motion_parameters.storage ? motion_parameters.storage : this.appDirs[0].path,
+            storage: motion_parameters.storage ? motion_parameters.storage : this.availableDirectories[0].path,
             motionAction:{
               type: motion_parameters.motionAction.type ? motion_parameters.motionAction.type : false,
               videoLength:motion_parameters.motionAction.videoLength ? motion_parameters.motionAction.videoLength : '',
@@ -341,7 +310,7 @@ export default class App extends Component<Props> {
               },
           }, function(){
 
-    console.log('Storage: ', this.appDirs);
+          console.log('Storage: ', this.availableDirectories);
 
             this.handles = [{
               x:this.state.motionInputAreaStyle.left,
@@ -359,31 +328,54 @@ export default class App extends Component<Props> {
     });
   }
 
-  // Create / Delete  collection folder on each available storage.
-  // TODO: lock SD or phone storage for a given collection / session
-  createCollectionFolders(collectionName) {
-    for(i=0; i<this.appDirs.length; i++){
-      const curDir = this.appDirs[i].path;
-      RNFetchBlob.fs.mkdir(curDir+'/collections/'+collectionName)
-      .then(() => { console.log('coll folder created ' + curDir+'/collections/'+collectionName ) })
-      .catch((err) => { console.log('error coll folder creation ' + curDir+'/collections/'+collectionName, err) })
-    }
-  }
-  deleteCollectionFolders(collectionName) {
-    for(i=0; i<this.appDirs.length; i++){
-      const curDir = this.appDirs[i].path;
-      RNFetchBlob.fs.unlink(curDir+'/collections/'+collectionName)
-      .then(() => { 
-        console.log('coll folder deleted ' + curDir+'/collections/'+collectionName )
-      })
-      .catch((err) => {
-        console.log('error coll folder detetion ' + curDir+'/collections/'+collectionName, err)
-      });
-    }
-  }
+  // No need that default folder.
+  // getAvailableStrages(){
+  //   // Get available storages.
+  //   NativeModules.ioPan.getExternalStorages()
+  //   .then((dirs) => {
+  //     this.availableDirectories = JSON.parse(dirs);
+
+  //     // Create default folders.
+  //     for(i=0; i<this.availableDirectories.length; i++){
+  //       const curDir = this.availableDirectories[i].path;
+  //       RNFetchBlob.fs.isDir(curDir+'/collections')
+  //       .then((isDir) => {
+  //         if(!isDir){
+  //           RNFetchBlob.fs.mkdir(curDir+'/collections')
+  //           .then(() => { 
+  //             console.log('collection folder created') 
+  //           })
+  //           .catch((err) => { 
+  //             console.log('error collection folder created '+curDir, err) 
+  //           })
+  //         }
+  //       })
+
+  //       // TODO: Free-cam folder ?
+
+  //       // Videos thumb folder.
+  //       //  TODO: do this on thumb Create, based on video path.
+  //       RNFetchBlob.fs.isDir(curDir+'/thumb')
+  //       .then((isDir) => {
+  //         if(!isDir){
+  //           RNFetchBlob.fs.mkdir(curDir+'/thumb')
+  //           .then(() => { 
+  //             console.log('thumb folder created ') 
+  //           })
+  //           .catch((err) => { 
+  //             console.log('error thumb folder created '+curDir, err) 
+  //           })
+  //         }
+  //       })
+  //     }
+  //   })
+  //   .catch((err) => { 
+  //     console.log('getExternalStorages', err) 
+  //   })
+  // }
+
 
   testBattery(){
-
       NativeModules.ioPan.getBatteryInfo()
       .then((battery) => {
         if(!this.state.bigBlackMask){
@@ -450,7 +442,7 @@ export default class App extends Component<Props> {
   //--------------------------------------------------------
 
   toggleStorage(index) {
-    this.setState({storage:this.appDirs[index].path},function(){this.storeMotionSettings()});
+    this.setState({storage:this.availableDirectories[index].path},function(){this.storeMotionSettings()});
   }
 
   PeerDetected = (user) => {
@@ -713,6 +705,7 @@ export default class App extends Component<Props> {
                 }, function(){
                   this.refs['collectionList']
                       .refs['collections']
+                      .refs['collection']
                       .refs['collection-form']
                       .refs['collection-'+field]
                       .setSource({uri:'file://' + this.state.storage + '/' + filename});
@@ -1878,6 +1871,11 @@ export default class App extends Component<Props> {
     this.setState({cam:view});
   }
 
+  pickInsectPhoto(view){
+    alert(view);
+   this.setState({cam:view});
+  }
+
   render() {
     console.log(this.state.cam);
     return (
@@ -1886,20 +1884,20 @@ export default class App extends Component<Props> {
         <View style={styles.header}>
           <ScrollView horizontal={true}>
 
-            { // Storege: SD / Phone
-              this.appDirs.length > 1
-              ? this.appDirs.map((value, index) => 
+            {/* // Storege: SD / Phone
+              this.availableDirectories.length > 1
+              ? this.availableDirectories.map((value, index) => 
                   <TouchableOpacity  
                     key={index}
                     style={styles.button}
                     onPress = {() => this.toggleStorage(index)}
-                    ><Text style={{color: this.state.storage==this.appDirs[index].path ? greenFlash : 'grey'}}>
+                    ><Text style={{color: this.state.storage==this.availableDirectories[index].path ? greenFlash : 'grey'}}>
                     {value.type}
                     </Text>
                   </TouchableOpacity>
                 )
               : null 
-            }
+            */}
 
             <Button 
               style={styles.button}
@@ -1987,19 +1985,17 @@ export default class App extends Component<Props> {
           </View>
         )}
 
-        { this.state.cam.indexOf('collection-') >= 0
-          ? <View style={this.state.cam!='collection-form'? {height:0}:{flex:1}}>
+      
+          <View style={this.state.cam!='collection-form'? {height:0}:{flex:1}}>
             <CollectionList
               ref="collectionList"
               filePath={this.state.storage}
               pickPhoto = {(view) => this.pickPhoto(view)}
-              createCollectionFolders =  {(collectionName) => this.createCollectionFolders(collectionName)}
-              deleteCollectionFolders =  {(collectionName) => this.deleteCollectionFolders(collectionName)}
-           />
-           </View>
-          : null
-        }
-
+              pickInsectPhoto = {(view) => this.pickInsectPhoto(view)}
+              
+            />
+          </View>
+       
 
         { this.state.cam=="login"
         ? <SpipolLogin
