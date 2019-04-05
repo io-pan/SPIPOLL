@@ -9,6 +9,7 @@ export const
     minute = "" + now.getMinutes(); if (minute.length == 1) { minute = "0" + minute; }
     second = "" + now.getSeconds(); if (second.length == 1) { second = "0" + second; }
 
+    // return year + month + day + "-" + hour + minute + second;
     return year + "-" + month + "-" + day + "_" + hour + "-" + minute + "-" + second;
   },
 

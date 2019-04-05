@@ -16,11 +16,10 @@ import RNFetchBlob from 'rn-fetch-blob';
 import BluetoothCP  from "react-native-bluetooth-cross-platform"
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
-import Cam from "./src/cam"
-import { colors } from "./src/colors"
 import SpipolLogin from  "./src/spipoll-login-form"
 import CollectionList from "./src/collections"
-
+import Cam from "./src/cam"
+import { colors } from "./src/cam"
 
 //-----------------------------------------------------------------------------------------
 export default class App extends Component<Props> {
@@ -28,12 +27,10 @@ export default class App extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
-      battery:{charging:false, level:0},
       devices: [],
       connectedTo:false,
       distantPicture:false,
       imgLocal: false,
-      imgTest:false,//'file:///'+RNFetchBlob.fs.dirs.DCIMDir+'/test.jpg',
       distantcam:false,
       previewing:false,
       distantRec:false,
@@ -106,9 +103,7 @@ export default class App extends Component<Props> {
 
     // TODO move this to specific component.
     setInterval(() => {this.testBattery()}, 60000);
-    KeepScreenOn.setKeepScreenOn(true);
-
-    this.requestForPermission();
+    
 
     BluetoothCP.advertise("WIFI");   // "WIFI", "BT", and "WIFI-BT"
     BluetoothCP.browse('WIFI');
@@ -374,6 +369,7 @@ export default class App extends Component<Props> {
 
         <View style={styles.header}>
           <ScrollView horizontal={true}>
+
             <Button 
               style={styles.button}
               color={ !this.state.bigBlackMask ?  'grey' : '#338433' }
@@ -392,9 +388,10 @@ export default class App extends Component<Props> {
             <MaterialCommunityIcons.Button   
               borderRadius={0}
               name='camera'
+              underlayColor={greenSuperLight}
               size={30}
-              color={ this.state.cam=='free' ? colors.greenFlash : 'grey'}
-              // backgroundColor = { this.state.cam !='collection-form' ? colors.greenFlash : 'white'}
+              color={ this.state.cam=='free' ? greenFlash : 'grey'}
+              // backgroundColor = { this.state.cam !='collection-form' ? greenFlash : 'white'}
               backgroundColor='transparent'
               onPress = {() => this.toggleView('free')}
             />
@@ -403,14 +400,21 @@ export default class App extends Component<Props> {
             <TouchableOpacity 
               style={styles.button}        
               onPress = {() => this.toggleView('collection-form')}
-            ><Text style={{ color:this.state.cam=='collection-form' ? colors.greenFlash : 'grey'}}
+            ><Text style={{ color:this.state.cam=='collection-form' ? greenFlash : 'grey'}}
             >Collections</Text></TouchableOpacity>
           </ScrollView>
         </View> 
 
-
         {/*        
         <ScrollView style={{backgroundColor:'red', paddingBottom:200}}>*/}
+
+        {/*
+        <Image
+          ref="bug"
+          style={{width:50, height:500,}} 
+          source={source}
+        />
+        */}
 
         {/*
         <View style={styles.containerPreview}>
@@ -421,33 +425,9 @@ export default class App extends Component<Props> {
         */}
 
 
-        { this.state.cam == 'collection-form' || this.state.cam =='login'
-          ? null
-          : <Cam
-            />
-        }
- 
-        <View style={this.state.cam!='collection-form' ? {height:0}:{flex:1}}>
-          <CollectionList
-            ref="collectionList"
-            pickPhoto = {(path, collection_id, field) => this.pickPhoto(path, collection_id, field)}
-            pickInsectPhoto = {(path, collection_id, session_id, insectKind_id, insect_id) =>
-              this.pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id)}
-          />
-        </View>
-       
-        { this.state.cam=="login"
-        ? <SpipolLogin
-            ref="LOGIN"
-         />
-        : null
-        }
+        <Cam
 
-        {/*      
-        <View style={{height:500}}></View>
-      </ScrollView>
-      */}
-
+        />
 
 
         { // Distant devices.
@@ -470,6 +450,29 @@ export default class App extends Component<Props> {
           </View>
         )}
 
+      
+        <View style={this.state.cam!='collection-form'? {height:0}:{flex:1}}>
+          <CollectionList
+            ref="collectionList"
+            pickPhoto = {(path, collection_id, field) => this.pickPhoto(path, collection_id, field)}
+            pickInsectPhoto = {(path, collection_id, session_id, insectKind_id, insect_id) =>
+              this.pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id)}
+          />
+        </View>
+       
+
+        { this.state.cam=="login"
+        ? <SpipolLogin
+            ref="LOGIN"
+         />
+        : null
+        }
+
+        {/*      
+        <View style={{height:500}}></View>
+      </ScrollView>
+      */}
+
       {this.state.bigBlackMask 
       ? <TouchableOpacity ref="black_mask_to_save_battery"
           style={{
@@ -482,7 +485,7 @@ export default class App extends Component<Props> {
         >
           <Text
             style={{
-              color:this.state.battery.charging ? colors.greenFlash : 'grey', 
+              color:this.state.battery.charging ? greenFlash : 'grey', 
               fontSize:50,fontWeight:'bold'}}
             >
             {this.state.battery.level}%
@@ -492,7 +495,7 @@ export default class App extends Component<Props> {
                 backgroundColor={'transparent'} 
                 name='battery-charging'
                 size={60}
-                color={colors.greenFlash}
+                color={greenFlash}
               />
             : <MaterialCommunityIcons.Button 
                 name='battery-40' 
@@ -511,6 +514,7 @@ export default class App extends Component<Props> {
 }
 
 const
+
 styles = StyleSheet.create({ 
   container: {
     flex: 1,
@@ -560,7 +564,7 @@ styles = StyleSheet.create({
     height:60,
     backgroundColor:'transparent',
     borderWidth:2,
-    borderColor:colors.greenFlash,
+    borderColor:greenFlash,
   },
 
   button:{

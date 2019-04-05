@@ -5,4 +5,6 @@ export const colors = {
 	greenSuperLight:"#ecf3cd",
 	greenFlash:"#92c83e",
 	lightBackGround:"#fafaff",
+
+	background: '#fafaff', //'#F5FCFF',
 }
