@@ -821,11 +821,8 @@ export default class  CollectionForm extends Component {
             lat={this.state.collection.place.lat}
             lon={this.state.collection.place.long}
             name={this.state.collection.place.name}
-            // locationChanged = {this._updateLocation}
+            highlightColor={colors.greenFlash}
             onCancel={(data) => this.hidePlaceModal(data)} 
-
-            // closeMe = {this._closeModal}
-            // connected = {this.state.connected}
           />
     
           <ModalFilterPicker
