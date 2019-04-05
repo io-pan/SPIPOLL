@@ -88,7 +88,7 @@ export default class AdvancedList extends Component {
 
     // Get default data.
     if(this.props.newItem) {
-      data = this.props.newItem(this.state.items.length);
+      data = this.props.newItem();
     }
 
     // Create & store item.
@@ -101,8 +101,6 @@ export default class AdvancedList extends Component {
     }, function(){
       AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
     });
-
-    // callback ?
   }
 
   storeItemField(key, val){
@@ -193,7 +191,7 @@ export default class AdvancedList extends Component {
 
               { this.state.selectItems === false 
               ?
-                this.props.newItemLabel === false ? null :
+                this.props.newItemLabel ===false ? null :
                 <TouchableOpacity  
                   style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
                   onPress = {() => this.newItem()}
@@ -268,7 +266,7 @@ export default class AdvancedList extends Component {
               </ScrollView>           
             </View>
 
-          : this.props.renderDetailedItem(this.state.items[this.state.editing], this.state.editing)
+          : this.props.renderDetailedItem(this.state.items[this.state.editing])
         }
       </View>
     );

@@ -315,17 +315,16 @@ class Collection extends Component {
     );
   }
 
-  renderSessionForm(data, index){
+  renderSessionForm(data){
     return(
       <SessionForm 
         ref="session-form"
         collection_id = {this.props.data.date}
         protocole={this.props.data.protocole}
-        index={index}
         data={data}
         valueChanged={(key,val) => this.sessionChanged(key,val)}
-        pickInsectPhoto = {( session_id, insectKind_id, insect_id) => 
-          this.props.pickInsectPhoto(this.props.data.date, index, insectKind_id, insect_id)}
+        pickInsectPhoto = {(field) => this.props.pickInsectPhoto('collection--'+this.props.data.date+'--'+field)}
+        pickPhoto = {(field) => this.pickPhoto('collection--'+this.props.data.date+'--'+field)}
       />
     );
   }
@@ -364,33 +363,36 @@ class Collection extends Component {
         { this.renderCollectionEditableName() }
         { this.renderCollectionTabs() }
 
-        { this.state.tab == 'collection' 
+        { this.state.tab=='collection' 
         ? <CollectionForm 
             ref="collection-form"
             data={this.props.data}
             valueChanged={(key,val) => this.collectionChanged(key,val)}
-            pickPhoto = {(field) => this.props.pickPhoto(this.props.data.date, field)}
+            filePath={this.props.filePath} // todo: remove
+            pickPhoto = {(field) => this.props.pickPhoto('collection--'+this.props.data.date+'--'+field)}
           />
 
-          : this.state.tab == 'sessions'
+          : this.state.tab=='sessions'
           ? <AdvancedList
               ref="session-list"
               localStorage = {this.props.data.date + "_sessions"}
               renderListItem = {(value, index) => this.renderSessionListItem(value, index)}
-              renderDetailedItem = {(data, index) => this.renderSessionForm(data, index)}
+              renderDetailedItem = {(data) => this.renderSessionForm(data)}
 
-              newItem = {(index) => this.newSession(index)}
+              newItem = {() => this.newSession()}
               newItemLabel = {this.props.data.protocole=='flash' ? false : "Nouvelle Session"}  
               deleteItem = {() => this.deleteSession()}
             />
        
-          : this.state.tab == 'insectes' 
+          : this.state.tab=='insectes' 
           ? <AdvancedList
               key="insect-list"
               ref="insect-list"
               localStorage = {this.props.data.date + "_insects"}
               renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
-              renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
+              renderDetailedItem = {(data) => this.renderInsectForm(data)}
+
+              newItem = {() => this.newInsect()}
               newItemLabel = {false}
               deleteItem = {() => this.deleteInsect()}
             />
@@ -488,12 +490,11 @@ export default class CollectionList extends Component {
       <Collection
         ref="collection"
         data={data}
-        pickPhoto = {(path, collection_id, field) => // TODO: index of photo ?
-          this.props.pickPhoto(path, collection_id, field)}
-        pickInsectPhoto = {(path, collection_id, session_id, insectKind_id, insect_id) => 
-          this.props.pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id)}
-        selectItem={(index) => this.refs['collections'].selectItem(index)} // For back buton (chevron-left in title bar).
-        storeItemField={(key,val) => this.refs['collections'].storeItemField(key,val)}// For collection name (in title bar).
+        selectItem={(index) => this.refs['collections'].selectItem(index)}
+        storeItemField={(key,val) => this.refs['collections'].storeItemField(key,val)}
+
+        pickPhoto = {(field) => this.props.pickPhoto(field)}
+        pickInsectPhoto = {(field) => this.props.pickInsectPhoto(field)}
       />
     );
   }

@@ -246,7 +246,7 @@ export default class SessionForm extends Component {
       this.storeSession('date', date);
     }
     else{
-      Alert.alert('Date invalide', 'Lancez la session ou programmez la dans les 3 jours à venir.'
+      Alert.alert('Date passée', 'Lancez la session ou programmez la session dans les 3 jours à venir.'
       );
       this.setState({session:{...this.state.session,date:''}});
     }
@@ -423,9 +423,7 @@ export default class SessionForm extends Component {
   }
 
 
-  newInsect(index){
-    this.props.pickInsectPhoto(  this.props.index, index, 0);
-
+  newInsect(){
     return {
       taxon_list_id_list:false,
       taxon_name:'',
@@ -435,11 +433,11 @@ export default class SessionForm extends Component {
   }
 
 
-
   renderInsectForm(data){ // on running session
     // No form here ... launch caméra.
     // this.refs['insect-list'].selectItem(false);
-
+    console.log(this.props)
+    alert('damned');
     // this.setState({o:'o'})
     //this.props.pickInsectPhoto('insect');
   }
@@ -482,9 +480,9 @@ export default class SessionForm extends Component {
                   ref="running-insect-list"
                   localStorage = {this.props.collection_id + "_insects"}
                   renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
-                  renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
+                  renderDetailedItem = {(data) => this.renderInsectForm(data)}
 
-                  newItem = {(index) => this.newInsect(index)}
+                  newItem = {() => this.newInsect()}
                   newItemLabel = "Nouvelle espèce d'insecte"
                   // deleteItem = {() => this.deleteInsect()}
                 />
