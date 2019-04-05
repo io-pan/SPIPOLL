@@ -37,6 +37,8 @@ export default class App extends Component<Props> {
       distantcam:false,
       previewing:false,
       distantRec:false,
+
+      cam:  'collection-form',
     };
   }
 
@@ -424,6 +426,7 @@ export default class App extends Component<Props> {
         { this.state.cam == 'collection-form' || this.state.cam =='login'
           ? null
           : <Cam
+
             />
         }
  

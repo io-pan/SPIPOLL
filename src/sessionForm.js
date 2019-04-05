@@ -17,14 +17,15 @@ import {
   NetInfo,
   CheckBox,
 } from 'react-native'
-
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+
 import FooterImage from './footerimage';
 import AdvancedList from './advancedList';
 import { Form, Timer } from './widgets.js';
 import { colors } from './colors';
 import { formatDate, formatTime } from './formatHelpers.js';
+import Cam from './cam';
 const  flashSessionDuration = 20*60;
 
 //-----------------------------------------------------------------------------------------
@@ -76,7 +77,6 @@ export default class SessionForm extends Component {
             {label:'Oui', value:1 },
             {label:'Non', value:0 },
           ],
-      
         }
       ]
     };
@@ -87,9 +87,9 @@ export default class SessionForm extends Component {
       isTimePickerVisible:false,
       isDatePickerVisible:false,
       session:{...props.data,
-        date: props.data.date ? new Date(props.data.date) : false,
-        time_start: props.data.time_start ? new Date(props.data.time_start) : false,
-        time_end: props.data.time_end ? new Date(props.data.time_end) : false,
+        date: props.data.date ? props.data.date : false,
+        time_start: props.data.time_start ? props.data.time_start : false,
+        time_end: props.data.time_end ? props.data.time_end : false,
       },
       // session:{
       //   date:'', //yyyy-mm-dd //id:cc-3-session-date-1 , cc-3-session-date-2   
@@ -100,7 +100,6 @@ export default class SessionForm extends Component {
       //   smpAttr_26:'',          // vent
       //   shadow:'',
       // },
-
     };
   }
 
@@ -366,6 +365,16 @@ export default class SessionForm extends Component {
 
   stopSession(){
     const now = new Date();
+console.log(now)
+console.log(now.getTime());
+console.log()
+
+console.log(new Date(this.state.session.time_start))
+console.log(this.state.session.time_start);
+console.log()
+
+console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
+
 
     if(now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000){
       // TODO: warn only if insect has been shot.
@@ -442,6 +451,13 @@ export default class SessionForm extends Component {
 
     // this.setState({o:'o'})
     //this.props.pickInsectPhoto('insect');
+    return(
+      <View style={{position:'absolute' , top:0, bottom:0}}>
+        <Cam
+          
+        />
+      </View>
+    );
   }
 
   renderInsectListItem(value, index){ 

@@ -31,6 +31,8 @@ import ModalFilterPicker from './filterSelect';
 import AdvancedList from './advancedList';
 import { ImageSlider } from './widgets.js';
 
+import Cam from './cam';
+
 import CollectionForm from './collectionForm';
 import SessionForm from './sessionForm';
 import InsectForm from './insectForm';
@@ -357,6 +359,11 @@ class Collection extends Component {
 
   //--------------------------------------------------------------------------------
   
+  pickPhoto(collection_id, field){
+    this.setState({tab:'cam'})  
+  }
+
+
   render(){
     return(
       <View style={{flex:1}}>
@@ -369,7 +376,8 @@ class Collection extends Component {
             ref="collection-form"
             data={this.props.data}
             valueChanged={(key,val) => this.collectionChanged(key,val)}
-            pickPhoto = {(field) => this.props.pickPhoto(this.props.data.date, field)}
+            // pickPhoto = {(field) => this.props.pickPhoto(this.props.data.date, field)}
+            pickPhoto = {(field) => this.pickPhoto(this.props.data.date, field)}
           />
 
           : this.state.tab == 'sessions'
@@ -394,6 +402,13 @@ class Collection extends Component {
               newItemLabel = {false}
               deleteItem = {() => this.deleteInsect()}
             />
+
+          : this.state.tab == 'cam'
+          ? <View style={{position:'absolute' , top:0, bottom:0}}>
+            <Cam
+              
+            />
+            </View>
           : null
           }
       </View>

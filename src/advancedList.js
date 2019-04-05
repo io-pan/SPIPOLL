@@ -162,7 +162,7 @@ export default class AdvancedList extends Component {
 
             // Backward loop to avoid re-index issue.
             for (var i = items.length - 1; i >= 0; i--) {
-              if(selected.indexOf(items[i] !== -1)) {
+              if(selected.indexOf(i) !== -1) {
                 // Delete folders & co.
                 if(this.props.deleteItem) {
                   this.props.deleteItem(items[i]);
