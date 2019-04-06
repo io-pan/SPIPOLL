@@ -29,7 +29,7 @@ import { deg2dms, dmsFormat } from './formatHelpers.js';
 import {
   ModalHelp,
   ModalPlace, 
-  ImagePicker, 
+  ImagePicker,
   Form 
 } from './widgets.js';
 
@@ -133,10 +133,9 @@ export default class  CollectionForm extends Component {
           occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
           locAttr_2:'',                 //  ruche
           locAttr_1:[],                 //  habitat
-          locAttr_3:false,                 //  grande culture en fleur
+          locAttr_3:false,              //  grande culture en fleur
         },
       },
-
     };
 
     this.gpsSearching = false;
@@ -429,11 +428,33 @@ export default class  CollectionForm extends Component {
     })
   }
 
+  // pickPhoto(field){
+  //   this.setState({visibleCam:true}, function() {
+  //     this.refs['collection-cam'].pickPhoto(field)
+  //   })
+  // }
+
+  // photoPicked(data){
+  //   this.setState({visibleCam:false}, function(){
+  //     // update photo picker
+  //   });
+  // }
+
   render () {
     return (
-      <View style={{flex:1}}>
-              
-          { this.state.collection.storage.path
+      
+      this.state.visibleCam
+      ? <View style={styles.cam}>
+        <Cam 
+          // style={styles.cam}
+          ref='collection-cam'
+          photoPicked={(data) => this.photoPicked()}
+          path={this.state.storage.path}
+        />
+        </View>
+
+      : <View style={{flex:1}}>
+        { this.state.collection.storage.path
           ? null 
           : <View>
               <View 
@@ -568,12 +589,14 @@ export default class  CollectionForm extends Component {
                   }}
                   title={'Fleur en\ngros plan'}
                   highlightColor={colors.greenFlash}
-                  onPress = {() => this.props.pickPhoto('flower')}
+                  // onPress = {() => this.pickPhoto('flower')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
+
+                  closeOnPhotoTaken={false}
+                  path={this.state.collection.storage.path + '/' + this.props.data.date + '/flower'}
                   source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/flower.jpg'}}
                 />
-
 
                 <ImagePicker 
                   // TODO ? multiple photos before user choose at the end ?
@@ -583,10 +606,13 @@ export default class  CollectionForm extends Component {
                   style={{marginLeft:5, flex:0.5,  padding:5,
                     borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
                   }}
-                  onPress = {() => this.props.pickPhoto('environment')}
+                  // onPress = {() => this.pickPhoto('environment')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
-                  source={{uri:'file://' + this.props.filePath + '/collections/' + this.props.data.date + '/environment.jpg'}}
+
+                  closeOnPhotoTaken={true}
+                  path={this.state.collection.storage.path + '/' + this.props.data.date + '/environment'}
+                  selected={this.state.collection.flower.photo}
                 />
               </View>
 
@@ -840,7 +866,8 @@ export default class  CollectionForm extends Component {
             content={this.state.help.protocole}
             onCancel={() => this.hideHelpModal()} 
           />         
-      </View>
+        </View>
+      
     );
   }
 }
@@ -885,6 +912,14 @@ const styles = StyleSheet.create({
     fontWeight:'bold', 
     textAlign:'center', 
     padding:10,
+  },
+
+  cam:{
+    position:'absolute',
+    top:0,
+    bottom:0,
+    left:0, 
+    right:0,
   },
 
   // collection_input_text:{

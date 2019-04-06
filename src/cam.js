@@ -26,7 +26,7 @@ import RNThumbnail from 'react-native-thumbnail';
 import Svg, { Ellipse,} from 'react-native-svg';
 // import ViewShot from "react-native-view-shot";
 
-import { formatDate } from './formatHelpers.js';
+import { date2folderName } from './formatHelpers.js';
 import { colors } from './colors';
 
 let source;
@@ -186,12 +186,9 @@ export default class Cam extends Component<Props> {
     this.motionActionRunning=false;
     this.motionPhotoNumber=false;
     this.motionActionVideo=false;
-
-    this.init();
   }
 
-  // TODO: fix that out componentWillMount.
-  init() {
+  componentWillMount() {
 
     // Get stored parameters.
     AsyncStorage.getItem('motion_parameters', (err, motion_parameters) => {
@@ -285,11 +282,12 @@ export default class Cam extends Component<Props> {
     if (this.camera) {
       try {
         const granted = await PermissionsAndroid.requestMultiple([
+          PermissionsAndroid.PERMISSIONS.CAMERA,
           PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE,
           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE]);
-          // console.log(granted);
 
-        if (granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
+        if (granted['android.permission.CAMERA'] === PermissionsAndroid.RESULTS.GRANTED
+        &&  granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED
         &&  granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED){
 
           const options = { 
@@ -308,16 +306,17 @@ export default class Cam extends Component<Props> {
             var picture = await this.camera.takePictureAsync(options);
             console.log(picture);
 
-            // TODO: when we are on motion runnnig mode, 
-              // .. set name based on collection and INSECT ID 
             const filename = 
-              this.state.cam.indexOf('collection-') >= 0
-              ? 'collections/'+ this.state.cam.split('--')[1] + '/' + this.state.cam.split('--')[2] + '.jpg'
-              : '/'+ formatDate() + '.jpg';            
+              (this.props.path || RNFetchBlob.fs.dirs.DCIMDir)
+              + '/' 
+              + date2folderName()
+              + '.jpg'
+            ;
+            console.log(filename);
 
             RNFetchBlob.fs.mv(
               picture.uri.replace('file://',''),
-              this.state.storage  + '/' + filename
+              filename
             ).then(() => {
               this.setState({ isTakingPicture: false });
 
@@ -341,20 +340,22 @@ export default class Cam extends Component<Props> {
               }
 
               // Send photo back to form.
-              if (this.state.cam.indexOf('collection-') >= 0){
-                const collId =  this.state.cam.split('--')[1];
-                const field =  this.state.cam.split('--')[2];
-                this.setState({
-                  cam:'collection-form',
-                }, function(){
-                  this.refs['collectionList']
-                      .refs['collections']
-                      .refs['collection']
-                      .refs['collection-form']
-                      .refs['collection-'+field]
-                      .setSource({uri:'file://' + this.state.storage + '/' + filename});
-                })
-              }
+
+              // if (this.props.trigger=='collection')){
+                this.props.photoPicked(filename);
+                // const collId =  this.state.cam.split('--')[1];
+                // const field =  this.state.cam.split('--')[2];
+                // this.setState({
+                //   cam:'collection-form',
+                // }, function(){
+                //   this.refs['collectionList']
+                //       .refs['collections']
+                //       .refs['collection']
+                //       .refs['collection-form']
+                //       .refs['collection-'+field]
+                //       .setSource({uri:'file://' + this.state.storage + '/' + filename});
+                // })
+              // }
             }).catch((err) => { 
               this.setState({ isTakingPicture: false }); 
               console.log(err) 
@@ -1012,7 +1013,7 @@ export default class Cam extends Component<Props> {
             borderRadius={0} 
             style={{
               flexDirection:'column',
-              borderRightWidth:1, borderRightColor:'#dddddd',
+              borderRightWidth:1, borderColor:'#dddddd',
               marginLeft:5,
             }}
             name='gesture-double-tap' //   th-large      
@@ -1298,15 +1299,15 @@ export default class Cam extends Component<Props> {
     this.setState({cam:view});
   }
 
-  pickPhoto(path, collection_id, field){
-    // alert(collection_id + ' '+ field)
-    this.setState({cam:'collection--' + path + '--' + collection_id +'--'+ field});
-  }
+  // pickPhoto(field){
+  //   // alert(collection_id + ' '+ field)
+  //   this.setState({cam:'collection--' + field});
+  // }
 
-  pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id){
-    // alert(collection_id + ' '+  session_id + ' '+  insectKind_id + ' '+  insect_id)
-    this.setState({cam:'collection--' + path + '--' + collection_id +'--'+ session_id + '--'+  insectKind_id + '--'+  insect_id });
-  }
+  // pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id){
+  //   // alert(collection_id + ' '+  session_id + ' '+  insectKind_id + ' '+  insect_id)
+  //   this.setState({cam:'collection--' + path + '--' + collection_id +'--'+ session_id + '--'+  insectKind_id + '--'+  insect_id });
+  // }
 
   render() {
     console.log(this.state.cam);

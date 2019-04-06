@@ -9,10 +9,8 @@ import {
   Image,
   Dimensions,
   Animated,
-  PermissionsAndroid,
   ScrollView,
   AsyncStorage,
-  Modal,
   BackHandler,
   NetInfo,
   CheckBox,
@@ -27,11 +25,8 @@ import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource'
 
 import FooterImage from './footerimage';
 import ImageView from './imageView';
-import ModalFilterPicker from './filterSelect';
 import AdvancedList from './advancedList';
 import { ImageSlider } from './widgets.js';
-
-import Cam from './cam';
 
 import CollectionForm from './collectionForm';
 import SessionForm from './sessionForm';
@@ -360,9 +355,14 @@ class Collection extends Component {
   //--------------------------------------------------------------------------------
   
   pickPhoto(collection_id, field){
-    this.setState({tab:'cam'})  
+    this.setState({tab:'cam'}, function(){
+      this.refs['collection-cam'].pickPhoto(collection_id, field);
+    })  
   }
 
+  sendPhotoToForm(){
+
+  }
 
   render(){
     return(
@@ -402,13 +402,17 @@ class Collection extends Component {
               newItemLabel = {false}
               deleteItem = {() => this.deleteInsect()}
             />
-
+          /*
           : this.state.tab == 'cam'
           ? <View style={{position:'absolute' , top:0, bottom:0}}>
             <Cam
+              key="collection-cam"
+              ref="collection-cam"
+              photoPicked = {() => this.sendPhotoToForm()}
               
             />
             </View>
+            */
           : null
           }
       </View>

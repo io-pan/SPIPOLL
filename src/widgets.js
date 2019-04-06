@@ -12,60 +12,17 @@ import {
   NativeModules,
 } from 'react-native'
 
+import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView from 'react-native-maps';
-// import DateTimePicker from 'react-native-modal-datetime-picker';
 
 import FooterImage from './footerimage';
 import ImageView from './imageView';
-import ModalFilterPicker from './filterSelect';
-import AdvancedList from './advancedList';
+import Cam from './cam';
+import { dmsFormat, deg2dms } from './formatHelpers.js';
 
 // TODO:  Add locationSelect and others
 //        ... at least take it out of CollectionForm.
-
-const 
-  pad2 = function(num){
-    return num<10 ? '0'+num : ''+num;
-  },
-  
-  deg2dms = function(deg, latlon) {
-    if (isNaN(deg)) return false;
-
-    var card = '';
-    if(latlon=='lat'){
-      card = deg > 0 ? "N" : "S"
-    }
-    else {
-      card = deg > 0 ? "E" : "W"
-    }
-
-    deg=Math.abs(deg);
-    var d = Math.floor(deg);
-    var minfloat = (deg-d)*60;
-    var m = Math.floor(minfloat);
-    var secfloat = (minfloat-m)*60;
-    var s = Math.round(secfloat * 100) / 100;
-    // After rounding, the seconds might become 60. These two
-    // if-tests are not necessary if no rounding is done.
-    if (s==60) {
-      m++;
-      s=0;
-    }
-    if (m==60) {
-      d++;
-      m=0;
-    }
-    return "" + d + ":" + m + ":" + s + ":" + card;
-  },
-
-  dmsFormat = function(dms){
-    if (!dms) return '';
-
-    dms = dms.split(':');
-    return "" + dms[0] + "°" +dms[1] + "'" + dms[2] + "''" + dms[3];
-  }
-;// const
 
 
 //=========================================================================================
@@ -149,6 +106,7 @@ export class Form extends Component {
     );
   }
 }
+
 
 //=========================================================================================
 export class ModalPlace extends Component {
@@ -371,22 +329,65 @@ export class ImageSlider extends Component {
   }
 }
 
+
 //=========================================================================================
 export class ImagePicker extends Component {
 //-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
-    const source = this.props.source;
-    source.uri = source.uri.substring(0, 
-      source.uri.indexOf('?t=') < 0 
-      ? source.uri.length
-      : source.uri.indexOf('?t=')
-      ) + '?t='+ new Date().getTime();
+    // const source = this.props.source;
+    // source.uri = source.uri.substring(0, 
+    //   source.uri.indexOf('?t=') < 0 
+    //   ? source.uri.length
+    //   : source.uri.indexOf('?t=')
+    //   ) + '?t='+ new Date().getTime();
 
     this.state = {
+      visibleCamera:false,
       visibleImageView:false,
-      source:source,
+      selected:false,
+      sources:[],
     };
+  }
+
+  componentWillMount(){
+    if(this.props.path){
+      RNFetchBlob.fs.isDir(this.props.path)
+      .then((isDir) => {
+        if(false === isDir){
+          RNFetchBlob.fs.mkdir(this.props.path)
+          .then(() => { 
+            // console.log('coll folder created ' + curDir+'/collections/'+collectionName ) 
+          })
+          .catch((err) => { 
+            Alert.alert(
+              'Erreur',
+              'Le dossier de stockage des photos n\'a pu être créé.\n'
+              + this.props.path
+            );
+          })
+        }
+        else{
+          RNFetchBlob.fs.ls(this.props.path)
+          .then((files) => {
+            this.setState({
+              sources:files, 
+              selected: 
+                typeof this.props.selected !== "undefined" && this.props.selected !== false
+                ? this.props.selected.indexOf(files) >= 0
+                  ? this.props.selected.indexOf(files)
+                  : files.length
+                    ? 0
+                    : false
+
+                : files.length
+                  ? 0
+                  : false
+              })
+          })
+        }
+      })
+    }
   }
 
   setSource(source){
@@ -416,12 +417,40 @@ export class ImagePicker extends Component {
     })
   }
   
-  render(){
-      return(
+  pickPhoto(){
+    this.setState({visibleCamera:true})
+  }
 
-        <View style={[ this.props.style,{}]}
-          
-          >
+  photoPicked(path){
+    if(path=='close'){
+      this.setState({visibleCamera:false}) 
+    }
+    else {
+      console.log()
+      let sources = this.state.sources;
+      sources.push(path.replace(this.props.path+'/', ''));
+      this.setState({
+        sources:sources,
+        visibleCamera:!this.props.closeOnPhotoTaken,
+      });
+    }
+  }
+
+
+  render(){
+     console.log(this.state)
+      return(
+        <View style={[ this.props.style,{}]}>
+
+          <Modal
+            visible={this.state.visibleCamera}
+            onRequestClose={() => this.photoPicked('close')}>
+            <Cam
+              path={this.props.path}
+              photoPicked={(path) => this.photoPicked(path)}
+            />
+          </Modal>
+
           <ImageView
             title={this.props.title.replace("\n", " ")}
             visible={this.state.visibleImageView}
@@ -437,12 +466,15 @@ export class ImagePicker extends Component {
               alignItems:'center', 
               justifyContent: 'center',
             }}
-            onPress = {() => this.props.onPress()}
+            onPress = {() => 
+              this.pickPhoto()
+              // this.props.onPress()
+            }
             onLayout = {this.onLayout} 
             >
             <Text style={{ fontSize:14, color:'grey', height:50, textAlign:'center',
                 padding:2,}}>
-            {this.props.title}</Text>
+            {this.props.title} {this.state.sources.length}</Text>
             <MaterialCommunityIcons
               name="camera"
               style={{
@@ -454,27 +486,48 @@ export class ImagePicker extends Component {
             />
           </TouchableOpacity>
 
-          { this.state.source
-            ? <TouchableOpacity 
-              style={{
-                alignItems:'center', 
-                justifyContent: 'center',
-                flex:0.5,
-                // borderColor:greenLight, borderWidth:1,
+          { true//this.state.selected
+          ? <TouchableOpacity 
+            style={{
+              alignItems:'center', 
+              justifyContent: 'center',
+              flex:0.5,
+              paddingBottom:10,
+              // borderColor:greenLight, borderWidth:1,
               }} 
               onPress={this.showImageView}
               >
               <Image
-                style={{ 
+                style={{
                   width:this.state.width,
                   height:this.state.width,
                 }}
                 resizeMode="contain"
-                source={this.state.source }
+                source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
               />
             </TouchableOpacity>
           : null
-        }
+          }
+
+          { this.state.sources.length 
+          ? <ScrollView horizontal={true}
+              // style={{flexDirection:'row', backgroundColor:'red'}}
+              >
+              { this.state.sources.map((path, index) => 
+                <Image 
+                  key={index} 
+                  style={{
+                    marginRight:1,
+                    width:50,//this.state.width/5,
+                    height:50,//this.state.width/5,
+                  }}
+                  resizeMode="contain"
+                  source={{uri:'file://'+this.props.path+'/'+path}}
+                />  
+              )}
+            </ScrollView>
+          : null
+          }
         </View>
       );
   }
@@ -482,7 +535,7 @@ export class ImagePicker extends Component {
 } // ImagePicker
 
 
-//-----------------------------------------------------------------------------------------
+//=========================================================================================
 export class ModalHelp extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props) {
