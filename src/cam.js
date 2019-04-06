@@ -123,7 +123,7 @@ export default class Cam extends Component<Props> {
   constructor(props) {
     super(props);
     this.state = {
-      cam: 'collection-form', // Different reasons why cam is on:
+      cam: props.mode ? props.mode : 'collection-form', // Different reasons why cam is on:
         // 'free'
         // collection-form
         // 'collection-flower'
@@ -150,7 +150,7 @@ export default class Cam extends Component<Props> {
         videoLength:'',
       },
       // motionOutputRunning:'',
-      motionDetectionMode: MODE_OFF,
+      motionDetectionMode: props.mode_ ? props.mode_ :  MODE_OFF,
       threshold : 0xa0a0a0,
       sampleSize : 30,
       minimumPixels: 1,
@@ -624,7 +624,7 @@ export default class Cam extends Component<Props> {
   }
 
   toggleMotionSetup(val){
-    if(this.state.motionSetup==val){
+    if(this.state.motionSetup && this.state.motionSetup.indexOf(val) != -1){ // watch out threshold / threshold-rvb
       this.setState({
         motionSetup:false,
       });
@@ -688,7 +688,7 @@ export default class Cam extends Component<Props> {
             } 
           />
 
-        : this.state.motionSetup == 'threshold-rvb'
+        : this.state.motionSetup == 'threshold'
         ? <Slider  
             ref="threshold"
             style={styles.slider} 
@@ -709,7 +709,7 @@ export default class Cam extends Component<Props> {
             onValueChange={(value) => this.onThreshold(0xffffff, (-value<<16)|(-value<<8)|-value)} 
           />
 
-        : this.state.motionSetup == 'threshold'
+        : this.state.motionSetup == 'threshold-rvb'
         ? <React.Fragment>
             <Slider  
               ref="threshold_red"
@@ -1098,7 +1098,8 @@ export default class Cam extends Component<Props> {
           >
             <Text 
               style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
-              color:this.state.motionSetup.indexOf('threshold') != -1 ? colors.greenFlash : 'grey' ,}}
+              color:this.state.motionSetup && this.state.motionSetup.indexOf('threshold') != -1 
+                ? colors.greenFlash : 'grey' ,}}
               >Sensibilité</Text>
           </MaterialCommunityIcons.Button>
 

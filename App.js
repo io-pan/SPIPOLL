@@ -423,7 +423,8 @@ export default class App extends Component<Props> {
         { this.state.cam == 'collection-form' || this.state.cam =='login'
           ? null
           : <Cam
-
+              mode='motion-setup'
+              mode_={1}
             />
         }
  
