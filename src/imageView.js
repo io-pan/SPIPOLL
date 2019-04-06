@@ -141,7 +141,6 @@ ImageView.propTypes = {
 }
 
 ImageView.defaultProps = {
-
   placeholderTextColor: '#ccc',
   androidUnderlineColor: 'rgba(0,0,0,0)',
   cancelButtonText: 'Retour',

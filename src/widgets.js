@@ -370,12 +370,13 @@ export class ImagePicker extends Component {
         else{
           RNFetchBlob.fs.ls(this.props.path)
           .then((files) => {
+            
             this.setState({
               sources:files, 
               selected: 
-                typeof this.props.selected !== "undefined" && this.props.selected !== false
-                ? this.props.selected.indexOf(files) >= 0
-                  ? this.props.selected.indexOf(files)
+                typeof this.props.selected !== "undefined" && this.state.selected == false
+                ? files.indexOf(this.props.selected) >= 0
+                  ? files.indexOf(this.props.selected)
                   : files.length
                     ? 0
                     : false
@@ -436,9 +437,15 @@ export class ImagePicker extends Component {
     }
   }
 
+  select(index){
+    this.setState({selected:index}, function(){
+      this.props.onSelect(this.state.sources[this.state.selected]);
+    });
+  }
 
   render(){
-     console.log(this.state)
+     console.log(this.state);
+
       return(
         <View style={[ this.props.style,{}]}>
 
@@ -455,7 +462,7 @@ export class ImagePicker extends Component {
             title={this.props.title.replace("\n", " ")}
             visible={this.state.visibleImageView}
             onCancel={this.hideImageView}
-            source={this.state.source}
+            source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
             titleTextStyle={{backgroundColor:this.props.highlightColor, color:'white', fontWeight:'bold',fontSize:16}}
             cancelButtonTextStyle={{backgroundColor:this.props.highlightColor, color:'white', fontWeight:'bold',fontSize:16}}
           />
@@ -466,15 +473,12 @@ export class ImagePicker extends Component {
               alignItems:'center', 
               justifyContent: 'center',
             }}
-            onPress = {() => 
-              this.pickPhoto()
-              // this.props.onPress()
-            }
+            onPress = {() => this.pickPhoto()}
             onLayout = {this.onLayout} 
             >
-            <Text style={{ fontSize:14, color:'grey', height:50, textAlign:'center',
-                padding:2,}}>
-            {this.props.title} {this.state.sources.length}</Text>
+            <Text style={{ fontSize:14, color:'grey', height:50, textAlign:'center',  padding:2,}}>
+            {this.props.title}</Text>
+
             <MaterialCommunityIcons
               name="camera"
               style={{
@@ -486,7 +490,7 @@ export class ImagePicker extends Component {
             />
           </TouchableOpacity>
 
-          { true//this.state.selected
+          { this.state.selected !== false
           ? <TouchableOpacity 
             style={{
               alignItems:'center', 
@@ -514,16 +518,20 @@ export class ImagePicker extends Component {
               // style={{flexDirection:'row', backgroundColor:'red'}}
               >
               { this.state.sources.map((path, index) => 
-                <Image 
+                <TouchableOpacity
                   key={index} 
-                  style={{
-                    marginRight:1,
-                    width:50,//this.state.width/5,
-                    height:50,//this.state.width/5,
-                  }}
-                  resizeMode="contain"
-                  source={{uri:'file://'+this.props.path+'/'+path}}
-                />  
+                  onPress={() => this.select(index)}
+                  >
+                  <Image 
+                    style={{
+                      marginRight:1,
+                      width:50,//this.state.width/5,
+                      height:50,//this.state.width/5,
+                    }}
+                    resizeMode="contain"
+                    source={{uri:'file://'+this.props.path+'/'+path}}
+                  />
+                </TouchableOpacity>
               )}
             </ScrollView>
           : null
