@@ -370,7 +370,7 @@ export class ImagePicker extends Component {
         else{
           RNFetchBlob.fs.ls(this.props.path)
           .then((files) => {
-            
+
             this.setState({
               sources:files, 
               selected: 
@@ -432,6 +432,7 @@ export class ImagePicker extends Component {
       sources.push(path.replace(this.props.path+'/', ''));
       this.setState({
         sources:sources,
+        selected:this.state.selected === false ? 0 : this.state.selected,
         visibleCamera:!this.props.closeOnPhotoTaken,
       });
     }
@@ -513,7 +514,7 @@ export class ImagePicker extends Component {
           : null
           }
 
-          { this.state.sources.length 
+          { this.state.sources.length > 1
           ? <ScrollView horizontal={true}
               // style={{flexDirection:'row', backgroundColor:'red'}}
               >
