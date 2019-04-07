@@ -165,7 +165,7 @@ export default class AdvancedList extends Component {
               if(selected.indexOf(i) !== -1) {
                 // Delete folders & co.
                 if(this.props.deleteItem) {
-                  this.props.deleteItem(items[i]);
+                  this.props.deleteItem(items[i], i);
                 }
                 // Remove from list.
                 items.splice(i, 1);
