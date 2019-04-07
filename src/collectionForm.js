@@ -367,15 +367,25 @@ export default class  CollectionForm extends Component {
           [key]:value,
         }}, function(){
 
-          // Create Folder.
+          // Create Folder now we have storage (phone/sd).
           if(key=='storage'){
           
             const collectionName = this.props.data.date;
 
-            console.log(value.path +'/'+ collectionName)
             RNFetchBlob.fs.mkdir(value.path +'/'+ collectionName)
             .then(() => { 
-              // console.log('coll folder created ' + curDir+'/collections/'+collectionName ) 
+              // Created insects folder.
+              RNFetchBlob.fs.mkdir(value.path +'/'+ collectionName  +'/insects')
+              .then(() => { 
+                //
+              })
+              .catch((err) => { 
+                Alert.alert(
+                  'Erreur',
+                  'Le dossier de stockage des photos n\'a pu être créé.\n'
+                  + value.path +'/'+ collectionName + '/insects'
+                );
+              })
             })
             .catch((err) => { 
               Alert.alert(
@@ -443,17 +453,7 @@ export default class  CollectionForm extends Component {
   render () {
     return (
       
-      this.state.visibleCam
-      ? <View style={styles.cam}>
-        <Cam 
-          // style={styles.cam}
-          ref='collection-cam'
-          photoPicked={(data) => this.photoPicked()}
-          path={this.state.storage.path}
-        />
-        </View>
-
-      : <View style={{flex:1}}>
+        <View style={{flex:1}}>
         { this.state.collection.storage.path
           ? null 
           : <View>
@@ -584,12 +584,11 @@ export default class  CollectionForm extends Component {
                 }}>
                 <ImagePicker 
                   ref="collection-flower"
-                  style={{marginRight:5, flex:0.5, padding:5,
-                    borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
-                  }}
                   title={'Fleur en\ngros plan'}
-                  highlightColor={colors.greenFlash}
-                  // onPress = {() => this.pickPhoto('flower')}
+                  styles={{
+                    highlightColor:colors.greenFlash,
+                    container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
+                  }}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
 
@@ -599,15 +598,13 @@ export default class  CollectionForm extends Component {
                   onSelect={(filename)=>this.storeFlower('photo', filename)}
                 />
 
-                <ImagePicker 
-                  // TODO ? multiple photos before user choose at the end ?
-                  title={'Fleur à 2-3 mètres\nde distance'}
-                  highlightColor={colors.greenFlash}
+                <ImagePicker
                   ref="collection-environment"
-                  style={{marginLeft:5, flex:0.5,  padding:5,
-                    borderWidth:1, borderColor:'lightgrey', backgroundColor:'white',
+                  title={'Fleur à 2-3 mètres\nde distance'}
+                  styles={{
+                    highlightColor:colors.greenFlash,
+                    container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
-                  // onPress = {() => this.pickPhoto('environment')}
                   crop={{w:150,h:150}}
                   size={{w:150,h:150}}
 
