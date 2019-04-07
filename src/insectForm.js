@@ -123,9 +123,20 @@ export default class InsectForm extends Component {
         <ScrollView style={{flex:1}}>
 
               <View style={styles.collection_grp}>
-                <ImageSlider
-                // map photos
-                  source={null}
+                <ImagePicker
+                  ref="collection-insect"
+                  title={false}
+                  styles={{
+                    highlightColor:colors.greenFlash,
+                    container:{marginRight:5, flex:1, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
+                  }}
+
+                  crop={{w:150,h:150}}
+                  size={{w:150,h:150}}
+
+                  path={this.props.collection_storage + '/insects/' + this.props.data.date }
+                  selected={this.state.insect.photo}
+                  onSelect={(filename)=>this.storeInsect('photo', filename)}
                 />
               </View>
 
