@@ -19,12 +19,13 @@ import {
 } from 'react-native'
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import DateTimePicker from 'react-native-modal-datetime-picker';
+import RNFetchBlob from 'rn-fetch-blob';
 
 import FooterImage from './footerimage';
 import AdvancedList from './advancedList';
 import { Form, Timer } from './widgets.js';
 import { colors } from './colors';
-import { formatDate, formatTime } from './formatHelpers.js';
+import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 import Cam from './cam';
 const  flashSessionDuration = 20*60;
 
@@ -433,35 +434,69 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
 
   newInsect(index){
-    this.props.pickInsectPhoto(this.props.index, index, 0);
+    // RUNNING SESSION
+    const now = date2folderName(),
+          folderName = this.props.collection_storage + '/insects/' + now;
 
+    // Create insect photos folder.
+    RNFetchBlob.fs.mkdir(folderName)
+    .then(() => { 
+      // console.log('insct folder created ' + folderName ) 
+    })
+    .catch((err) => { 
+      Alert.alert(
+        'Erreur',
+        'Le dossier de stockage des photos n\'a pu être créé.\n'
+        + folderName
+      );
+    })
+
+    // Return default data.
     return {
       taxon_list_id_list:false,
       taxon_name:'',
       comment:'',
       session:false,
+      photo:'',
+      date: now,
     };
   }
 
-
-
-  renderInsectForm(data){ // on running session
-    // No form here ... launch caméra.
-    // this.refs['insect-list'].selectItem(false);
-
-    // this.setState({o:'o'})
-    //this.props.pickInsectPhoto('insect');
+  photoPicked(path){
+    if(path=='close'){
+      // this.setState({visibleCamera:false}) 
+    }
+    else {
+      console.log()
+      let sources = this.state.sources;
+      sources.push(path.replace(this.props.path+'/', ''));
+      this.setState({
+        sources:sources,
+        selected:this.state.selected === false ? 0 : this.state.selected,
+        visibleCamera:!this.props.closeOnPhotoTaken,
+      });
+    }
+  }
+ 
+  renderInsectForm(data){ 
+    // RUNNING SESSION
+    // no form, launch camera instead
+console.log(this.props);
+console.log(data);
     return(
-      <View style={{position:'absolute' , top:0, bottom:0}}>
+      <View style={{position:'absolute' , top:-60, bottom:0}}>
+        <Text> {'<'} insect id  -  nb photos</Text>
         <Cam
-          
+          path={this.props.collection_storage + '/insects/' + data.date}
+          photoPicked={(path) => this.photoPicked(path)}
         />
+        <Text>retour</Text>
       </View>
     );
   }
 
   renderInsectListItem(value, index){ 
-    // On running session.
+    // RUNNING SESSION
     return(
       <View style={{flexDirection:'row', flex:1}}>
           <Text>{index}</Text>
@@ -469,9 +504,13 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
           ? value.taxon_extra_info 
           : value.taxon_name ? value.taxon_name 
           : 'Non identifié' }</Text>
+
+          <Text>Ajouter une photo</Text>
+
       </View>
     );
   }
+
 
   renderRunningForm(sessionStatus){
     return(

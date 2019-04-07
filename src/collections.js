@@ -236,11 +236,13 @@ class Collection extends Component {
     );
   }
 
-  renderInsectForm(data){
+  renderInsectForm(data, index){
     return(
       <View style={{flex:1}}>
         <InsectForm
-          collection_id = {this.props.data.date}
+          // collection_id = {this.props.data.date}
+          collection_storage = {this.props.data.storage.path + '/' + this.props.data.date}
+          index={index}
           data={data}
           valueChanged={(key,val) => this.insectChanged(key,val)}
           // session_id = data.time_start // TODO: list of sessions
@@ -258,8 +260,20 @@ class Collection extends Component {
     }
   }
 
-  deleteInsect(){
-    // TODO: delete photos
+  deleteInsect(data) {
+    // Delete photos folder.
+    const folder = this.props.data.storage.path + '/' + this.props.data.date + '/insects/' + data.date;
+    RNFetchBlob.fs.unlink(folder)
+    .then(() => { 
+      // console.log('insect folder deleted ' + folder)
+    })
+    .catch((err) => {
+      Alert.alert(
+        'Erreur',
+        'Le dossier contenant les photos n\'a pu être supprimé.\n'
+        + folder
+      );
+    }); 
   }
 
   //--------------------------------------------------------------------------------
@@ -316,13 +330,14 @@ class Collection extends Component {
     return(
       <SessionForm 
         ref="session-form"
-        collection_id = {this.props.data.date}
-        protocole={this.props.data.protocole}
+        collection_id = {this.props.data.date}  // For localstorage of insect list on running session.
+        collection_storage = {this.props.data.storage.path + '/' + this.props.data.date} // To store insect photos on running session.
+        protocole={this.props.data.protocole} // To check sessions durations.
         index={index}
         data={data}
         valueChanged={(key,val) => this.sessionChanged(key,val)}
-        pickInsectPhoto = {( session_id, insectKind_id, insect_id) => 
-          this.props.pickInsectPhoto(this.props.data.date, index, insectKind_id, insect_id)}
+        // pickInsectPhoto = {( session_id, insectKind_id, insect_id) => 
+        //   this.props.pickInsectPhoto(this.props.data.date, index, insectKind_id, insect_id)}
       />
     );
   }
@@ -376,7 +391,6 @@ class Collection extends Component {
             ref="collection-form"
             data={this.props.data}
             valueChanged={(key,val) => this.collectionChanged(key,val)}
-            // pickPhoto = {(field) => this.props.pickPhoto(this.props.data.date, field)}
             pickPhoto = {(field) => this.pickPhoto(this.props.data.date, field)}
           />
 
@@ -400,7 +414,7 @@ class Collection extends Component {
               renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
               renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
               newItemLabel = {false}
-              deleteItem = {() => this.deleteInsect()}
+              deleteItem = {(data, index) => this.deleteInsect(data, index)}
             />
           /*
           : this.state.tab == 'cam'
@@ -507,10 +521,10 @@ export default class CollectionList extends Component {
       <Collection
         ref="collection"
         data={data}
-        pickPhoto = {(path, collection_id, field) => // TODO: index of photo ?
-          this.props.pickPhoto(path, collection_id, field)}
-        pickInsectPhoto = {(path, collection_id, session_id, insectKind_id, insect_id) => 
-          this.props.pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id)}
+        // pickPhoto = {(path, collection_id, field) => // TODO: index of photo ?
+        //    this.props.pickPhoto(path, collection_id, field)}
+        // pickInsectPhoto = {(path, collection_id, session_id, insectKind_id, insect_id) => 
+        //    this.props.pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id)}
         selectItem={(index) => this.refs['collections'].selectItem(index)} // For back buton (chevron-left in title bar).
         storeItemField={(key,val) => this.refs['collections'].storeItemField(key,val)}// For collection name (in title bar).
       />
