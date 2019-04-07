@@ -541,7 +541,7 @@ export default class CollectionList extends Component {
           height:80,
         }}
         resizeMode="contain"
-        source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/flower.jpg' + '?t='+ new Date().getTime() }}
+        source={{uri:'file://' + value.storage.path + '/' + value.date +'/flower/' + value.photo_flower}}
       />
       <Image
         style={{ 
@@ -550,7 +550,7 @@ export default class CollectionList extends Component {
           height:80,
         }}
         resizeMode="contain"
-        source={{uri:'file://' + this.props.filePath + '/collections/' + value.date +'/environment.jpg' + '?t='+ new Date().getTime() }}
+        source={{uri:'file://' + value.storage.path + '/' + value.date +'/environment/' + value.photo_environment}}
       />
 
       <View style={{padding:5, overflow:'hidden'}}>

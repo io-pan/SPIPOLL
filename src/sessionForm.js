@@ -480,9 +480,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
  
   renderInsectForm(data){ 
     // RUNNING SESSION
-    // no form, launch camera instead
-console.log(this.props);
-console.log(data);
+    // No form, launch camera instead.
     return(
       <View style={{position:'absolute' , top:-60, bottom:0}}>
         <Text> {'<'} insect id  -  nb photos</Text>

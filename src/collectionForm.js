@@ -595,7 +595,10 @@ export default class  CollectionForm extends Component {
                   closeOnPhotoTaken={false}
                   path={this.state.collection.storage.path + '/' + this.props.data.date + '/flower'}
                   selected={this.state.collection.flower.photo}
-                  onSelect={(filename)=>this.storeFlower('photo', filename)}
+                  onSelect={(filename)=>{
+                    this.storeFlower('photo', filename);
+                    this.props.valueChanged('photo_flower',filename);
+                  }}
                 />
 
                 <ImagePicker
@@ -611,7 +614,10 @@ export default class  CollectionForm extends Component {
                   closeOnPhotoTaken={true}
                   path={this.state.collection.storage.path + '/' + this.props.data.date + '/environment'}
                   selected={this.state.collection.environment.photo}
-                  onSelect={(filename)=>this.storeEnvironment('photo', filename)}
+                  onSelect={(filename)=>{
+                    this.storeEnvironment('photo', filename);
+                    this.props.valueChanged('photo_environment',filename);
+                  }}
                 />
               </View>
 
