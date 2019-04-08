@@ -23,7 +23,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 
 import FooterImage from './footerimage';
 import AdvancedList from './advancedList';
-import { Form, Timer } from './widgets.js';
+import { Form, Timer, ImageSlider} from './widgets.js';
 import { colors } from './colors';
 import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 import Cam from './cam';
@@ -477,34 +477,100 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
       });
     }
   }
- 
-  renderInsectForm(data){ 
+
+  renderInsectForm(data, index){ 
     // RUNNING SESSION
     // No form, launch camera instead.
+    console.log(this)
     return(
-      <View style={{position:'absolute' , top:-60, bottom:0}}>
-        <Text> {'<'} insect id  -  nb photos</Text>
+      <Modal 
+        onRequestClose={() => this.refs['running-insect-list'].selectItem(false)}
+        >
+
+
+        <View style={{flexDirection:'row', backgroundColor:colors.greenFlash,}}
+          > 
+          <TouchableOpacity 
+            style={[{
+              padding:10,
+              borderRightWidth:1, borderRightColor:'white', 
+            }]}
+            onPress={() => this.refs['running-insect-list'].selectItem(false)}
+            >
+            <MaterialCommunityIcons
+              name="chevron-left" 
+              style={[{ color:'white',
+              }]}
+              size={30}
+            />
+          </TouchableOpacity>
+
+          <ScrollView horizontal={true}>
+          <Text style={{
+            textAlign:'center',
+            fontSize:18, fontWeight:'bold', color:'white',
+            padding:10, paddingLeft:20, paddingRight:20}}
+            >
+            { data.taxon_extra_info ? data.taxon_extra_info 
+            : data.taxon_name ? data.taxon_name 
+            : 'Insecte ' + (index+1) }
+          </Text>
+          </ScrollView>
+        </View>
+
+        <View style={{flex:1}}
+        >
         <Cam
           path={this.props.collection_storage + '/insects/' + data.date}
           photoPicked={(path) => this.photoPicked(path)}
         />
-        <Text>retour</Text>
-      </View>
+        </View>
+
+        <TouchableOpacity style={{
+            backgroundColor:colors.greenFlash,
+            height:55, justifyContent:'center', textAlign:'center',
+          }}
+          onPress={() => this.refs['running-insect-list'].selectItem(false)}
+          >
+          <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
+          Retour à la session</Text>
+          </TouchableOpacity>
+      </Modal>
     );
   }
 
   renderInsectListItem(value, index){ 
     // RUNNING SESSION
     return(
-      <View style={{flexDirection:'row', flex:1}}>
-          <Text>{index}</Text>
-          <Text>{ value.taxon_extra_info 
-          ? value.taxon_extra_info 
-          : value.taxon_name ? value.taxon_name 
-          : 'Non identifié' }</Text>
+      <View style={{flex:1, flexDirection:'row',
+        justifyContent:'center', textAlign:'center'}}>
 
-          <Text>Ajouter une photo</Text>
 
+        <Text style={{flexDirection:'row', padding:5, paddingLeft:10, paddingTop:0, flex:0.4,}}
+        >{ value.taxon_extra_info 
+        ? value.taxon_extra_info 
+        : value.taxon_name ? value.taxon_name 
+        : 'Insecte ' + (index+1) + '\n' + 'Non identifié' }
+        </Text>
+ 
+        <View style={{flex:0.6, justifyContent:'center', textAlign:'center'}}>
+          <ScrollView horizontal={true}>
+          <ImageSlider
+            path={this.props.collection_storage + '/insects/' + value.date}
+            onPress={()=>{}}
+            style={{height:50, flex:1}}
+          />
+          </ScrollView>
+        </View>
+
+        <View style={{padding:10}}>
+          <MaterialCommunityIcons
+            name="camera-enhance" 
+            style={{color:colors.greenFlash, backgroundColor:'transparent'}}
+            size={30}
+            backgroundColor = 'transparent'
+          />
+        </View>
       </View>
     );
   }
@@ -512,37 +578,44 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
   renderRunningForm(sessionStatus){
     return(
-      <View style={{flex:1, backgroundColor:'red'}} >
+      <Modal
+        visible={true}
+        onRequestClose={() => this.stopSession()}
+        // style={{ justifyContent:'center', textAlign:'center',}} 
+        >
 
-                {/*                
-                <TouchableOpacity  
-                  style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
-                  onPress = {() => this.newItem()}
-                  >
-                  <MaterialCommunityIcons   
-                    name='plus-circle-outline'
-                    style={{fontSize:24, paddingRight:10, color:'white'}}
-                  />
-                  <Text style={{color: 'white', fontSize:16,}}>
-                  {this.props.newItemLabel ? this.props.newItemLabel : 'Ajouter'}</Text>
-                </TouchableOpacity>
-                */}
+        { this.renderLaunchButton(sessionStatus)}
 
-                { this.renderLaunchButton(sessionStatus)}
+        <AdvancedList
+          key="running-insect-list"
+          ref="running-insect-list"
+          localStorage = {this.props.collection_id + "_insects"}
+          renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
+          renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
 
-                <AdvancedList
-                  key="running-insect-list"
-                  ref="running-insect-list"
-                  localStorage = {this.props.collection_id + "_insects"}
-                  renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
-                  renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
+          newItem = {(index) => this.newInsect(index)}
+          newItemContent = {
+            <View style={{backgroundColor:colors.greenFlash, 
+                flexDirection:'row', alignItems:'center', justifyContent:'center', 
+                height:50,
+                margin:15 }}
+              >
+              <View style={{
+                padding:3, alignItems:'center', justifyContent:'center',
+                borderRadius:60,  borderWidth:2, borderColor:'white', }}
+              >
+              <MaterialCommunityIcons   
+                name='camera'
+                style={{ fontSize:24, color:'white' }}
+              /></View>
+              <Text style={{marginLeft:10, color: 'white', fontSize:16, fontWeight:'bold'}}>
+              Nouvelle espèce d'insecte</Text>
+            </View>
+          }
+          // deleteItem = {() => this.deleteInsect()}
+        />
 
-                  newItem = {(index) => this.newInsect(index)}
-                  newItemLabel = "Nouvelle espèce d'insecte"
-                  // deleteItem = {() => this.deleteInsect()}
-                />
-
-      </View>
+      </Modal>
     );
   }
 
@@ -599,7 +672,9 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
             : sessionStatus == 'running' ?
 
-              <View style={[{height:55, margin:0, borderTopWidth:1, borderTopColor:'white'}]}>
+              <View style={[{height:55, margin:0, 
+                  // borderTopWidth:1, borderTopColor:'white'
+                  }]}>
                   <View style={{height:55, backgroundColor:colors.greenFlash, flexDirection:'row',
                             justifyContent:'center', alignItems:'center',}}>
                     <View
@@ -861,6 +936,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
                     label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:colors.greenFlash},
                     labelText:{fontSize:14, backgroundColor:'white'},
                     highlightColor:colors.greenFlash,
+                    badColor:colors.purple,
                   }}
                 />
               </View>

@@ -71,7 +71,7 @@ export default class  CollectionForm extends Component {
         },{
           name:'locAttr_1',
           type:'multiSelect',
-          title:"Type d'habitat",
+          title:"Type d'habitat \n (plusieurs choix possibles)",
           values: [ 
             {label:'Urbain',          value:111},
             {label:'Péri-urbain',     value:112},
@@ -838,6 +838,7 @@ export default class  CollectionForm extends Component {
                     label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:colors.greenFlash},
                     labelText:{fontSize:14, backgroundColor:'white'},
                     highlightColor:colors.greenFlash,
+                    badColor:colors.purple,
                   }}
                 />
               </View>

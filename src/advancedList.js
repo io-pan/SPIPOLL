@@ -193,17 +193,12 @@ export default class AdvancedList extends Component {
 
               { this.state.selectItems === false 
               ?
-                this.props.newItemLabel === false ? null :
+                this.props.newItemContent === false ? null :
                 <TouchableOpacity  
-                  style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
+                  //style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
                   onPress = {() => this.newItem()}
                   >
-                    <MaterialCommunityIcons   
-                      name='plus-circle-outline'
-                      style={{fontSize:24, paddingRight:10, color:'white'}}
-                    />
-                    <Text style={{color: 'white', fontSize:16,}}>
-                    {this.props.newItemLabel ? this.props.newItemLabel : 'Ajouter'}</Text>
+                    { this.props.newItemContent }
                 </TouchableOpacity>
                 
               :
@@ -234,38 +229,47 @@ export default class AdvancedList extends Component {
               </View>
               }
 
-              <ScrollView>
-              { this.state.items.map((value, index) => 
-                <TouchableOpacity  
-                  key={index}
-                  style={[styles.listItem,  this.state.items.length-1==index 
-                    ? {borderBottomWidth:15}
-                    : null
-                  ]}
-                  onPress = {() => this.selectItem(index)}
-                  onLongPress = {() => this.selectItems(index)}
-                  >
-                  { this.state.selectItems === false ? null :
-                    <View style={{
-                      borderRadius:10,
-                      margin:10, marginLeft:20,
-                      height:20, width:20, borderWidth:2, borderColor:colors.greenDark, padding:2, 
-                    }}>
-                       <View style={{
-                        borderRadius:6,
-                        height:12, width:12,
-                        backgroundColor: this.state.selectItems.indexOf(index)>=0
-                          ? colors.greenFlash
-                          : 'transparent'
-                      }}></View>
-                    </View>
-                  }
+              
+              { this.state.items.length 
+              ? 
+                
+                <ScrollView>
+                { this.state.items.map((value, index) => 
+                  <TouchableOpacity  
+                    key={index}
+                    style={[styles.listItem,  this.state.items.length-1==index 
+                      ? {borderBottomWidth:15}
+                      : null
+                    ]}
+                    onPress = {() => this.selectItem(index)}
+                    onLongPress = {() => this.selectItems(index)}
+                    >
+                    { this.state.selectItems === false ? null :
+                      <View style={{
+                        borderRadius:10,
+                        margin:10, marginLeft:20,
+                        height:20, width:20, borderWidth:2, borderColor:colors.greenDark, padding:2, 
+                      }}>
+                         <View style={{
+                          borderRadius:6,
+                          height:12, width:12,
+                          backgroundColor: this.state.selectItems.indexOf(index)>=0
+                            ? colors.greenFlash
+                            : 'transparent'
+                        }}></View>
+                      </View>
+                    }
 
-                  { this.props.renderListItem(value, index) }
+                    { this.props.renderListItem(value, index) }
 
-                </TouchableOpacity>
-              )}
-              </ScrollView>           
+                  </TouchableOpacity>
+                )}
+                </ScrollView> 
+
+              :  <Text style={{textAlign:'center', padding:50}}>Aucun élément</Text>
+
+              }
+                        
             </View>
 
           : this.props.renderDetailedItem(this.state.items[this.state.editing], this.state.editing)

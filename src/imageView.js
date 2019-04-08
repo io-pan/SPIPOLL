@@ -6,156 +6,75 @@ import {
   View,
   TouchableOpacity,
   Text,
-  Image,
+  ScrollView,
 } from 'react-native'
 
-import ImageZoom from 'react-native-image-pan-zoom';
-
-
+import ImageViewer from 'react-native-image-zoom-viewer';
 
 
 export default class ImageView extends Component {
   constructor (props, ctx) {
     super(props, ctx)
 
-    this.state = {
-      w:0,
-      h:0,
-    }
-  }
-
-  // componentWillReceiveProps (newProps) {
-  //   console.log(newProps);
-  //   if ((!this.props.visible && newProps.visible) || (this.props.options !== newProps.options)) {
-  //   }
-  // }
-
-  getWindowDimension(event) {
-    // TODO: reset inputMotionArea and poignées.
-    this.setState({
-      w: event.nativeEvent.layout.width,
-      h: event.nativeEvent.layout.height,
+    const srcs = [];  //        {uri:'file://'+props.path+'/'+item}
+    props.sources.forEach(function(item){ //source: {uri: this.props.failImageSource.url}
+      srcs.push({ url:'file://'+props.path+'/'+item });
     });
+    this.state = { sources:srcs }
   }
+
+  // getWindowDimension(event) {
+  //   // if()
+  //   console.log( event.nativeEvent.layout)
+  //   this.setState({
+  //     w: event.nativeEvent.layout.width,
+  //     h: event.nativeEvent.layout.height,
+  //   });
+  // }
 
   render () {
 
-    const {
-      title,
-      titleTextStyle,
-      overlayStyle,
-      cancelContainerStyle,
-      renderList,
-      renderCancelButton,
-      visible,
-      modal,
-      onCancel
-    } = this.props
-
-    const renderedTitle = (!title) ? null : (
-      <Text 
-      style={titleTextStyle || styles.titleTextStyle}
-      >{title}</Text>
-    )
-
     return (
       <Modal
-        onRequestClose={onCancel}
-        {...modal}
-        visible={visible}
+        onRequestClose={this.props.onCancel}
+        visible={this.props.visible}
         supportedOrientations={['portrait', 'landscape']}
-      >
-          <View style={styles.cancelButton}
-          >{renderedTitle}</View>
+        >
+        <ImageViewer 
+          imageUrls={this.state.sources}
+          enablePreload={true}
+          renderIndicator ={()=> null}
+          renderHeader={(currentIndex) => 
+            <View style={{flexDirection:'row'}}>
+              <ScrollView horizontal={true} >
+                <View style={this.props.styles.container}>
+                  <Text style={this.props.styles.text}>
+                   { this.props.title}
+                  </Text>
+                </View>
+              </ScrollView>
 
-          <View 
-            style={styles.main}
-            onLayout={(event) => this.getWindowDimension(event)}
-          >
+              <View style={this.props.styles.container}>
+                <Text style={this.props.styles.text}>
+                {currentIndex+1}/{this.state.sources.length}
+                </Text>
+              </View>
+            </View>
+          }
+          renderFooter={() => null} // renders below screnn bottom
+        />
 
-            <ImageZoom
-              cropWidth={this.state.w}
-              cropHeight={this.state.h}
-              imageWidth={this.state.w}
-              imageHeight={this.state.h}
-              >
-              <Image
-                style={{ 
-                  width:this.state.w,
-                  height:this.state.h,
-                }}
-                fadeDuration={0}
-                resizeMode="contain"
-                source={this.props.source }
-              />
-            </ImageZoom>
-
-          </View>
-
-          <View 
-          // style={cancelContainerStyle || styles.cancelContainer}
-          >
-            {(renderCancelButton || this.renderCancelButton)()}
-          </View>
+        <TouchableOpacity 
+          onPress={this.props.onCancel}
+          style={this.props.styles.container}
+        >
+          <Text style={this.props.styles.text}>
+          Retour</Text>
+        </TouchableOpacity>
 
       </Modal>
     )
   }
-
- 
-
-  renderCancelButton = () => {
-    const {
-      cancelButtonStyle,
-      cancelButtonTextStyle,
-      cancelButtonText
-    } = this.props
-
-    return (
-      <TouchableOpacity onPress={this.props.onCancel}
-        activeOpacity={0.7}
-        style={cancelButtonStyle || styles.cancelButton}
-      >
-        <Text
-          // style={styles.cancelButton}
-         style={cancelButtonTextStyle || styles.cancelButtonText}
-         >{cancelButtonText}</Text>
-      </TouchableOpacity>
-    )
-  }
-
-
-}
-
-ImageView.propTypes = {
- 
-  onCancel: PropTypes.func.isRequired,
-  placeholderText: PropTypes.string,
-  placeholderTextColor: PropTypes.string,
-  androidUnderlineColor: PropTypes.string,
-  cancelButtonText: PropTypes.string,
-  title: PropTypes.string,
-  visible: PropTypes.bool,
-  modal: PropTypes.object,
-  renderCancelButton: PropTypes.func,
-}
-
-ImageView.defaultProps = {
-  placeholderTextColor: '#ccc',
-  androidUnderlineColor: 'rgba(0,0,0,0)',
-  cancelButtonText: 'Retour',
-  visible: true,
 }
 
 
-const styles = StyleSheet.create({ 
-  cancelButton:{
-    // borderWidth:2,borderColor:'red',
-    alignItems: 'center',//'flex-end'
-    padding:10,
-  },
-  main:{
-    flex:1,
-    // backgroundColor:'red',
-  },
-});

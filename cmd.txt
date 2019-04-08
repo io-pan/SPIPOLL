@@ -18,6 +18,7 @@ npm i rn-fetch-blob --save
 npm i react-native-camera --save
 npm i react-native-view-shot --save
 npm i react-native-image-pan-zoom  --save
+npm i react-native-image-zoom-viewer --save
 npm install react-native-thumbnail --save
 npm install --save react-native-modal-datetime-picker
 npm i react-native-maps --save

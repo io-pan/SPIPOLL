@@ -210,6 +210,7 @@ export default class InsectForm extends Component {
                     label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:colors.greenFlash},
                     labelText:{fontSize:14, backgroundColor:'white'}, 
                     highlightColor:colors.greenFlash,
+                    badColor:colors.purple,
                   }}
                 />
               </View>

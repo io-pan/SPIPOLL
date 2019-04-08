@@ -19,7 +19,7 @@ import MapView from 'react-native-maps';
 import FooterImage from './footerimage';
 import ImageView from './imageView';
 import Cam from './cam';
-import { dmsFormat, deg2dms } from './formatHelpers.js';
+import { dmsFormat, deg2dms, pad2 } from './formatHelpers.js';
 
 // TODO:  Add locationSelect and others
 //        ... at least take it out of CollectionForm.
@@ -49,7 +49,20 @@ export class Form extends Component {
     return (
       this.props.fields.map((field, index) => 
         <View key={index} style={this.props.styles.group}>
-          <Text style={this.props.styles.title}>{field.title}</Text>
+          
+          <Text style={[this.props.styles.title, 
+            ((field.type=='singleSelect' 
+                && !(this.props.currentValues[field.name] || this.props.currentValues[field.name] === 0))
+
+            || (field.type=='multiSelect'  
+                && this.props.currentValues[field.name].length==0)
+            ) 
+              ? {color:this.props.styles.badColor}
+              : {}
+          ]}>
+
+          {field.title}</Text>
+          
           { field.type=='int'
 
           ? <View 
@@ -86,7 +99,8 @@ export class Form extends Component {
                   key={field.title+'_'+value.value}
                   style={this.props.styles.label}
                   onPress = { field.type=='singleSelect'
-                    ? () => this.props.fieldChanged(field.name, value.value)
+                    ? () => this.props.fieldChanged(field.name, 
+                        this.props.currentValues[field.name]==value.value ? '' : value.value)
                     : () => this.props.fieldChanged(field.name, this.makeMultiSelect(field.name, value.value))
                   }
                   >
@@ -321,11 +335,35 @@ export class ImageSlider extends Component {
     super(props);
 
     this.state = {
+      sources:[],
     };
   }
 
+  componentWillMount(){
+    if(this.props.path){
+        RNFetchBlob.fs.ls(this.props.path)
+        .then((files) => this.setState({ sources:files }) )
+    }
+  }
+
   render(){
-    return null;
+    return this.state.sources.map((path, index) => 
+      <TouchableOpacity
+        key={index} 
+        onPress={() => this.props.onPress(index)}
+        >
+        <Image 
+          key={index}
+          style={{
+            marginRight:1,
+            width:50,//this.state.width/5,
+            height:50,//this.state.width/5,
+          }}
+          resizeMode="contain"
+          source={{uri:'file://'+this.props.path+'/'+path}}
+        />
+      </TouchableOpacity>
+    );
   }
 }
 
@@ -347,6 +385,8 @@ export class ImagePicker extends Component {
       visibleImageView:false,
       selected:false,
       sources:[],
+      width:0,
+      height:0,
     };
   }
 
@@ -389,19 +429,20 @@ export class ImagePicker extends Component {
         }
       })
     }
+
   }
 
-  setSource(source){
-    // console.log(source);
-    // console.log(this.state.source);
-    source.uri = source.uri.substring(0, 
-      source.uri.indexOf('?t=') < 0 
-      ? source.uri.length
-      : source.uri.indexOf('?t=')
-      ) + '?t='+ new Date().getTime();
-    console.log('ImagePicker setSource', source);
-    this.setState({source:source});
-  }
+  // setSource(source){
+  //   // console.log(source);
+  //   // console.log(this.state.source);
+  //   source.uri = source.uri.substring(0, 
+  //     source.uri.indexOf('?t=') < 0 
+  //     ? source.uri.length
+  //     : source.uri.indexOf('?t=')
+  //     ) + '?t='+ new Date().getTime();
+  //   console.log('ImagePicker setSource', source);
+  //   this.setState({source:source});
+  // }
 
   showImageView = () => {
     // console.log('showImageView');
@@ -411,11 +452,13 @@ export class ImagePicker extends Component {
     this.setState({visibleImageView: false});
   }
 
-  onLayout = (e) => {
-    this.setState({
-      width: e.nativeEvent.layout.width,
-      height: e.nativeEvent.layout.height,
-    })
+  onLayout = (e) => { // TODO:
+    if(!this.state.width || !this.state.height){
+      this.setState({
+        width: e.nativeEvent.layout.width,
+        height: e.nativeEvent.layout.height,
+      });
+    }
   }
   
   pickPhoto(){
@@ -427,13 +470,18 @@ export class ImagePicker extends Component {
       this.setState({visibleCamera:false}) 
     }
     else {
-      console.log()
       let sources = this.state.sources;
       sources.push(path.replace(this.props.path+'/', ''));
+
+      const prev_selected = this.state.selected;
       this.setState({
         sources:sources,
         selected:this.state.selected === false ? 0 : this.state.selected,
         visibleCamera:!this.props.closeOnPhotoTaken,
+      }, function(){
+        if( prev_selected === false){
+          this.props.onSelect(this.state.sources[this.state.selected]);
+        }
       });
     }
   }
@@ -445,72 +493,86 @@ export class ImagePicker extends Component {
   }
 
   render(){
+    // TODO lots of render !! ?
      console.log(this.state);
 
+      console.log('file://'+this.props.path+'/'+this.state.sources[this.state.selected]);
+
       return(
-        <View style={[ this.props.style,{}]}>
+        <View style={this.props.styles.container}
+        onLayout = {this.onLayout} >
 
-          <Modal
-            visible={this.state.visibleCamera}
-            onRequestClose={() => this.photoPicked('close')}>
-            <Cam
-              path={this.props.path}
-              photoPicked={(path) => this.photoPicked(path)}
-            />
-          </Modal>
+          { this.props.title === false
+          ? null
+          : <React.Fragment>
+              <Modal
+                visible={this.state.visibleCamera}
+                onRequestClose={() => this.photoPicked('close')}>
+                <Cam
+                  path={this.props.path}
+                  photoPicked={(path) => this.photoPicked(path)}
+                />
+              </Modal>
 
-          <ImageView
-            title={this.props.title.replace("\n", " ")}
-            visible={this.state.visibleImageView}
-            onCancel={this.hideImageView}
-            source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
-            titleTextStyle={{backgroundColor:this.props.highlightColor, color:'white', fontWeight:'bold',fontSize:16}}
-            cancelButtonTextStyle={{backgroundColor:this.props.highlightColor, color:'white', fontWeight:'bold',fontSize:16}}
-          />
+              <TouchableOpacity 
+                style={{
+                  flex:1,
+                  alignItems:'center', 
+                  justifyContent: 'center',
+                }}
+                onPress = {() => this.pickPhoto()}
+                >
+                <Text style={{ fontSize:14, color:'grey', height:50, textAlign:'center',  padding:2,}}>
+                {this.props.title}</Text>
 
-          <TouchableOpacity 
-            style={{
-              flex:1,
-              alignItems:'center', 
-              justifyContent: 'center',
-            }}
-            onPress = {() => this.pickPhoto()}
-            onLayout = {this.onLayout} 
-            >
-            <Text style={{ fontSize:14, color:'grey', height:50, textAlign:'center',  padding:2,}}>
-            {this.props.title}</Text>
-
-            <MaterialCommunityIcons
-              name="camera"
-              style={{
-                backgroundColor:'transparent',
-                marginBottom:5,
-                color:this.props.highlightColor,
-              }}
-              size={30}
-            />
-          </TouchableOpacity>
+                <MaterialCommunityIcons
+                  name="camera"
+                  style={{
+                    backgroundColor:'transparent',
+                    marginBottom:5,
+                    color:this.props.styles.highlightColor,
+                  }}
+                  size={30}
+                />
+              </TouchableOpacity>
+            </React.Fragment>
+          }
 
           { this.state.selected !== false
           ? <TouchableOpacity 
-            style={{
-              alignItems:'center', 
-              justifyContent: 'center',
-              flex:0.5,
-              paddingBottom:10,
-              // borderColor:greenLight, borderWidth:1,
-              }} 
-              onPress={this.showImageView}
-              >
-              <Image
-                style={{
-                  width:this.state.width,
-                  height:this.state.width,
-                }}
-                resizeMode="contain"
-                source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
-              />
-            </TouchableOpacity>
+              style={{
+                alignItems:'center', 
+                justifyContent: 'center',
+                flex:0.5,
+                paddingBottom:10,
+                // borderColor:greenLight, borderWidth:1,
+                }} 
+                onPress={this.showImageView}
+                >
+                <ImageView
+                  title={this.props.title?this.props.title.replace("\n", " "):''}
+                  visible={this.state.visibleImageView}
+                  onCancel={this.hideImageView}
+                  sources = {this.state.sources}
+                  path={this.props.path}
+                  source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
+                  styles={{
+                    text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
+                    container:{height:55, alignItems:'center', justifyContent:'center',
+                      paddingLeft:20, paddingRight:20,
+                      backgroundColor:this.props.styles.highlightColor},
+                  }}
+                />
+                <Image
+                  style={{
+                    width:this.state.width,
+                    height:this.state.width,
+                  }}
+                  // onLoad= 
+                  resizeMode="contain"
+                  source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
+                />
+              </TouchableOpacity>
           : null
           }
 

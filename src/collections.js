@@ -226,7 +226,17 @@ class Collection extends Component {
   renderInsectListItem(value, index){
     return(
       <View style={{flex:1, flexDirection:'row', padding:5}}>
-        <Text>{index} - </Text>
+        <Image
+          style={{ 
+            margin:1,
+            width:80,
+            height:80,
+          }}
+          resizeMode="contain"
+          source={{uri:'file://' + this.props.data.storage.path + '/' + this.props.data.date 
+                    + '/insects/' + value.date + '/' + value.photo}}
+        />
+
         <Text>{ 
           value.taxon_extra_info || value.taxon_name || 'Non identifié' 
         }</Text>
@@ -402,7 +412,17 @@ class Collection extends Component {
               renderDetailedItem = {(data, index) => this.renderSessionForm(data, index)}
 
               newItem = {(index) => this.newSession(index)}
-              newItemLabel = {this.props.data.protocole=='flash' ? false : "Nouvelle Session"}  
+              newItemContent = {this.props.data.protocole=='flash' ? false : 
+                <View style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
+                  >
+                  <MaterialCommunityIcons   
+                    name='plus-circle-outline'
+                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                  />
+                  <Text style={{color: 'white', fontSize:16,}}>
+                  Nouvelle Session</Text>
+                </View>
+               }
               deleteItem = {() => this.deleteSession()}
             />
        
@@ -413,7 +433,7 @@ class Collection extends Component {
               localStorage = {this.props.data.date + "_insects"}
               renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
               renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
-              newItemLabel = {false}
+              newItemContent = {false}
               deleteItem = {(data, index) => this.deleteInsect(data, index)}
             />
           /*
@@ -612,7 +632,17 @@ export default class CollectionList extends Component {
           renderDetailedItem = {(data) => this.renderCollection(data)}
 
           newItem = {() => this.newCollection()}
-          newItemLabel = "Nouvelle Collection"
+          newItemContent = {
+            <View style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
+              >
+              <MaterialCommunityIcons   
+                name='plus-circle-outline'
+                style={{fontSize:24, paddingRight:10, color:'white'}}
+              />
+              <Text style={{color: 'white', fontSize:16,}}>
+              Nouvelle Collection</Text>
+            </View>
+          }
           deleteItem = {(item) => this.deleteCollection(item)}
         />
       </View>
