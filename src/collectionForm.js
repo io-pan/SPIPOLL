@@ -584,6 +584,7 @@ export default class  CollectionForm extends Component {
                 }}>
                 <ImagePicker 
                   ref="collection-flower"
+                  cam={true}
                   title={'Fleur en\ngros plan'}
                   styles={{
                     highlightColor:colors.greenFlash,
@@ -604,6 +605,7 @@ export default class  CollectionForm extends Component {
                 <ImagePicker
                   ref="collection-environment"
                   title={'Fleur à 2-3 mètres\nde distance'}
+                  cam={true}
                   styles={{
                     highlightColor:colors.greenFlash,
                     container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}

@@ -125,7 +125,8 @@ export default class InsectForm extends Component {
               <View style={styles.collection_grp}>
                 <ImagePicker
                   ref="collection-insect"
-                  title={false}
+                  title={this.state.insect.taxon_extra_info || this.state.insect.taxon_name || 'Non identifié' }
+                  cam = {false}
                   styles={{
                     highlightColor:colors.greenFlash,
                     container:{marginRight:5, flex:1, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}

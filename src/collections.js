@@ -288,25 +288,26 @@ class Collection extends Component {
 
   //--------------------------------------------------------------------------------
   renderSessionListItem(value, index){
+    console.log(value);
     return(
       <View style={{padding:5, overflow:'hidden'}}>
         <View style={{flexDirection:'row', flex:1}}>
-          {/*
-          // TODO: météo
-          <MaterialCommunityIcons
-            name={ value.protocole == 'flash' 
-            ? 'flash-outline' 
-            : value.protocole == 'long' 
-              ? 'timer-sand'
-              : 'help-circle-outline'
-            }
-            style={[styles.listItemText,{
-                margin:0,
-                marginTop:7,
-              }]}
-            size={18}
-          />
-          */}
+
+          { !value.smpAttr_24 ? null :
+            <MaterialCommunityIcons
+              name={ value.smpAttr_24 == 123 
+              ? 'weather-sunny' 
+              : value.smpAttr_24 == 126 
+                ? 'weather-cloudy'
+                : 'weather-partlycloudy'
+              }
+              style={[styles.listItemText,{
+
+                }]}
+              size={25}
+            />
+          }
+          
           <Text style={[styles.listItemText, {fontWeight:'normal', fontSize:16}]}>
             { value.time_start > new Date().getTime()
             ? <MaterialCommunityIcons

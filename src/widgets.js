@@ -502,7 +502,7 @@ export class ImagePicker extends Component {
         <View style={this.props.styles.container}
         onLayout = {this.onLayout} >
 
-          { this.props.title === false
+          { this.props.cam === false
           ? null
           : <React.Fragment>
               <Modal
@@ -553,14 +553,17 @@ export class ImagePicker extends Component {
                   title={this.props.title?this.props.title.replace("\n", " "):''}
                   visible={this.state.visibleImageView}
                   onCancel={this.hideImageView}
+                  
+                  path={this.props.path}  // collection path
                   sources = {this.state.sources}
-                  path={this.props.path}
-                  source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
+                  index={this.state.selected}
+                  selected={this.state.selected}
                   styles={{
                     text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
                     container:{height:55, alignItems:'center', justifyContent:'center',
                       paddingLeft:20, paddingRight:20,
                       backgroundColor:this.props.styles.highlightColor},
+                    highlightColor:this.props.styles.highlightColor,
                   }}
                 />
                 <Image
