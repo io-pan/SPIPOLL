@@ -23,8 +23,6 @@ import MapView from 'react-native-maps';
 import DateTimePicker from 'react-native-modal-datetime-picker';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 
-import FooterImage from './footerimage';
-import ImageView from './imageView';
 import AdvancedList from './advancedList';
 import { ImageSlider } from './widgets.js';
 
@@ -418,9 +416,9 @@ class Collection extends Component {
                   >
                   <MaterialCommunityIcons   
                     name='plus-circle-outline'
-                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                    style={{fontSize:30, paddingRight:10, color:'white'}}
                   />
-                  <Text style={{color: 'white', fontSize:16,}}>
+                  <Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
                   Nouvelle Session</Text>
                 </View>
                }
@@ -634,13 +632,14 @@ export default class CollectionList extends Component {
 
           newItem = {() => this.newCollection()}
           newItemContent = {
-            <View style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
+            <View style={{
+              backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
               >
               <MaterialCommunityIcons   
                 name='plus-circle-outline'
-                style={{fontSize:24, paddingRight:10, color:'white'}}
+                style={{fontSize:30, paddingRight:10, color:'white'}}
               />
-              <Text style={{color: 'white', fontSize:16,}}>
+              <Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
               Nouvelle Collection</Text>
             </View>
           }

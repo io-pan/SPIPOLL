@@ -14,23 +14,9 @@ import {
   PermissionsAndroid,
 } from 'react-native'
 
-import {
-  Button,
-  CheckBox,
-  ListItem,
-} from 'react-native-elements';
-import ImageView from './imageView';
-import ModalFilterPicker from './filterSelect';
-import RNFetchBlob from 'rn-fetch-blob';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
-// Spipoll
-import { flowerList } from './flowers.js';
-const greenDark = "#231f20";
-const green = "#d2e284";
-const greenLight = "#e0ecb2";
-const greenSuperLight ="#ecf3cd"
-const greenFlash ="#92c83e";
+import { colors } from './colors';
+// import RNFetchBlob from 'rn-fetch-blob';
+// import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 
 //-----------------------------------------------------------------------------------------
@@ -273,14 +259,14 @@ const styles = StyleSheet.create({
   },
   coll_subtitle:{
     marginLeft:10,
-    color:greenFlash,
+    color:colors.greenFlash,
     fontSize:16,
     fontWeight:'bold',
     paddingBottom:10,
     paddingTop:5,
   },
   coll_info:{
-    color: green,
+    color: colors.green,
     fontSize:12,
     marginLeft:45,
     paddingRight:5,
@@ -288,12 +274,12 @@ const styles = StyleSheet.create({
   },
   coll_info_grp:{
     fontSize:14,
-    color: greenDark,
+    color: colors.greenDark,
     padding:10,
   },
 
   collection_grp:{
-    backgroundColor:greenLight,
+    backgroundColor:colors.greenLight,
     margin:5,
     borderWidth:1,
     borderColor:'#dddddd',
@@ -324,7 +310,7 @@ const styles = StyleSheet.create({
     padding:5,
     fontWeight:'normal',
     fontSize:16,
-    color:greenDark,
+    color:colors.greenDark,
     backgroundColor:'white',
   },
   row:{
