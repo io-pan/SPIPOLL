@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   BackHandler,
   ScrollView,
+  FlatList,
   AsyncStorage,
 } from 'react-native'
 
@@ -185,94 +186,117 @@ export default class AdvancedList extends Component {
     );
   }
 
+  dele = (txt)=>{
+    alert(txt);
+  }
+
+  //TODO: as props
+  actions = [{
+    label:'Annuler', 
+    action: ()=> this.selectItems(false)
+  },{
+    label:'Supprimer', 
+    action: () => this.deleteSelected()
+  }];
+
+  renderActions(){
+    return(
+      <View  
+        style={{
+          height:55,
+          flexDirection:'row', alignItems:'center', justifyContent:'center',
+          backgroundColor:colors.greenFlash,
+          borderTopWidth:1, borderTopColor:'white',
+        }}
+        >
+
+      { this.state.selectItems === false 
+
+      ? // Default button: NEW ITEM
+        this.props.newItemContent === false ? null :
+        <TouchableOpacity  
+          onPress = {() => this.newItem()}
+          >
+          { this.props.newItemContent }
+        </TouchableOpacity>
+        
+      : // CANCEL / DELETE 
+        this.actions.map((value, index) => 
+          <TouchableOpacity
+            key={index}
+            style={{
+              flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',
+              borderRightWidth:1, borderRightColor:'white'}}
+            onPress = {value.action}
+            >
+            <MaterialCommunityIcons   
+              name='delete-circle'
+              style={{fontSize:24, paddingRight:10, color:'white'}}
+            /><Text style={{color: 'white', fontSize:16,}}>
+            {value.label}</Text>
+          </TouchableOpacity>
+          )
+      }
+      </View>
+    )
+  }
+
   render(){
     return(
-       <View style={{flex:1}}>
-        { this.state.editing === false
-          ? <View style={{flex:1}}>
+      <View style={{flex:1}}>
+        { this.state.editing !== false
 
-              { this.state.selectItems === false 
-              ?
-                this.props.newItemContent === false ? null :
-                <TouchableOpacity  
-                  //style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
-                  onPress = {() => this.newItem()}
-                  >
-                    { this.props.newItemContent }
-                </TouchableOpacity>
-                
-              :
-              <View  
-                style={{alignItems:'center', backgroundColor:colors.greenFlash,
-                 height:50, flexDirection:'row'}}
-                >
-                <TouchableOpacity style={{flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',
-                 borderRightWidth:1, borderRightColor:'white'}}
-                  onPress = {() => this.deleteSelected()}
-                  >
-                  <MaterialCommunityIcons   
-                    name='delete-circle'
-                    style={{fontSize:24, paddingRight:10, color:'white'}}
-                  /><Text style={{color: 'white', fontSize:16,}}>
-                  Suprimer</Text>
-                </TouchableOpacity>
+          ? this.props.renderDetailedItem(this.state.items[this.state.editing], this.state.editing)
 
-                <TouchableOpacity style={{flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',}}
-                  onPress = {() => this.selectItems(false)}
-                  >
-                  <MaterialCommunityIcons   
-                    name='close-circle'
-                    style={{fontSize:24, paddingRight:10, color:'white'}}
-                  /><Text style={{color: 'white', fontSize:16,}}>
-                  Annuler</Text>
-                </TouchableOpacity>
-              </View>
-              }
-
+          : <View style={{flex:1}}>
               
-              { this.state.items.length 
-              ? 
-                
-                <ScrollView>
-                { this.state.items.map((value, index) => 
-                  <TouchableOpacity  
-                    key={index}
-                    style={[styles.listItem,  this.state.items.length-1==index 
-                      ? {borderBottomWidth:15}
-                      : null
-                    ]}
-                    onPress = {() => this.selectItem(index)}
-                    onLongPress = {() => this.selectItems(index)}
-                    >
-                    { this.state.selectItems === false ? null :
-                      <View style={{
-                        borderRadius:10,
-                        margin:10, marginLeft:20,
-                        height:20, width:20, borderWidth:2, borderColor:colors.greenDark, padding:2, 
-                      }}>
-                         <View style={{
-                          borderRadius:6,
-                          height:12, width:12,
-                          backgroundColor: this.state.selectItems.indexOf(index)>=0
-                            ? colors.greenFlash
-                            : 'transparent'
-                        }}></View>
-                      </View>
-                    }
+              { !this.state.items.length 
+              ? <Text style={{textAlign:'center', padding:50}}>
+                  Aucun élément
+                </Text>
 
-                    { this.props.renderListItem(value, index) }
+              : <ScrollView 
+                  style={{}}
+                  contentContainerStyle={{ 
+                    flexGrow: 1,
+                    justifyContent: 'space-between' 
+                  }}
+                  >
 
-                  </TouchableOpacity>
-                )}
-                </ScrollView> 
+                  { this.state.items.map((value, index) => 
+                    <TouchableOpacity  
+                      key={index}
+                      style={styles.listItem}
+                      onPress = {() => this.selectItem(index)}
+                      onLongPress = {() => this.selectItems(index)}
+                      >
+                      { this.state.selectItems === false ? null :
+                        <View style={{
+                          borderRadius:10,
+                          margin:10, marginLeft:20,
+                          height:20, width:20, borderWidth:2, borderColor:colors.greenDark, padding:2, 
+                        }}>
+                           <View style={{
+                            borderRadius:6,
+                            height:12, width:12,
+                            backgroundColor: this.state.selectItems.indexOf(index)>=0
+                              ? colors.greenFlash
+                              : 'transparent'
+                          }}></View>
+                        </View>
+                      }
 
-              :  <Text style={{textAlign:'center', padding:50}}>Aucun élément</Text>
+                      { this.props.renderListItem(value, index) }
 
+                    </TouchableOpacity>
+                  )}
+
+                  <FooterImage/>
+                </ScrollView>
               }
-                        
-            </View>
 
-          : this.props.renderDetailedItem(this.state.items[this.state.editing], this.state.editing)
+              { this.renderActions() }            
+            </View>
         }
       </View>
     );
