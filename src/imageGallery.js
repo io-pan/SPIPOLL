@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import PropTypes from 'prop-types'
 import {
+  Alert,
   StyleSheet,
   Modal,
   View,
@@ -13,6 +14,7 @@ import {
   BackHandler,
 } from 'react-native'
 
+import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ImageViewer from 'react-native-image-zoom-viewer';
 import FooterImage from './footerimage';
@@ -21,11 +23,10 @@ const backgroundColor='black',
       thumbBorderColor='black',
       thumbMarginPlusPadding = 2;
 
-export default class ImageView extends Component {
+export default class ImageGallery extends Component {
   constructor (props, ctx) {
     super(props, ctx)
-
-    const srcs = [];  //        
+       
     // props.sources.forEach(function(item){ //source: {uri: this.props.failImageSource.url}
     //   srcs.push({
     //     props:{
@@ -35,39 +36,98 @@ export default class ImageView extends Component {
     //   });
     // });
 
-    props.sources.forEach(function(item){ //source: {uri: this.props.failImageSource.url}
-      srcs.push({ url:'file://'+props.path+'/'+item });
-    });
-
     this.actions = {
-      single:[
+      slide:[
         {label:'Recadrer'},
       ],
-      multi:[
-        {label:'Supprimer'},
-      ],
+      thumbs:[{
+        label:'Annuler', 
+        action: ()=>this.cancelSelectedForAction()
+      },{
+        label:'Supprimer', 
+        action: () => this.deleteImage()
+      }],
     };
 
+ //   this.state.sources = this.feedForImageSlider(props.sources, props.path);
+
     this.state = { 
-      sources:srcs,
-      view:this.props.view ? this.props.view : 'slide', // slide / thumbs
-      index:this.props.index,
-      // Size thumbs so all photos fit in screen.
+      sources:[],
+      view:'thumbs', // slide / thumbs
+      index:this.props.index, // ioio
+      
       thumbCols:0,
       selectedForAction:false,
     }
     this.maxThumbCols = 1;
   }
 
-  // getWindowDimension(event) {
-  //   // if()
-  //   console.log( event.nativeEvent.layout)
-  //   this.setState({
-  //     w: event.nativeEvent.layout.width,
-  //     h: event.nativeEvent.layout.height,
-  //   });
+  componentDidMount(){
+    this.scanFolder();
+  }
+
+
+  scanFolder(){
+    if(this.props.path){
+      // RNFetchBlob.fs.isDir(this.props.path)
+      // .then((isDir) => {
+      //   if(false === isDir){
+      //     RNFetchBlob.fs.mkdir(this.props.path)
+      //     .then(() => { 
+      //       // console.log('coll folder created ' + curDir+'/collections/'+collectionName ) 
+      //     })
+      //     .catch((err) => { 
+      //       Alert.alert(
+      //         'Erreur',
+      //         'Le dossier de stockage des photos n\'a pu être créé.\n'
+      //         + this.props.path
+      //       );
+      //     })
+      //   }
+      //   else{
+          RNFetchBlob.fs.ls(this.props.path)
+          .then((files) => {
+            const sources = [];
+            files.forEach((filename)=>{ //source: {uri: this.props.failImageSource.url}
+              sources.push({ url:'file://' + this.props.path +'/'+ filename });
+            });
+
+            this.setState({sources:sources});
+            this.props.imageCountChanged(files.length)
+            // this.setState({
+            //   selected: 
+            //     typeof this.props.selected !== "undefined" && this.state.selected == false
+            //     ? files.indexOf(this.props.seslected) >= 0
+            //       ? files.indexOf(this.props.selected)
+            //       : files.length
+            //         ? 0
+            //         : false
+
+            //     : files.length
+            //       ? 0
+            //       : false
+            //   })
+          });
+      //   }
+      // })
+    }    
+  }
+
+  // shouldComponentUpdate(nextProps, nextState){
+  //   if(nextProps.sources.length != this.state.sources.length
+  //   && this.state.selectedForAction == nextState.selectedForAction){
+  //     scanFolder();
+  //   }
+  //   return true;
   // }
 
+  // feedForImageSlider(filenameList, path){
+  //   const srcs = [];
+  //   filenameList.forEach(function(filename){ //source: {uri: this.props.failImageSource.url}
+  //     srcs.push({ url:'file://' + path +'/'+ filename });
+  //   });
+  //   return srcs;
+  // }
 
   thumbPress(index, long){
 
@@ -96,8 +156,68 @@ export default class ImageView extends Component {
     }
   }
 
+  selectImage(index){
+    const imageSelected = this.state.sources[index].url.replace('file://'+this.props.path+'/' ,'');
+    this.props.onSelect(imageSelected);
+  }
+
+
+  addImage(){
+
+  }
+
+  deleteImage(){
+    const selected = this.state.selectedForAction;
+
+    let nextSelectedImage = this.state.index;
+    // Selcted if might change.
+    if(selected.indexOf(this.state.index) !== -1){
+      nextSelectedImage = false;
+    }
+
+    // Backward loop to avoid re-index issue.
+    for (var i = this.state.sources.length - 1; i >= 0; i--) {
+      if(selected.indexOf(i) !== -1) {
+        // Delete file.
+        // TODO: this.props.deletePhoto()
+        RNFetchBlob.fs.unlink(this.state.sources[i].url)
+        .then(() => { 
+          // console.log('photo supprimée' )
+        })
+        .catch((err) => {
+          Alert.alert(
+            'Erreur',
+            'La photo n\'a pu être supprimée.\n'
+            + this.state.sources[i].url
+          );
+        });
+
+        // Remove from list.
+        this.state.sources.splice(i, 1);
+      }
+    }
+
+    // Store purged list.
+    this.setState({
+      selected:nextSelectedImage,
+      selectedForAction:false,
+    }, function(){
+      // Inform picker 
+      if(!nextSelectedImage){
+        this.props.onSelect(false);
+      }
+      this.props.imageCountChanged(this.state.count);
+    });
+  }
+
   toggleView(){
     this.setState({view:this.state.view=='slide' ? 'thumbs' : 'slide'});
+  }
+
+  setIndex(index){
+    this.setState({
+      index:index,
+    });
   }
 
   gotoImage(index){
@@ -109,9 +229,13 @@ export default class ImageView extends Component {
 
   renderHeader(currentIndex){
     return(
-      <View style={{height:55, flexDirection:'row', 
-            justifyContent:'center', alignItems:'center',
-            borderRightWidth:1, borderRightColor:'white', backgroundColor:this.props.styles.highlightColor}}>
+      <View 
+        style={{
+          height:55, flexDirection:'row', 
+          justifyContent:'center', alignItems:'center',
+          borderRightWidth:1, borderRightColor:'white', backgroundColor:this.props.styles.highlightColor
+          }}
+        >
         <TouchableOpacity 
           style={[{
             width:55,
@@ -129,7 +253,7 @@ export default class ImageView extends Component {
 
         <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
           <Text style={this.props.styles.text}>
-           { this.props.title}
+           { this.props.title }
           </Text>
         </ScrollView>
 
@@ -187,8 +311,9 @@ export default class ImageView extends Component {
   }
 
   render () {
-    return (
+    console.log('render ImageGallery ' + this.props.title);
 
+    return (
       <Modal
         onRequestClose={
           this.state.selectedForAction!==false
@@ -200,7 +325,9 @@ export default class ImageView extends Component {
         >
 
         <View // Slideshow
-          style = {this.state.view == 'slide' ? {flex:1}:{height:0}}>
+          style = {this.state.view == 'slide' ? {flex:1}:{
+            // TODO: try to solve ImageViewer flickering onrender ...
+            position:'absolute', bottom:-200}}>
           <ImageViewer 
             imageUrls={this.state.sources}
             index={this.state.index}
@@ -210,20 +337,20 @@ export default class ImageView extends Component {
             renderHeader={(currentIndex) => this.renderHeader(currentIndex)}
             renderFooter={() => null} // renders below screnn bottom
 
-            // TODO: ImageViewer flicks on 1st render ...
-            // one solution: display:none
-            // onChange={(index) => {}}
+            onChange={(index) => this.setIndex(index)}
           />
 
 
-        { // Action buttons     
+          { // Sideshow Action buttons     
           true
           ? <View style={[this.props.styles.container,{ 
               flexDirection:'row', 
-                  flexDirection:'row',
-                  justifyContent:'center', alignItems:'center',
+              flexDirection:'row',
+              justifyContent:'center', alignItems:'center',
+              borderTopWidth:1, borderTopColor:'white',
               backgroundColor:this.props.styles.highlightColor}]}
               >
+
               <TouchableOpacity 
                 // onPress = {() => this.closeSetupMotion()}
                 style={{ 
@@ -243,7 +370,7 @@ export default class ImageView extends Component {
 
              
               <TouchableOpacity 
-                  // onPress = {() => this.takeMotion()}
+                  onPress = {() => this.selectImage(this.state.index)}
                   style={{
                     flex:0.5,
                     flexDirection:'row',
@@ -292,7 +419,7 @@ export default class ImageView extends Component {
                   key={index}
                   style={{ 
                     borderWidth:1,
-                    borderColor: this.props.selected===index 
+                    borderColor: path.url === 'file://' + this.props.path +'/'+this.props.selected
                     ? this.props.styles.highlightColor : thumbBorderColor,
                     margin:1, padding:1,
                     justifyContent:'center', alignItems:'center',
@@ -340,22 +467,23 @@ export default class ImageView extends Component {
             */}
 
           </ScrollView>
+
           <View style={{backgroundColor:this.props.styles.highlightColor }}>
-          <Slider  
-            ref="sampleSize"
-            style={{height:30,margin:10,backgroundColor:'transparent'}} 
-            thumbTintColor = {'white'}
-            minimumTrackTintColor={'white'}
-            maximumTrackTintColor={'white'}
-            minimumValue={1}
-            maximumValue={this.maxThumbCols}
-            step={1}
-            value={this.state.thumbCols}
-            onValueChange={(value) => this.setThumbCols(value)} 
-          />
+            <Slider  
+              ref="sampleSize"
+              style={{height:30,margin:10,backgroundColor:'transparent'}} 
+              thumbTintColor = {'white'}
+              minimumTrackTintColor={'white'}
+              maximumTrackTintColor={'white'}
+              minimumValue={-this.maxThumbCols}
+              maximumValue={-1}
+              step={1}
+              value={-this.state.thumbCols}
+              onValueChange={(value) => this.setThumbCols(-value)} 
+            />
           </View>
 
-          { // Action Buttons.
+          { // Thumbnails Action Buttons.
             this.state.selectedForAction === false ? null :
             <View style={[this.props.styles.container,{ 
               flexDirection:'row', 
@@ -363,40 +491,23 @@ export default class ImageView extends Component {
                   justifyContent:'center', alignItems:'center',
               backgroundColor:this.props.styles.highlightColor}]}
               >
-              <TouchableOpacity 
-                onPress = {() => this.cancelSelectedForAction()}
-                style={{ 
-                  flex:0.5,
-                  flexDirection:'row',
-                  justifyContent:'center', alignItems:'center',
-                  borderRightColor:'white', borderRightWidth:1,
-                }}>
-                <MaterialCommunityIcons   
-                  name='close-circle'
-                  size={35}
-                  color='white'
-                />
-                <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
-                Annuler</Text>
-              </TouchableOpacity>
 
-             
-              <TouchableOpacity 
-                  // onPress = {() => this.takeMotion()}
+              { this.actions.thumbs.map((value, index) => 
+                <TouchableOpacity
+                  key={index}
                   style={{
-                    flex:0.5,
-                    flexDirection:'row',
-                    justifyContent:'center', alignItems:'center',
-                  }}>
+                    flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',
+                    borderRightWidth:1, borderRightColor:'white'}}
+                  onPress = {value.action}
+                  >
                   <MaterialCommunityIcons   
                     name='delete-circle'
-                    size={35}
-                    color='white'
-                  />
-                  <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
-                  Supprimer</Text>
+                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                  /><Text style={{color: 'white', fontSize:16,}}>
+                  {value.label}</Text>
                 </TouchableOpacity>
-       
+                )
+              }
             </View>
           }
         </View>

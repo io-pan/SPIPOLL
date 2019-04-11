@@ -438,21 +438,9 @@ export default class  CollectionForm extends Component {
     })
   }
 
-  // pickPhoto(field){
-  //   this.setState({visibleCam:true}, function() {
-  //     this.refs['collection-cam'].pickPhoto(field)
-  //   })
-  // }
-
-  // photoPicked(data){
-  //   this.setState({visibleCam:false}, function(){
-  //     // update photo picker
-  //   });
-  // }
-
   render () {
+    console.log('render CollectionForm');
     return (
-      
         <View style={{flex:1}}>
         { this.state.collection.storage.path
           ? null 
@@ -588,14 +576,14 @@ export default class  CollectionForm extends Component {
                   title={'Fleur en\ngros plan'}
                   styles={{
                     highlightColor:colors.greenFlash,
+                    badColor:colors.purple,
                     container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
-                  crop={{w:150,h:150}}
-                  size={{w:150,h:150}}
+
 
                   closeOnPhotoTaken={false}
                   path={this.state.collection.storage.path + '/' + this.props.data.date + '/flower'}
-                  selected={this.state.collection.flower.photo}
+                  filename={this.state.collection.flower.photo}
                   onSelect={(filename)=>{
                     this.storeFlower('photo', filename);
                     this.props.valueChanged('photo_flower',filename);
@@ -608,14 +596,13 @@ export default class  CollectionForm extends Component {
                   cam={true}
                   styles={{
                     highlightColor:colors.greenFlash,
+                    badColor:colors.purple,
                     container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
-                  crop={{w:150,h:150}}
-                  size={{w:150,h:150}}
 
                   closeOnPhotoTaken={true}
                   path={this.state.collection.storage.path + '/' + this.props.data.date + '/environment'}
-                  selected={this.state.collection.environment.photo}
+                  filename={this.state.collection.environment.photo}
                   onSelect={(filename)=>{
                     this.storeEnvironment('photo', filename);
                     this.props.valueChanged('photo_environment',filename);

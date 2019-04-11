@@ -87,8 +87,12 @@ export default class App extends Component<Props> {
   //   NativeModules.ioPan.getBatteryStatus(callback);
   // }
 
-  componentDidMount() {
+  componentWillMount() {
     StatusBar.setHidden(true);
+  }
+  
+  componentDidMount() {
+
     SplashScreen.hide();
         // LDPI: Portrait: 200x320px. 
         // MDPI: Portrait: 320x480px.

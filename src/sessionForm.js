@@ -595,21 +595,14 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
           newItem = {(index) => this.newInsect(index)}
           newItemContent = {
-            <View style={{backgroundColor:colors.greenFlash, 
-                flexDirection:'row', alignItems:'center', justifyContent:'center', 
-                height:50,
-                margin:15 }}
-              >
-              <View style={{
-                padding:3, alignItems:'center', justifyContent:'center',
-                borderRadius:60,  borderWidth:2, borderColor:'white', }}
+            <View style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
               >
               <MaterialCommunityIcons   
-                name='camera'
-                style={{ fontSize:24, color:'white' }}
-              /></View>
-              <Text style={{marginLeft:10, color: 'white', fontSize:16, fontWeight:'bold'}}>
-              Nouvelle espèce d'insecte</Text>
+                name='plus-circle-outline'
+                style={{fontSize:30, paddingRight:10, color:'white'}}
+              />
+              <Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
+               Nouvelle espèce d'insecte</Text>
             </View>
           }
           // deleteItem = {() => this.deleteInsect()}

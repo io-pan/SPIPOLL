@@ -129,14 +129,12 @@ export default class InsectForm extends Component {
                   cam = {false}
                   styles={{
                     highlightColor:colors.greenFlash,
+                    badColor:colors.purple,
                     container:{marginRight:5, flex:1, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
 
-                  crop={{w:150,h:150}}
-                  size={{w:150,h:150}}
-
                   path={this.props.collection_storage + '/insects/' + this.props.data.date }
-                  selected={this.state.insect.photo}
+                  filename={this.state.insect.photo}
                   onSelect={(filename)=>this.storeInsect('photo', filename)}
                 />
               </View>

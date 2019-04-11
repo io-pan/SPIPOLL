@@ -17,7 +17,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import MapView from 'react-native-maps';
 
 import FooterImage from './footerimage';
-import ImageView from './imageView';
+import ImageGallery from './imageGallery';
 import Cam from './cam';
 import { dmsFormat, deg2dms, pad2 } from './formatHelpers.js';
 
@@ -300,7 +300,8 @@ export class ModalPlace extends Component {
 
             <Text style={{fontSize:16}}>{this.state.name}</Text>
 
-            <View style={{flexDirection:'row', alignItems:'space-between'}}>
+            <View style={{flexDirection:'row', alignItems:'space-between' // TODO: try space-around
+              }}>
              
               <Text style={{fontSize:16, marginRight:5,
                 color:'grey'
@@ -327,6 +328,7 @@ export class ModalPlace extends Component {
     )
   }
 }
+
 
 //=========================================================================================
 export class ImageSlider extends Component {
@@ -373,93 +375,32 @@ export class ImagePicker extends Component {
 //-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
-    // const source = this.props.source;
-    // source.uri = source.uri.substring(0, 
-    //   source.uri.indexOf('?t=') < 0 
-    //   ? source.uri.length
-    //   : source.uri.indexOf('?t=')
-    //   ) + '?t='+ new Date().getTime();
 
+    const f = this.props.filename;
     this.state = {
       visibleCamera:false,
-      visibleImageView:false,
-      selected:false,
-      sources:[],
-      width:0,
-      height:0,
-    };
-  }
-
-  componentWillMount(){
-    if(this.props.path){
-      RNFetchBlob.fs.isDir(this.props.path)
-      .then((isDir) => {
-        if(false === isDir){
-          RNFetchBlob.fs.mkdir(this.props.path)
-          .then(() => { 
-            // console.log('coll folder created ' + curDir+'/collections/'+collectionName ) 
-          })
-          .catch((err) => { 
-            Alert.alert(
-              'Erreur',
-              'Le dossier de stockage des photos n\'a pu être créé.\n'
-              + this.props.path
-            );
-          })
-        }
-        else{
-          RNFetchBlob.fs.ls(this.props.path)
-          .then((files) => {
-
-            this.setState({
-              sources:files, 
-              selected: 
-                typeof this.props.selected !== "undefined" && this.state.selected == false
-                ? files.indexOf(this.props.selected) >= 0
-                  ? files.indexOf(this.props.selected)
-                  : files.length
-                    ? 0
-                    : false
-
-                : files.length
-                  ? 0
-                  : false
-              })
-          })
-        }
-      })
+      visibleImageGallery:false,
+      count:0,
+      // filename:,
     }
-
   }
 
-  // setSource(source){
-  //   // console.log(source);
-  //   // console.log(this.state.source);
-  //   source.uri = source.uri.substring(0, 
-  //     source.uri.indexOf('?t=') < 0 
-  //     ? source.uri.length
-  //     : source.uri.indexOf('?t=')
-  //     ) + '?t='+ new Date().getTime();
-  //   console.log('ImagePicker setSource', source);
-  //   this.setState({source:source});
+  showImageGallery = () => {
+    // console.log('showImageGallery');
+    this.setState({visibleImageGallery:true});
+  }
+  hideImageGallery = () => {
+    this.setState({visibleImageGallery: false});
+  }
+
+  // onLayout = (e) => { // TODO:
+  //   if(!this.state.width || !this.state.height){
+  //     this.setState({
+  //       width: e.nativeEvent.layout.width,
+  //       height: e.nativeEvent.layout.height,
+  //     });
+  //   }
   // }
-
-  showImageView = () => {
-    // console.log('showImageView');
-    this.setState({visibleImageView:true});
-  }
-  hideImageView = () => {
-    this.setState({visibleImageView: false});
-  }
-
-  onLayout = (e) => { // TODO:
-    if(!this.state.width || !this.state.height){
-      this.setState({
-        width: e.nativeEvent.layout.width,
-        height: e.nativeEvent.layout.height,
-      });
-    }
-  }
   
   pickPhoto(){
     this.setState({visibleCamera:true})
@@ -470,37 +411,38 @@ export class ImagePicker extends Component {
       this.setState({visibleCamera:false}) 
     }
     else {
-      let sources = this.state.sources;
-      sources.push(path.replace(this.props.path+'/', ''));
+      if(this.state.count){
+        // Tell gallery to scan folder.
+        // this.refs ioio
+      }
 
-      const prev_selected = this.state.selected;
       this.setState({
-        sources:sources,
-        selected:this.state.selected === false ? 0 : this.state.selected,
         visibleCamera:!this.props.closeOnPhotoTaken,
-      }, function(){
-        if( prev_selected === false){
-          this.props.onSelect(this.state.sources[this.state.selected]);
-        }
-      });
+      }, function(){ });
     }
   }
 
-  select(index){
-    this.setState({selected:index}, function(){
-      this.props.onSelect(this.state.sources[this.state.selected]);
-    });
+  imageSelected(filename) {
+    this.props.onSelect(filename);
+
+    this.setState({filename:filename})
+  }
+
+  imageCountChanged(count){
+    this.setState({count:count})
   }
 
   render(){
     // TODO lots of render !! ?
-     console.log(this.state);
+    console.log('render ImagePicker ' + this.props.title);
+    console.log('  props', this.props);
+    console.log('  state', this.state);
 
-      console.log('file://'+this.props.path+'/'+this.state.sources[this.state.selected]);
 
       return(
         <View style={this.props.styles.container}
-        onLayout = {this.onLayout} >
+          // onLayout = {this.onLayout} 
+          >
 
           { this.props.cam === false
           ? null
@@ -508,6 +450,20 @@ export class ImagePicker extends Component {
               <Modal
                 visible={this.state.visibleCamera}
                 onRequestClose={() => this.photoPicked('close')}>
+                
+                <View 
+                  style={{ 
+                    height:55, 
+                    alignItems:'center', justifyContent: 'center',
+                    backgroundColor:this.props.styles.highlightColor,
+                  }}
+                  >
+                  <Text style={{
+                    fontSize:18, fontWeight:'bold', textAlign:'center', 
+                    color:'white', 
+                  }}>
+                  {this.props.title ? this.props.title.replace("\n", " ") : ''}</Text>
+                </View>
                 <Cam
                   path={this.props.path}
                   photoPicked={(path) => this.photoPicked(path)}
@@ -522,7 +478,9 @@ export class ImagePicker extends Component {
                 }}
                 onPress = {() => this.pickPhoto()}
                 >
-                <Text style={{ fontSize:14, color:'grey', height:50, textAlign:'center',  padding:2,}}>
+                <Text style={{ fontSize:14, height:50, textAlign:'center',  padding:2,
+                color: this.props.filename ? 'grey' : this.props.styles.badColor, 
+                }}>
                 {this.props.title}</Text>
 
                 <MaterialCommunityIcons
@@ -538,8 +496,7 @@ export class ImagePicker extends Component {
             </React.Fragment>
           }
 
-          { this.state.selected !== false
-          ? <TouchableOpacity 
+            <TouchableOpacity 
               style={{
                 alignItems:'center', 
                 justifyContent: 'center',
@@ -547,17 +504,19 @@ export class ImagePicker extends Component {
                 paddingBottom:10,
                 // borderColor:greenLight, borderWidth:1,
                 }} 
-                onPress={this.showImageView}
+                onPress={this.showImageGallery}
                 >
-                <ImageView
-                  title={this.props.title?this.props.title.replace("\n", " "):''}
-                  visible={this.state.visibleImageView}
-                  onCancel={this.hideImageView}
-                  
+              
+                <ImageGallery
+                  title={this.props.title ? this.props.title.replace("\n", " ") : ''}
+                  visible={this.state.visibleImageGallery}
+                  onCancel={this.hideImageGallery}
+
                   path={this.props.path}  // collection path
-                  sources = {this.state.sources}
-                  index={this.state.selected}
-                  selected={this.state.selected}
+                  selected={this.props.filename}
+                  onSelect = {(filename)=>this.imageSelected(filename)}
+                  imageCountChanged = {(ids)=>this.imageCountChanged(ids)}
+
                   styles={{
                     text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
                     container:{height:55, alignItems:'center', justifyContent:'center',
@@ -566,48 +525,105 @@ export class ImagePicker extends Component {
                     highlightColor:this.props.styles.highlightColor,
                   }}
                 />
-                <Image
-                  style={{
-                    width:this.state.width,
-                    height:this.state.width,
-                  }}
-                  // onLoad= 
-                  resizeMode="contain"
-                  source={{uri:'file://'+this.props.path+'/'+this.state.sources[this.state.selected]}}
-                />
-              </TouchableOpacity>
-          : null
-          }
+                
+                { // Big selected photo.
+                  !this.props.filename 
+                  ? !this.state.count
+                    ? null
+                    : <Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>
+                      Sélectionner une photo</Text>
 
-          { this.state.sources.length > 1
-          ? <ScrollView horizontal={true}
-              // style={{flexDirection:'row', backgroundColor:'red'}}
-              >
-              { this.state.sources.map((path, index) => 
-                <TouchableOpacity
-                  key={index} 
-                  onPress={() => this.select(index)}
-                  >
-                  <Image 
-                    style={{
-                      marginRight:1,
-                      width:50,//this.state.width/5,
-                      height:50,//this.state.width/5,
-                    }}
-                    resizeMode="contain"
-                    source={{uri:'file://'+this.props.path+'/'+path}}
-                  />
-                </TouchableOpacity>
-              )}
-            </ScrollView>
-          : null
-          }
+                  : <View style={{flex:1, flexDirection:'row'}}>
+
+                      <ImageSized
+                        resizeMode="contain"
+                        source={{uri:'file://' + this.props.path +'/'+ this.props.filename }}
+                      />
+
+                      { // Photo count.
+                        !this.state.count
+                        ? null
+                        : <View 
+                            style={{position:'absolute', top:0, right:0,
+                              alignItems:'center', justifyContent:'center',
+                              height:25, width:25, 
+                              backgroundColor:'transparent',
+                            }}
+                            >
+                            <View 
+                            style={{position:'absolute', bottom:0, left:0,
+                              height:22, width:22, 
+                              borderRadius:2, 
+                              borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                              borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                              backgroundColor:'white',
+                            }}
+                            />
+
+                            <View 
+                              style={{position:'absolute', bottom:4, left:4,
+                                alignItems:'center', justifyContent:'center',
+                                height:22, width:22, 
+                                borderRadius:2, 
+                                borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                                borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                                backgroundColor:'white',
+                              }}
+                              >
+                                <Text style={{
+                                  fontWeight:'bold', fontSize:12, textAlign:'center',
+                                  color:this.props.styles.highlightColor, 
+                                  backgroundColor:'transparent',
+                                }}>
+                                {this.state.count}</Text>
+                            </View>
+                          </View>
+
+                      }
+
+                    </View>
+                }
+            </TouchableOpacity>
+
         </View>
       );
   }
 
 } // ImagePicker
 
+
+//=========================================================================================
+export class ImageSized extends Component {
+//-----------------------------------------------------------------------------------------
+  constructor (props) {
+    super(props);
+    this.state={size:false};
+  }
+
+  setSize(e){
+    this.setState({size:e.nativeEvent.layout.width});
+  }
+
+  render(){
+    return(
+      <View 
+        style={{flex:1,}}
+        onLayout = {(event) => this.setSize(event) } 
+        >
+        { !this.state.size
+        ? null
+        : <Image 
+            style={{
+              width:this.state.size, height:this.state.size
+            }}
+            resizeMode={this.props.resizeMode}
+            source={this.props.source}
+          />
+        }
+      </View>
+    );
+  }
+}
 
 //=========================================================================================
 export class ModalHelp extends Component {
