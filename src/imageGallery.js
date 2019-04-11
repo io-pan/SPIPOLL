@@ -162,8 +162,11 @@ export default class ImageGallery extends Component {
   }
 
 
-  addImage(){
-
+  addImage(path){
+    const sources = this.state.sources;
+    sources.push({ url:'file://' + path });
+    this.props.imageCountChanged(sources.length);
+    this.setState({sources:source});
   }
 
   deleteImage(){
@@ -175,12 +178,13 @@ export default class ImageGallery extends Component {
       nextSelectedImage = false;
     }
 
+    const sources = this.state.sources;
     // Backward loop to avoid re-index issue.
-    for (var i = this.state.sources.length - 1; i >= 0; i--) {
+    for (var i =sources.length - 1; i >= 0; i--) {
       if(selected.indexOf(i) !== -1) {
         // Delete file.
         // TODO: this.props.deletePhoto()
-        RNFetchBlob.fs.unlink(this.state.sources[i].url)
+        RNFetchBlob.fs.unlink(sources[i].url)
         .then(() => { 
           // console.log('photo supprimée' )
         })
@@ -188,25 +192,28 @@ export default class ImageGallery extends Component {
           Alert.alert(
             'Erreur',
             'La photo n\'a pu être supprimée.\n'
-            + this.state.sources[i].url
+            +sources[i].url
           );
         });
 
         // Remove from list.
-        this.state.sources.splice(i, 1);
+        sources.splice(i, 1);
       }
     }
 
+
     // Store purged list.
     this.setState({
+      sources:sources,
       selected:nextSelectedImage,
       selectedForAction:false,
     }, function(){
       // Inform picker 
-      if(!nextSelectedImage){
-        this.props.onSelect(false);
-      }
-      this.props.imageCountChanged(this.state.count);
+      // TODO: select slide/thumb as well with if slide, index=currentselected
+      // if(!nextSelectedImage){
+      //   this.props.onSelect(false);
+      // }
+      this.props.imageCountChanged(this.state.sources.length);
     });
   }
 

@@ -376,12 +376,10 @@ export class ImagePicker extends Component {
   constructor(props) {
     super(props);
 
-    const f = this.props.filename;
     this.state = {
       visibleCamera:false,
       visibleImageGallery:false,
       count:0,
-      // filename:,
     }
   }
 
@@ -407,25 +405,21 @@ export class ImagePicker extends Component {
   }
 
   photoPicked(path){
-    if(path=='close'){
+    
+    if(path=='close' || this.props.closeOnPhotoTaken){
       this.setState({visibleCamera:false}) 
     }
-    else {
-      if(this.state.count){
-        // Tell gallery to scan folder.
-        // this.refs ioio
-      }
-
-      this.setState({
-        visibleCamera:!this.props.closeOnPhotoTaken,
-      }, function(){ });
+    else{
+      this.refs["gallery"+this.props.path].addImage(path);
     }
+
+    // this.setState({
+    //   visibleCamera:!this.props.closeOnPhotoTaken,
+    // }, function(){ });
   }
 
   imageSelected(filename) {
     this.props.onSelect(filename);
-
-    this.setState({filename:filename})
   }
 
   imageCountChanged(count){
@@ -439,154 +433,170 @@ export class ImagePicker extends Component {
     console.log('  state', this.state);
 
 
-      return(
-        <View style={this.props.styles.container}
-          // onLayout = {this.onLayout} 
-          >
+    return(
+      <View style={this.props.styles.container}
+        // onLayout = {this.onLayout} 
+        >
+            
+        <ImageGallery
+          // Modal image slider/gallery.
+          ref={"gallery"+this.props.path}
+          title={this.props.title ? this.props.title.replace("\n", " ") : ''}
+          visible={this.state.visibleImageGallery}
+          onCancel={this.hideImageGallery}
 
-          { this.props.cam === false
-          ? null
-          : <React.Fragment>
-              <Modal
-                visible={this.state.visibleCamera}
-                onRequestClose={() => this.photoPicked('close')}>
-                
-                <View 
-                  style={{ 
-                    height:55, 
-                    alignItems:'center', justifyContent: 'center',
-                    backgroundColor:this.props.styles.highlightColor,
-                  }}
-                  >
-                  <Text style={{
-                    fontSize:18, fontWeight:'bold', textAlign:'center', 
-                    color:'white', 
-                  }}>
-                  {this.props.title ? this.props.title.replace("\n", " ") : ''}</Text>
-                </View>
-                <Cam
-                  path={this.props.path}
-                  photoPicked={(path) => this.photoPicked(path)}
-                />
-              </Modal>
+          path={this.props.path}  // collection path
+          selected={this.props.filename}
+          onSelect = {(filename)=>this.imageSelected(filename)}
+          imageCountChanged = {(ids)=>this.imageCountChanged(ids)}
 
-              <TouchableOpacity 
-                style={{
-                  flex:1,
-                  alignItems:'center', 
-                  justifyContent: 'center',
+          styles={{
+            text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
+            container:{height:55, alignItems:'center', justifyContent:'center',
+              paddingLeft:20, paddingRight:20,
+              backgroundColor:this.props.styles.highlightColor},
+            highlightColor:this.props.styles.highlightColor,
+          }}
+        />
+
+        { // Caméra.
+        this.props.cam === false
+        ? null
+        : <React.Fragment>
+            <Modal
+              visible={this.state.visibleCamera}
+              onRequestClose={() => this.photoPicked('close')}>
+              
+              <View 
+                style={{ 
+                  height:55, 
+                  alignItems:'center', justifyContent: 'center',
+                  backgroundColor:this.props.styles.highlightColor,
                 }}
-                onPress = {() => this.pickPhoto()}
                 >
-                <Text style={{ fontSize:14, height:50, textAlign:'center',  padding:2,
-                color: this.props.filename ? 'grey' : this.props.styles.badColor, 
+                <Text style={{
+                  fontSize:18, fontWeight:'bold', textAlign:'center', 
+                  color:'white', 
                 }}>
-                {this.props.title}</Text>
+                {this.props.title ? this.props.title.replace("\n", " ") : ''}</Text>
+              </View>
 
-                <MaterialCommunityIcons
-                  name="camera"
-                  style={{
-                    backgroundColor:'transparent',
-                    marginBottom:5,
-                    color:this.props.styles.highlightColor,
-                  }}
-                  size={30}
-                />
-              </TouchableOpacity>
-            </React.Fragment>
-          }
+              <View style={{flex:1}}>
+              <Cam
+                path={this.props.path}
+                photoPicked={(path) => this.photoPicked(path)}
+              />
+              </View>
+
+              <TouchableOpacity style={{
+                  backgroundColor:this.props.styles.highlightColor,
+                  height:55, justifyContent:'center', textAlign:'center',
+                }}
+                onPress={(path) => this.photoPicked('close')}
+                >
+                <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
+                Retour à la collection</Text>
+                </TouchableOpacity>
+
+            </Modal>
 
             <TouchableOpacity 
               style={{
+                flex:1,
                 alignItems:'center', 
                 justifyContent: 'center',
-                flex:0.5,
-                paddingBottom:10,
-                // borderColor:greenLight, borderWidth:1,
-                }} 
-                onPress={this.showImageGallery}
-                >
-              
-                <ImageGallery
-                  title={this.props.title ? this.props.title.replace("\n", " ") : ''}
-                  visible={this.state.visibleImageGallery}
-                  onCancel={this.hideImageGallery}
+              }}
+              onPress = {() => this.pickPhoto()}
+              >
+              <Text style={{ fontSize:14, height:50, textAlign:'center',  padding:2,
+              color: this.props.filename ? 'grey' : this.props.styles.badColor, 
+              }}>
+              {this.props.title}</Text>
 
-                  path={this.props.path}  // collection path
-                  selected={this.props.filename}
-                  onSelect = {(filename)=>this.imageSelected(filename)}
-                  imageCountChanged = {(ids)=>this.imageCountChanged(ids)}
+              <MaterialCommunityIcons
+                name="camera"
+                style={{
+                  backgroundColor:'transparent',
+                  marginBottom:5,
+                  color:this.props.styles.highlightColor,
+                }}
+                size={30}
+              />
+            </TouchableOpacity>
+          </React.Fragment>
+        }
 
-                  styles={{
-                    text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
-                    container:{height:55, alignItems:'center', justifyContent:'center',
-                      paddingLeft:20, paddingRight:20,
-                      backgroundColor:this.props.styles.highlightColor},
-                    highlightColor:this.props.styles.highlightColor,
-                  }}
+        <TouchableOpacity 
+          // Big selected photo.
+          style={{
+            alignItems:'center', 
+            justifyContent: 'center',
+            flex:0.5,
+            paddingBottom:10,
+            // borderColor:greenLight, borderWidth:1,
+          }} 
+          onPress={this.showImageGallery}
+          >
+            
+          {
+            !this.props.filename 
+            ? !this.state.count
+              ? null
+              : <Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>
+                Sélectionner une photo</Text>
+
+            : <View style={{flex:1, flexDirection:'row'}}>
+
+                <ImageSized
+                  resizeMode="contain"
+                  source={{uri:'file://' + this.props.path +'/'+ this.props.filename }}
                 />
-                
-                { // Big selected photo.
-                  !this.props.filename 
-                  ? !this.state.count
-                    ? null
-                    : <Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>
-                      Sélectionner une photo</Text>
 
-                  : <View style={{flex:1, flexDirection:'row'}}>
-
-                      <ImageSized
-                        resizeMode="contain"
-                        source={{uri:'file://' + this.props.path +'/'+ this.props.filename }}
+                { // Photo count.
+                  !this.state.count
+                  ? null
+                  : <View 
+                      style={{position:'absolute', top:0, right:0,
+                        width:26, height:26,
+                        alignItems:'center', justifyContent:'center',
+                        backgroundColor:'white',
+                      }}
+                      >
+                      <View 
+                        style={{position:'absolute', bottom:2, left:2,
+                          height:22, width:22, 
+                          borderRadius:2, 
+                          borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                          borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                          backgroundColor:'white',
+                        }}
                       />
-
-                      { // Photo count.
-                        !this.state.count
-                        ? null
-                        : <View 
-                            style={{position:'absolute', top:0, right:0,
-                              alignItems:'center', justifyContent:'center',
-                              height:25, width:25, 
-                              backgroundColor:'transparent',
-                            }}
-                            >
-                            <View 
-                            style={{position:'absolute', bottom:0, left:0,
-                              height:22, width:22, 
-                              borderRadius:2, 
-                              borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
-                              borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
-                              backgroundColor:'white',
-                            }}
-                            />
-
-                            <View 
-                              style={{position:'absolute', bottom:4, left:4,
-                                alignItems:'center', justifyContent:'center',
-                                height:22, width:22, 
-                                borderRadius:2, 
-                                borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
-                                borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
-                                backgroundColor:'white',
-                              }}
-                              >
-                                <Text style={{
-                                  fontWeight:'bold', fontSize:12, textAlign:'center',
-                                  color:this.props.styles.highlightColor, 
-                                  backgroundColor:'transparent',
-                                }}>
-                                {this.state.count}</Text>
-                            </View>
-                          </View>
-
-                      }
-
+                      <View 
+                        style={{position:'absolute', bottom:6, left:6,
+                          alignItems:'center', justifyContent:'center',
+                          height:22, width:22, 
+                          borderRadius:2, 
+                          borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                          borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                          backgroundColor:'white',
+                        }}
+                        >
+                        <Text style={{
+                          fontWeight:'bold', fontSize:12, textAlign:'center',
+                          color:this.props.styles.highlightColor, 
+                          backgroundColor:'transparent',
+                        }}>
+                        {this.state.count}</Text>
+                      </View>
                     </View>
                 }
-            </TouchableOpacity>
 
-        </View>
-      );
+              </View>
+          }
+        </TouchableOpacity>
+
+      </View>
+    );
   }
 
 } // ImagePicker
