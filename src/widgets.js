@@ -405,33 +405,41 @@ export class ImagePicker extends Component {
   }
 
   photoPicked(path){
-    
-    if(path=='close' || this.props.closeOnPhotoTaken){
-      this.setState({visibleCamera:false}) 
+    if(path=='close'){
+      this.setState({
+        visibleCamera:false,
+        visibleImageGallery:true,
+          // TODO think of default thumb/sile & set index
+      }) 
     }
     else{
-      this.refs["gallery"+this.props.path].addImage(path);
+      this.refs["gallery"].addImage(path);
     }
-
-    // this.setState({
-    //   visibleCamera:!this.props.closeOnPhotoTaken,
-    // }, function(){ });
   }
 
   imageSelected(filename) {
+    // alert('ii')
     this.props.onSelect(filename);
   }
 
-  imageCountChanged(count){
-    this.setState({count:count})
+  imageCountChanged(count, newSelectedImage){
+    if(newSelectedImage!==false){
+      console.log('uuu set ' + this.props._key + '  ' + newSelectedImage )
+      // alert('cc')
+      this.props.onSelect(newSelectedImage);
+    }
+    this.setState({
+      count:count,
+      visibleImageGallery:count?this.state.visibleImageGallery:false,
+    });
+
   }
 
   render(){
     // TODO lots of render !! ?
-    console.log('render ImagePicker ' + this.props.title);
-    console.log('  props', this.props);
-    console.log('  state', this.state);
-
+    // console.log('render ImagePicker ' + this.props.title);
+    // console.log('  props', this.props);
+    // console.log('  state', this.state);
 
     return(
       <View style={this.props.styles.container}
@@ -439,8 +447,9 @@ export class ImagePicker extends Component {
         >
             
         <ImageGallery
-          // Modal image slider/gallery.
-          ref={"gallery"+this.props.path}
+          // Modal image Slider/Thumb list.
+          ref={"gallery"}
+          key={this.props._key+"_gallery"}
           title={this.props.title ? this.props.title.replace("\n", " ") : ''}
           visible={this.state.visibleImageGallery}
           onCancel={this.hideImageGallery}
@@ -448,7 +457,7 @@ export class ImagePicker extends Component {
           path={this.props.path}  // collection path
           selected={this.props.filename}
           onSelect = {(filename)=>this.imageSelected(filename)}
-          imageCountChanged = {(ids)=>this.imageCountChanged(ids)}
+          imageCountChanged = {(count, newSelectedImage)=>this.imageCountChanged(count, newSelectedImage)}
 
           styles={{
             text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
@@ -459,7 +468,7 @@ export class ImagePicker extends Component {
           }}
         />
 
-        { // Caméra.
+        { // Modal Caméra.
         this.props.cam === false
         ? null
         : <React.Fragment>
@@ -509,7 +518,9 @@ export class ImagePicker extends Component {
               onPress = {() => this.pickPhoto()}
               >
               <Text style={{ fontSize:14, height:50, textAlign:'center',  padding:2,
-              color: this.props.filename ? 'grey' : this.props.styles.badColor, 
+              color: !this.state.count 
+                ? this.props.styles.badColor 
+                : 'grey', 
               }}>
               {this.props.title}</Text>
 
@@ -526,6 +537,7 @@ export class ImagePicker extends Component {
           </React.Fragment>
         }
 
+        { !this.state.count ? null :
         <TouchableOpacity 
           // Big selected photo.
           style={{
@@ -594,6 +606,7 @@ export class ImagePicker extends Component {
               </View>
           }
         </TouchableOpacity>
+        }
 
       </View>
     );

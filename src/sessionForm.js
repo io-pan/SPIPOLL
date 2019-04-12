@@ -462,21 +462,16 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
     };
   }
 
+
   photoPicked(path){
-    if(path=='close'){
-      // this.setState({visibleCamera:false}) 
-    }
-    else {
-      console.log()
-      let sources = this.state.sources;
-      sources.push(path.replace(this.props.path+'/', ''));
-      this.setState({
-        sources:sources,
-        selected:this.state.selected === false ? 0 : this.state.selected,
-        visibleCamera:!this.props.closeOnPhotoTaken,
-      });
-    }
+  //   if(path=='close'){
+  //     this.setState({visibleCamera:false}) 
+  //   }
+  //   else{
+  //     this.refs["gallery"].addImage(path);
+  //   }
   }
+
 
   renderInsectForm(data, index){ 
     // RUNNING SESSION
@@ -486,7 +481,6 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
       <Modal 
         onRequestClose={() => this.refs['running-insect-list'].selectItem(false)}
         >
-
 
         <View style={{flexDirection:'row', backgroundColor:colors.greenFlash,}}
           > 

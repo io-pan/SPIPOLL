@@ -69,49 +69,52 @@ export default class ImageGallery extends Component {
 
   scanFolder(){
     if(this.props.path){
-      // RNFetchBlob.fs.isDir(this.props.path)
-      // .then((isDir) => {
-      //   if(false === isDir){
-      //     RNFetchBlob.fs.mkdir(this.props.path)
-      //     .then(() => { 
-      //       // console.log('coll folder created ' + curDir+'/collections/'+collectionName ) 
-      //     })
-      //     .catch((err) => { 
-      //       Alert.alert(
-      //         'Erreur',
-      //         'Le dossier de stockage des photos n\'a pu être créé.\n'
-      //         + this.props.path
-      //       );
-      //     })
-      //   }
-      //   else{
-          RNFetchBlob.fs.ls(this.props.path)
-          .then((files) => {
-            const sources = [];
-            files.forEach((filename)=>{ //source: {uri: this.props.failImageSource.url}
-              sources.push({ url:'file://' + this.props.path +'/'+ filename });
-            });
+      RNFetchBlob.fs.ls(this.props.path)
+      .then((files) => {
 
-            this.setState({sources:sources});
-            this.props.imageCountChanged(files.length)
-            // this.setState({
-            //   selected: 
-            //     typeof this.props.selected !== "undefined" && this.state.selected == false
-            //     ? files.indexOf(this.props.seslected) >= 0
-            //       ? files.indexOf(this.props.selected)
-            //       : files.length
-            //         ? 0
-            //         : false
-
-            //     : files.length
-            //       ? 0
-            //       : false
-            //   })
+        if(!files.length){
+          this.setState({
+            sources:[],
           });
-      //   }
-      // })
+        }
+        else{
+
+          const sources = [];
+          files.forEach((filename)=>{ //source: {uri: this.props.failImageSource.url}
+            sources.push({ url:'file://' + this.props.path +'/'+ filename });
+          });
+
+          // TODO: Set index to already selected item.
+          //  ... but because of async storgae, we do not have it yet.
+          const index = files.indexOf(this.props.path +'/'+ this.props.selected);
+
+          this.setState({
+            index: index!=-1 ? index : 0,
+            view: files.length == 1 ? 'slide' : 'thumbs', // this.state.view,
+            sources:sources,
+          });
+        }
+
+        this.props.imageCountChanged(
+          files.length, 
+          files.length==1&&!this.props.selected ? files[0] : false);
+      });
     }    
   }
+
+  // TODO:
+  // go here fom cam but not insect
+
+  // si aucune selectionée et + de 1
+  // -> thumb
+
+  // si  selectionée et  1
+  // -> slide
+
+  // si  selectionée et  1
+  // -> slide
+
+
 
   // shouldComponentUpdate(nextProps, nextState){
   //   if(nextProps.sources.length != this.state.sources.length
@@ -161,29 +164,29 @@ export default class ImageGallery extends Component {
     this.props.onSelect(imageSelected);
   }
 
-
   addImage(path){
     const sources = this.state.sources;
     sources.push({ url:'file://' + path });
-    this.props.imageCountChanged(sources.length);
-    this.setState({sources:source});
+    this.props.imageCountChanged(
+      sources.length, 
+      false
+      // Do not default select lonly image since user can take a 2nd on the fly.
+      // sources.length == 1 //
+      // ? path.replace(this.props.path+'/' ,'')
+      // : false
+    );
+    this.setState({sources:sources});
   }
 
   deleteImage(){
     const selected = this.state.selectedForAction;
 
-    let nextSelectedImage = this.state.index;
-    // Selcted if might change.
-    if(selected.indexOf(this.state.index) !== -1){
-      nextSelectedImage = false;
-    }
-
     const sources = this.state.sources;
+    let selectedImageDeleted = false;
     // Backward loop to avoid re-index issue.
-    for (var i =sources.length - 1; i >= 0; i--) {
+    for (var i = sources.length - 1; i >= 0; i--) {
       if(selected.indexOf(i) !== -1) {
         // Delete file.
-        // TODO: this.props.deletePhoto()
         RNFetchBlob.fs.unlink(sources[i].url)
         .then(() => { 
           // console.log('photo supprimée' )
@@ -196,24 +199,27 @@ export default class ImageGallery extends Component {
           );
         });
 
+        // Check if selected image has been deteted.
+        if( sources[i].url == 'file://' + this.props.path +'/'+ this.props.selected ){
+          selectedImageDeleted = true;
+        }
+
         // Remove from list.
         sources.splice(i, 1);
       }
     }
 
-
     // Store purged list.
     this.setState({
       sources:sources,
-      selected:nextSelectedImage,
       selectedForAction:false,
     }, function(){
-      // Inform picker 
-      // TODO: select slide/thumb as well with if slide, index=currentselected
-      // if(!nextSelectedImage){
-      //   this.props.onSelect(false);
-      // }
-      this.props.imageCountChanged(this.state.sources.length);
+      // Inform picker.
+      this.props.imageCountChanged(
+        this.state.sources.length, 
+        this.state.sources.length==1 // Default select lonely remaining image...
+        ? this.state.sources[0].url.replace('file://'+this.props.path+'/' ,'')
+        : selectedImageDeleted ? '' : false); // ... or none.
     });
   }
 
@@ -318,6 +324,9 @@ export default class ImageGallery extends Component {
   }
 
   render () {
+    if(!this.state.sources.length){
+      return null;
+    }
     console.log('render ImageGallery ' + this.props.title);
 
     return (
@@ -327,7 +336,7 @@ export default class ImageGallery extends Component {
           ?  ()=>this.cancelSelectedForAction()
           : this.props.onCancel
         }
-        visible={this.props.visible}
+        visible={this.props.visible!==false}
         supportedOrientations={['portrait', 'landscape']}
         >
 

@@ -105,37 +105,38 @@ export default class  CollectionForm extends Component {
         },
       },
 
-      collection://this.props.data,
-      {
-        storage: this.props.data.storage,
-        name: this.props.data.name,             // location:name   WTF !!
-        protocole: this.props.data.protocole,
-          // flash  name=smpAttr:21:464433 id=smpAttr:21:0  value=106
-          // long        smpAttr:21:464433    smpAttr:21:1        107
+      loaded:false,
+      collection:this.props.data,
+      // {
+      //   storage: this.props.data.storage,
+      //   name: this.props.data.name,             // location:name   WTF !!
+      //   protocole: this.props.data.protocole,
+      //     // flash  name=smpAttr:21:464433 id=smpAttr:21:0  value=106
+      //     // long        smpAttr:21:464433    smpAttr:21:1        107
         
-        place:{
-          long: this.props.data.place.long,     //  name=place:long  id=imp-sref-long
-          lat: this.props.data.place.lat,       //  name=place:lat  imp-sref-lat
-          name: this.props.data.place.name,     //
-        },
+      //   place:{
+      //     long: this.props.data.place.long,     //  name=place:long  id=imp-sref-long
+      //     lat: this.props.data.place.lat,       //  name=place:lat  imp-sref-lat
+      //     name: this.props.data.place.name,     //
+      //   },
         
-        flower:{
-          photo:'',
-          id_flower_unknown:false,
-          taxon_list_id_list:false,     // flower:taxa_taxon_list_id_list[]
-          taxon_name:'',                // just for display on app.
-          taxon_extra_info:'',
-          comment:'',
-        },
+      //   flower:{
+      //     photo:'',
+      //     id_flower_unknown:false,
+      //     taxon_list_id_list:false,     // flower:taxa_taxon_list_id_list[]
+      //     taxon_name:'',                // just for display on app.
+      //     taxon_extra_info:'',
+      //     comment:'',
+      //   },
 
-        environment:{
-          photo:'',
-          occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
-          locAttr_2:'',                 //  ruche
-          locAttr_1:[],                 //  habitat
-          locAttr_3:false,              //  grande culture en fleur
-        },
-      },
+      //   environment:{
+      //     photo:'',
+      //     occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
+      //     locAttr_2:'',                 //  ruche
+      //     locAttr_1:[],                 //  habitat
+      //     locAttr_3:false,              //  grande culture en fleur
+      //   },
+      // },
     };
 
     this.gpsSearching = false;
@@ -166,7 +167,7 @@ export default class  CollectionForm extends Component {
       else {
         console.log('localStorage ' + this.props.data.date+'_collection', JSON.parse(collection));
         if(collection){
-          this.setState({collection:JSON.parse(collection)});
+          this.setState({loaded:true,collection:JSON.parse(collection)});
         }
       }
     });
@@ -206,7 +207,9 @@ export default class  CollectionForm extends Component {
     })
   }
 
-  storeCollection(){
+  storeCollection(commingf){
+    console.log('CCCCCC ' + commingf,this.state.collection);
+
     AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
   }
 
@@ -229,12 +232,13 @@ export default class  CollectionForm extends Component {
         ...this.state.collection,
         flower:flower,
       }}, function(){
-        this.storeCollection();
+        this.storeCollection('flower');
       }
     );
   }
  
   storeEnvironment(field, value){
+    console.log(this.state.collection)
     this.setState({
       collection:{
         ...this.state.collection,
@@ -244,7 +248,7 @@ export default class  CollectionForm extends Component {
         },
       },
     }, function(){
-      this.storeCollection();
+      this.storeCollection('env');
     })
   }
 
@@ -440,7 +444,13 @@ export default class  CollectionForm extends Component {
 
   render () {
     console.log('render CollectionForm');
+
+    if(!this.state.loaded){
+      return null;
+    }
+
     return (
+        
         <View style={{flex:1}}>
         { this.state.collection.storage.path
           ? null 
@@ -572,6 +582,8 @@ export default class  CollectionForm extends Component {
                 }}>
                 <ImagePicker 
                   ref="collection-flower"
+                  key="collection-flower"
+                  _key="collection-flower"
                   cam={true}
                   title={'Fleur en\ngros plan'}
                   styles={{
@@ -580,8 +592,6 @@ export default class  CollectionForm extends Component {
                     container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
 
-
-                  closeOnPhotoTaken={false}
                   path={this.state.collection.storage.path + '/' + this.props.data.date + '/flower'}
                   filename={this.state.collection.flower.photo}
                   onSelect={(filename)=>{
@@ -592,6 +602,8 @@ export default class  CollectionForm extends Component {
 
                 <ImagePicker
                   ref="collection-environment"
+                  key="collection-environment"
+                  _key="collection-environment"
                   title={'Fleur à 2-3 mètres\nde distance'}
                   cam={true}
                   styles={{
@@ -600,7 +612,6 @@ export default class  CollectionForm extends Component {
                     container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
 
-                  closeOnPhotoTaken={true}
                   path={this.state.collection.storage.path + '/' + this.props.data.date + '/environment'}
                   filename={this.state.collection.environment.photo}
                   onSelect={(filename)=>{
