@@ -35,7 +35,7 @@ export default class AdvancedList extends Component {
     this.state = {
       items:[],
       editing:false,
-      selectItems:false,
+      selectedItems:false,
     };
     this.editingRequested = false;
   }
@@ -65,8 +65,8 @@ export default class AdvancedList extends Component {
     });
 
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (this.state.selectItems!==false){
-        this.setState({selectItems:false});
+      if (this.state.selectedItems!==false){
+        this.setState({selectedItems:false});
       }
       else if (this.state.editing!==false){
         this.setState({editing:false});
@@ -120,16 +120,16 @@ export default class AdvancedList extends Component {
     }
 
     else{
-      if(this.state.selectItems!==false){
-        let selectItems = this.state.selectItems;
-        const i = selectItems.indexOf(index);
+      if(this.state.selectedItems!==false){
+        let selectedItems = this.state.selectedItems;
+        const i = selectedItems.indexOf(index);
         if(i<0){
-          selectItems.push(index);
+          selectedItems.push(index);
         }
         else{
-          selectItems.splice(i, 1);
+          selectedItems.splice(i, 1);
         }
-        this.setState({selectItems:selectItems}); 
+        this.setState({selectedItems:selectedItems}); 
       }
       else{
         this.setState({editing:index});   
@@ -137,12 +137,12 @@ export default class AdvancedList extends Component {
     }
   }
 
-  selectItems(index) {
+  selectedItems(index) {
     if(index===false){
-      this.setState({selectItems:false});
+      this.setState({selectedItems:false});
     }
     else {
-      this.setState({selectItems:[index]});
+      this.setState({selectedItems:[index]});
     }
   }
 
@@ -158,7 +158,7 @@ export default class AdvancedList extends Component {
         {
           text: 'Supprimer', 
           onPress: () => {
-            const selected = this.state.selectItems,
+            const selected = this.state.selectedItems,
                   items = this.state.items;
 
             // Backward loop to avoid re-index issue.
@@ -176,7 +176,7 @@ export default class AdvancedList extends Component {
             // Store purged list.
             this.setState({
               items:items,
-              selectItems:false,
+              selectedItems:false,
             }, function(){
               AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
             });
@@ -193,7 +193,7 @@ export default class AdvancedList extends Component {
   //TODO: as props
   actions = [{
     label:'Annuler', 
-    action: ()=> this.selectItems(false)
+    action: ()=> this.selectedItems(false)
   },{
     label:'Supprimer', 
     action: () => this.deleteSelected()
@@ -210,7 +210,7 @@ export default class AdvancedList extends Component {
         }}
         >
 
-      { this.state.selectItems === false 
+      { this.state.selectedItems === false 
 
       ? // Default button: NEW ITEM
         this.props.newItemContent === false ? null :
@@ -251,9 +251,12 @@ export default class AdvancedList extends Component {
           : <View style={{flex:1}}>
               
               { !this.state.items.length 
-              ? <Text style={{textAlign:'center', padding:50}}>
-                  Aucun élément
-                </Text>
+              ? <View style={{flex:1}}>
+                  <Text style={{textAlign:'center', padding:20}}>
+                    Aucun élément
+                  </Text>
+                  <FooterImage/>
+                </View>
 
               : <ScrollView 
                   style={{}}
@@ -268,9 +271,9 @@ export default class AdvancedList extends Component {
                       key={index}
                       style={styles.listItem}
                       onPress = {() => this.selectItem(index)}
-                      onLongPress = {() => this.selectItems(index)}
+                      onLongPress = {() => this.selectedItems(index)}
                       >
-                      { this.state.selectItems === false ? null :
+                      { this.state.selectedItems === false ? null :
                         <View style={{
                           borderRadius:10,
                           margin:10, marginLeft:20,
@@ -279,7 +282,7 @@ export default class AdvancedList extends Component {
                            <View style={{
                             borderRadius:6,
                             height:12, width:12,
-                            backgroundColor: this.state.selectItems.indexOf(index)>=0
+                            backgroundColor: this.state.selectedItems.indexOf(index)>=0
                               ? colors.greenFlash
                               : 'transparent'
                           }}></View>
@@ -295,7 +298,10 @@ export default class AdvancedList extends Component {
                 </ScrollView>
               }
 
-              { this.renderActions() }            
+              { this.props.newItemContent || this.state.selectedItems.length
+              ? this.renderActions() 
+              : null
+              }            
             </View>
         }
       </View>

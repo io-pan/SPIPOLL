@@ -31,6 +31,9 @@ export class Form extends Component {
 //-----------------------------------------------------------------------------------------
   constructor(props) {
     super(props);
+    // TODO: 
+    // use state and localstore here, so container would not have to render. 
+    // this.state = this.props.currentValues
   }
 
   makeMultiSelect(field, value){
@@ -439,7 +442,10 @@ export class ImagePicker extends Component {
   }
 
   showImageGallery = (index) => {
-    this.setState({bigGalleryIndex:index});
+    this.setState({
+      bigGalleryIndex:index,
+      visibleCamera:false,
+    });
   }
 
   hideImageGallery = () => {
@@ -448,7 +454,10 @@ export class ImagePicker extends Component {
 
   showCam(){
     this.nbTakenPhoto = 0;
-    this.setState({visibleCamera:true})
+    this.setState({
+      visibleCamera:true,
+      bigGalleryIndex:false,
+    })
   }
 
   photoPicked(path){
@@ -472,21 +481,6 @@ export class ImagePicker extends Component {
       this.nbTakenPhoto++;
       const sources = this.state.sources;
       sources.push({ url:'file://' + path });
-
-
-
-
-// TODO !!!!!!!!!!!!!!!!!!!!!
-// Last add photo keeps blank
-
-      // sources.push({ 
-      //   props: {
-      //     height:50,
-      //     width:50,
-      //     style:{backgroundColor:'red'},
-      //     source: { url:'file://' + path },
-      //   }
-      // });
 
       this.setState({sources:sources});
     }
@@ -580,17 +574,56 @@ export class ImagePicker extends Component {
                 onRequestClose={() => this.photoPicked('close')}>
                 
                 <View 
-                  style={{ 
-                    height:55, 
-                    alignItems:'center', justifyContent: 'center',
-                    backgroundColor:this.props.styles.highlightColor,
-                  }}
+                  style={{
+                    height:55, flexDirection:'row', 
+                    justifyContent:'center', alignItems:'center',
+                    backgroundColor:this.props.styles.highlightColor
+                    }}
                   >
-                  <Text style={{
-                    fontSize:18, fontWeight:'bold', textAlign:'center', 
-                    color:'white', 
-                  }}>
-                  {this.props.title ? this.props.title.replace("\n", " ") : ''}</Text>
+                  <TouchableOpacity 
+                    style={[{
+                      height:55,
+                      width:55,
+                      justifyContent:'center', alignItems:'center', 
+                      borderRightWidth:1, borderRightColor:'white', 
+                    }]}
+                    onPress={(path) => this.photoPicked('close')}
+                    >
+                    <MaterialCommunityIcons
+                      name="chevron-left" 
+                      style={[{ color:'white' }]}
+                      size={30}
+                    />
+                  </TouchableOpacity>
+
+                  <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
+                    <Text style={{
+                      fontSize:18, fontWeight:'bold', textAlign:'center', 
+                      color:'white', 
+                    }}>
+                     {this.props.title ? this.props.title.replace("\n", " ") : ''}</Text>
+                  </ScrollView>
+
+                  { this.state.sources.length
+                  ? <TouchableOpacity 
+                      style={[
+                        {borderLeftWidth:1, borderLeftColor:'white'}, {
+                        flexDirection:'row',
+                        width:60,
+                        justifyContent:'center', alignItems:'center',
+                      }]}
+                      onPress={()=> this.showImageGallery(this.state.sources.length-1)}
+                      >
+                      <Text style={{fontSize:16, color:'white', marginRight:5}}>{this.state.sources.length}</Text>
+                      <MaterialCommunityIcons
+                        name="view-grid"
+                        style={{ color:'white'}}
+                        size={30}
+                      />
+                    </TouchableOpacity>
+                  : null
+                  }
+
                 </View>
 
                 <View style={{flex:1}}>
@@ -600,6 +633,7 @@ export class ImagePicker extends Component {
                 />
                 </View>
 
+                {/*
                 <TouchableOpacity style={{
                     backgroundColor:this.props.styles.highlightColor,
                     height:55, justifyContent:'center', textAlign:'center',
@@ -609,6 +643,7 @@ export class ImagePicker extends Component {
                   <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
                   Retour à la collection</Text>
                   </TouchableOpacity>
+                */}
 
               </Modal>
 
