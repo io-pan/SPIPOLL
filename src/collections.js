@@ -540,10 +540,6 @@ export default class CollectionList extends Component {
       <Collection
         ref="collection"
         data={data}
-        // pickPhoto = {(path, collection_id, field) => // TODO: index of photo ?
-        //    this.props.pickPhoto(path, collection_id, field)}
-        // pickInsectPhoto = {(path, collection_id, session_id, insectKind_id, insect_id) => 
-        //    this.props.pickInsectPhoto(path, collection_id, session_id, insectKind_id, insect_id)}
         selectItem={(index) => this.refs['collections'].selectItem(index)} // For back buton (chevron-left in title bar).
         storeItemField={(key,val) => this.refs['collections'].storeItemField(key,val)}// For collection name (in title bar).
       />

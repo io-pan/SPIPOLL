@@ -592,7 +592,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
             <View style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
               >
               <MaterialCommunityIcons   
-                name='plus-circle-outline'
+                name='camera' // 'plus-circle-outline'
                 style={{fontSize:30, paddingRight:10, color:'white'}}
               />
               <Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
@@ -888,6 +888,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
   }
 
   render(){
+    console.log('SessionForm');
     const sessionStatus = this.sessionStatus();
     return(
       <View  style={{flex:1}}>
