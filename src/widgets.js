@@ -464,7 +464,7 @@ export class ImagePicker extends Component {
         visibleCamera:false,
         bigGalleryIndex: this.nbTakenPhoto 
           ? this.state.sources.length-1
-          : false, // ...unless he came back but did not take photo.
+          : false, // ...unless he came back but did not take any photo.
       });
 
     }
@@ -472,6 +472,12 @@ export class ImagePicker extends Component {
       this.nbTakenPhoto++;
       const sources = this.state.sources;
       sources.push({ url:'file://' + path });
+
+
+
+
+// TODO !!!!!!!!!!!!!!!!!!!!!
+// Last add photo keeps blank
 
       // sources.push({ 
       //   props: {
@@ -527,8 +533,7 @@ export class ImagePicker extends Component {
     // console.log('  props', this.props);
     // console.log('  state', this.state);
     console.log(this.state.index);
-    
-    console.log(this.state.source);
+    console.log(this.state.sources);
 
     const currentImageIsSelected = 
       this.state.sources.length 
@@ -540,10 +545,10 @@ export class ImagePicker extends Component {
       <View style={this.props.styles.container}
         >
 
-        { this.state.bigGalleryIndex === false
+        { // Modal image Slider/Thumb list.
+          this.state.bigGalleryIndex === false
           ? null
           : <ImageGallery
-            // Modal image Slider/Thumb list.
             ref={"gallery"}
             title={this.props.title ? this.props.title.replace("\n", " ") : ''}
             visible={this.state.bigGalleryIndex}
@@ -565,7 +570,6 @@ export class ImagePicker extends Component {
             }}
           />
         }
-
 
         { // Modal Caméra.
           this.props.cam === false
@@ -639,8 +643,8 @@ export class ImagePicker extends Component {
         { !this.state.sources.length 
           ? null
           : !this.props.filename 
-            ? <TouchableOpacity 
-                // Big selected photo.
+            ? // Choose a photo.
+              <TouchableOpacity 
                 style={{
                   alignItems:'center', 
                   justifyContent: 'center',
@@ -653,7 +657,8 @@ export class ImagePicker extends Component {
                 Sélectionner une photo</Text>
               </TouchableOpacity>
             
-            : <ViewSized
+            : // Tiny slider.
+              <ViewSized
                 style = {{
                   padding: currentImageIsSelected ? 1 : 2,
                   borderWidth: currentImageIsSelected ? 2 : 1,
@@ -661,7 +666,7 @@ export class ImagePicker extends Component {
                 }}
                 renderItem={()=>
                   <ImageViewer 
-                    // key={new Date()}
+                    key={this.state.sources.length}
                     backgroundColor='transparent'
                     imageUrls={this.state.sources}
                     index={this.state.index}

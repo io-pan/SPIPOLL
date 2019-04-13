@@ -42,8 +42,9 @@ export default class ImageGallery extends Component {
 
     this.state = { 
       sources:this.props.sources,
-      index:this.props.visible,
-      view: 'slide', // this.props.visible < 0 ? 'thumbs' : 'slide',      
+                                                            // We could show thumbs to let user choose: 
+      index: this.props.visible >=0 ? his.props.visible : 0,// this.props.visible,   
+      view: 'slide',                                        // this.props.visible < 0 ? 'thumbs' : 'slide',      
       thumbCols:0,
       selectedForAction:false,
     }
