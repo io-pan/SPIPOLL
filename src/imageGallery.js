@@ -26,15 +26,6 @@ const backgroundColor='black',
 export default class ImageGallery extends Component {
   constructor (props, ctx) {
     super(props, ctx)
-       
-    // props.sources.forEach(function(item){ //source: {uri: this.props.failImageSource.url}
-    //   srcs.push({
-    //     props:{
-    //       url: '',
-    //       source: {uri:'file://'+props.path+'/'+item}
-    //     }
-    //   });
-    // });
 
     this.actions = {
       slide:[
@@ -51,13 +42,13 @@ export default class ImageGallery extends Component {
 
     this.state = { 
       sources:this.props.sources,
-      view:'slide', // slide / thumbs
       index:this.props.visible,
-      
+      view: 'slide', // this.props.visible < 0 ? 'thumbs' : 'slide',      
       thumbCols:0,
       selectedForAction:false,
     }
     this.maxThumbCols = 1;
+    console.log('CONST ' + this.props.visible);
   }
 
   thumbPress(index, long){
@@ -89,8 +80,13 @@ export default class ImageGallery extends Component {
 
   selectImage(index){
     this.props.onSelect(
+      index,
       this.props.sources[index].url.replace('file://'+this.props.path+'/' ,'')
     );
+  }
+
+  cancelSelectedForAction(){
+    this.setState({selectedForAction:false});
   }
 
   deleteImage(){
@@ -217,9 +213,6 @@ export default class ImageGallery extends Component {
     );
   }
 
-  setThumbCols(nbCols){
-    this.setState({thumbCols: nbCols});
-  }
 
   onLayout(e) {
     if(!this.state.thumbCols){
@@ -233,14 +226,15 @@ export default class ImageGallery extends Component {
     }
   }
 
-  cancelSelectedForAction(){
-    this.setState({selectedForAction:false});
+  setThumbCols(nbCols){
+    this.setState({thumbCols: nbCols});
   }
 
   render () {
     if(!this.props.sources.length){
       return null;
     }
+
     console.log('render ImageGallery ' + this.props.title);
 
     return (

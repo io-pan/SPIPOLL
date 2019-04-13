@@ -439,7 +439,7 @@ export class ImagePicker extends Component {
   }
 
   showImageGallery = (index) => {
-    this.setState({bigGalleryIndex:this.state.index});
+    this.setState({bigGalleryIndex:index});
   }
 
   hideImageGallery = () => {
@@ -487,16 +487,20 @@ export class ImagePicker extends Component {
   }
 
 
-  imageSelected(filename) {
+  imageSelected(index, filename) {
+    this.setState({index:index});
     this.props.onSelect(filename);
   }
 
   imageDeleted(sources, newSelectedImage){
+    let index = this.state.index;
     if(newSelectedImage!==false){
+      index = 0;
       this.props.onSelect(newSelectedImage);
     }
     this.setState({
       sources:sources,
+      index:index,
       bigGalleryIndex:sources.length ? sources.length-1 : false,
     });
   }
@@ -549,7 +553,7 @@ export class ImagePicker extends Component {
             selected={this.props.filename}
 
             sources={this.state.sources}
-            onSelect = {(filename)=>this.imageSelected(filename)}
+            onSelect = {(index, filename)=>this.imageSelected(index, filename)}
             imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
 
             styles={{
@@ -657,6 +661,7 @@ export class ImagePicker extends Component {
                 }}
                 renderItem={()=>
                   <ImageViewer 
+                    // key={new Date()}
                     backgroundColor='transparent'
                     imageUrls={this.state.sources}
                     index={this.state.index}
@@ -665,7 +670,7 @@ export class ImagePicker extends Component {
                     saveToLocalByLongPress={false}
                     renderHeader={(currentIndex) => this.renderSliderHeader(currentIndex)}
                     loadingRender={() => <Text style={{fontSize:16}}>...</Text>}
-                    onClick={this.showImageGallery}
+                    onClick={()=>this.showImageGallery(this.state.index)}
                     onChange={(index) => this.setIndex(index)}
                   />
                 }
