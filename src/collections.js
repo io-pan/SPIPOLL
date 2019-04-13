@@ -37,6 +37,93 @@ import {
   formatTime,
  } from './formatHelpers.js';
 
+const deviceWidth = Dimensions.get('window').width;
+    // this.itemWidth = this.deviceWidth/props.tabs.length;
+
+//=========================================================================================
+class CollectionNavTabs extends Component {
+//-----------------------------------------------------------------------------------------
+
+  constructor(props) {
+    super(props);
+
+
+    this.state = {
+      tab: 'flower', // TODO depending on collection state.
+    }
+  }
+
+  setTab(value){
+    let bigScrollX = 0;
+
+    if(value=='flower'){
+     
+    }
+    else if(value=='calendar-clock'){
+      bigScrollX = 1*Dimensions.get('window').width;
+    }
+    else if(value=='ladybug'){
+      bigScrollX = 2*Dimensions.get('window').width;
+    }
+
+    this.setState({tab:value});
+    this.props.tabSet(bigScrollX, value);
+  }
+
+  scroll(event){         
+    const pos = event.nativeEvent.contentOffset.x;
+
+    let tab = ''
+    if(pos == 0){
+      tab = 'flower';
+    }
+    else if(pos == deviceWidth){
+      tab = 'calendar-clock';
+    }
+    else if(pos == 2*deviceWidth){
+      tab = 'ladybug';
+    }
+    if(tab){
+      this.setState({tab:tab});     
+    }
+  }
+
+  render(){
+    return(
+      <View // Tabs.
+        style={{margin:0, flexDirection:'row', alignItems:'center', justifyContent:'space-around'}}
+        >
+        {/*<ScrollView horizontal={true}>*/}
+        { this.props.tabs.map((tab, index) =>
+         <TouchableOpacity 
+          key={index}
+          style={{ marginLeft:5, marginRight:5,
+            width:deviceWidth/this.props.tabs.length,
+            flexDirection:'row', justifyContent:'center', alignItems:'center', 
+            // borderRightWidth:1, borderRightColor:'lightgrey',
+          }}
+          onPress = {() => this.setTab(tab.icon)} 
+          >
+          <MaterialCommunityIcons
+            name={tab.icon}
+            style={{
+              backgroundColor:'transparent',
+
+              color:colors.greenFlash,
+            }}
+            size={25}
+          />
+          <Text style={{ fontSize:16, marginLeft:5,
+            color: this.state.tab==tab.icon ? colors.greenFlash :'grey'}}>
+          {tab.text}</Text>
+        </TouchableOpacity>
+        )}
+        {/*</ScrollView>*/}
+      </View>
+    );
+  }
+};
+
 
 //=========================================================================================
 class Collection extends Component {
@@ -44,9 +131,21 @@ class Collection extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      tab: 'collection',//'collection', // TODO depending on collection state.
       name: this.props.data.name,
     }
+
+    this.tabIndicatorX = new Animated.Value(0);
+    this.tabs = [{
+        icon:'flower',
+        text:'Fleur'
+      },{
+        icon:'calendar-clock',
+        text:'Session'+(this.props.data.protocole=='flash'?'':'s')
+      },{
+        icon:'ladybug',
+        text:'Insectes'
+    }];
+
   }
 
   componentDidMount(){
@@ -55,98 +154,6 @@ class Collection extends Component {
     }
   }
 
-  setTab(value){
-    // Back to sessions list.
-    if(value=='sessions' && this.state.tab=='sessions' && this.props.data.protocole=='long'){
-      this.refs['session-list'].selectItem(false);
-    }
-    else if(value=='sessions' && this.props.data.protocole=='flash'){
-      this.setState({tab:value}, function(){
-        this.refs['session-list'].selectItem(0);
-      });
-    }
-
-    else if(value=='insectes' && this.state.tab=='insectes'){
-      this.refs['insect-list'].selectItem(false);
-    }
-
-    else{
-      this.setState({tab:value});
-    }
-  }
-
-  renderCollectionTabs(){
-    return(
-      !this.props.data.storage.path || !this.props.data.name || !this.props.data.protocole ? null :
-      <View style={{margin:10, flexDirection:'row', alignItems:'center', justifyContent:'space-between'}}>
-        {/*<ScrollView horizontal={true}>*/}
-         
-           <TouchableOpacity 
-            style={{ marginLeft:5, marginRight:5,
-              flexDirection:'row', justifyContent:'center', alignItems:'center', 
-              // borderRightWidth:1, borderRightColor:'lightgrey',
-              }}
-            onPress = {() => this.setTab('collection')} 
-            >
-            <MaterialCommunityIcons
-              name="flower"  // search-web  magnify  map-search
-              style={{
-                backgroundColor:'transparent',
-                margin:5,
-                color:colors.greenFlash,
-              }}
-              size={25}
-            />
-            <Text style={{ fontSize:16,
-              color: this.state.tab=='collection'? colors.greenFlash :'grey'}}>
-            Fleur</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={{ marginLeft:5, marginRight:5,
-              flexDirection:'row', justifyContent:'center', alignItems:'center', 
-              // borderRightWidth:1, borderRightColor:'lightgrey',
-              }}
-            onPress = {() => this.setTab('sessions')} 
-            >
-            <MaterialCommunityIcons
-              name="calendar-clock"  // search-web  magnify  map-search
-              style={{
-                backgroundColor:'transparent',
-                margin:5,
-                color:colors.greenFlash,
-              }}
-              size={25}
-            />
-            <Text style={{ fontSize:16,
-              color: this.state.tab=='sessions'? colors.greenFlash :'grey'}}>
-            Session{this.props.data.protocole=='flash'?'':'s'}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={{ marginLeft:5, marginRight:5,
-              flexDirection:'row', justifyContent:'center', alignItems:'center', 
-              // borderBottomWidth:1, borderBottomColor:'grey',
-              }}
-            onPress = {() => this.setTab('insectes')} 
-            >
-            <MaterialCommunityIcons
-              name="ladybug"  // search-web  magnify  map-search
-              style={{
-                backgroundColor:'transparent',
-                margin:5,
-                color:colors.greenFlash,
-              }}
-              size={25}
-            />
-            <Text style={{ fontSize:16, 
-              color: this.state.tab=='insectes'? colors.greenFlash :'grey'}}>
-            Insectes</Text>
-          </TouchableOpacity>
-        {/*</ScrollView>*/}
-      </View>
-    );
-  }
 
   edit(field){
     this.tempValue = this.state[field];
@@ -376,35 +383,93 @@ class Collection extends Component {
     // TODO: remove session reference on insects.
   }
 
-  //--------------------------------------------------------------------------------
-  
-  pickPhoto(collection_id, field){
-    this.setState({tab:'cam'}, function(){
-      this.refs['collection-cam'].pickPhoto(collection_id, field);
-    })  
-  }
+  //----------------------------------------------------------------------
 
-  sendPhotoToForm(){
-
+  tabSet(x, tab){
+    this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
+    
+    if(tab=='calendar-clock'){
+      this.refs['session-list'].selectItem(
+        this.props.data.protocole=='flash'
+        ? 0     // Show default flash session
+        : false // Show sessions list
+      );
+    }
+    else if(tab=='ladybug'){
+      this.refs['insect-list'].selectItem(false);
+    }
   }
 
   render(){
+
+
+
     return(
       <View style={{flex:1}}>
       
         { this.renderCollectionEditableName() }
-        { this.renderCollectionTabs() }
+        
+        { !this.props.data.storage.path || !this.props.data.name || !this.props.data.protocole 
+          ? null 
+          : 
+            <View style={{marginTop:10}}>
+              <CollectionNavTabs
+                ref="CollectionNavTabs"
+                protocole={this.props.data.protocole}
+                tabs={this.tabs}
+                tabSet={(x, tab)=>this.tabSet(x, tab)}
+              />
 
-        { this.state.tab == 'collection' 
-        ? <CollectionForm 
-            ref="collection-form"
-            data={this.props.data}
-            valueChanged={(key,val) => this.collectionChanged(key,val)}
-            pickPhoto = {(field) => this.pickPhoto(this.props.data.date, field)}
-          />
+              <View // Tabs indicator.
+                style={{marginTop:5, 
+                }}>
+                <Animated.View
+                  style={{
+                    position: 'absolute', top: 0, left:0,
+                    transform: [{ translateX: 
+                      this.tabIndicatorX.interpolate({
+                        inputRange: [0,deviceWidth],
+                        outputRange: [0,deviceWidth/this.tabs.length],
+                      }) 
+                    }],
+                    margin:10,marginTop:0,
+                    width:deviceWidth/this.tabs.length - 20,
+                    height:2,backgroundColor: colors.greenFlash
+                  }}
+                />
+              </View>
+            </View>
+        }
 
-          : this.state.tab == 'sessions'
-          ? <AdvancedList
+
+        <ScrollView
+          ref="bigscroll"
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          scrollEventThrottle={10}
+          pagingEnabled
+          scrollEnabled = { !(!this.props.data.storage.path || !this.props.data.name || !this.props.data.protocole) }
+          onScroll={Animated.event(
+             [{nativeEvent: {contentOffset: {x: this.tabIndicatorX}}}],
+             {listener: (event) => {
+              this.refs['CollectionNavTabs'].scroll(event);
+ 
+              console.log(this.tabIndicatorX.Value)
+            }} // Optional async listener
+          )}
+        >
+     
+          <View style={{width: Dimensions.get('window').width}}>
+            <CollectionForm 
+              ref="collection-form"
+              data={this.props.data}
+              valueChanged={(key,val) => this.collectionChanged(key,val)}
+              pickPhoto = {(field) => this.pickPhoto(this.props.data.date, field)}
+            />
+          </View>
+
+          <View style={{width: Dimensions.get('window').width}}>
+            <AdvancedList
               ref="session-list"
               localStorage = {this.props.data.date + "_sessions"}
               renderListItem = {(value, index) => this.renderSessionListItem(value, index)}
@@ -424,9 +489,10 @@ class Collection extends Component {
                }
               deleteItem = {() => this.deleteSession()}
             />
-       
-          : this.state.tab == 'insectes' 
-          ? <AdvancedList
+          </View>
+
+          <View style={{width: Dimensions.get('window').width}}>
+            <AdvancedList
               key="insect-list"
               ref="insect-list"
               localStorage = {this.props.data.date + "_insects"}
@@ -435,19 +501,9 @@ class Collection extends Component {
               newItemContent = {false}
               deleteItem = {(data, index) => this.deleteInsect(data, index)}
             />
-          /*
-          : this.state.tab == 'cam'
-          ? <View style={{position:'absolute' , top:0, bottom:0}}>
-            <Cam
-              key="collection-cam"
-              ref="collection-cam"
-              photoPicked = {() => this.sendPhotoToForm()}
-              
-            />
-            </View>
-            */
-          : null
-          }
+          </View>
+
+        </ScrollView>
       </View>
     );
   }
