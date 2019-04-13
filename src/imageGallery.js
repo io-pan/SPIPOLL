@@ -157,11 +157,12 @@ export default class ImageGallery extends Component {
         style={{
           height:55, flexDirection:'row', 
           justifyContent:'center', alignItems:'center',
-          borderRightWidth:1, borderRightColor:'white', backgroundColor:this.props.styles.highlightColor
+          backgroundColor:this.props.styles.highlightColor
           }}
         >
         <TouchableOpacity 
           style={[{
+            height:55,
             width:55,
             justifyContent:'center', alignItems:'center', 
             borderRightWidth:1, borderRightColor:'white', 
@@ -183,12 +184,11 @@ export default class ImageGallery extends Component {
 
         { currentIndex === false ? null :
           <Text style={[this.props.styles.text,{
-            fontWeight:'normal', paddingLeft:10,
-            marginRight:this.props.sources.length > 1 ?  0 : 10,
+            fontWeight:'normal', fontSize:16, paddingLeft:10,
+            marginRight:0,
             borderLeftWidth:1, borderLeftColor:'white', 
           }]}>
           {currentIndex+1}/{this.props.sources.length}</Text>
-
         }
 
         { this.props.sources.length > 1

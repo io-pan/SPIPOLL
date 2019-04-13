@@ -87,11 +87,11 @@ export default class InsectForm extends Component {
   storeInsect(field,value){
     if(field=='taxon'){
       this.setState({
-        insect:{
-          ...this.state.insect,
-          taxon_list_id_list:value.value,
-          taxon_name:value.label,
-        },
+        // insect:{
+        //   ...this.state.insect,
+        //   taxon_list_id_list:value.value,
+        //   taxon_name:value.label,
+        // },
         visibleTaxonModal: false,
       },function(){
         // Update list. ... TODO: multival
@@ -100,14 +100,14 @@ export default class InsectForm extends Component {
       });
     }
     else{
-      this.setState({
-        insect:{
-          ...this.state.insect,
-          [field]:value,
-        }
-      },function(){
-         this.props.valueChanged(field, value);
-      });    
+      // this.setState({
+      //   insect:{
+      //     ...this.state.insect,
+      //     [field]:value,
+      //   }
+      // },function(){
+        this.props.valueChanged(field, value);
+      // });    
     }
   }
 
@@ -119,6 +119,7 @@ export default class InsectForm extends Component {
   }
 
   render(){
+    console.log('render InsectForm');
     return(
         <ScrollView style={{flex:1}}>
 

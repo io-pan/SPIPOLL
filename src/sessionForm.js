@@ -422,7 +422,8 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
   storeSession(field, value){
     this.setState({
       isTimePickerVisible:false,
-      session:{
+
+      session:{ // TODO: this shoud not be needed.
         ...this.state.session,
         [field]:value,
       }
@@ -579,6 +580,11 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
         >
 
         { this.renderLaunchButton(sessionStatus)}
+
+        <Text style={{marginTop:20, marginBottom:10, textAlign:'center', 
+          fontSize:16, fontWeight:'bold'}} >
+        Espèces déjà vue</Text>
+
 
         <AdvancedList
           key="running-insect-list"
