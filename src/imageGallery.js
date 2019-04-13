@@ -49,88 +49,16 @@ export default class ImageGallery extends Component {
       }],
     };
 
- //   this.state.sources = this.feedForImageSlider(props.sources, props.path);
-
     this.state = { 
-      sources:[],
-      view:'thumbs', // slide / thumbs
-      index:this.props.index, // ioio
+      sources:this.props.sources,
+      view:'slide', // slide / thumbs
+      index:this.props.visible,
       
       thumbCols:0,
       selectedForAction:false,
     }
     this.maxThumbCols = 1;
   }
-
-  componentDidMount(){
-    this.scanFolder();
-  }
-
-
-  scanFolder(){
-    if(this.props.path){
-      RNFetchBlob.fs.ls(this.props.path)
-      .then((files) => {
-
-        if(!files.length){
-          this.setState({
-            sources:[],
-          });
-        }
-        else{
-
-          const sources = [];
-          files.forEach((filename)=>{ //source: {uri: this.props.failImageSource.url}
-            sources.push({ url:'file://' + this.props.path +'/'+ filename });
-          });
-
-          // TODO: Set index to already selected item.
-          //  ... but because of async storgae, we do not have it yet.
-          const index = files.indexOf(this.props.path +'/'+ this.props.selected);
-
-          this.setState({
-            index: index!=-1 ? index : 0,
-            view: files.length == 1 ? 'slide' : 'thumbs', // this.state.view,
-            sources:sources,
-          });
-        }
-
-        this.props.imageCountChanged(
-          files.length, 
-          files.length==1&&!this.props.selected ? files[0] : false);
-      });
-    }    
-  }
-
-  // TODO:
-  // go here fom cam but not insect
-
-  // si aucune selectionée et + de 1
-  // -> thumb
-
-  // si  selectionée et  1
-  // -> slide
-
-  // si  selectionée et  1
-  // -> slide
-
-
-
-  // shouldComponentUpdate(nextProps, nextState){
-  //   if(nextProps.sources.length != this.state.sources.length
-  //   && this.state.selectedForAction == nextState.selectedForAction){
-  //     scanFolder();
-  //   }
-  //   return true;
-  // }
-
-  // feedForImageSlider(filenameList, path){
-  //   const srcs = [];
-  //   filenameList.forEach(function(filename){ //source: {uri: this.props.failImageSource.url}
-  //     srcs.push({ url:'file://' + path +'/'+ filename });
-  //   });
-  //   return srcs;
-  // }
 
   thumbPress(index, long){
 
@@ -160,32 +88,19 @@ export default class ImageGallery extends Component {
   }
 
   selectImage(index){
-    const imageSelected = this.state.sources[index].url.replace('file://'+this.props.path+'/' ,'');
-    this.props.onSelect(imageSelected);
-  }
-
-  addImage(path){
-    const sources = this.state.sources;
-    sources.push({ url:'file://' + path });
-    this.props.imageCountChanged(
-      sources.length, 
-      false
-      // Do not default select lonly image since user can take a 2nd on the fly.
-      // sources.length == 1 //
-      // ? path.replace(this.props.path+'/' ,'')
-      // : false
+    this.props.onSelect(
+      this.props.sources[index].url.replace('file://'+this.props.path+'/' ,'')
     );
-    this.setState({sources:sources});
   }
 
   deleteImage(){
-    const selected = this.state.selectedForAction;
+    const selectedForAction = this.state.selectedForAction;
 
-    const sources = this.state.sources;
+    const sources = this.props.sources;
     let selectedImageDeleted = false;
     // Backward loop to avoid re-index issue.
     for (var i = sources.length - 1; i >= 0; i--) {
-      if(selected.indexOf(i) !== -1) {
+      if(selectedForAction.indexOf(i) !== -1) {
         // Delete file.
         RNFetchBlob.fs.unlink(sources[i].url)
         .then(() => { 
@@ -211,14 +126,13 @@ export default class ImageGallery extends Component {
 
     // Store purged list.
     this.setState({
-      sources:sources,
       selectedForAction:false,
     }, function(){
       // Inform picker.
-      this.props.imageCountChanged(
-        this.state.sources.length, 
-        this.state.sources.length==1 // Default select lonely remaining image...
-        ? this.state.sources[0].url.replace('file://'+this.props.path+'/' ,'')
+      this.props.imageDeleted(
+        sources, 
+        sources.length==1 // Default select lonely remaining image...
+        ? sources[0].url.replace('file://'+this.props.path+'/' ,'')
         : selectedImageDeleted ? '' : false); // ... or none.
     });
   }
@@ -273,14 +187,14 @@ export default class ImageGallery extends Component {
         { currentIndex === false ? null :
           <Text style={[this.props.styles.text,{
             fontWeight:'normal', paddingLeft:10,
-            marginRight:this.state.sources.length > 1 ?  0 : 10,
+            marginRight:this.props.sources.length > 1 ?  0 : 10,
             borderLeftWidth:1, borderLeftColor:'white', 
           }]}>
-          {currentIndex+1}/{this.state.sources.length}</Text>
+          {currentIndex+1}/{this.props.sources.length}</Text>
 
         }
 
-        { this.state.sources.length > 1
+        { this.props.sources.length > 1
         ? <TouchableOpacity 
             style={[
               currentIndex !== false ? null : {borderLeftWidth:1, borderLeftColor:'white'}, {
@@ -311,7 +225,7 @@ export default class ImageGallery extends Component {
     if(!this.state.thumbCols){
       const height = e.nativeEvent.layout.height,
             width = e.nativeEvent.layout.width,
-            maxThumbCols = (Math.sqrt(this.state.sources.length * width / height));
+            maxThumbCols = (Math.sqrt(this.props.sources.length * width / height));
 
       this.width = width;
       this.maxThumbCols = Math.ceil(maxThumbCols);
@@ -324,7 +238,7 @@ export default class ImageGallery extends Component {
   }
 
   render () {
-    if(!this.state.sources.length){
+    if(!this.props.sources.length){
       return null;
     }
     console.log('render ImageGallery ' + this.props.title);
@@ -345,7 +259,7 @@ export default class ImageGallery extends Component {
             // TODO: try to solve ImageViewer flickering onrender ...
             position:'absolute', bottom:-200}}>
           <ImageViewer 
-            imageUrls={this.state.sources}
+            imageUrls={this.props.sources}
             index={this.state.index}
             enablePreload={true}
             renderIndicator ={()=> null}
@@ -430,7 +344,7 @@ export default class ImageGallery extends Component {
                 flexWrap: 'wrap', alignItems:'flex-start',
               }}>
 
-              { this.state.sources.map((path, index) =>
+              { this.props.sources.map((path, index) =>
                 <TouchableOpacity 
                   key={index}
                   style={{ 

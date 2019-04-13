@@ -208,8 +208,6 @@ export default class  CollectionForm extends Component {
   }
 
   storeCollection(commingf){
-    console.log('CCCCCC ' + commingf,this.state.collection);
-
     AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
   }
 
@@ -581,9 +579,8 @@ export default class  CollectionForm extends Component {
                 margin:15,
                 }}>
                 <ImagePicker 
-                  ref="collection-flower"
+                  // ref="collection-flower"
                   key="collection-flower"
-                  _key="collection-flower"
                   cam={true}
                   title={'Fleur en\ngros plan'}
                   styles={{
@@ -601,9 +598,8 @@ export default class  CollectionForm extends Component {
                 />
 
                 <ImagePicker
-                  ref="collection-environment"
+                  // ref="collection-environment"
                   key="collection-environment"
-                  _key="collection-environment"
                   title={'Fleur à 2-3 mètres\nde distance'}
                   cam={true}
                   styles={{

@@ -234,26 +234,6 @@ export default class Cam extends Component<Props> {
         }
       }
     });
-
-    // Create folder. TODO not sure we should do it here.
-    if(this.props.path){
-      RNFetchBlob.fs.isDir(this.props.path)
-      .then((isDir) => {
-        if(false === isDir){
-          RNFetchBlob.fs.mkdir(this.props.path)
-          .then(() => { 
-            // console.log('coll folder created ' + curDir+'/collections/'+collectionName ) 
-          })
-          .catch((err) => { 
-            Alert.alert(
-              'Erreur',
-              'Le dossier de stockage des photos n\'a pu être créé.\n'
-              + this.props.path
-            );
-          })
-        }
-      });
-    }
   }
 
   onCameraReady = async () => {

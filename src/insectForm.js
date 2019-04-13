@@ -124,7 +124,7 @@ export default class InsectForm extends Component {
 
               <View style={styles.collection_grp}>
                 <ImagePicker
-                  ref="collection-insect"
+                  key="collection-insect"
                   title={this.state.insect.taxon_extra_info || this.state.insect.taxon_name || 'Non identifié' }
                   cam = {false}
                   styles={{
