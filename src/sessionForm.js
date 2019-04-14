@@ -583,7 +583,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
         <Text style={{marginTop:20, marginBottom:10, textAlign:'center', 
           fontSize:16, fontWeight:'bold'}} >
-        Espèces déjà vue</Text>
+        Espèces déjà vues</Text>
 
 
         <AdvancedList

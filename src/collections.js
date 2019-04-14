@@ -387,7 +387,7 @@ class Collection extends Component {
 
   tabSet(x, tab){
     this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
-    
+
     if(tab=='calendar-clock'){
       this.refs['session-list'].selectItem(
         this.props.data.protocole=='flash'
@@ -401,9 +401,6 @@ class Collection extends Component {
   }
 
   render(){
-
-
-
     return(
       <View style={{flex:1}}>
       
@@ -421,8 +418,7 @@ class Collection extends Component {
               />
 
               <View // Tabs indicator.
-                style={{marginTop:5, 
-                }}>
+                style={{marginTop:5, height:12}}>
                 <Animated.View
                   style={{
                     position: 'absolute', top: 0, left:0,
@@ -450,12 +446,38 @@ class Collection extends Component {
           pagingEnabled
           scrollEnabled = { !(!this.props.data.storage.path || !this.props.data.name || !this.props.data.protocole) }
           onScroll={Animated.event(
-             [{nativeEvent: {contentOffset: {x: this.tabIndicatorX}}}],
-             {listener: (event) => {
+            [{nativeEvent: {contentOffset: {x: this.tabIndicatorX}}}],
+            {listener: (event) => {
+              // Highlight tab.
               this.refs['CollectionNavTabs'].scroll(event);
+
+
+              // TODO:
+              //
+              // . new insects do not appear in tab insect list
+              // . deal with backHandler here
  
-              console.log(this.tabIndicatorX.Value)
-            }} // Optional async listener
+
+
+              // Close lists.
+              if(event.nativeEvent.contentOffset.x == 0){ //  tab = 'flower';     
+                this.refs['session-list'].selectItem(this.props.data.protocole=='flash' ? 0 : false);
+                this.refs['insect-list'].selectItem(false);
+              }
+
+            
+              else if(event.nativeEvent.contentOffset.x == deviceWidth){ // tab = 'calendar-clock';
+                this.refs['insect-list'].selectItem(false);
+                if(this.props.data.protocole=='flash'){ 
+                  // Show default flash session.        
+                  this.refs['session-list'].selectItem(0);
+                }
+              }
+
+              else if(event.nativeEvent.contentOffset.x == 2*deviceWidth){ //  tab = 'ladybug';  
+                this.refs['session-list'].selectItem(this.props.data.protocole=='flash' ? 0 : false);
+              }
+            }}
           )}
         >
      

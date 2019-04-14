@@ -724,8 +724,7 @@ export default class  CollectionForm extends Component {
 
               <View style={styles.collection_grp}>
                 { this.state.collection.place.lat && this.state.collection.place.long
-                  ?
-                  <View style={[styles.collection_subgrp,{marginBottom:5, backgroundColor:'white'}]}>
+                ? <View style={[styles.collection_subgrp,{marginBottom:5, backgroundColor:'white'}]}>
                     <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
                       <Text style={{fontSize:16,
                         color:'grey'
@@ -746,7 +745,12 @@ export default class  CollectionForm extends Component {
                       </Text>
                     </View>
                   </View>
-                  : null
+                : <View style={[styles.collection_subgrp,{
+                    padding:5,marginBottom:5, backgroundColor:'white',
+                    flexDirection:'row', flex:1, justifyContent: 'center'}]}>
+                    <Text style={[styles.coll_subtitle,{color:colors.purple}]}>
+                    ...</Text>
+                  </View> 
                 }
               
                 <View style={[{flexDirection:'row', flex:1, paddingTop:0}]}>           

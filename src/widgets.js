@@ -675,47 +675,79 @@ export class ImagePicker extends Component {
             </React.Fragment>
         }
 
-        { !this.state.sources.length 
-          ? null
-          : !this.props.filename 
-            ? // Choose a photo.
-              <TouchableOpacity 
-                style={{
-                  alignItems:'center', 
-                  justifyContent: 'center',
-                  flex:0.5,
-                  paddingBottom:10,
-                  // borderColor:greenLight, borderWidth:1,
-                }} 
-                onPress={()=>this.showImageGallery(-1)}
-                ><Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>
-                Sélectionner une photo</Text>
-              </TouchableOpacity>
-            
-            : // Tiny slider.
-              <ViewSized
-                style = {{
-                  padding: currentImageIsSelected ? 1 : 2,
-                  borderWidth: currentImageIsSelected ? 2 : 1,
-                  borderColor: currentImageIsSelected ? this.props.styles.highlightColor : 'lightgrey'
-                }}
-                renderItem={()=>
-                  <ImageViewer 
-                    key={this.state.sources.length}
-                    backgroundColor='transparent'
-                    imageUrls={this.state.sources}
-                    index={this.state.index}
-                    enablePreload={true}
-                    renderIndicator ={()=> null}
-                    saveToLocalByLongPress={false}
-                    renderHeader={(currentIndex) => this.renderSliderHeader(currentIndex)}
-                    loadingRender={() => <Text style={{fontSize:16}}>...</Text>}
-                    onClick={()=>this.showImageGallery(this.state.index)}
-                    onChange={(index) => this.setIndex(index)}
-                  />
-                }
-              />
+
+
+        { !this.state.sources.length ? null :
+        <TouchableOpacity 
+          // Big selected photo.
+          style={{
+            alignItems:'center', 
+            justifyContent: 'center',
+            flex:0.5,
+            paddingBottom:10,
+            // borderColor:greenLight, borderWidth:1,
+          }} 
+          onPress={ this.props.filename
+            ? ()=>this.showImageGallery(this.state.index)
+            : ()=>this.showImageGallery(-1)
           }
+          >
+            
+          {
+            !this.props.filename 
+            ? <Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>
+              Sélectionner une photo</Text>
+
+            : <View style={{flex:1, flexDirection:'row'}}>
+
+                <ImageSized
+                  resizeMode="contain"
+                  source={{uri:'file://' + this.props.path +'/'+ this.props.filename }}
+                />
+
+                { // Photo count.
+                  this.state.sources.length < 1
+                  ? null
+                  : <View 
+                      style={{position:'absolute', top:0, right:0,
+                        width:26, height:26,
+                        alignItems:'center', justifyContent:'center',
+                        backgroundColor:'white',
+                      }}
+                      >
+                      <View 
+                        style={{position:'absolute', bottom:2, left:2,
+                          height:22, width:22, 
+                          borderRadius:2, 
+                          borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                          borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                          backgroundColor:'white',
+                        }}
+                      />
+                      <View 
+                        style={{position:'absolute', bottom:6, left:6,
+                          alignItems:'center', justifyContent:'center',
+                          height:22, width:22, 
+                          borderRadius:2, 
+                          borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                          borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                          backgroundColor:'white',
+                        }}
+                        >
+                        <Text style={{
+                          fontWeight:'bold', fontSize:12, textAlign:'center',
+                          color:this.props.styles.highlightColor, 
+                          backgroundColor:'transparent',
+                        }}>
+                        {this.state.sources.length}</Text>
+                      </View>
+                    </View>
+                }
+
+              </View>
+          }
+        </TouchableOpacity>
+        }
       </View>
     );
   }

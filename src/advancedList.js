@@ -69,6 +69,7 @@ export default class AdvancedList extends Component {
         this.setState({selectedItems:false});
       }
       else if (this.state.editing!==false){
+        alert();
         this.setState({editing:false});
       }  
       else if(this.props.backHandler){
