@@ -17,13 +17,270 @@ import {
 import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ImageViewer from 'react-native-image-zoom-viewer';
+import ImageZoom from 'react-native-image-pan-zoom';
+import { ImageSized } from './widgets.js';
 import FooterImage from './footerimage';
 
 const backgroundColor='black',
       thumbBorderColor='black',
       thumbMarginPlusPadding = 2;
 
+
+
+//=========================================================================================
+export class ModalCrop extends Component {
+//-----------------------------------------------------------------------------------------
+  constructor(props) {
+    super(props);
+    this.state = {
+      visible:false,
+      rotate:0,
+
+      // Container
+      containerWidth:0,
+      containerHeight:0,
+
+      cropWidth:0,
+      cropHeight:0,
+
+    }
+  }
+
+  show(){
+    Image.getSize(
+      this.props.source.url,
+      (w,h) => {
+        this.setState({
+          visible:true, 
+          rotate:0,
+          imageWidth:w,
+          imageHeight:h,
+          landscape: w > h,
+        });
+      }
+    );
+  }
+
+
+  getContainerSize(e){
+    const w = e.nativeEvent.layout.width,
+          h = e.nativeEvent.layout.height;
+
+    console.log(e.nativeEvent.layout.width);
+    this.setState({
+      containerWidth:w,
+      containerHeight:h,
+      cropWidth: w,
+      cropHeight: w*4/3, // this.state.landscape ? w*3/4 : w*4/3,
+    });
+  }
+
+
+  hide(){
+    this.setState({visible:false});
+  }
+
+  setLandscape(landscape){
+    this.refs['image-zoom'].reset();
+    this.setState({
+      landscape:landscape,
+      rotate:0,
+      // cropWidth: this.state.containerWidth,
+      // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
+    });
+  }
+
+  rotate(deg){
+    this.setState({rotate:deg});
+  }
+
+  render(){
+    console.log(this.state)
+    const titleStyleLandscape = this.state.landscape 
+            ? {letterSpacing:8, paddingTop:0, transform:[{ rotateZ:'90deg'}]}
+            : {}, 
+          titleStyle = {
+            letterSpacing:3,
+            fontSize:18, fontWeight:'bold', textAlign:'center', 
+            color:'white'
+          }
+    ;
+
+    return(
+      <Modal
+        visible={this.state.visible}
+        onRequestClose={() => this.hide()}>
+        
+        <View 
+          // Title bar.
+          style={{
+            height:55, flexDirection:'row', 
+            justifyContent:'center', alignItems:'center',
+            backgroundColor:this.props.styles.highlightColor,
+            }}
+          >
+          <TouchableOpacity 
+            style={[{
+              height:55,
+              width:55,
+              justifyContent:'center', alignItems:'center', 
+              borderRightWidth:1, borderRightColor:'white', 
+            }]}
+            onPress={(path) => this.hide()}
+            >
+            <MaterialCommunityIcons
+              name="chevron-left" 
+              style={[{ color:'white' }]}
+              size={30}
+            />
+          </TouchableOpacity>
+
+          <View style={{flex:1, flexDirection:this.state.landscape?'row-reverse':'row', 
+             alignItems:'center', justifyContent:'center',
+          }}>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            R</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            E</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            C</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            A</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            D</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            R</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            E</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            R</Text>
+            {/*
+            <Text style={{ fontSize:18, fontWeight:'bold', textAlign:'center', color:'white', }}>
+            Recadrer  {this.props.title ? this.props.title.replace("\n", " ") : ''} </Text>
+            */}
+          </View>
+
+        </View>
+
+        <View 
+          onLayout={(event)=> this.getContainerSize(event)}
+          style={{flex:1, backgroundColor:backgroundColor, justifyContent:'center', alignItems:'center',
+            }}>
+            { !this.state.containerWidth
+              ? null
+              : <ImageZoom 
+                  ref="image-zoom"
+                  style={{backgroundColor:'white'}}
+                  cropWidth={this.state.cropWidth}
+                  cropHeight={this.state.cropHeight}
+
+                  imageWidth={
+                    this.state.landscape 
+                    ? this.state.cropHeight 
+                    : this.state.cropWidth
+                  }
+
+                  imageHeight={
+                    this.state.landscape 
+                    ? this.state.imageHeight> this.state.imageWidth 
+                      ? this.state.cropHeight  // img prt
+                      : this.state.cropHeight //*  this.state.imageWidth / this.state.imageHeight
+                    : this.state.cropHeight
+                  }
+                  >
+
+                  <Image style={{
+                    top:
+                      this.state.landscape 
+                      ? this.state.cropHeight/2-this.state.cropWidth/2
+                      : 0
+                    ,
+                    width:
+                      this.state.landscape 
+                      ? this.state.cropHeight
+                      : this.state.cropWidth
+                    ,
+                    height:
+                      this.state.landscape
+                      ? this.state.imageHeight> this.state.imageWidth // img prt
+                        ? this.state.cropWidth
+                        : this.state.cropWidth//*  this.state.imageWidth / this.state.imageHeight
+                      : this.state.cropHeight
+                      ,
+                      transform:[
+                        { rotateZ: ((this.state.landscape?90:0) + this.state.rotate) +'deg'},
+                      ]
+                    }}
+                    resizeMode='contain'
+                    source={{uri:this.props.source.url}}
+                  />
+                </ImageZoom>
+            }
+
+   {/*       <ImageSized
+            resizeMode="contain"
+            source={{uri:this.props.source.url}}
+          />*/}
+        </View>
+
+
+
+        <View style={{flexDirection:'row', backgroundColor:this.props.styles.highlightColor }}>
+           
+
+
+          <TouchableOpacity 
+            style={[{
+              height:55,
+              width:55,
+              justifyContent:'center', alignItems:'center', 
+              borderRightWidth:1, borderRightColor:'white', 
+            }]}
+            onPress={()=> this.setLandscape(!this.state.landscape)}
+            >
+            <MaterialCommunityIcons
+              name="phone-rotate-landscape" //{this.state.landscape ? "crop-landscape" : "crop-portrait" }
+              style={[{ color:'white' }]}
+              size={30}
+            />
+          </TouchableOpacity>
+       
+
+            <Slider  
+              ref="sampleSize"
+              style={{flex:1, height:30,margin:10,backgroundColor:'transparent'}} 
+              thumbTintColor = {'white'}
+              minimumTrackTintColor={'white'}
+              maximumTrackTintColor={'white'}
+              minimumValue={ -180 }
+              maximumValue={ 180 }
+              step={1}
+              value={ this.state.rotate }
+              onValueChange={(value) => this.rotate(value)} 
+            />
+          </View>
+
+
+        {/*
+        <TouchableOpacity style={{
+            backgroundColor:this.props.styles.highlightColor,
+            height:55, justifyContent:'center', textAlign:'center',
+          }}
+          onPress={(path) => this.photoPicked('close')}
+          >
+          <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
+          Retour à la collection</Text>
+          </TouchableOpacity>
+        */}
+
+      </Modal>
+    );
+  }
+} // ModalCrop
+
+//==================================================================================================
 export default class ImageGallery extends Component {
+//--------------------------------------------------------------------------------------------------
   constructor (props, ctx) {
     super(props, ctx)
 
@@ -47,10 +304,19 @@ export default class ImageGallery extends Component {
       view: 'slide',                                        // this.props.visible < 0 ? 'thumbs' : 'slide',      
       thumbCols:0,
       selectedForAction:false,
+
+      visibleCropModal:false, 
     }
     this.maxThumbCols = 1;
     console.log('CONST ' + this.props.visible);
   }
+
+  showCropModal(){
+    this.refs['crop-modal'].show();
+  }
+  // hideCropModal(){
+  //   this.refs['crop-modal'].hide());
+  // }
 
   thumbPress(index, long){
 
@@ -249,6 +515,14 @@ export default class ImageGallery extends Component {
         supportedOrientations={['portrait', 'landscape']}
         >
 
+        <ModalCrop
+          ref='crop-modal'
+          visible={this.state.visibleCropModal}
+          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
+          source={this.props.sources[this.state.index]}
+          styles={this.props.styles}
+        />
+
         <View // Slideshow
           style = {this.state.view == 'slide' ? {flex:1}:{
             // TODO: try to solve ImageViewer flickering onrender ...
@@ -277,7 +551,7 @@ export default class ImageGallery extends Component {
               >
 
               <TouchableOpacity 
-                // onPress = {() => this.closeSetupMotion()}
+                onPress = {() => this.showCropModal()}
                 style={{ 
                   flex:0.5,
                   flexDirection:'row',

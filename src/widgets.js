@@ -444,7 +444,7 @@ export class ImagePicker extends Component {
   showImageGallery = (index) => {
     this.setState({
       bigGalleryIndex:index,
-      visibleCamera:false,
+      // visibleCamera:false, // Do not close cam since we can open gallery from cam modal
     });
   }
 
@@ -675,78 +675,77 @@ export class ImagePicker extends Component {
             </React.Fragment>
         }
 
-
-
-        { !this.state.sources.length ? null :
-        <TouchableOpacity 
-          // Big selected photo.
-          style={{
-            alignItems:'center', 
-            justifyContent: 'center',
-            flex:0.5,
-            paddingBottom:10,
-            // borderColor:greenLight, borderWidth:1,
-          }} 
-          onPress={ this.props.filename
-            ? ()=>this.showImageGallery(this.state.index)
-            : ()=>this.showImageGallery(-1)
-          }
-          >
+        { // Big selected photo.
+          !this.state.sources.length ? null :
+          <TouchableOpacity 
             
-          {
-            !this.props.filename 
-            ? <Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>
-              Sélectionner une photo</Text>
+            style={{
+              alignItems:'center', 
+              justifyContent: 'center',
+              flex:0.5,
+              paddingBottom:10,
+              // borderColor:greenLight, borderWidth:1,
+            }} 
+            onPress={ this.props.filename
+              ? ()=>this.showImageGallery(this.state.index)
+              : ()=>this.showImageGallery(-1)
+            }
+            >
+              
+            {
+              !this.props.filename 
+              ? <Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>
+                Sélectionner une photo</Text>
 
-            : <View style={{flex:1, flexDirection:'row'}}>
+              : <View style={{flex:1, flexDirection:'row'}}>
 
-                <ImageSized
-                  resizeMode="contain"
-                  source={{uri:'file://' + this.props.path +'/'+ this.props.filename }}
-                />
+                  <ImageSizedSquare
+                    resizeMode="contain"
+                    source={{uri:'file://' + this.props.path +'/'+ this.props.filename }}
+                  />
 
-                { // Photo count.
-                  this.state.sources.length < 1
-                  ? null
-                  : <View 
-                      style={{position:'absolute', top:0, right:0,
-                        width:26, height:26,
-                        alignItems:'center', justifyContent:'center',
-                        backgroundColor:'white',
-                      }}
-                      >
-                      <View 
-                        style={{position:'absolute', bottom:2, left:2,
-                          height:22, width:22, 
-                          borderRadius:2, 
-                          borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
-                          borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
-                          backgroundColor:'white',
-                        }}
-                      />
-                      <View 
-                        style={{position:'absolute', bottom:6, left:6,
+                  { // Photo count.
+                    this.state.sources.length < 1
+                    ? null
+                    : <View 
+                        style={{position:'absolute', top:0, right:0,
+                          width:26, height:26,
                           alignItems:'center', justifyContent:'center',
-                          height:22, width:22, 
-                          borderRadius:2, 
-                          borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
-                          borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
                           backgroundColor:'white',
                         }}
                         >
-                        <Text style={{
-                          fontWeight:'bold', fontSize:12, textAlign:'center',
-                          color:this.props.styles.highlightColor, 
-                          backgroundColor:'transparent',
-                        }}>
-                        {this.state.sources.length}</Text>
+                        <View 
+                          style={{position:'absolute', bottom:2, left:2,
+                            height:22, width:22, 
+                            borderRadius:2, 
+                            borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                            borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                            backgroundColor:'white',
+                          }}
+                        />
+                        <View 
+                          style={{position:'absolute', bottom:6, left:6,
+                            alignItems:'center', justifyContent:'center',
+                            height:22, width:22, 
+                            borderRadius:2, 
+                            borderBottomWidth:2, borderBottomColor:this.props.styles.highlightColor,
+                            borderLeftWidth:2, borderLeftColor:this.props.styles.highlightColor,
+                            backgroundColor:'white',
+                          }}
+                          >
+                          <Text style={{
+                            fontWeight:'bold', fontSize:12, textAlign:'center',
+                            color:this.props.styles.highlightColor, 
+                            backgroundColor:'transparent',
+                          }}>
+                          {this.state.sources.length}</Text>
+                        </View>
                       </View>
-                    </View>
-                }
+                  }
 
-              </View>
-          }
-        </TouchableOpacity>
+                </View>
+            }
+          </TouchableOpacity>
         }
       </View>
     );
@@ -756,7 +755,7 @@ export class ImagePicker extends Component {
 
 
 //=========================================================================================
-export class ImageSized extends Component {
+export class ImageSizedSquare extends Component {
 //-----------------------------------------------------------------------------------------
   constructor (props) {
     super(props);
@@ -787,6 +786,46 @@ export class ImageSized extends Component {
     );
   }
 }
+
+//=========================================================================================
+export class ImageSized extends Component {
+//-----------------------------------------------------------------------------------------
+  constructor (props) {
+    super(props);
+    this.state={
+      height:false,
+      width:false,
+    };
+  }
+
+  setSize(e){
+    this.setState({
+      width:e.nativeEvent.layout.width,
+      height:e.nativeEvent.layout.height,
+    });
+  }
+
+  render(){
+    return(
+      <View 
+        style={{flex:1,}}
+        onLayout = {(event) => this.setSize(event) } 
+        >
+        { !this.state.height
+        ? null
+        : <Image 
+            style={{
+              width:this.state.width, height:this.state.height
+            }}
+            resizeMode={this.props.resizeMode ? this.props.resizeMode : "contain"}
+            source={this.props.source}
+          />
+        }
+      </View>
+    );
+  }
+}
+
 
 //=========================================================================================
 export class ViewSized extends Component {

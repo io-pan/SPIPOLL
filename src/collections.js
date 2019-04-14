@@ -455,8 +455,12 @@ class Collection extends Component {
               // TODO:
               //
               // . new insects do not appear in tab insect list
-              // . deal with backHandler here
- 
+
+              // . Deal with backHandler here back should do:
+              //   (0 close modal: done)
+              //   1 return to advancedlist if insect or session form is open
+              //   2 go to previous tab
+              //   3 go to collection list
 
 
               // Close lists.
