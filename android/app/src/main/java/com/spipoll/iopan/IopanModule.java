@@ -20,10 +20,19 @@ import  android.support.v4.content.ContextCompat;
 
 import java.io.IOException;
 import java.io.File;
+import java.io.FileOutputStream;
+// import java.io.FileInputStream;
+  import android.content.res.Resources;
 import java.util.Locale;
 import java.util.List;
 import android.location.Address;
 import android.location.Geocoder;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
+import android.util.Base64;
+import java.io.ByteArrayOutputStream;
 
 public class IopanModule extends ReactContextBaseJavaModule {
 
@@ -184,6 +193,94 @@ public class IopanModule extends ReactContextBaseJavaModule {
   }
 
 
+  @ReactMethod
+  public void cropBitmap(
+    String path, 
+    double x,
+    double y, 
+    double w,
+    double h,
+    double rotation,
+    double scale,
+    final Promise promise) {
+
+
+    WritableNativeMap returnValue = new WritableNativeMap();
+      returnValue.putString("path", path);
+      returnValue.putDouble("x", x);
+      returnValue.putDouble("y", y);
+      returnValue.putDouble("w", x);
+      returnValue.putDouble("h", y);
+      returnValue.putDouble("rotation", x);
+      returnValue.putDouble("scale", y);  
+
+    try {
+     
+      // final image
+      // Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
+
+      // Load bitmap.
+returnValue.putString("00", "GO");
+
+      Bitmap bitmap = null;
+      BitmapFactory.Options options = new BitmapFactory.Options();
+      options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+
+      bitmap = BitmapFactory.decodeFile(path, options);
+      if(bitmap==null){
+        returnValue.putString("20 error", "bmp Loaded");
+      }
+  
+      returnValue.putString("30 ", "bmp Loaded");
+  
+      // Rotate
+
+returnValue.putString("40 ", " ");
+
+      // Scale
+
+returnValue.putString("50 ", " ");
+
+      // Crop
+
+
+
+returnValue.putString("60", " ");
+
+
+      // Save motion bitmap as file.
+      String filname = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/test.jpg";
+      try {
+          FileOutputStream fOutputStream = new FileOutputStream(filname);
+          bitmap.compress(Bitmap.CompressFormat.JPEG, 80, fOutputStream);
+          fOutputStream.flush();
+          fOutputStream.close();
+          fOutputStream = null;
+      } catch (Resources.NotFoundException e) {
+          returnValue.putString("error","motion Documents directory of the app could not be found."+filname);
+          promise.resolve(returnValue);
+      } catch (IOException e) {
+          returnValue.putString("error","motion An unknown I/O exception has occurred."+filname);
+          promise.resolve(returnValue);
+      }
+
+returnValue.putString("99", "file saved");
+
+
+      promise.resolve(returnValue);
+
+    } catch (Exception e) {
+      returnValue.putString("ERROR", "ERROR");
+      promise.resolve(returnValue);
+    }
+  }
+
+
+  public static Bitmap rotateBitmap(Bitmap source, float angle){
+        Matrix matrix = new Matrix();
+        matrix.postRotate(angle);
+        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+  }
 
 }
 

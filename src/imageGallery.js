@@ -12,6 +12,7 @@ import {
   Dimensions,
   Slider,
   BackHandler,
+  NativeModules,
 } from 'react-native'
 
 import RNFetchBlob from 'rn-fetch-blob';
@@ -43,6 +44,12 @@ export class ModalCrop extends Component {
       cropWidth:0,
       cropHeight:0,
 
+    }
+    this.crop = {
+      positionX: 0, 
+      positionY: 0, 
+      scale: 1,
+      rotation: 0,
     }
   }
 
@@ -93,6 +100,74 @@ export class ModalCrop extends Component {
   rotate(deg){
     this.setState({rotate:deg});
   }
+
+  onMove(IOnMove){
+    //   type: string;
+    //   positionX: number;
+    //   positionY: number;
+    //   scale: number;
+    //   zoomCurrentDistance: number;
+
+    this.crop = {
+      positionX: IOnMove.positionX, 
+      positionY: IOnMove.positionY, 
+      scale: IOnMove.scale,
+      rotation: this.state.rotate,
+    }
+  }
+
+  cropImage(){
+    // Alert.alert(
+    //   'Remplacer la photo originale ?',
+    //   'Souhaitez vous remplacer par la photo originale par la photo recadrée '
+    //   + 'ou garder les deux ?',
+    //   [{
+    //     text: 'Annuler',
+    //     onPress: () => console.log('Cancel Pressed'),
+    //   },{
+    //     text: 'Conserver', 
+    //     onPress: () => console.log('Cancel Pressed'),
+    //   },{
+    //     text: 'Remplacer', 
+    //     onPress: () => console.log('Cancel Pressed'),
+    //   }]
+    // );
+
+    console.log(this.crop);
+    // String path, 
+    // int x,
+    // int y, 
+    // int w,
+    // int h,
+    // int rotation,
+    // int scale,
+    NativeModules.ioPan.cropBitmap(
+      this.props.source.url.replace('file://',''),
+      this.crop.positionX,
+      this.crop.positionY,
+500,
+500,
+      this.crop.rotation,
+      this.crop.scale,
+
+    )
+    .then((msg) => {
+     console.log(msg);
+
+
+    
+    })
+    .catch((err) => {
+      console.log(err);
+      // Alert.alert(
+      //   'Erreur',
+      //   'La photo n\'a pu être supprimée.\n'
+      //   +sources[i].url
+      // );
+    });
+
+  }
+
 
   render(){
     console.log(this.state)
@@ -160,17 +235,36 @@ export class ModalCrop extends Component {
             */}
           </View>
 
+          <TouchableOpacity 
+            style={[{
+              height:55,
+              width:55,
+              justifyContent:'center', alignItems:'center', 
+              borderRightWidth:1, borderRightColor:'white', 
+            }]}
+            onPress={()=> this.setLandscape(!this.state.landscape)}
+            >
+            <MaterialCommunityIcons
+              name="phone-rotate-landscape" //{this.state.landscape ? "crop-landscape" : "crop-portrait" }
+              style={[{ color:'white' }]}
+              size={30}
+            />
+          </TouchableOpacity>
+       
         </View>
 
         <View 
           onLayout={(event)=> this.getContainerSize(event)}
           style={{flex:1, backgroundColor:backgroundColor, justifyContent:'center', alignItems:'center',
             }}>
+
             { !this.state.containerWidth
               ? null
               : <ImageZoom 
                   ref="image-zoom"
                   style={{backgroundColor:'white'}}
+
+                  onMove={(IOnMove)=>this.onMove(IOnMove)}
                   cropWidth={this.state.cropWidth}
                   cropHeight={this.state.cropHeight}
 
@@ -236,15 +330,14 @@ export class ModalCrop extends Component {
               justifyContent:'center', alignItems:'center', 
               borderRightWidth:1, borderRightColor:'white', 
             }]}
-            onPress={()=> this.setLandscape(!this.state.landscape)}
+            onPress={() => this.cropImage()}
             >
             <MaterialCommunityIcons
-              name="phone-rotate-landscape" //{this.state.landscape ? "crop-landscape" : "crop-portrait" }
+              name="crop" 
               style={[{ color:'white' }]}
               size={30}
             />
           </TouchableOpacity>
-       
 
             <Slider  
               ref="sampleSize"
