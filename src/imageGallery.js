@@ -12,15 +12,19 @@ import {
   Dimensions,
   Slider,
   BackHandler,
-  NativeModules,
+  NativeModules,PanResponder,
+
 } from 'react-native'
 
 import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ImageViewer from 'react-native-image-zoom-viewer';
-import ImageZoom from 'react-native-image-pan-zoom';
+// import ImageZoom from 'react-native-image-pan-zoom';
 import { ImageSized } from './widgets.js';
 import FooterImage from './footerimage';
+
+import ImageZoom from 'react-native-view-editor';
+
 
 const backgroundColor='black',
       thumbBorderColor='black',
@@ -34,6 +38,8 @@ export class ModalCrop extends Component {
   constructor(props) {
     super(props);
     this.state = {
+outbase64:false,
+
       visible:false,
       rotate:0,
 
@@ -50,8 +56,41 @@ export class ModalCrop extends Component {
       positionY: 0, 
       scale: 1,
       rotation: 0,
-    }
+    };
+
+
+    this._panResponder = PanResponder.create({
+      // Ask to be the responder:
+      onStartShouldSetPanResponder: (evt, gestureState) => true,
+      onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
+      onMoveShouldSetPanResponder: (evt, gestureState) => true,
+      onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
+
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderTerminationRequest: () => false,
+      onPanResponderTerminate: () => {},
+      onPanResponderRelease: (evt, gestureState) => {},
+
+      onPanResponderGrant: (evt, gestureState) => {
+         console.log('ôoooooooooo');
+              console.log(evt.nativeEvent.changedTouches.length);  
+      console.log(gestureState.numberActiveTouches + ' ' + new Date().getTime());
+
+        // The gesture has started. Show visual feedback so the user knows
+        // what is happening!
+        // gestureState.d{x,y} will be set to zero now
+      },
+      onPanResponderMove: (evt, gestureState) => {
+     console.log(evt.nativeEvent.changedTouches.length);  
+      console.log(gestureState.numberActiveTouches + ' ' + new Date().getTime());
+        // The most recent move distance is gestureState.move{X,Y}
+        // The accumulated gesture distance since becoming responder is
+        // gestureState.d{x,y}
+      },
+    })
+    console.log(this._panResponder);
   }
+
 
   show(){
     Image.getSize(
@@ -63,6 +102,10 @@ export class ModalCrop extends Component {
           imageWidth:w,
           imageHeight:h,
           landscape: w > h,
+        }, function(){
+
+
+
         });
       }
     );
@@ -88,13 +131,14 @@ export class ModalCrop extends Component {
   }
 
   setLandscape(landscape){
-    this.refs['image-zoom'].reset();
-    this.setState({
-      landscape:landscape,
-      rotate:0,
-      // cropWidth: this.state.containerWidth,
-      // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
-    });
+this.setState({outbase64:!this.state.outbase64});
+    // this.refs['image-zoom'].reset();
+    // this.setState({
+    //   landscape:landscape,
+    //   rotate:0,
+    //   // cropWidth: this.state.containerWidth,
+    //   // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
+    // });
   }
 
   rotate(deg){
@@ -107,13 +151,17 @@ export class ModalCrop extends Component {
     //   positionY: number;
     //   scale: number;
     //   zoomCurrentDistance: number;
-
+    console.log(IOnMove);
     this.crop = {
       positionX: IOnMove.positionX, 
       positionY: IOnMove.positionY, 
       scale: IOnMove.scale,
       rotation: this.state.rotate,
-    }
+    };
+
+    console.log(this.crop);
+    console.log(this.state.cropWidth + ' - ' + this.state.cropHeight );
+    // if(this.refs['limage']) console.log(this.refs['limage'])
   }
 
   cropImage(){
@@ -145,14 +193,17 @@ export class ModalCrop extends Component {
       this.props.source.url.replace('file://',''),
       this.crop.positionX,
       this.crop.positionY,
+375,
 500,
-500,
+
       this.crop.rotation,
       this.crop.scale,
 
     )
     .then((msg) => {
-     console.log(msg);
+
+      this.setState({motionBase64:msg.motionBase64});
+          console.log(msg);
 
 
     
@@ -168,9 +219,17 @@ export class ModalCrop extends Component {
 
   }
 
-
+Mask() {
+  return (
+    <View style={styles.maskContainer}>
+      <View style={[styles.mask, styles.topBottom, styles.top]} />
+      <View style={[styles.mask, styles.topBottom, styles.bottom]} />
+      <View style={[styles.mask, styles.side, styles.left]} />
+      <View style={[styles.mask, styles.side, styles.right]} />
+    </View>
+  )
+}
   render(){
-    console.log(this.state)
     const titleStyleLandscape = this.state.landscape 
             ? {letterSpacing:8, paddingTop:0, transform:[{ rotateZ:'90deg'}]}
             : {}, 
@@ -181,11 +240,38 @@ export class ModalCrop extends Component {
           }
     ;
 
+const PIrad = Math.PI / 180;
+  let rad = this.state.rotate * Math.PI / 180,
+      
+        dx =   -  this.crop.positionX/ this.crop.scale;
+        dy =   -  this.crop.positionY/ this.crop.scale;
+
+
+        // dx = -100;
+        // dy = 60;
+
+
+        tx = Math.cos(rad) * dx - Math.sin(rad) * dy,
+        ty = Math.sin(rad) * dx + Math.cos(rad) * dy;
+
+// tx = Math.cos(( this.state.rotate) * PIrad) * dx 
+//       + Math.sin((360 - this.state.rotate) * PIrad) * dy
+//     ;
+
+// ty =  Math.sin(( this.state.rotate)  * PIrad) * dx 
+//     + Math.cos(( this.state.rotate) * PIrad) * dy
+//     ;
+
+console.log( this.state.rotate + ' ' + ty);
+
     return(
+      !this.state.visible ? null:
+
       <Modal
         visible={this.state.visible}
         onRequestClose={() => this.hide()}>
-        
+             {/* <View style={{position:'absolute', top:-100, left:-300, right:0, bottom:-500, zIndex:9999}}>*/}
+
         <View 
           // Title bar.
           style={{
@@ -252,18 +338,94 @@ export class ModalCrop extends Component {
           </TouchableOpacity>
        
         </View>
+{this.state.outbase64
+  ? <Image 
+          style={{
+                   
+                    width:  this.state.cropWidth  ,
+                    height: this.state.cropHeight,
+              }}
+                    resizeMode='contain'
+    source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
+            />
 
+
+  :
         <View 
           onLayout={(event)=> this.getContainerSize(event)}
-          style={{flex:1, backgroundColor:backgroundColor, justifyContent:'center', alignItems:'center',
+          style={{flex:1, justifyContent:'center', alignItems:'center',
+            backgroundColor:backgroundColor, 
             }}>
 
+
             { !this.state.containerWidth
+
+              ? null
+              :  
+               <ImageZoom
+      style={{flex:1}}
+      imageHeight={this.state.cropWidth*4/3}
+      imageWidth={this.state.cropWidth}
+      imageContainerHeight={this.state.cropHeight}
+      imageMask={null}
+      maskHeight={this.state.cropWidth}
+      maskPadding={50}
+      rotate={true}
+   >
+           <Image 
+                  ref="limage"
+                  style={{
+ 
+
+                    // top:
+                    //   this.state.landscape 
+                    //   ? this.state.cropHeight/2-this.state.cropWidth/2
+                    //   : 0
+                    // ,
+                    width:
+                      this.state.landscape 
+                      ? this.state.cropHeight
+                      : this.state.cropWidth
+                    ,
+                    height:
+                      this.state.landscape
+                      ? this.state.imageHeight> this.state.imageWidth // img prt
+                        ? this.state.cropWidth
+                        : this.state.cropWidth//*  this.state.imageWidth / this.state.imageHeight
+                      : this.state.cropHeight
+                      ,
+
+                    }}
+                    source={{uri:this.props.source.url}}
+                  />
+
+    </ImageZoom>
+
+
+
+/*
+
+
+
+
+
+    */
+              /*
               ? null
               : <ImageZoom 
                   ref="image-zoom"
-                  style={{backgroundColor:'white'}}
+                  style={{backgroundColor:'blue', 
 
+                   transform:[
+                      { translateX: tx},
+                      { translateY: ty},
+                      { rotateZ: ((this.state.landscape?90:0) + this.state.rotate) +'deg'},
+                    ],
+
+
+                    }}
+minScale ={1}
+maxScale ={8}
                   onMove={(IOnMove)=>this.onMove(IOnMove)}
                   cropWidth={this.state.cropWidth}
                   cropHeight={this.state.cropHeight}
@@ -282,8 +444,11 @@ export class ModalCrop extends Component {
                     : this.state.cropHeight
                   }
                   >
+                  <Image 
+                  ref="limage"
+                  style={{
+ 
 
-                  <Image style={{
                     top:
                       this.state.landscape 
                       ? this.state.cropHeight/2-this.state.cropWidth/2
@@ -301,23 +466,26 @@ export class ModalCrop extends Component {
                         : this.state.cropWidth//*  this.state.imageWidth / this.state.imageHeight
                       : this.state.cropHeight
                       ,
-                      transform:[
-                        { rotateZ: ((this.state.landscape?90:0) + this.state.rotate) +'deg'},
-                      ]
+
                     }}
-                    resizeMode='contain'
                     source={{uri:this.props.source.url}}
                   />
                 </ImageZoom>
+*/
             }
 
    {/*       <ImageSized
             resizeMode="contain"
             source={{uri:this.props.source.url}}
           />*/}
+
+{/*
+<View style={{backgroundColor:'red', position:'absolute', width:1,top:0,bottom:0,left:180}} />
+<View style={{backgroundColor:'red', position:'absolute', height:1,left:0,right:0,top:300}}  />
+*/}
         </View>
 
-
+}
 
         <View style={{flexDirection:'row', backgroundColor:this.props.styles.highlightColor }}>
            
@@ -365,7 +533,6 @@ export class ModalCrop extends Component {
           Retour à la collection</Text>
           </TouchableOpacity>
         */}
-
       </Modal>
     );
   }
@@ -405,7 +572,10 @@ export default class ImageGallery extends Component {
   }
 
   showCropModal(){
-    this.refs['crop-modal'].show();
+    this.setState({visibleCropModal:true},
+      function(){
+        this.refs['crop-modal'].show();
+      })
   }
   // hideCropModal(){
   //   this.refs['crop-modal'].hide());
@@ -598,6 +768,18 @@ export default class ImageGallery extends Component {
     console.log('render ImageGallery ' + this.props.title);
 
     return (
+      this.state.visibleCropModal 
+      ?
+      <ModalCrop
+          ref='crop-modal'
+          visible={this.state.visibleCropModal}
+          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
+          source={this.props.sources[this.state.index]}
+          styles={this.props.styles}
+        />
+
+      : //this.props.visible===false?null:
+
       <Modal
         onRequestClose={
           this.state.selectedForAction!==false
@@ -608,13 +790,7 @@ export default class ImageGallery extends Component {
         supportedOrientations={['portrait', 'landscape']}
         >
 
-        <ModalCrop
-          ref='crop-modal'
-          visible={this.state.visibleCropModal}
-          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
-          source={this.props.sources[this.state.index]}
-          styles={this.props.styles}
-        />
+
 
         <View // Slideshow
           style = {this.state.view == 'slide' ? {flex:1}:{
@@ -812,3 +988,44 @@ export default class ImageGallery extends Component {
 }
 
 
+
+const styles = StyleSheet.create({
+  container: {
+    marginTop: 20,
+  },
+  flex: {
+    flex: 1,
+  },
+  maskContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+  },
+  mask: {
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    position: 'absolute',
+    overflow: 'hidden',
+  },
+  topBottom: {
+    height: 50,
+    width: 360 - 100,
+    left: 50,
+  },
+  top: {
+    top: 0,
+  },
+  bottom: {
+    top: 360 - 50,
+  },
+  side: {
+    width: 50,
+    height: 360,
+    top: 0,
+  },
+  left: {
+    left: 0,
+  },
+  right: {
+    left: 360 - 50,
+  },
+});

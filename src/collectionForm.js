@@ -37,7 +37,6 @@ import {
 import { flowerList } from './flowers.js';
 import { colors } from './colors';
 
-
 //-----------------------------------------------------------------------------------------
 export default class  CollectionForm extends Component {
 //-----------------------------------------------------------------------------------------

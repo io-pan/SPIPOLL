@@ -477,41 +477,66 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
   renderInsectForm(data, index){ 
     // RUNNING SESSION
     // No form, launch camera instead.
-    console.log(this)
     return(
       <Modal 
         onRequestClose={() => this.refs['running-insect-list'].selectItem(false)}
         >
 
-        <View style={{flexDirection:'row', backgroundColor:colors.greenFlash,}}
-          > 
-          <TouchableOpacity 
-            style={[{
-              padding:10,
-              borderRightWidth:1, borderRightColor:'white', 
-            }]}
-            onPress={() => this.refs['running-insect-list'].selectItem(false)}
-            >
-            <MaterialCommunityIcons
-              name="chevron-left" 
-              style={[{ color:'white',
-              }]}
-              size={30}
-            />
-          </TouchableOpacity>
+                <View 
+                  style={{
+                    height:55, flexDirection:'row', 
+                    justifyContent:'center', alignItems:'center',
+                    backgroundColor:colors.greenFlash
+                    }}
+                  >
+                  <TouchableOpacity 
+                    style={[{
+                      height:55,
+                      width:55,
+                      justifyContent:'center', alignItems:'center', 
+                      borderRightWidth:1, borderRightColor:'white', 
+                    }]}
+                    onPress={() => this.refs['running-insect-list'].selectItem(false)}
+                    >
+                    <MaterialCommunityIcons
+                      name="chevron-left" 
+                      style={[{ color:'white' }]}
+                      size={30}
+                    />
+                  </TouchableOpacity>
 
-          <ScrollView horizontal={true}>
-          <Text style={{
-            textAlign:'center',
-            fontSize:18, fontWeight:'bold', color:'white',
-            padding:10, paddingLeft:20, paddingRight:20}}
-            >
-            { data.taxon_extra_info ? data.taxon_extra_info 
-            : data.taxon_name ? data.taxon_name 
-            : 'Insecte ' + (index+1) }
-          </Text>
-          </ScrollView>
-        </View>
+                  <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
+                    <Text style={{
+                      fontSize:18, fontWeight:'bold', textAlign:'center', 
+                      color:'white', 
+                    }}>
+                    { data.taxon_extra_info ? data.taxon_extra_info 
+                    : data.taxon_name ? data.taxon_name 
+                    : 'Insecte ' + (index+1) }</Text>
+                  </ScrollView>
+
+                  {/* this.state.sources.length
+                  ? <TouchableOpacity 
+                      style={[
+                        {borderLeftWidth:1, borderLeftColor:'white'}, {
+                        flexDirection:'row',
+                        width:60,
+                        justifyContent:'center', alignItems:'center',
+                      }]}
+                      onPress={()=> this.showImageGallery(this.state.sources.length-1)}
+                      >
+                      <Text style={{fontSize:16, color:'white', marginRight:5}}>{this.state.sources.length}</Text>
+                      <MaterialCommunityIcons
+                        name="view-grid"
+                        style={{ color:'white'}}
+                        size={30}
+                      />
+                    </TouchableOpacity>
+                  : null
+                  */}
+
+                </View>
+
 
         <View style={{flex:1}}
         >
@@ -520,7 +545,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
           photoPicked={(path) => this.photoPicked(path)}
         />
         </View>
-
+{/*
         <TouchableOpacity style={{
             backgroundColor:colors.greenFlash,
             height:55, justifyContent:'center', textAlign:'center',
@@ -530,6 +555,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
           <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
           Retour à la session</Text>
           </TouchableOpacity>
+      */}    
       </Modal>
     );
   }
@@ -599,7 +625,7 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
               >
               <MaterialCommunityIcons   
                 name='camera' // 'plus-circle-outline'
-                style={{fontSize:30, paddingRight:10, color:'white'}}
+                style={{fontSize:25, paddingRight:10, color:'white'}}
               />
               <Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
                Nouvelle espèce d'insecte</Text>

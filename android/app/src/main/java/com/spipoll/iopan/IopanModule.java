@@ -33,6 +33,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
 import android.util.Base64;
 import java.io.ByteArrayOutputStream;
+import android.media.ExifInterface;
 
 public class IopanModule extends ReactContextBaseJavaModule {
 
@@ -206,13 +207,13 @@ public class IopanModule extends ReactContextBaseJavaModule {
 
 
     WritableNativeMap returnValue = new WritableNativeMap();
-      returnValue.putString("path", path);
-      returnValue.putDouble("x", x);
-      returnValue.putDouble("y", y);
-      returnValue.putDouble("w", x);
-      returnValue.putDouble("h", y);
-      returnValue.putDouble("rotation", x);
-      returnValue.putDouble("scale", y);  
+      returnValue.putString("_path", path);
+      returnValue.putDouble("_x", (double)x);
+      returnValue.putDouble("_y", (double)y);
+      returnValue.putDouble("_w", (float)w);
+      returnValue.putDouble("_h", (float)h);
+      returnValue.putDouble("_rotation", rotation);
+      returnValue.putDouble("_scale", (float)scale);  
 
     try {
      
@@ -227,6 +228,7 @@ returnValue.putString("00", "GO");
       options.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
       bitmap = BitmapFactory.decodeFile(path, options);
+      
       if(bitmap==null){
         returnValue.putString("20 error", "bmp Loaded");
       }
@@ -234,12 +236,31 @@ returnValue.putString("00", "GO");
       returnValue.putString("30 ", "bmp Loaded");
   
       // Rotate
+      bitmap = rotateBitmap(bitmap, (float)rotation);
+      returnValue.putString("40 ", " ");
 
-returnValue.putString("40 ", " ");
+      // Translation
+      // bitmap = translateBitmap(bitmap, (float)x, (float)y);
 
+      returnValue.putString("45 ", " ");
+      
       // Scale
+bitmap = Bitmap.createScaledBitmap(bitmap,
+         500, 375, 
+          false);
+
+
 
 returnValue.putString("50 ", " ");
+
+        // BASE 64
+          Bitmap bitmap64 = null;
+          bitmap64 = rotateBitmap(bitmap, -90);
+          ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+          bitmap64.compress(Bitmap.CompressFormat.PNG, 30, outputStream);
+          String motionBase64 = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
+          outputStream = null;
+  returnValue.putString("motionBase64",motionBase64);
 
       // Crop
 
@@ -248,7 +269,7 @@ returnValue.putString("50 ", " ");
 returnValue.putString("60", " ");
 
 
-      // Save motion bitmap as file.
+      // Save  as file.
       String filname = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/test.jpg";
       try {
           FileOutputStream fOutputStream = new FileOutputStream(filname);
@@ -264,6 +285,16 @@ returnValue.putString("60", " ");
           promise.resolve(returnValue);
       }
 
+
+  ExifInterface exifSource = new ExifInterface(path);
+  ExifInterface exifDest = new ExifInterface(filname);
+  exifDest.setAttribute(ExifInterface.TAG_ORIENTATION, exifSource.getAttribute(ExifInterface.TAG_ORIENTATION));
+  exifDest.saveAttributes();
+
+  returnValue.putString("55 ", "copyExifRotation");
+
+
+
 returnValue.putString("99", "file saved");
 
 
@@ -277,9 +308,15 @@ returnValue.putString("99", "file saved");
 
 
   public static Bitmap rotateBitmap(Bitmap source, float angle){
-        Matrix matrix = new Matrix();
-        matrix.postRotate(angle);
-        return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+    Matrix matrix = new Matrix();
+    matrix.postRotate(angle);
+    return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
+  }
+
+  public static Bitmap translateBitmap(Bitmap source, float x, float y){
+    Matrix matrix = new Matrix();
+    matrix.postTranslate(x,y);
+    return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
   }
 
 }
