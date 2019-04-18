@@ -43,10 +43,6 @@ outbase64:false,
       visible:false,
       rotate:0,
 
-      // Container
-      containerWidth:0,
-      containerHeight:0,
-
       cropWidth:0,
       cropHeight:0,
 
@@ -131,14 +127,14 @@ outbase64:false,
   }
 
   setLandscape(landscape){
-this.setState({outbase64:!this.state.outbase64});
+// this.setState({outbase64:!this.state.outbase64});
     // this.refs['image-zoom'].reset();
-    // this.setState({
-    //   landscape:landscape,
-    //   rotate:0,
-    //   // cropWidth: this.state.containerWidth,
-    //   // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
-    // });
+    this.setState({
+      landscape:landscape,
+      rotate:0,
+      // cropWidth: this.state.containerWidth,
+      // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
+    });
   }
 
   rotate(deg){
@@ -338,7 +334,9 @@ console.log( this.state.rotate + ' ' + ty);
           </TouchableOpacity>
        
         </View>
-{this.state.outbase64
+
+
+  {this.state.outbase64
   ? <Image 
           style={{
                    
@@ -346,7 +344,7 @@ console.log( this.state.rotate + ' ' + ty);
                     height: this.state.cropHeight,
               }}
                     resizeMode='contain'
-    source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
+        source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
             />
 
 
@@ -358,74 +356,48 @@ console.log( this.state.rotate + ' ' + ty);
             }}>
 
 
-            { !this.state.containerWidth
+            { !this.state.cropWidth
+            ? null
+            :  
+              <ImageZoom
+                style={{ backgroundColor:'white' }}
 
-              ? null
-              :  
-               <ImageZoom
-      style={{flex:1}}
-      imageHeight={this.state.cropWidth*4/3}
-      imageWidth={this.state.cropWidth}
-      imageContainerHeight={this.state.cropHeight}
-      imageMask={null}
-      maskHeight={this.state.cropWidth}
-      maskPadding={50}
-      rotate={true}
-   >
-           <Image 
+                imageWidth={ this.state.cropWidth }
+                imageHeight={  this.state.cropHeight }
+
+      
+                imageContainerWidth={this.state.cropWidth }
+                imageContainerHeight={ this.state.cropHeight }
+
+                maskPadding={0}
+                rotate={true}
+                initialRotate={ this.state.landscape ? 90 : 0 }
+                maxZoomScale={8}
+                >
+                <Image 
                   ref="limage"
                   style={{
- 
+                    width:!this.state.landscape 
+                      ? this.state.cropWidth
+                      : this.state.cropWidth*3/4
+                    ,
 
-                    // top:
-                    //   this.state.landscape 
-                    //   ? this.state.cropHeight/2-this.state.cropWidth/2
-                    //   : 0
-                    // ,
-                    width:
-                      this.state.landscape 
+                    height:!this.state.landscape 
                       ? this.state.cropHeight
                       : this.state.cropWidth
                     ,
-                    height:
-                      this.state.landscape
-                      ? this.state.imageHeight> this.state.imageWidth // img prt
-                        ? this.state.cropWidth
-                        : this.state.cropWidth//*  this.state.imageWidth / this.state.imageHeight
-                      : this.state.cropHeight
-                      ,
-
                     }}
+                    // resizeMode="contain"
                     source={{uri:this.props.source.url}}
                   />
+                </ImageZoom>
 
-    </ImageZoom>
-
-
-
-/*
-
-
-
-
-
-    */
               /*
               ? null
               : <ImageZoom 
                   ref="image-zoom"
                   style={{backgroundColor:'blue', 
 
-                   transform:[
-                      { translateX: tx},
-                      { translateY: ty},
-                      { rotateZ: ((this.state.landscape?90:0) + this.state.rotate) +'deg'},
-                    ],
-
-
-                    }}
-minScale ={1}
-maxScale ={8}
                   onMove={(IOnMove)=>this.onMove(IOnMove)}
                   cropWidth={this.state.cropWidth}
                   cropHeight={this.state.cropHeight}
@@ -479,10 +451,10 @@ maxScale ={8}
             source={{uri:this.props.source.url}}
           />*/}
 
-{/*
+
 <View style={{backgroundColor:'red', position:'absolute', width:1,top:0,bottom:0,left:180}} />
 <View style={{backgroundColor:'red', position:'absolute', height:1,left:0,right:0,top:300}}  />
-*/}
+
         </View>
 
 }
