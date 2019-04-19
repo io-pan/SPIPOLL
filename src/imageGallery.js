@@ -41,8 +41,6 @@ export class ModalCrop extends Component {
 outbase64:false,
 
       visible:false,
-      rotate:0,
-
       cropWidth:0,
       cropHeight:0,
 
@@ -94,7 +92,6 @@ outbase64:false,
       (w,h) => {
         this.setState({
           visible:true, 
-          rotate:0,
           imageWidth:w,
           imageHeight:h,
           landscape: w > h,
@@ -131,33 +128,20 @@ outbase64:false,
     // this.refs['image-zoom'].reset();
     this.setState({
       landscape:landscape,
-      rotate:0,
       // cropWidth: this.state.containerWidth,
       // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
     });
   }
 
-  rotate(deg){
-    this.setState({rotate:deg});
-  }
-
-  onMove(IOnMove){
-    //   type: string;
-    //   positionX: number;
-    //   positionY: number;
-    //   scale: number;
-    //   zoomCurrentDistance: number;
-    console.log(IOnMove);
+  onChange(position, scale, rotate){
     this.crop = {
-      positionX: IOnMove.positionX, 
-      positionY: IOnMove.positionY, 
-      scale: IOnMove.scale,
-      rotation: this.state.rotate,
+      positionX: position.x, 
+      positionY: position.y, 
+      scale: scale,
+      rotation: rotate,
     };
 
     console.log(this.crop);
-    console.log(this.state.cropWidth + ' - ' + this.state.cropHeight );
-    // if(this.refs['limage']) console.log(this.refs['limage'])
   }
 
   cropImage(){
@@ -235,30 +219,6 @@ Mask() {
             color:'white'
           }
     ;
-
-const PIrad = Math.PI / 180;
-  let rad = this.state.rotate * Math.PI / 180,
-      
-        dx =   -  this.crop.positionX/ this.crop.scale;
-        dy =   -  this.crop.positionY/ this.crop.scale;
-
-
-        // dx = -100;
-        // dy = 60;
-
-
-        tx = Math.cos(rad) * dx - Math.sin(rad) * dy,
-        ty = Math.sin(rad) * dx + Math.cos(rad) * dy;
-
-// tx = Math.cos(( this.state.rotate) * PIrad) * dx 
-//       + Math.sin((360 - this.state.rotate) * PIrad) * dy
-//     ;
-
-// ty =  Math.sin(( this.state.rotate)  * PIrad) * dx 
-//     + Math.cos(( this.state.rotate) * PIrad) * dy
-//     ;
-
-console.log( this.state.rotate + ' ' + ty);
 
     return(
       !this.state.visible ? null:
@@ -374,23 +334,12 @@ console.log( this.state.rotate + ' ' + ty);
                 initialRotate={ this.state.landscape ? 90 : 0 }
                 maxZoomScale={8}
 
-                onChange={(position, scale, rotate)=> {
-                  // console.log('------------------------------- collback')
-                  // console.log(position)
-                  // console.log(scale)
-                  // console.log(rotate)
-                }}
+                onChange={(position, scale, rotate)=> this.onChange(position, scale, rotate) }
 
                 >
                 <Image 
                   ref="limage"
                   style={{
-                    transform:[
-                      // { translateX: tx},
-                      // { translateY: ty},
-                      { rotateZ: ((this.state.landscape?90:0) + this.state.rotate) +'deg'},
-                    ],
-
                     width:!this.state.landscape 
                       ? this.state.cropWidth
                       : this.state.cropWidth*3/4
@@ -405,77 +354,18 @@ console.log( this.state.rotate + ' ' + ty);
                     source={{uri:this.props.source.url}}
                   />
                 </ImageZoom>
-
-              /*
-              ? null
-              : <ImageZoom 
-                  ref="image-zoom"
-                  style={{backgroundColor:'blue', 
-
-                  onMove={(IOnMove)=>this.onMove(IOnMove)}
-                  cropWidth={this.state.cropWidth}
-                  cropHeight={this.state.cropHeight}
-
-                  imageWidth={
-                    this.state.landscape 
-                    ? this.state.cropHeight 
-                    : this.state.cropWidth
-                  }
-
-                  imageHeight={
-                    this.state.landscape 
-                    ? this.state.imageHeight> this.state.imageWidth 
-                      ? this.state.cropHeight  // img prt
-                      : this.state.cropHeight //*  this.state.imageWidth / this.state.imageHeight
-                    : this.state.cropHeight
-                  }
-                  >
-                  <Image 
-                  ref="limage"
-                  style={{
- 
-
-                    top:
-                      this.state.landscape 
-                      ? this.state.cropHeight/2-this.state.cropWidth/2
-                      : 0
-                    ,
-                    width:
-                      this.state.landscape 
-                      ? this.state.cropHeight
-                      : this.state.cropWidth
-                    ,
-                    height:
-                      this.state.landscape
-                      ? this.state.imageHeight> this.state.imageWidth // img prt
-                        ? this.state.cropWidth
-                        : this.state.cropWidth//*  this.state.imageWidth / this.state.imageHeight
-                      : this.state.cropHeight
-                      ,
-
-                    }}
-                    source={{uri:this.props.source.url}}
-                  />
-                </ImageZoom>
-*/
             }
 
-   {/*       <ImageSized
-            resizeMode="contain"
-            source={{uri:this.props.source.url}}
-          />*/}
-
-
-<View style={{backgroundColor:'red', position:'absolute', width:1,top:0,bottom:0,left:180}} />
-<View style={{backgroundColor:'red', position:'absolute', height:1,left:0,right:0,top:300}}  />
-
+            {/*
+            <View style={{backgroundColor:'red', position:'absolute', width:1,top:0,bottom:0,left:180}} />
+            <View style={{backgroundColor:'red', position:'absolute', height:1,left:0,right:0,top:300}}  />
+            */}
         </View>
 
-}
+  }
 
         <View style={{flexDirection:'row', backgroundColor:this.props.styles.highlightColor }}>
            
-
 
           <TouchableOpacity 
             style={[{
@@ -493,19 +383,7 @@ console.log( this.state.rotate + ' ' + ty);
             />
           </TouchableOpacity>
 
-            <Slider  
-              ref="sampleSize"
-              style={{flex:1, height:30,margin:10,backgroundColor:'transparent'}} 
-              thumbTintColor = {'white'}
-              minimumTrackTintColor={'white'}
-              maximumTrackTintColor={'white'}
-              minimumValue={ -180 }
-              maximumValue={ 180 }
-              step={1}
-              value={ this.state.rotate }
-              onValueChange={(value) => this.rotate(value)} 
-            />
-          </View>
+        </View>
 
 
         {/*
