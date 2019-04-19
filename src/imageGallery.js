@@ -361,7 +361,7 @@ console.log( this.state.rotate + ' ' + ty);
             :  
               <ImageZoom
                 style={{ backgroundColor:'white' }}
-
+                checkAdjustment={false}
                 imageWidth={ this.state.cropWidth }
                 imageHeight={  this.state.cropHeight }
 
@@ -373,10 +373,24 @@ console.log( this.state.rotate + ' ' + ty);
                 rotate={true}
                 initialRotate={ this.state.landscape ? 90 : 0 }
                 maxZoomScale={8}
+
+                onChange={(position, scale, rotate)=> {
+                  // console.log('------------------------------- collback')
+                  // console.log(position)
+                  // console.log(scale)
+                  // console.log(rotate)
+                }}
+
                 >
                 <Image 
                   ref="limage"
                   style={{
+                    transform:[
+                      // { translateX: tx},
+                      // { translateY: ty},
+                      { rotateZ: ((this.state.landscape?90:0) + this.state.rotate) +'deg'},
+                    ],
+
                     width:!this.state.landscape 
                       ? this.state.cropWidth
                       : this.state.cropWidth*3/4
