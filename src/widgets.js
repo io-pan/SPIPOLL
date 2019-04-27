@@ -529,11 +529,11 @@ export class ImagePicker extends Component {
     console.log(this.state.index);
     console.log(this.state.sources);
 
-    const currentImageIsSelected = 
-      this.state.sources.length 
-      && this.state.sources[this.state.index].url == 'file://' + this.props.path +'/'+ this.props.filename 
-      ? true
-      : false;
+    // const currentImageIsSelected = 
+    //   this.state.sources.length 
+    //   && this.state.sources[this.state.index].url == 'file://' + this.props.path +'/'+ this.props.filename 
+    //   ? true
+    //   : false;
 
     return(
       <View style={this.props.styles.container}

@@ -384,11 +384,18 @@ class Collection extends Component {
   }
 
   //----------------------------------------------------------------------
-
   tabSet(x, tab){
     this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
 
     if(tab=='calendar-clock'){
+
+
+     // Create default flash session if not exist.
+      if(this.props.data.protocole=='flash' && !this.refs['session-list'].state.items.length){
+          this.refs['session-list'].newItem();
+      }
+
+
       this.refs['session-list'].selectItem(
         this.props.data.protocole=='flash'
         ? 0     // Show default flash session
@@ -469,12 +476,17 @@ class Collection extends Component {
                 this.refs['insect-list'].selectItem(false);
               }
 
-            
               else if(event.nativeEvent.contentOffset.x == deviceWidth){ // tab = 'calendar-clock';
                 this.refs['insect-list'].selectItem(false);
+                
+                // Show/create default flash session.
                 if(this.props.data.protocole=='flash'){ 
-                  // Show default flash session.        
-                  this.refs['session-list'].selectItem(0);
+                  if(!this.refs['session-list'].state.items.length){
+                    this.refs['session-list'].newItem();
+                  }
+                  else {
+                    this.refs['session-list'].selectItem(0);     
+                  }
                 }
               }
 

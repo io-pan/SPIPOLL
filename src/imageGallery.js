@@ -95,10 +95,8 @@ outbase64:false,
           imageWidth:w,
           imageHeight:h,
           landscape: w > h,
+          imageLandscape: w > h,
         }, function(){
-
-
-
         });
       }
     );
@@ -124,21 +122,22 @@ outbase64:false,
   }
 
   setLandscape(landscape){
-// this.setState({outbase64:!this.state.outbase64});
-    // this.refs['image-zoom'].reset();
-    this.setState({
-      landscape:landscape,
-      // cropWidth: this.state.containerWidth,
-      // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
-    });
+this.setState({outbase64:!this.state.outbase64});
+ 
+
+    // this.setState({
+    //   landscape:landscape,
+    //   // cropWidth: this.state.containerWidth,
+    //   // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
+    // });
   }
 
   onChange(position, scale, rotate){
     this.crop = {
-      positionX: position.x, 
-      positionY: position.y, 
-      scale: scale,
-      rotation: rotate,
+      positionX: position.x||0, 
+      positionY: position.y||0, 
+      scale: scale||0,
+      rotation: rotate||0,
     };
 
     console.log(this.crop);
@@ -171,14 +170,12 @@ outbase64:false,
     // int scale,
     NativeModules.ioPan.cropBitmap(
       this.props.source.url.replace('file://',''),
+      this.state.imageWidth,
+      this.state.imageHeight,
       this.crop.positionX,
       this.crop.positionY,
-375,
-500,
-
       this.crop.rotation,
       this.crop.scale,
-
     )
     .then((msg) => {
 
@@ -199,30 +196,20 @@ outbase64:false,
 
   }
 
-Mask() {
-  return (
-    <View style={styles.maskContainer}>
-      <View style={[styles.mask, styles.topBottom, styles.top]} />
-      <View style={[styles.mask, styles.topBottom, styles.bottom]} />
-      <View style={[styles.mask, styles.side, styles.left]} />
-      <View style={[styles.mask, styles.side, styles.right]} />
-    </View>
-  )
-}
   render(){
     const titleStyleLandscape = this.state.landscape 
             ? {letterSpacing:8, paddingTop:0, transform:[{ rotateZ:'90deg'}]}
             : {}, 
           titleStyle = {
-            letterSpacing:3,
+            letterSpacing:0,
             fontSize:18, fontWeight:'bold', textAlign:'center', 
             color:'white'
           }
     ;
 
     return(
+      // Avoid loading big image while we do not need it.
       !this.state.visible ? null:
-
       <Modal
         visible={this.state.visible}
         onRequestClose={() => this.hide()}>
@@ -258,19 +245,21 @@ Mask() {
             <Text style={[titleStyle,titleStyleLandscape]}>
             R</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
-            E</Text>
+            e</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
-            C</Text>
+            c</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
-            A</Text>
+            a</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
-            D</Text>
+            d</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
-            R</Text>
+            r</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
-            E</Text>
+            a</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
-            R</Text>
+            g</Text>
+            <Text style={[titleStyle,titleStyleLandscape]}>
+            e</Text>
             {/*
             <Text style={{ fontSize:18, fontWeight:'bold', textAlign:'center', color:'white', }}>
             Recadrer  {this.props.title ? this.props.title.replace("\n", " ") : ''} </Text>
@@ -436,10 +425,7 @@ export default class ImageGallery extends Component {
   }
 
   showCropModal(){
-    this.setState({visibleCropModal:true},
-      function(){
-        this.refs['crop-modal'].show();
-      })
+    this.refs['crop-modal'].show();
   }
   // hideCropModal(){
   //   this.refs['crop-modal'].hide());
@@ -632,17 +618,8 @@ export default class ImageGallery extends Component {
     console.log('render ImageGallery ' + this.props.title);
 
     return (
-      this.state.visibleCropModal 
-      ?
-      <ModalCrop
-          ref='crop-modal'
-          visible={this.state.visibleCropModal}
-          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
-          source={this.props.sources[this.state.index]}
-          styles={this.props.styles}
-        />
 
-      : //this.props.visible===false?null:
+
 
       <Modal
         onRequestClose={
@@ -654,7 +631,13 @@ export default class ImageGallery extends Component {
         supportedOrientations={['portrait', 'landscape']}
         >
 
-
+        <ModalCrop
+          ref='crop-modal'
+          visible={false}
+          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
+          source={this.props.sources[this.state.index]}
+          styles={this.props.styles}
+        />
 
         <View // Slideshow
           style = {this.state.view == 'slide' ? {flex:1}:{

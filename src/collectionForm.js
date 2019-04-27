@@ -396,6 +396,20 @@ export default class  CollectionForm extends Component {
               );
             })
           }
+
+          // Create default flash session.
+          // if(key=='protocole' && value=='flash'){
+          //   {
+          //     date:'',
+          //     time_start:'',
+          //     time_end:'',
+          //     smpAttr_24:'',
+          //     smpAttr_25:'',
+          //     smpAttr_26:'',
+          //     shadow:'', 
+          //   } 
+          // }
+
           // Update list items.
           this.props.valueChanged(key,value);
 
