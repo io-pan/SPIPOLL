@@ -425,6 +425,7 @@ export class ImagePicker extends Component {
     .then((files) => {
 
       if(files.length){
+        files.sort();
         const sources = [],
               index = files.indexOf(this.props.filename);
 
@@ -465,10 +466,14 @@ export class ImagePicker extends Component {
 
       // If only one photo, selected it.
       if(this.state.sources.length == 1){
-        this.props.onSelect(path.replace(this.props.path,''));
+        console.log('onephoto',this.state.sources[0].url.replace('file://' + this.props.path,''))
+        console.log(this.props.path);
+         console.log(this.state.sources[0].url);
+        this.props.onSelect(this.state.sources[0].url.replace('file://' + this.props.path,''));
       }
       
       // Show gallery so user can see what he picked... 
+      // TODO : keep this ?
       this.setState({
         visibleCamera:false,
         bigGalleryIndex: this.nbTakenPhoto 
@@ -562,6 +567,8 @@ export class ImagePicker extends Component {
                 backgroundColor:this.props.styles.highlightColor},
               highlightColor:this.props.styles.highlightColor,
             }}
+
+            photoPicked={(path) => this.photoPicked(path)}
           />
         }
 

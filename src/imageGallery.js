@@ -140,7 +140,7 @@ export class ModalCrop extends Component {
     console.log(this.crop);
   }
 
-  cropImage(){
+  cropImage(copy){
     // Alert.alert(
     //   'Remplacer la photo originale ?',
     //   'Souhaitez vous remplacer par la photo originale par la photo recadrée '
@@ -157,33 +157,24 @@ export class ModalCrop extends Component {
     //   }]
     // );
 
-    console.log('CROP', this.crop);
- console.log('ny',
-  (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2)
 
-  );
+    let ny = (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2);
+    ny = ny * this.state.imageHeight/this.state.cropHeight;
+    ny = ny /this.crop.scale;
 
- ny = (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2);
- ny = ny * this.state.imageHeight/this.state.cropHeight;
- ny = ny /this.crop.scale;
+    let nx = (-this.crop.positionX ) +  (this.crop.scale-1)*(this.state.cropWidth/2)
+    nx = nx * this.state.imageWidth/this.state.cropWidth;
+    nx = nx / this.crop.scale;
 
- nx = (-this.crop.positionX ) +  (this.crop.scale-1)*(this.state.cropWidth/2)
- nx = nx * this.state.imageWidth/this.state.cropWidth;
- nx = nx / this.crop.scale;
+    let dest_path = this.props.source.url.replace('file://','');
+    if(copy){
+      dest_path = dest_path.split('.jpg');
+      dest_path = dest_path[0] + '_copie.jpg'
+    }
 
-  console.log('nx scale',
- nx  );
-  console.log('ny scale',
- ny  );
-    // String path, 
-    // int x,
-    // int y, 
-    // int w,
-    // int h,
-    // int rotation,
-    // int scale,
     NativeModules.ioPan.cropBitmap(
       this.props.source.url.replace('file://',''),
+      dest_path,
       this.state.imageWidth,
       this.state.imageHeight,
       nx,
@@ -192,11 +183,13 @@ export class ModalCrop extends Component {
       this.crop.scale,
     )
     .then((msg) => {
+      this.setState({visible:false});
+      // todo ioio
+      //  Update image picker & gallery. 
+      // add or update.
 
-          console.log(msg);
+      console.log(msg);
 
-
-    
     })
     .catch((err) => {
       console.log(err);
@@ -364,7 +357,7 @@ export class ModalCrop extends Component {
               flex:1,
               flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
               borderRightWidth:1, borderRightColor:'white'}}
-            onPress={() => this.cropImage()}
+            onPress={() => this.cropImage(false)}
             >
             <MaterialCommunityIcons
               name="check" 
@@ -372,7 +365,19 @@ export class ModalCrop extends Component {
             /><Text style={{color:'white', fontWeight:'bold', fontSize:18,}}>
             Enregistrer</Text>
           </TouchableOpacity>
-
+          <TouchableOpacity 
+            style={{
+              flex:1,
+              flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
+              borderRightWidth:1, borderRightColor:'white'}}
+            onPress={() => this.cropImage(true)}
+            >
+            <MaterialCommunityIcons
+              name="content-duplicate" 
+              style={{fontSize:24, paddingRight:10, color:'white'}}
+            /><Text style={{color:'white', fontWeight:'bold', fontSize:18,}}>
+            Copier</Text>
+          </TouchableOpacity>
         {/*
         <TouchableOpacity style={{
             backgroundColor:this.props.styles.highlightColor,
@@ -680,6 +685,9 @@ export default class ImageGallery extends Component {
             // TODO: try to solve ImageViewer flickering onrender ...
             position:'absolute', bottom:-200}}>
           <ImageViewer 
+          backgroundColor={ 
+             this.state.index == 2
+             ? this.props.styles.highlightColor : 'black'}
             imageUrls={this.props.sources}
             index={this.state.index}
             enablePreload={true}
@@ -687,6 +695,16 @@ export default class ImageGallery extends Component {
             saveToLocalByLongPress={false}
             renderHeader={(currentIndex) => this.renderHeader(currentIndex)}
             renderFooter={() => null} // renders below screnn bottom
+
+            renderImage={(props) => 
+              <Image  {...props} style={{...props.style, 
+                  borderWidth: 
+                    this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected
+                    ? 1 : 0,
+                  borderColor:this.props.styles.highlightColor,
+                }}
+              />
+            }
 
             onChange={(index) => this.setIndex(index)}
           />

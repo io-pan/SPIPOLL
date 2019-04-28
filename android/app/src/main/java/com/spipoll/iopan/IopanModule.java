@@ -196,7 +196,8 @@ public class IopanModule extends ReactContextBaseJavaModule {
 
   @ReactMethod
   public void cropBitmap(
-    String path, 
+    String src_path, 
+    String dst_path, 
     double w,
     double h,
     double x,
@@ -206,7 +207,7 @@ public class IopanModule extends ReactContextBaseJavaModule {
     final Promise promise) {
 
     WritableNativeMap returnValue = new WritableNativeMap();
-      // returnValue.putString("0 path", path);
+      // returnValue.putString("0 src_path", src_path);
       // returnValue.putDouble("0 _w", (float)w);
       // returnValue.putDouble("0 _h", (float)h);
       // returnValue.putDouble("0 __x", (double)x);
@@ -222,12 +223,12 @@ public class IopanModule extends ReactContextBaseJavaModule {
       Bitmap bitmap = null;
       BitmapFactory.Options options = new BitmapFactory.Options();
       options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-      bitmap = BitmapFactory.decodeFile(path, options);
+      bitmap = BitmapFactory.decodeFile(src_path, options);
         // returnValue.putString("11 w", ""+ bitmap.getWidth());
         // returnValue.putString("12 h", ""+ bitmap.getHeight());
 
       // Get image original orientation.
-      ExifInterface exif = new ExifInterface(path);
+      ExifInterface exif = new ExifInterface(src_path);
       int originalOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       originalOrientation = exifToDegrees(originalOrientation);
         // returnValue.putString("19 orientation", ""+originalOrientation);
@@ -264,7 +265,7 @@ public class IopanModule extends ReactContextBaseJavaModule {
               // returnValue.putString("52 nx ", ""+nx);
 
 
-      int ny = (int)Math.round((newH - h)/2); // Additional height due to rotation
+      int ny = (int)Math.round((newH - h)/2) // Additional height due to rotation
              + (int)Math.round(y);
             // returnValue.putString("56 ny ", ""+ny);
 
@@ -301,7 +302,8 @@ public class IopanModule extends ReactContextBaseJavaModule {
       //   returnValue.putString("60 motionBase64",motionBase64);
 
       // Save  as file.
-      String filname = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/test.jpg";
+      // String filname = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/test.jpg";
+      String filname = dst_path;
       try {
           FileOutputStream fOutputStream = new FileOutputStream(filname);
 
@@ -319,7 +321,7 @@ public class IopanModule extends ReactContextBaseJavaModule {
 
       // Copy image original orientation.
       //  ... no need since we took it in consideration when we create new image.
-        // ExifInterface exifSource = new ExifInterface(path);
+        // ExifInterface exifSource = new ExifInterface(src_path);
         // ExifInterface exifDest = new ExifInterface(filname);
         // exifDest.setAttribute(ExifInterface.TAG_ORIENTATION, exifSource.getAttribute(ExifInterface.TAG_ORIENTATION));
         // exifDest.saveAttributes();
