@@ -420,37 +420,39 @@ export class ImagePicker extends Component {
     }
   }
 
-  scanFolder(){
+  scanFolder(newfilename){
     RNFetchBlob.fs.ls(this.props.path)
     .then((files) => {
 
       if(files.length){
         files.sort();
+
         const sources = [],
-              index = files.indexOf(this.props.filename);
+              index = newfilename
+                    ? files.indexOf(newfilename.replace(this.props.path+'/', ''))
+                    : files.indexOf(this.props.filename)
+        ;
 
         files.forEach((filename)=> {
           sources.push({ url:'file://' + this.props.path +'/'+ filename });
+                                                              // + '?' + new Date().getTime() });
         });
 
         this.setState({
           index: index!=-1 ? index : 0,
           sources:sources,
         });
+
+        if(newfilename){
+          this.showImageGallery(index)
+        }
       }
 
     });  
   }
 
   showImageGallery = (index) => {
-    this.setState({
-      bigGalleryIndex:index,
-      // visibleCamera:false, // Do not close cam since we can open gallery from cam modal
-    });
-  }
-
-  hideImageGallery = () => {
-    this.setState({bigGalleryIndex: false});
+    this.refs['gallery'].show(index);
   }
 
   showCam(){
@@ -526,6 +528,12 @@ export class ImagePicker extends Component {
     );
   }
 
+  imageCroped(copy, path){
+    console.log('imageCroped');
+    this.scanFolder(path);
+    // todo goto imageslider
+  }
+
   render(){
     // TODO lots of render !! ?
     console.log('render ImagePicker ' + this.props.title);
@@ -544,14 +552,10 @@ export class ImagePicker extends Component {
       <View style={this.props.styles.container}
         >
 
-        { // Modal image Slider/Thumb list.
-          this.state.bigGalleryIndex === false
-          ? null
-          : <ImageGallery
+       
+        <ImageGallery
             ref={"gallery"}
             title={this.props.title ? this.props.title.replace("\n", " ") : ''}
-            visible={this.state.bigGalleryIndex}
-            onCancel={this.hideImageGallery}
 
             path={this.props.path}  // collection path
             selected={this.props.filename}
@@ -559,6 +563,8 @@ export class ImagePicker extends Component {
             sources={this.state.sources}
             onSelect = {(index, filename)=>this.imageSelected(index, filename)}
             imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
+
+            imageCroped={(copy, path)=> this.imageCroped(copy, path)}
 
             styles={{
               text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
@@ -570,7 +576,7 @@ export class ImagePicker extends Component {
 
             photoPicked={(path) => this.photoPicked(path)}
           />
-        }
+      
 
         { // Modal Caméra.
           this.props.cam === false
@@ -708,7 +714,7 @@ export class ImagePicker extends Component {
 
                   <ImageSizedSquare
                     resizeMode="contain"
-                    source={{uri:'file://' + this.props.path +'/'+ this.props.filename }}
+                    source={{uri:'file://' + this.props.path +'/'+ this.props.filename + '?' + new Date().getTime() }}
                   />
 
                   { // Photo count.

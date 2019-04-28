@@ -213,6 +213,7 @@ export default class  CollectionForm extends Component {
   storeFlower(field, value){
     const flower = field=='id_flower_unknown' && value
     ? {
+        ...this.state.collection.flower,
         id_flower_unknown:value,
         taxon_list_id_list:false,
         taxon_name:'',
@@ -455,6 +456,7 @@ export default class  CollectionForm extends Component {
 
   render () {
     console.log('render CollectionForm');
+   console.log(this.state.collection);
 
     if(!this.state.loaded){
       return null;
