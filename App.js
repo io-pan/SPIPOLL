@@ -71,16 +71,16 @@ export default class App extends Component<Props> {
   }
 
   testBattery(){
-      NativeModules.ioPan.getBatteryInfo()
-      .then((battery) => {
-        if(!this.state.bigBlackMask){
-          this.setState({battery:battery});
-        }
-        console.log(battery.level);
-        if (battery.level < 15) {
-          // TODO send alert (to distant).
-        }
-      })
+      // NativeModules.ioPan.getBatteryInfo()
+      // .then((battery) => {
+      //   if(!this.state.bigBlackMask){
+      //     this.setState({battery:battery});
+      //   }
+      //   console.log(battery.level);
+      //   if (battery.level < 15) {
+      //     // TODO send alert (to distant).
+      //   }
+      // })
 
   }
   // getBatteryLevel = (callback) => {

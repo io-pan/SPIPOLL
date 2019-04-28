@@ -206,41 +206,32 @@ public class IopanModule extends ReactContextBaseJavaModule {
     final Promise promise) {
 
     WritableNativeMap returnValue = new WritableNativeMap();
-      returnValue.putString("0 path", path);
-      returnValue.putDouble("0 _w", (float)w);
-      returnValue.putDouble("0 _h", (float)h);
-      returnValue.putDouble("0 __x", (double)x);
-      returnValue.putDouble("0 __y", (double)y);
-      returnValue.putDouble("0 rotation", rotation);
-      returnValue.putDouble("0 scale", (float)scale);  
+      // returnValue.putString("0 path", path);
+      // returnValue.putDouble("0 _w", (float)w);
+      // returnValue.putDouble("0 _h", (float)h);
+      // returnValue.putDouble("0 __x", (double)x);
+      // returnValue.putString("0 __y", ""+y);
+      //   returnValue.putDouble("0 __y d ", (double)y);
+      //   returnValue.putDouble("0 __y f", (float)y);
+      // returnValue.putDouble("0 rotation", rotation);
+      // returnValue.putDouble("0 scale", scale);  
+
 
     try {
-     
-      // final image
-      // Bitmap.createBitmap(bitmapWidth, bitmapHeight, Bitmap.Config.ARGB_8888);
-
       // Load bitmap.
-returnValue.putString("00", "GO");
-
       Bitmap bitmap = null;
       BitmapFactory.Options options = new BitmapFactory.Options();
       options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-
-
       bitmap = BitmapFactory.decodeFile(path, options);
-      returnValue.putString("11 w", ""+ bitmap.getWidth());
-      returnValue.putString("12 h", ""+ bitmap.getHeight());
-
+        // returnValue.putString("11 w", ""+ bitmap.getWidth());
+        // returnValue.putString("12 h", ""+ bitmap.getHeight());
 
       // Get image original orientation.
       ExifInterface exif = new ExifInterface(path);
       int originalOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       originalOrientation = exifToDegrees(originalOrientation);
-
-      returnValue.putString("19 orientation", ""+originalOrientation);
+        // returnValue.putString("19 orientation", ""+originalOrientation);
      
-     
-
       bitmap = Bitmap.createBitmap(
         rotateBitmap(bitmap,originalOrientation),
         0,0,
@@ -251,111 +242,63 @@ returnValue.putString("00", "GO");
       if(bitmap==null){
         returnValue.putString("20 error", "bmp Loaded");
       }
-  
-      returnValue.putString("20 ", "bmp Loaded");
-      returnValue.putString("21 w", ""+ bitmap.getWidth());
-      returnValue.putString("22 h", ""+ bitmap.getHeight());
+        // returnValue.putString("20 ", "bmp Loaded");
+        // returnValue.putString("21 w", ""+ bitmap.getWidth());
+        // returnValue.putString("22 h", ""+ bitmap.getHeight());
 
-
-
-
-      // Rotate
+      // Rotate.
       bitmap = rotateBitmap(bitmap, (float)rotation);
       int newW = bitmap.getWidth();
       int newH = bitmap.getHeight();
-
-      returnValue.putString("40 rotation ok.  ", " ");
-      returnValue.putString("41 newW: ", " " + newW  );
-      returnValue.putString("42 newH: ", " " +   newH);
-      // // Translate
-      // bitmap = bitmap = translateBitmap(bitmap, (float)x, (float)y);
-      // newW = bitmap.getWidth();
-      // newH = bitmap.getHeight();
-      // returnValue.putString("41 trans  ok. new dim: ", " " + newW + " " + newH);
+        // returnValue.putString("40 rotation ok.  ", " ");
+        // returnValue.putString("41 newW: ", " " + newW  );
+        // returnValue.putString("42 newH: ", " " +   newH);
 
 
+      // Keep portion of bitmap based on given scale and translation.
+      int finalWidth = (int)Math.round(w/scale);
+      int finalHeight = (int)Math.round(h/scale);
 
-      // // Keep part of bitmap based on given scale and translation
-
-      int nx = (int)Math.round((newW - w)/2) + (int)Math.round(x);
-      int ny = (int)Math.round((newH - h)/2) + (int)Math.round(y);
-      int nw = (int)Math.round(w);//Math.round(newW/scale);
-      int nh = (int)Math.round(h);//Math.round(newH/scale);
+      int nx = (int)Math.round((newW - w)/2) // Additional width due to rotation
+             + (int)Math.round(x);
+              // returnValue.putString("52 nx ", ""+nx);
 
 
-  returnValue.putString("50 ", "");
-  returnValue.putString("51 nx ", ""+nx);
-  returnValue.putString("52 ny ", ""+ny);
+      int ny = (int)Math.round((newH - h)/2); // Additional height due to rotation
+             + (int)Math.round(y);
+            // returnValue.putString("56 ny ", ""+ny);
+
+      // Reset vales if out of canvas.
+      if(nx < 0){
+        nx = 0; // returnValue.putString("57 reset nx ", ""+nx);
+      }
+
+      if(ny < 0){ 
+        ny = 0;  // returnValue.putString("58 reset ny ", ""+ny);
+      }
+  
+      if(nx+finalWidth > newW){
+        nx = newW - finalWidth;  // returnValue.putString("57 reset nx ", ""+nx);
+      } 
+      if(ny+finalHeight > newH){
+        ny = newH - finalHeight;  // returnValue.putString("58 reset ny ", ""+ny);
+      }
 
       bitmap = Bitmap.createBitmap(
         bitmap, 
         nx, 
         ny, 
-        (int)Math.round(w), 
-        (int)Math.round(h)
+        finalWidth, 
+        finalHeight
       );
 
-      // bitmap = translateBitmap(bitmap, (float)x, (float)y);
-        // return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
-      // returnValue.putString("45 ", " ");
-   
-
-
-// bitmap =  Bitmap.createScaledBitmap(
-//    rotateBitmap(bitmap, (float)rotation), 
-//    (int)(scale*w), (int)(scale*h), true);
-
-
-
-
-// bitmap =  Bitmap.createBitmap(bitmap, (int)(x+(scale*w)-w), (int)(y+(scale*h)-h), (int)w, (int)h, matrix, true);
-
-
-
-
-
-
-
-    // bitmap = Bitmap.createBitmap(bitmap, 0, 0,
-    //                   (float)w, (float)h, matrix, true);
-
-    // float[] points = {(float)x , (float)y};
-    // bitmap = cropBitmapObjectWithScale(
-    //     bitmap,
-    //     points,  
-    //     (int)rotation,
-    //     true,
-    //     3,
-    //     4,
-    //     (float)scale,
-    //     false, 
-    //     false
-    //   );
-
-      // Bitmap bitmap,
-      // float[] points,
-      // int degreesRotated,
-      // boolean fixAspectRatio,
-      // int aspectRatioX,
-      // int aspectRatioY,
-      // float scale,
-      // boolean flipHorizontally,
-      // boolean flipVertically
-
-
-
-
-
-        // BASE 64
-          Bitmap bitmap64 = Bitmap.createScaledBitmap(  bitmap, 500, 375,  false);
-          ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-          bitmap64.compress(Bitmap.CompressFormat.PNG, 30, outputStream);
-          String motionBase64 = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
-          outputStream = null;
-          returnValue.putString("60 motionBase64",motionBase64);
-
-
-
+      // // BASE 64
+      //   Bitmap bitmap64 = Bitmap.createScaledBitmap(  bitmap, 500, 375,  false);
+      //   ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      //   bitmap64.compress(Bitmap.CompressFormat.PNG, 30, outputStream);
+      //   String motionBase64 = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
+      //   outputStream = null;
+      //   returnValue.putString("60 motionBase64",motionBase64);
 
       // Save  as file.
       String filname = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/test.jpg";
@@ -374,19 +317,16 @@ returnValue.putString("00", "GO");
           promise.resolve(returnValue);
       }
 
-
       // Copy image original orientation.
-      // ExifInterface exifSource = new ExifInterface(path);
-      // ExifInterface exifDest = new ExifInterface(filname);
-      // exifDest.setAttribute(ExifInterface.TAG_ORIENTATION, exifSource.getAttribute(ExifInterface.TAG_ORIENTATION));
-      // exifDest.saveAttributes();
+      //  ... no need since we took it in consideration when we create new image.
+        // ExifInterface exifSource = new ExifInterface(path);
+        // ExifInterface exifDest = new ExifInterface(filname);
+        // exifDest.setAttribute(ExifInterface.TAG_ORIENTATION, exifSource.getAttribute(ExifInterface.TAG_ORIENTATION));
+        // exifDest.saveAttributes();
+        // returnValue.putString("55 ", "copyExifRotation");
 
-      // returnValue.putString("55 ", "copyExifRotation");
 
-
-
-      returnValue.putString("99", "file saved");
-
+      // returnValue.putString("99", "file saved");
 
       promise.resolve(returnValue);
 
@@ -397,25 +337,10 @@ returnValue.putString("00", "GO");
   }
 
 
-  public static Bitmap transformBitmap(Bitmap source, float x, float y, float angle, float scale){
-    Matrix matrix = new Matrix();
-    matrix.postScale(scale,scale);
-    matrix.postRotate(angle);
-    matrix.postTranslate(x,y);
-
-    return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
-  }
-
   public static Bitmap rotateBitmap(Bitmap source, float angle){
     Matrix matrix = new Matrix();
     matrix.postRotate(angle);
 
-    return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
-  }
-
-  public static Bitmap translateBitmap(Bitmap source, float x, float y){
-    Matrix matrix = new Matrix();
-    matrix.postTranslate(x,y);
     return Bitmap.createBitmap(source, 0, 0, source.getWidth(), source.getHeight(), matrix, true);
   }
 

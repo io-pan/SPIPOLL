@@ -38,13 +38,11 @@ export class ModalCrop extends Component {
   constructor(props) {
     super(props);
     this.state = {
-outbase64:false,
-
       visible:false,
       cropWidth:0,
       cropHeight:0,
-
     }
+
     this.crop = {
       positionX: 0, 
       positionY: 0, 
@@ -97,6 +95,7 @@ outbase64:false,
           landscape: w > h,
           imageLandscape: w > h,
         }, function(){
+
         });
       }
     );
@@ -107,7 +106,8 @@ outbase64:false,
     const w = e.nativeEvent.layout.width,
           h = e.nativeEvent.layout.height;
 
-    console.log(e.nativeEvent.layout.width);
+    console.log('he', w*4/3);
+
     this.setState({
       containerWidth:w,
       containerHeight:h,
@@ -122,21 +122,18 @@ outbase64:false,
   }
 
   setLandscape(landscape){
-this.setState({outbase64:!this.state.outbase64});
- 
-
-    // this.setState({
-    //   landscape:landscape,
-    //   // cropWidth: this.state.containerWidth,
-    //   // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
-    // });
+    this.setState({
+      landscape:landscape,
+      // cropWidth: this.state.containerWidth,
+      // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
+    });
   }
 
   onChange(position, scale, rotate){
     this.crop = {
       positionX: position.x||0, 
       positionY: position.y||0, 
-      scale: scale||0,
+      scale: scale||1,
       rotation: rotate||0,
     };
 
@@ -160,7 +157,24 @@ this.setState({outbase64:!this.state.outbase64});
     //   }]
     // );
 
-    console.log(this.crop);
+    console.log('CROP', this.crop);
+ console.log('ny',
+  (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2)
+
+  );
+
+ ny = (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2);
+ ny = ny * this.state.imageHeight/this.state.cropHeight;
+ ny = ny /this.crop.scale;
+
+ nx = (-this.crop.positionX ) +  (this.crop.scale-1)*(this.state.cropWidth/2)
+ nx = nx * this.state.imageWidth/this.state.cropWidth;
+ nx = nx / this.crop.scale;
+
+  console.log('nx scale',
+ nx  );
+  console.log('ny scale',
+ ny  );
     // String path, 
     // int x,
     // int y, 
@@ -172,14 +186,13 @@ this.setState({outbase64:!this.state.outbase64});
       this.props.source.url.replace('file://',''),
       this.state.imageWidth,
       this.state.imageHeight,
-      this.crop.positionX,
-      this.crop.positionY,
+      nx,
+      ny,
       this.crop.rotation,
       this.crop.scale,
     )
     .then((msg) => {
 
-      this.setState({motionBase64:msg.motionBase64});
           console.log(msg);
 
 
@@ -284,20 +297,6 @@ this.setState({outbase64:!this.state.outbase64});
        
         </View>
 
-
-  {this.state.outbase64
-  ? <Image 
-          style={{
-                   
-                    width:  this.state.cropWidth  ,
-                    height: this.state.cropHeight,
-              }}
-                    resizeMode='contain'
-        source={{uri: 'data:image/png;base64,' + this.state.motionBase64}}
-            />
-
-
-  :
         <View 
           onLayout={(event)=> this.getContainerSize(event)}
           style={{flex:1, justifyContent:'center', alignItems:'center',
@@ -351,29 +350,28 @@ this.setState({outbase64:!this.state.outbase64});
             */}
         </View>
 
-  }
 
-        <View style={{flexDirection:'row', backgroundColor:this.props.styles.highlightColor }}>
-           
-
+        <View  
+          style={{
+            height:55,
+            flexDirection:'row', alignItems:'center', justifyContent:'center',
+            backgroundColor:this.props.styles.highlightColor,
+            borderTopWidth:1, borderTopColor:'white',
+          }}
+          >         
           <TouchableOpacity 
-            style={[{
-              height:55,
-              width:55,
-              justifyContent:'center', alignItems:'center', 
-              borderRightWidth:1, borderRightColor:'white', 
-            }]}
+            style={{
+              flex:1,
+              flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
+              borderRightWidth:1, borderRightColor:'white'}}
             onPress={() => this.cropImage()}
             >
             <MaterialCommunityIcons
-              name="crop" 
-              style={[{ color:'white' }]}
-              size={30}
-            />
+              name="check" 
+              style={{fontSize:24, paddingRight:10, color:'white'}}
+            /><Text style={{color:'white', fontWeight:'bold', fontSize:18,}}>
+            Enregistrer</Text>
           </TouchableOpacity>
-
-        </View>
-
 
         {/*
         <TouchableOpacity style={{
@@ -386,6 +384,11 @@ this.setState({outbase64:!this.state.outbase64});
           Retour à la collection</Text>
           </TouchableOpacity>
         */}
+
+        </View>
+
+
+
       </Modal>
     );
   }
@@ -398,16 +401,29 @@ export default class ImageGallery extends Component {
     super(props, ctx)
 
     this.actions = {
-      slide:[
-        {label:'Recadrer'},
-      ],
+      slide:[{
+          label:'',//Supprimer
+          icon:'trash-can-outline',
+          action: () => this.deleteImage()
+        },{
+          label:'',//Recadrer
+          icon:'crop',
+          action: () => this.showCropModal()
+        },{
+          label:'Sélectionner',
+          icon:'paperclip',
+          action: () => this.selectImage()
+        }],
+
       thumbs:[{
-        label:'Annuler', 
-        action: ()=>this.cancelSelectedForAction()
-      },{
-        label:'Supprimer', 
-        action: () => this.deleteImage()
-      }],
+          label:'Annuler',
+          icon:'cancel',
+          action: ()=>this.cancelSelectedForAction()
+        },{
+          label:'Supprimer', 
+          icon:'trash-can-outline',
+          action: () => this.deleteImage()
+        }],
     };
 
     this.state = { 
@@ -458,10 +474,10 @@ export default class ImageGallery extends Component {
     }
   }
 
-  selectImage(index){
+  selectImage(){
     this.props.onSelect(
-      index,
-      this.props.sources[index].url.replace('file://'+this.props.path+'/' ,'')
+      this.state.index,
+      this.props.sources[this.state.index].url.replace('file://'+this.props.path+'/' ,'')
     );
   }
 
@@ -470,47 +486,67 @@ export default class ImageGallery extends Component {
   }
 
   deleteImage(){
-    const selectedForAction = this.state.selectedForAction;
+    const sources = this.props.sources,
+          selectedForAction = this.state.selectedForAction===false
+            ? [this.state.index]   // Delete single photo from slider.
+            : this.state.selectedForAction
+    ;
 
-    const sources = this.props.sources;
-    let selectedImageDeleted = false;
-    // Backward loop to avoid re-index issue.
-    for (var i = sources.length - 1; i >= 0; i--) {
-      if(selectedForAction.indexOf(i) !== -1) {
-        // Delete file.
-        RNFetchBlob.fs.unlink(sources[i].url)
-        .then(() => { 
-          // console.log('photo supprimée' )
-        })
-        .catch((err) => {
-          Alert.alert(
-            'Erreur',
-            'La photo n\'a pu être supprimée.\n'
-            +sources[i].url
-          );
-        });
+    Alert.alert(
+      'Supprimer ' + selectedForAction.length + ' photo' + (selectedForAction.length>1?'s':'') +' ?',
+      '',
+      [
+        {
+          text: 'Annuler',
+          onPress: () => console.log('Cancel Pressed'),
+        },
+        {
+          text: 'Supprimer', 
+          onPress: () => {
 
-        // Check if selected image has been deteted.
-        if( sources[i].url == 'file://' + this.props.path +'/'+ this.props.selected ){
-          selectedImageDeleted = true;
-        }
+            let selectedImageDeleted = false;
+            // Backward loop to avoid re-index issue.
+            for (var i = sources.length - 1; i >= 0; i--) {
+              if(selectedForAction.indexOf(i) !== -1) {
+                // Delete file.
+                RNFetchBlob.fs.unlink(sources[i].url)
+                .then(() => { 
+                  // console.log('photo supprimée' )
+                })
+                .catch((err) => {
+                  Alert.alert(
+                    'Erreur',
+                    'La photo n\'a pu être supprimée.\n'
+                    +sources[i].url
+                  );
+                });
 
-        // Remove from list.
-        sources.splice(i, 1);
-      }
-    }
+                // Check if selected image has been deteted.
+                if( sources[i].url == 'file://' + this.props.path +'/'+ this.props.selected ){
+                  selectedImageDeleted = true;
+                }
 
-    // Store purged list.
-    this.setState({
-      selectedForAction:false,
-    }, function(){
-      // Inform picker.
-      this.props.imageDeleted(
-        sources, 
-        sources.length==1 // Default select lonely remaining image...
-        ? sources[0].url.replace('file://'+this.props.path+'/' ,'')
-        : selectedImageDeleted ? '' : false); // ... or none.
-    });
+                // Remove from list.
+                sources.splice(i, 1);
+              }
+            }
+
+            // Store purged list.
+            this.setState({
+              selectedForAction:false,
+            }, function(){
+              // Inform picker.
+              this.props.imageDeleted(
+                sources, 
+                sources.length==1 // Default select lonely remaining image...
+                ? sources[0].url.replace('file://'+this.props.path+'/' ,'')
+                : selectedImageDeleted ? '' : false); // ... or none.
+            });
+
+          }
+        },
+      ],
+    );
   }
 
   toggleView(){
@@ -658,48 +694,33 @@ export default class ImageGallery extends Component {
 
           { // Sideshow Action buttons     
           true
-          ? <View style={[this.props.styles.container,{ 
-              flexDirection:'row', 
-              flexDirection:'row',
-              justifyContent:'center', alignItems:'center',
-              borderTopWidth:1, borderTopColor:'white',
-              backgroundColor:this.props.styles.highlightColor}]}
+          ? <View style={{ 
+                height:55,
+                flexDirection:'row', alignItems:'center', justifyContent:'space-around',
+                backgroundColor:this.props.styles.highlightColor,
+                borderTopWidth:1, borderTopColor:'white',
+              }}
               >
 
-              <TouchableOpacity 
-                onPress = {() => this.showCropModal()}
-                style={{ 
-                  flex:0.5,
-                  flexDirection:'row',
-                  justifyContent:'center', alignItems:'center',
-                  borderRightColor:'white', borderRightWidth:1,
-                }}>
-                <MaterialCommunityIcons   
-                  name='crop-rotate'
-                  size={35}
-                  color='white'
-                />
-                <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
-                Recadrer</Text>
-              </TouchableOpacity>
-
-             
-              <TouchableOpacity 
-                  onPress = {() => this.selectImage(this.state.index)}
+              { this.actions.slide.map((value, index) => 
+                <TouchableOpacity
+                  key={index}
                   style={{
-                    flex:0.5,
-                    flexDirection:'row',
-                    justifyContent:'center', alignItems:'center',
-                  }}>
+                    minWidth:50,
+                    flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
+                    borderRightWidth:1, 
+                    borderRightColor:'white'}}
+                  onPress = {value.action}
+                  >
                   <MaterialCommunityIcons   
-                    name='delete-circle'
-                    size={35}
-                    color='white'
-                  />
-                  <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
-                  Sélectionner</Text>
+                    name={value.icon}
+                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                  /><Text style={{color: 'white', fontSize:16,}}>
+                  {value.label}</Text>
                 </TouchableOpacity>
-       
+                )
+              }
+
             </View>
 
           : null
@@ -800,11 +821,12 @@ export default class ImageGallery extends Component {
 
           { // Thumbnails Action Buttons.
             this.state.selectedForAction === false ? null :
-            <View style={[this.props.styles.container,{ 
-              flexDirection:'row', 
-                  flexDirection:'row',
-                  justifyContent:'center', alignItems:'center',
-              backgroundColor:this.props.styles.highlightColor}]}
+            <View style={{ 
+                height:55,
+                flexDirection:'row', alignItems:'center', justifyContent:'center',
+                backgroundColor:this.props.styles.highlightColor,
+                borderTopWidth:1, borderTopColor:'white',
+              }}
               >
 
               { this.actions.thumbs.map((value, index) => 
@@ -816,7 +838,7 @@ export default class ImageGallery extends Component {
                   onPress = {value.action}
                   >
                   <MaterialCommunityIcons   
-                    name='delete-circle'
+                    name={value.icon}
                     style={{fontSize:24, paddingRight:10, color:'white'}}
                   /><Text style={{color: 'white', fontSize:16,}}>
                   {value.label}</Text>

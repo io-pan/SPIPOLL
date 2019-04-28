@@ -141,6 +141,7 @@ class Collection extends Component {
       },{
         icon:'calendar-clock',
         text:'Session'+(this.props.data.protocole=='flash'?'':'s')
+        // TODO: props might change after mount.
       },{
         icon:'ladybug',
         text:'Insectes'
@@ -392,7 +393,8 @@ class Collection extends Component {
 
      // Create default flash session if not exist.
       if(this.props.data.protocole=='flash' && !this.refs['session-list'].state.items.length){
-          this.refs['session-list'].newItem();
+          // this.refs['session-list'].newItem();
+          this.refs['session-list'].selectItem(0);
       }
 
 
@@ -408,6 +410,8 @@ class Collection extends Component {
   }
 
   render(){
+    console.log('render Collection');
+
     return(
       <View style={{flex:1}}>
       
@@ -482,7 +486,7 @@ class Collection extends Component {
                 // Show/create default flash session.
                 if(this.props.data.protocole=='flash'){ 
                   if(!this.refs['session-list'].state.items.length){
-                    this.refs['session-list'].newItem();
+                    this.refs['session-list'].selectItem(0);
                   }
                   else {
                     this.refs['session-list'].selectItem(0);     
@@ -513,6 +517,7 @@ class Collection extends Component {
               renderListItem = {(value, index) => this.renderSessionListItem(value, index)}
               renderDetailedItem = {(data, index) => this.renderSessionForm(data, index)}
 
+              editing = {this.props.data.protocole=='flash' ? 0 : false}
               newItem = {(index) => this.newSession(index)}
               newItemContent = {this.props.data.protocole=='flash' ? false : 
                 <View style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}

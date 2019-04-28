@@ -31,13 +31,13 @@ export default class AdvancedList extends Component {
       // newItem // callback
       // newItemLabel
       // deleteItem
-
+console.log('.............'+props.editing)
     this.state = {
       items:[],
       editing:false,
       selectedItems:false,
     };
-    this.editingRequested = false;
+    // this.editingRequested = false;
   }
 
   componentWillMount(){
@@ -49,17 +49,20 @@ export default class AdvancedList extends Component {
       else {
         if(items){
           console.log('items: ', JSON.parse(items));
+         
           this.setState({
             items:JSON.parse(items),
-            editing: this.editingRequested,
+            editing: typeof this.props.editing != 'undefined' ? this.props.editing : false,// this.editingRequested,
           }, function(){
-            this.editingRequested = false;
+            // this.editingRequested = false;
             // console.log(this.props.localStorage, JSON.parse(items));
           });
         }
-        else if(this.editingRequested !== false){
+
+        // Create item if editing requested.
+        else if( typeof this.props.editing != 'undefined'){
           this.newItem();
-          this.editingRequested = false;
+          // this.editingRequested = false;
         }
       }
     });
@@ -117,7 +120,7 @@ export default class AdvancedList extends Component {
 
   selectItem(index){
     if(this.state.items.length==0){
-      this.editingRequested = index;
+      // this.editingRequested = index; // storage not loaded
     }
 
     else{
@@ -192,11 +195,15 @@ export default class AdvancedList extends Component {
   }
 
   //TODO: as props
-  actions = [{
+  actions = [
+  {
     label:'Annuler', 
+    icon:'cancel',
     action: ()=> this.selectedItems(false)
-  },{
-    label:'Supprimer', 
+  },
+  {
+    label:'Supprimer',
+    icon:'trash-can-outline',
     action: () => this.deleteSelected()
   }];
 
@@ -211,7 +218,7 @@ export default class AdvancedList extends Component {
         }}
         >
 
-      { this.state.selectedItems === false 
+      { this.state.selectedItems === false
 
       ? // Default button: NEW ITEM
         this.props.newItemContent === false ? null :
@@ -226,12 +233,12 @@ export default class AdvancedList extends Component {
           <TouchableOpacity
             key={index}
             style={{
-              flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',
+              flexDirection:'row', flex:1/this.actions.length, height:50, alignItems:'center', justifyContent:'center',
               borderRightWidth:1, borderRightColor:'white'}}
             onPress = {value.action}
             >
             <MaterialCommunityIcons   
-              name='delete-circle'
+              name={value.icon}
               style={{fontSize:24, paddingRight:10, color:'white'}}
             /><Text style={{color: 'white', fontSize:16,}}>
             {value.label}</Text>
