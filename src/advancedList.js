@@ -6,7 +6,6 @@ import {
   StyleSheet,
   View,
   TouchableOpacity,
-  BackHandler,
   ScrollView,
   FlatList,
   AsyncStorage,
@@ -31,7 +30,7 @@ export default class AdvancedList extends Component {
       // newItem // callback
       // newItemLabel
       // deleteItem
-console.log('.............'+props.editing)
+      
     this.state = {
       items:[],
       editing:false,
@@ -66,26 +65,6 @@ console.log('.............'+props.editing)
         }
       }
     });
-
-    this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-      if (this.state.selectedItems!==false){
-        this.setState({selectedItems:false});
-      }
-      else if (this.state.editing!==false){
-        alert();
-        this.setState({editing:false});
-      }  
-      else if(this.props.backHandler){
-        this.props.backHandler();
-      }
-
-      return true;      
-    });
-  }
-
-  componentWillUnmount(){
-    this.backHandler.remove();
-    BackHandler.removeEventListener('hardwareBackPress', this.backButton);
   }
 
   newItem(){

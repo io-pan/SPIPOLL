@@ -157,6 +157,9 @@ export class ModalCrop extends Component {
     //   }]
     // );
 
+// TODO:
+//  . not ok when cropping a cropped photo
+//  . copie 1 2 3...
 
     let ny = (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2);
     ny = ny * this.state.imageHeight/this.state.cropHeight;

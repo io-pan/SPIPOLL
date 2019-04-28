@@ -49,6 +49,15 @@ export class Form extends Component {
     return array;
   }
 
+  fieldChanged(key, value){
+
+    // TODO: store here so parent component do not need to reRender
+    // AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
+
+    this.props.fieldChanged(key, value);
+  }
+
+
   render(){
     return (
       this.props.fields.map((field, index) => 
@@ -87,9 +96,9 @@ export class Form extends Component {
                    }
                 ]}
                 defaultValue={this.props.currentValues[field.name] ? this.props.currentValues[field.name]+'' : ''}
-                onEndEditing = {(event) => this.props.fieldChanged(field.name, isNaN(parseInt(event.nativeEvent.text),10) 
+                onEndEditing = {(event) => this.fieldChanged(field.name, isNaN(parseInt(event.nativeEvent.text),10) 
                   ? '' : parseInt(event.nativeEvent.text),10)} 
-                onSubmitEditing = {(event) => this.props.fieldChanged(field.name, isNaN(parseInt(event.nativeEvent.text),10) 
+                onSubmitEditing = {(event) => this.fieldChanged(field.name, isNaN(parseInt(event.nativeEvent.text),10) 
                   ? '' : parseInt(event.nativeEvent.text),10)}               
               />
             </View>
@@ -103,9 +112,9 @@ export class Form extends Component {
                   key={field.title+'_'+value.value}
                   style={this.props.styles.label}
                   onPress = { field.type=='singleSelect'
-                    ? () => this.props.fieldChanged(field.name, 
+                    ? () => this.fieldChanged(field.name, 
                         this.props.currentValues[field.name]==value.value ? '' : value.value)
-                    : () => this.props.fieldChanged(field.name, this.makeMultiSelect(field.name, value.value))
+                    : () => this.fieldChanged(field.name, this.makeMultiSelect(field.name, value.value))
                   }
                   >
                   <Text style={[this.props.styles.labelText,{

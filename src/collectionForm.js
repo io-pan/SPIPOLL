@@ -24,6 +24,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 
 import FooterImage from './footerimage';
 // import ImageView from './imageView';
+import LoadingView from './loadingview';
 import ModalFilterPicker from './filterSelect';
 import { deg2dms, dmsFormat } from './formatHelpers.js';
 import {
@@ -166,7 +167,10 @@ export default class  CollectionForm extends Component {
       else {
         console.log('localStorage ' + this.props.data.date+'_collection', JSON.parse(collection));
         if(collection){
-          this.setState({loaded:true,collection:JSON.parse(collection)});
+          this.setState({
+            loaded:true,
+            collection:JSON.parse(collection)
+          });
         }
       }
     });
@@ -459,7 +463,7 @@ export default class  CollectionForm extends Component {
    console.log(this.state.collection);
 
     if(!this.state.loaded){
-      return null;
+      return <LoadingView/>;
     }
 
     return (

@@ -47,7 +47,6 @@ class CollectionNavTabs extends Component {
   constructor(props) {
     super(props);
 
-
     this.state = {
       tab: 'flower', // TODO depending on collection state.
     }
@@ -135,6 +134,7 @@ class Collection extends Component {
     }
 
     this.tabIndicatorX = new Animated.Value(0);
+    this.tab = 'flower';
     this.tabs = [{
         icon:'flower',
         text:'Fleur'
@@ -153,6 +153,41 @@ class Collection extends Component {
     if(!this.state.name){
       this.refs['name'].focus();
     }
+
+    this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+      // BackHandler behaviour:
+      // 1. return to advancedlist if insect or session form is open
+      // 2. go to previous tab
+      // 3. go to collection list
+
+      if (this.tab == 'flower'){
+        this.collectionChanged('editing', false);
+      }
+
+      else if (this.tab == 'calendar-clock'){
+        if (this.refs['session-list'].state.editing!==false
+        && this.props.data.protocole!='flash' ){
+          this.refs['session-list'].selectItem(false);
+        }
+        else{
+          this.refs['CollectionNavTabs'].setTab('flower');
+        }
+      } 
+
+      else if (this.tab == 'ladybug'){
+        if (this.refs['insect-list'].state.editing!==false){
+          this.refs['insect-list'].selectItem(false);
+        }
+        else{
+          this.refs['CollectionNavTabs'].setTab('calendar-clock');
+        }
+      } 
+      return true;      
+    });
+  }
+
+  componentWillUnmount(){
+    this.backHandler.remove();
   }
 
 
@@ -387,11 +422,12 @@ class Collection extends Component {
   //----------------------------------------------------------------------
   tabSet(x, tab){
     this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
+    this.tab = tab;
 
     if(tab=='calendar-clock'){
 
 
-     // Create default flash session if not exist.
+      // Create default flash session if not exist.
       if(this.props.data.protocole=='flash' && !this.refs['session-list'].state.items.length){
           // this.refs['session-list'].newItem();
           this.refs['session-list'].selectItem(0);
@@ -467,20 +503,15 @@ class Collection extends Component {
               //
               // . new insects do not appear in tab insect list
 
-              // . Deal with backHandler here back should do:
-              //   (0 close modal: done)
-              //   1 return to advancedlist if insect or session form is open
-              //   2 go to previous tab
-              //   3 go to collection list
-
-
               // Close lists.
               if(event.nativeEvent.contentOffset.x == 0){ //  tab = 'flower';     
+                this.tab = 'flower';
                 this.refs['session-list'].selectItem(this.props.data.protocole=='flash' ? 0 : false);
                 this.refs['insect-list'].selectItem(false);
               }
 
               else if(event.nativeEvent.contentOffset.x == deviceWidth){ // tab = 'calendar-clock';
+                this.tab = 'calendar-clock';
                 this.refs['insect-list'].selectItem(false);
                 
                 // Show/create default flash session.
@@ -495,6 +526,7 @@ class Collection extends Component {
               }
 
               else if(event.nativeEvent.contentOffset.x == 2*deviceWidth){ //  tab = 'ladybug';  
+                this.tab = 'ladybug';
                 this.refs['session-list'].selectItem(this.props.data.protocole=='flash' ? 0 : false);
               }
             }}
