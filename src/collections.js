@@ -396,13 +396,14 @@ class Collection extends Component {
 
   newSession(){
     return {
-        date:'',
-        time_start:'',
-        time_end:'',
-        smpAttr_24:'',
-        smpAttr_25:'',
-        smpAttr_26:'',
-        shadow:'',
+        date:null,
+        time_start:null,
+        time_end:null,
+        smpAttr_24:null,
+        smpAttr_25:null,
+        smpAttr_26:null,
+        smpAttr_27:null,
+        shadow:null
     };
   }
 
@@ -607,40 +608,40 @@ export default class CollectionList extends Component {
 
     // Create stored data.
     AsyncStorage.setItem(now+'_collection', JSON.stringify({
-      storage:{type:false, path:false},
-      name:'',
-      protocole:'',
+      storage:{type:null, path:null},
+      name:null,
+      protocole:null,
 
       place:{
-        lat:false,
-        long:false,
-        name:''
+        lat:null,
+        long:null,
+        name:null
       }, 
 
       flower:{
-        photo:'',
-        id_flower_unknown:false,
-        taxon_list_id_list:false,     // flower:taxa_taxon_list_id_list[]
-        taxon_name:'',                // just for display on app.
-        taxon_extra_info:'',
-        comment:'',
+        photo:null,
+        id_flower_unknown:null,
+        taxon_list_id_list:null,     // flower:taxa_taxon_list_id_list[]
+        taxon_name:null,                // just for display on app.
+        taxon_extra_info:null,
+        comment:null,
       },
 
       environment:{
         photo:'',
-        occAttr_3_1528533:false,      //  spontanée, plantée occAttr:3:1528533
-        locAttr_2:'',     // NOT MANDATORY            //  ruche
+        occAttr_3_1528533:null,      //  spontanée, plantée occAttr:3:1528533
+        locAttr_2:null,     // NOT MANDATORY            //  ruche
         locAttr_1:[],   // NOT MANDATORY              //  habitat
-        locAttr_3:false,                 //  grande culture en fleur
+        locAttr_3:null,                 //  grande culture en fleur
       },
     }));
 
     // Return data required for list.
     return {
-      storage:{type:false, path:false},
-      name:'',
-      protocole:'',
-      place:{lat:'', long:'', name:''},
+      storage:{type:null, path:null},
+      name:null,
+      protocole:null,
+      place:{lat:null, long:null, name:null},
       date:now,
     }
   }

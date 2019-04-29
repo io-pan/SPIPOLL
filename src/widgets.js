@@ -29,6 +29,19 @@ import { dmsFormat, deg2dms, pad2 } from './formatHelpers.js';
 // TODO:  Add locationSelect and others
 //        ... at least take it out of CollectionForm.
 
+//=========================================================================================
+export const checkForm = (structure, data) => {
+  let ok = true;
+  structure.map((value, index) => {
+    if( !value.optional){
+      if(value.type == 'multiSelect' && data[value.name].length == 0
+      || value.type == 'singleSelect' && data[value.name] === null){
+        ok = false;
+      }
+    }
+  });
+  return ok;
+}
 
 //=========================================================================================
 export class Form extends Component {
@@ -69,7 +82,7 @@ export class Form extends Component {
           
           <Text style={[this.props.styles.title, 
             ((field.type=='singleSelect' 
-                && !(this.props.currentValues[field.name] || this.props.currentValues[field.name] === 0))
+                && this.props.currentValues[field.name] === null)
 
             || (field.type=='multiSelect'  
                 && this.props.currentValues[field.name].length==0)
@@ -117,7 +130,7 @@ export class Form extends Component {
                   style={this.props.styles.label}
                   onPress = { field.type=='singleSelect'
                     ? () => this.fieldChanged(field.name, 
-                        this.props.currentValues[field.name]===value.value ? '' : value.value)
+                        this.props.currentValues[field.name]===value.value ? null : value.value)
                     : () => this.fieldChanged(field.name, this.makeMultiSelect(field.name, value.value))
                   }
                   >

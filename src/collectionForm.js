@@ -26,6 +26,7 @@ import {
   ImagePicker,
   LocationPicker,
   Form,
+  checkForm,
 } from './widgets.js';
 
 // Spipoll data.
@@ -45,9 +46,9 @@ export default class  CollectionForm extends Component {
           type:'singleSelect',
           title:'La plante est',
           values: [ 
-            {label:'Spontanée',   value:'108' },
-            {label:'Plantée',     value:'109' },
-            {label:'Ne sais pas', value:'110' },
+            {label:'Spontanée',   value:108 },
+            {label:'Plantée',     value:109 },
+            {label:'Ne sais pas', value:110 },
           ],
         },{
           name: 'ocAttr_2',
@@ -59,9 +60,9 @@ export default class  CollectionForm extends Component {
           type:'singleSelect',
           title:'Grande culture en fleur à moins de 50m',
           values: [ 
-            {label:'Oui', value:'140' },
-            {label:'Non', value:'141' },
-            {label:'Ne sais pas', value:'142' },
+            {label:'Oui', value:140 },
+            {label:'Non', value:141 },
+            {label:'Ne sais pas', value:142 },
           ],
         },{
           name:'locAttr_1',
@@ -336,16 +337,7 @@ export default class  CollectionForm extends Component {
     }
 
     // Check Environment form validity.
-    let envOk = true;
-    this.form.environment.map((value, index) => {
-      if( !value.optional){
-        if(value.type == 'multiSelect' && this.state.collection.environment[value.name].length == 0
-        || value.type == 'singleSelect' && !this.state.collection.environment[value.name]){
-          envOk = false;
-        }
-      }
-    });
-
+    const envOk = checkForm(this.form.environment, this.state.collection.environment);
 
     return (
         

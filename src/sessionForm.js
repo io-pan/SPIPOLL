@@ -23,7 +23,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 
 import FooterImage from './footerimage';
 import AdvancedList from './advancedList';
-import { Form, Timer, ImageSlider} from './widgets.js';
+import { Form, checkForm, Timer, ImageSlider,} from './widgets.js';
 import { colors } from './colors';
 import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 import Cam from './cam';
@@ -63,7 +63,7 @@ export default class SessionForm extends Component {
           type:'singleSelect',
           title:'Vent',
           values: [ 
-            {label:'Nul',                value:131},
+            {label:'Nul',                 value:131},
             {label:'Faible, irrégulier',  value:132},
             {label:'Faible, continu',     value:133},
             {label:'Fort, irrégulier',    value:134},
@@ -366,15 +366,15 @@ export default class SessionForm extends Component {
 
   stopSession(){
     const now = new Date();
-console.log(now)
-console.log(now.getTime());
-console.log()
+    // console.log(now)
+    // console.log(now.getTime());
+    // console.log()
 
-console.log(new Date(this.state.session.time_start))
-console.log(this.state.session.time_start);
-console.log()
+    // console.log(new Date(this.state.session.time_start))
+    // console.log(this.state.session.time_start);
+    // console.log()
 
-console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
+    // console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
 
     if(now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000){
@@ -454,12 +454,12 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
     // Return default data.
     return {
-      taxon_list_id_list:false,
-      taxon_name:'',
-      comment:'',
-      session:false,
-      photo:'',
-      date: now,
+      taxon_list_id_list:null,
+      taxon_name:null,
+      comment:null,
+      session:null,
+      photo:null,
+      date:null,
     };
   }
 
@@ -921,6 +921,10 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
   render(){
     console.log('SessionForm');
+
+    // Check form validity.
+    const sessOk = checkForm(this.form.session, this.state.session);
+
     const sessionStatus = this.sessionStatus();
     return(
       <View  style={{flex:1}}>
@@ -940,7 +944,10 @@ console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
                   >
                   <Text style={{
                     fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
-                    padding:5, color:colors.greenFlash, backgroundColor:'transparent'}}>
+                    padding:5, 
+                    color: sessOk ? colors.greenFlash : colors.purple,
+                    backgroundColor:'transparent'
+                    }}>
                       {formatDate(this.state.session.date)}  {formatTime(this.state.session.time_start)}  -  {formatTime(this.state.session.time_end)}
                   </Text>
                 </View>
