@@ -10,6 +10,8 @@ import {
   ScrollView,
   Modal,
   NativeModules,
+  Keyboard
+   // onFocus={Keyboard.dismiss()}
 } from 'react-native'
 
 import RNFetchBlob from 'rn-fetch-blob';
@@ -142,7 +144,7 @@ export class ModalPlace extends Component {
     super(props);
 
     console.log('ModalPlace');
-     console.log(props);
+
     this.state = {
       visible:false,
                                               //46.7235477,2.4466963
@@ -157,28 +159,11 @@ export class ModalPlace extends Component {
         longitudeDelta: 8,
       },
     }    
-
-    this.makeCancelable = (promise) => {
-      let hasCanceled_ = false;
-      const wrappedPromise = new Promise((resolve, reject) => {
-        promise.then(
-          val => hasCanceled_ ? reject({isCanceled: true}) : resolve(val),
-          error => hasCanceled_ ? reject({isCanceled: true}) : reject(error)
-        );
-      });
-      return {
-        promise: wrappedPromise,
-        cancel() {
-          hasCanceled_ = true;
-        },
-      };
-    };
-    this.geocodeAddressPromise = false;
   }
 
   show(){
     this.setState({visible:true}, function(){
-      this.refs.searchText.focus(); 
+      setTimeout(this.refs.searchText.focus, 1);
     })
   }
 
@@ -218,56 +203,45 @@ export class ModalPlace extends Component {
   }
 
   onRegionChangeComplete(region) {
-   
-      // Get place name
-      NativeModules.ioPan.getLocationName(region.latitude, region.longitude)
-      .then((ville) => {
-          this.setState({ 
-            name: ville,
-            lat: region.latitude,
-            lon: region.longitude,
-          }, function(){
-            // this.storeListItem('place', { 
-            //   ...this.state.collection.place,
-            //   name: ville,
-            //   lat:region.latitude,
-            //   long:region.longitude, 
-            // });
-          });
-      })          
-      .catch((error) => { 
-          this.setState({ 
-            name: 'Lieu inconnu',
-            lat: region.latitude,
-            lon: region.longitude,
-          }, function(){
-            // this.storeListItem('place', { 
-            //   ...this.state.collection.place,
-            //   name: 'Lieu inconnu',
-            //   lat:region.latitude,
-            //   long:region.longitude, 
-            // });
-          });
-      }); 
-    
+    // Get place name
+    NativeModules.ioPan.getLocationName(region.latitude, region.longitude)
+    .then((ville) => {
+        this.setState({ 
+          name: ville,
+          lat: region.latitude,
+          lon: region.longitude,
+        }, function(){
+          // this.storeListItem('place', { 
+          //   ...this.state.collection.place,
+          //   name: ville,
+          //   lat:region.latitude,
+          //   long:region.longitude, 
+          // });
+        });
+    })          
+    .catch((error) => { 
+        this.setState({ 
+          name: 'Lieu inconnu',
+          lat: region.latitude,
+          lon: region.longitude,
+        }, function(){
+          // this.storeListItem('place', { 
+          //   ...this.state.collection.place,
+          //   name: 'Lieu inconnu',
+          //   lat:region.latitude,
+          //   long:region.longitude, 
+          // });
+        });
+    }); 
   }
 
-  // textLayout(){
-  //   if(!this.props.lat||!this.props.lon){
-  //     this.refs.searchText.focus(); 
-  //   }
-  // }
-
-
-
   render() {
-
-    if(!this.state.visible) return null;// TODO: looks like rn do this by default.
+    // if(!this.state.visible) return null; // looks like rn do this by default.
 
     return (
       <Modal
         onRequestClose={()=>this.hide(false)}
-        visible={this.props.visible}
+        visible={this.state.visible}
       >
 
         <View style={{flex:1}} >
@@ -316,9 +290,7 @@ export class ModalPlace extends Component {
               // backgroundColor:this.props.highlightColor
               }}
             >
-           
             <TextInput
-              // onLayout = {(event) => this.textLayout() } 
               underlineColorAndroid='transparent'
               ref='searchText'
               placeholder='Ville, Département'

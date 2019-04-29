@@ -760,7 +760,7 @@ export default class  CollectionForm extends Component {
                     padding:5,marginBottom:5, backgroundColor:'white',
                     flexDirection:'row', flex:1, justifyContent: 'center'}]}>
                     <Text style={[styles.coll_subtitle,{color:colors.purple}]}>
-                    Localisez ou chercher</Text>
+                    ...</Text>
                   </View> 
                 }
               
