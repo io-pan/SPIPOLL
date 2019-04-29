@@ -144,7 +144,7 @@ export class ModalPlace extends Component {
     console.log('ModalPlace');
      console.log(props);
     this.state = {
-      visible: this.props.visible,
+      visible:false,
                                               //46.7235477,2.4466963
       name: this.props.name?''+this.props.name:'',
       lat: this.props.lat?this.props.lat:46.7235477,
@@ -176,8 +176,22 @@ export class ModalPlace extends Component {
     this.geocodeAddressPromise = false;
   }
 
+  show(){
+    this.setState({visible:true}, function(){
+      this.refs.searchText.focus(); 
+    })
+  }
+
+  hide(senddata){
+    if(senddata){
+      this.props.onPlace({lat:this.state.lat,long:this.state.lon, name:this.state.name});
+    }
+    this.setState({visible:false})
+  }
+
   onSearchInput(text) {
     if (text) {
+      text += ', France'
       NativeModules.ioPan.getLocationCoord(text)
       .then((coord) => {
         this.setState({ 
@@ -238,42 +252,79 @@ export class ModalPlace extends Component {
     
   }
 
-  textLayout(){
-    if(!this.props.lat||!this.props.lon){
-      this.refs.searchText.focus(); 
-    }
-  }
+  // textLayout(){
+  //   if(!this.props.lat||!this.props.lon){
+  //     this.refs.searchText.focus(); 
+  //   }
+  // }
 
-  sendData = () => {
-    this.props.onCancel({lat:this.state.lat,long:this.state.lon, name:this.state.name});
-  }
+
 
   render() {
+
+    if(!this.state.visible) return null;// TODO: looks like rn do this by default.
+
     return (
       <Modal
-        onRequestClose={this.sendData}
+        onRequestClose={()=>this.hide(false)}
         visible={this.props.visible}
       >
+
         <View style={{flex:1}} >
 
-          <Text style={{ textAlign:'center',
-            backgroundColor:this.props.highlightColor, paddingTop:30,paddingBottom:20, 
-            color:'white', fontWeight:'bold', fontSize:18,
-          }}>
-          {this.props.title}
-          </Text>
-          <MaterialCommunityIcons.Button   
-            name="magnify"
-            backgroundColor={this.props.highlightColor}
-            size={30}
-            style={{marginLeft:5, marginBottom:20}}
-          >
+          <View 
+            style={{
+              height:55, flexDirection:'row', 
+              justifyContent:'center', alignItems:'center',
+              backgroundColor:this.props.highlightColor
+              }}
+            >
+            <TouchableOpacity 
+              style={[{
+                height:55,
+                width:55,
+                justifyContent:'center', alignItems:'center', 
+                borderRightWidth:1, borderRightColor:'white', 
+              }]}
+              onPress={(path) => this.hide()}
+              >
+              <MaterialCommunityIcons
+                name="chevron-left" 
+                style={[{ color:'white' }]}
+                size={30}
+              />
+            </TouchableOpacity>
+
+            <View 
+              // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
+              style={{flex:1,
+               alignItems:'center', justifyContent:'center',
+              }}>
+              <Text style={{
+                fontSize:18, fontWeight:'bold', textAlign:'center', 
+                color:'white', 
+              }}>
+               {this.props.title ? this.props.title.replace("\n", " ") : ''}</Text>
+            </View>
+
+          </View>
+
+          <View 
+            style={{
+              height:55, flexDirection:'row', 
+              justifyContent:'center', alignItems:'center',
+              // backgroundColor:this.props.highlightColor
+              }}
+            >
+           
             <TextInput
-              onLayout = {(event) => this.textLayout() } 
-              autofocus={true}
+              // onLayout = {(event) => this.textLayout() } 
               underlineColorAndroid='transparent'
               ref='searchText'
+              placeholder='Ville, Département'
               style={{ 
+                fontSize:18,
+                textAlign:'center',
                 backgroundColor:'white', 
                 flex:1,
                 margin:0, 
@@ -283,7 +334,8 @@ export class ModalPlace extends Component {
               onEndEditing =    {(event) => this.onSearchInput( event.nativeEvent.text) } 
               onSubmitEditing = {(event) => this.onSearchInput( event.nativeEvent.text) } 
             />
-          </MaterialCommunityIcons.Button>
+            </View>
+
 
           <View style={{
               height:Dimensions.get('window').width,
@@ -309,9 +361,9 @@ export class ModalPlace extends Component {
             <View style={styles.target_v}  ></View>
           </View>
 
-          <View style={{flex:1, alignItems:'center'}}>
+          <View style={{flex:1, alignItems:'center', justifyContent:'center'}}>
 
-            <Text style={{fontSize:16}}>{this.state.name}</Text>
+            <Text style={{fontSize:18}}>{this.state.name}</Text>
 
             <View style={{flexDirection:'row', alignItems:'space-between' // TODO: try space-around
               }}>
@@ -327,10 +379,11 @@ export class ModalPlace extends Component {
 
           </View> 
 
-          <View style={{flexDirection:'row'}}>
+          <View style={{flexDirection:'row',flexDirection:'row', alignItems:'center', justifyContent:'center',
+            height:55, backgroundColor:this.props.highlightColor,}}>
             <TouchableOpacity
-              style={{flex:1,backgroundColor:this.props.highlightColor, borderRightWidth:1, borderRightColor:'white'}}
-              onPress={this.sendData}
+              style={{flex:1}}
+              onPress={()=>this.hide(true)}
               ><Text style={{textAlign:'center', padding:10,fontWeight:'bold', fontSize:16, color:'white'}}>
               OK</Text>
             </TouchableOpacity>

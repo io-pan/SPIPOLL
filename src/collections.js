@@ -255,7 +255,7 @@ class Collection extends Component {
       : <TextInput
           ref="name"
           style={styles.collection_input_text}
-          placeholder={this.tempValue || 'Nom de la collection'}s
+          placeholder={this.tempValue || 'Nom de la collection'}
           onEndEditing = {(event) => this.save('name', event.nativeEvent.text)} 
           onSubmitEditing = {(event) => this.save('name', event.nativeEvent.text)} 
         />
@@ -782,14 +782,16 @@ export default class CollectionList extends Component {
 const styles = StyleSheet.create({
   collection_input_text:{
     padding:5,
+    paddingLeft:15,
     marginTop:5, marginBottom:5,
-    marginLeft:15,
-    marginRight:15,
+    marginLeft:0,
+    marginRight:0,
+    height:55,
     fontSize:18,
     textAlign:'center',
     backgroundColor:'white',
-    borderColor:colors.greenFlash,
-    borderWidth:1,
+    // borderColor:colors.greenFlash,
+    // borderWidth:1,
   },
   titleTextStyle:{
     backgroundColor:colors.greenFlash, 

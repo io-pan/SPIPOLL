@@ -95,7 +95,7 @@ export default class  CollectionForm extends Component {
       connected:false,
       
       visibleTaxonModal:false,
-      visiblePlaceModal:false,
+
 
       help:{
         visible:false,
@@ -430,14 +430,6 @@ export default class  CollectionForm extends Component {
     }
   }
 
-  showPlaceModal(){
-    this.setState({visiblePlaceModal:true});
-  }
-
-  hidePlaceModal(placeData){
-    this.storeListItem('place', placeData);
-    this.setState({visiblePlaceModal:false});
-  }
 
   help(topic){
     this.setState({
@@ -768,7 +760,7 @@ export default class  CollectionForm extends Component {
                     padding:5,marginBottom:5, backgroundColor:'white',
                     flexDirection:'row', flex:1, justifyContent: 'center'}]}>
                     <Text style={[styles.coll_subtitle,{color:colors.purple}]}>
-                    ...</Text>
+                    Localisez ou chercher</Text>
                   </View> 
                 }
               
@@ -817,7 +809,7 @@ export default class  CollectionForm extends Component {
                           flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
                           borderColor:'lightgrey',
                           }}
-                        onPress = {() => this.showPlaceModal()} 
+                        onPress = {() => this.refs['modal-place'].show()} 
                         >
                         <MaterialCommunityIcons
                           name="magnify"  // search-web  magnify  map-search
@@ -867,13 +859,13 @@ export default class  CollectionForm extends Component {
           }
 
           <ModalPlace
-            visible = {this.state.visiblePlaceModal}
-            title={this.state.collection.name}
+            ref="modal-place"
+            title="Chercher un lieu"//{this.state.collection.name}
             lat={this.state.collection.place.lat}
             lon={this.state.collection.place.long}
             name={this.state.collection.place.name}
             highlightColor={colors.greenFlash}
-            onCancel={(data) => this.hidePlaceModal(data)} 
+            onPlace={(data) => this.storeListItem('place', data)} 
           />
     
           <ModalFilterPicker
