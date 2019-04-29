@@ -117,13 +117,13 @@ export class Form extends Component {
                   style={this.props.styles.label}
                   onPress = { field.type=='singleSelect'
                     ? () => this.fieldChanged(field.name, 
-                        this.props.currentValues[field.name]==value.value ? '' : value.value)
+                        this.props.currentValues[field.name]===value.value ? '' : value.value)
                     : () => this.fieldChanged(field.name, this.makeMultiSelect(field.name, value.value))
                   }
                   >
                   <Text style={[this.props.styles.labelText,{
                     color: field.type=='singleSelect' 
-                    ? this.props.currentValues[field.name]==value.value ? this.props.styles.highlightColor : 'grey'
+                    ? this.props.currentValues[field.name]===value.value ? this.props.styles.highlightColor : 'grey'
                     : this.props.currentValues[field.name].indexOf(value.value)!==-1 ? this.props.styles.highlightColor : 'grey'
                     }]}>
                   {value.label}</Text>

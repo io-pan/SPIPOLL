@@ -51,6 +51,7 @@ export default class  CollectionForm extends Component {
           ],
         },{
           name: 'ocAttr_2',
+          optional: true,
           type: 'int',
           title: " Distance approximative de la plus proche ruche d'abeilles domestiques.\n\n En mètres; par exemple : 150",
         },{
@@ -328,11 +329,23 @@ export default class  CollectionForm extends Component {
 
   render () {
     console.log('render CollectionForm');
-   console.log(this.state.collection);
+    console.log(this.state.collection);
 
     if(!this.state.loaded){
       return <LoadingView/>;
     }
+
+    // Check Environment form validity.
+    let envOk = true;
+    this.form.environment.map((value, index) => {
+      if( !value.optional){
+        if(value.type == 'multiSelect' && this.state.collection.environment[value.name].length == 0
+        || value.type == 'singleSelect' && !this.state.collection.environment[value.name]){
+          envOk = false;
+        }
+      }
+    });
+
 
     return (
         
@@ -606,7 +619,9 @@ export default class  CollectionForm extends Component {
                 />
               </View>
 
-              <Text style={styles.collSectionTitle}>
+              <Text style={[styles.collSectionTitle, 
+                this.state.collection.place.lat&&this.state.collection.place.long
+                ?{}:{backgroundColor:colors.purple}]}>
               Lieu</Text>
 
               <View style={styles.collection_grp}>
@@ -628,7 +643,8 @@ export default class  CollectionForm extends Component {
 
               </View>
 
-              <Text style={styles.collSectionTitle}>
+              <Text style={[styles.collSectionTitle,
+                envOk?{}:{backgroundColor:colors.purple}]}>
               Environnement</Text>
 
               <View style={styles.collection_grp}>
