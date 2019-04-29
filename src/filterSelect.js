@@ -12,6 +12,8 @@ import {
   ScrollView
 } from 'react-native'
 
+
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import FooterImage from './footerimage';
 
 export default class ModalFilterPicker extends Component {
@@ -19,6 +21,7 @@ export default class ModalFilterPicker extends Component {
     super(props, ctx)
 
     this.state = {
+      visible:false,
       filter: '',
       ds: props.options,
     }
@@ -36,6 +39,19 @@ export default class ModalFilterPicker extends Component {
     }
   }
 
+  show(){
+    this.setState({
+      visible:true,
+      filter: '',
+      ds: this.props.options,
+    }, function(){
+      setTimeout(this.refs.filter.focus, 1);
+    });
+  }
+  hide(){
+    this.setState({visible:false});
+  }
+
   render () {
     const {
       title,
@@ -44,21 +60,53 @@ export default class ModalFilterPicker extends Component {
       cancelContainerStyle,
       renderCancelButton,
       filterTextInputStyle,
-      visible,
       modal,
-      onCancel
     } = this.props
 
     const renderedTitle = (!title) ? null : (
-      <Text style={titleTextStyle || styles.titleTextStyle}
-      >{title}</Text>
+          <View 
+            style={{
+              height:55, flexDirection:'row', 
+              justifyContent:'center', alignItems:'center',
+              backgroundColor:this.props.highlightColor
+              }}
+            >
+{            <TouchableOpacity 
+              style={[{
+                height:55,
+                width:55,
+                justifyContent:'center', alignItems:'center', 
+                borderRightWidth:1, borderRightColor:'white', 
+              }]}
+              onPress={() =>  this.hide()}
+              >
+              <MaterialCommunityIcons
+                name="chevron-left" 
+                style={[{ color:'white' }]}
+                size={30}
+              />
+            </TouchableOpacity>}
+
+            <View 
+              // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
+              style={{flex:1,
+               alignItems:'center', justifyContent:'center',
+              }}>
+              <Text style={{
+                fontSize:18, fontWeight:'bold', textAlign:'center', 
+                color:'white', 
+              }}>
+               { title.replace("\n", " ") }</Text>
+            </View>
+
+          </View>
     )
 
     return (
       <Modal
-        onRequestClose={onCancel}
+        onRequestClose={() => this.hide()}
         {...modal}
-        visible={visible}
+        visible={this.state.visible}
         supportedOrientations={['portrait', 'landscape']}
         >
         {renderedTitle}
@@ -171,7 +219,10 @@ export default class ModalFilterPicker extends Component {
   	      	borderBottomWidth:1,
   	      	borderBottomColor:'#92c83e',
   	      }}
-          onPress={() => this.props.onSelect(rowData.item)}
+          onPress={() => {
+            this.hide();
+            this.props.onSelect(rowData.item)
+          }}
           >
           { !this.state.filter
             ?
@@ -237,7 +288,7 @@ export default class ModalFilterPicker extends Component {
     } = this.props
 
     return (
-      <TouchableOpacity onPress={this.props.onCancel}
+      <TouchableOpacity onPress={() => this.hide()}
         activeOpacity={0.7}
         // style={cancelButtonStyle || styles.cancelButton}
       >
@@ -273,7 +324,7 @@ export default class ModalFilterPicker extends Component {
 ModalFilterPicker.propTypes = {
   options: PropTypes.array.isRequired,
   onSelect: PropTypes.func.isRequired,
-  onCancel: PropTypes.func.isRequired,
+  // onCancel: PropTypes.func.isRequired,
   placeholderText: PropTypes.string,
   placeholderTextColor: PropTypes.string,
   androidUnderlineColor: PropTypes.string,

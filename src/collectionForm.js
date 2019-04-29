@@ -87,11 +87,6 @@ export default class  CollectionForm extends Component {
     };
 
     this.state = {
-
-      
-      visibleTaxonModal:false,
-
-
       help:{
         visible:false,
         'protocole':{
@@ -182,9 +177,9 @@ export default class  CollectionForm extends Component {
     ? {
         ...this.state.collection.flower,
         id_flower_unknown:value,
-        taxon_list_id_list:false,
-        taxon_name:'',
-        taxon_extra_info:'',
+        taxon_list_id_list:null,
+        taxon_name:null,
+        taxon_extra_info:null,
       }
     : {
         ...this.state.collection.flower,
@@ -228,17 +223,13 @@ export default class  CollectionForm extends Component {
           taxon_name:picked.label,
         },
       },
-      visibleTaxonModal: false,
     }, function(){
       this.storeCollection();
     })
   }
 
   showTaxonModal = () => {
-    this.setState({visibleTaxonModal:true});
-  }
-  hideTaxonModal = () => {
-    this.setState({visibleTaxonModal: false});
+    this.refs['flower-taxon-modal'].show();
   }
 
   // TODO: check we don't do this 2X.
@@ -660,12 +651,12 @@ export default class  CollectionForm extends Component {
           }
     
           <ModalFilterPicker
-            visible={this.state.visibleTaxonModal}
-            title='Fleur'
+            ref={'flower-taxon-modal'}
+            title='Taxon de la fleur'
             titleTextStyle={styles.titleTextStyle}
+            highlightColor={colors.greenFlash}
             options={flowerList}
             onSelect={this.selectTaxon}
-            onCancel={this.hideTaxonModal}
           />
 
           <ModalHelp

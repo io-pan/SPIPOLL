@@ -67,7 +67,6 @@ export default class InsectForm extends Component {
     ]};
 
     this.state = {
-      visibleTaxonModal:false,
       insect:this.props.data,
       // {
       //   taxon_list_id_list:this.props.data.taxon_list_id_list,
@@ -92,7 +91,7 @@ export default class InsectForm extends Component {
         //   taxon_list_id_list:value.value,
         //   taxon_name:value.label,
         // },
-        visibleTaxonModal: false,
+        // visibleTaxonModal: false,
       },function(){
         // Update list. ... TODO: multival
         this.props.valueChanged('taxon_list_id_list', value.value);
@@ -112,10 +111,7 @@ export default class InsectForm extends Component {
   }
 
   showTaxonModal = () => {
-    this.setState({visibleTaxonModal:true});
-  }
-  hideTaxonModal = () => {
-    this.setState({visibleTaxonModal: false});
+    this.refs['modal-insect-list'].show();
   }
 
   render(){
@@ -216,8 +212,9 @@ export default class InsectForm extends Component {
               </View>
 
               <ModalFilterPicker
-                visible={this.state.visibleTaxonModal}
-                title='Insecte'
+                ref={'modal-insect-list'}
+                title="Taxon de l'insecte"
+                highlightColor={colors.greenFlash}
                 titleTextStyle={styles.titleTextStyle}
                 options={insectList}
                 onSelect={(picked) => this.storeInsect('taxon',picked)}
