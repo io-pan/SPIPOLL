@@ -10,8 +10,10 @@ import {
   ScrollView,
   Modal,
   NativeModules,
-  Keyboard
-   // onFocus={Keyboard.dismiss()}
+  Animated,
+  NetInfo,  
+  PermissionsAndroid,
+  Alert,
 } from 'react-native'
 
 import RNFetchBlob from 'rn-fetch-blob';
@@ -136,6 +138,231 @@ export class Form extends Component {
   }
 }
 
+//=========================================================================================
+export class LocationPicker extends Component {
+//-----------------------------------------------------------------------------------------
+  constructor(props) {
+    super(props);
+    this.state = {
+      gpsOpacity:new Animated.Value(1),
+      gpsSearching:false,
+      connected:false,
+    };
+    this.toValue = 1;
+  }
+
+  componentDidMount(){
+    NetInfo.addEventListener(
+      'connectionChange',
+      this._handleConnectivityChange
+    );
+
+    NetInfo.isConnected.fetch().done(
+      (isConnected) => { this.setState({'connected':isConnected}); }
+    );this.gpsAnimation() 
+  }
+
+  componentWillUnmount(){
+    NetInfo.removeEventListener(
+        'connectionChange',
+        this._handleConnectivityChange
+    );
+    navigator.geolocation.clearWatch(this.watchID);
+  }
+
+  _handleConnectivityChange = (isConnected) => {
+    // console.log(isConnected);
+    this.setState({'connected':isConnected});
+  }
+
+  gpsAnimation() {
+    if (!this.state.gpsSearching && this.toValue==1){
+      return;
+    }
+  console.log('-'+this.toValue)
+    this.toValue = (this.toValue==0) ?1:0;
+
+    console.log(this.toValue)
+    Animated.timing(
+      this.state.gpsOpacity,
+      {
+        toValue: this.toValue,
+        useNativeDriver: true,
+      }
+    ).start(() => this.gpsAnimation())  
+  }
+
+  geoLoc = async () => {
+    if (this.state.gpsSearching) return;
+
+    const granted = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+      PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION]);
+
+    // console.log('geoloc permission requested');
+    if (granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
+    &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED){
+
+      // console.log('geoloc permission granted');
+      this.setState({
+        gpsSearching:true,
+        gpsOpacity:new Animated.Value(0),
+        }, function(){ 
+        this.gpsAnimation()
+      });
+
+      this.watchID = navigator.geolocation.watchPosition(
+        (position) => {
+          // console.log(position);
+          navigator.geolocation.clearWatch(this.watchID);
+          this.setState({gpsSearching:false});
+
+          // Get place name
+          NativeModules.ioPan.getLocationName(position.coords.latitude, position.coords.longitude)
+          .then((ville) => {
+            this.props.locationChanged({ 
+              lat:position.coords.latitude,
+              long:position.coords.longitude, 
+              name: ville,
+            });
+          })          
+          .catch((error) => { 
+            this.props.locationChanged({
+              lat:position.coords.latitude,
+              long:position.coords.longitude, 
+              name: 'Nom du lieu introuvable',
+            });
+          }); 
+
+        },
+        (error) => {
+          this.setState({gpsSearching:false});
+          Alert.alert(
+            'Position introuvable.',
+            'Vérifiez que la géolocalisation est activée sur votre appareil.'
+          );
+          // console.log('GPS error: ', JSON.stringify(error))
+        },{
+          enableHighAccuracy:true,
+          timeout:500, 
+          maximumAge:1000,
+        }
+      );
+    }
+  }
+
+  render(){
+    return(
+      <View>
+
+        <ModalPlace
+          ref="modal-place"
+          title="Chercher un lieu"//{this.state.collection.name}
+          lat={this.props.lat}
+          lon={this.props.long}
+          name={this.props.name}
+          highlightColor={this.props.styles.highlightColor}
+          onPlace={(data) => this.props.locationChanged(data)} 
+        />
+        
+        { this.props.lat && this.props.long // && !this.state.gpsSearching
+        ? <View style={[styles.collection_subgrp,{marginBottom:10}]}>
+            <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+              <Text style={{fontSize:16,
+                color:'grey'
+                }}
+                >{this.props.name}
+              </Text>
+            </View>
+            <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
+              <Text style={{fontSize:16,
+                color:'grey'
+                }}
+                >
+                { 
+                  dmsFormat(deg2dms(this.props.lat, 'lat'))
+                  + '   ' + 
+                  dmsFormat(deg2dms(this.props.long, 'lon'))
+                }
+              </Text>
+            </View>
+          </View>
+        : null
+        }
+      
+        <View style={[{flexDirection:'row', flex:1, paddingTop:0}]}>           
+          <TouchableOpacity 
+            style={{ marginRight:5, 
+              flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+              borderColor:'lightgrey',
+            }}
+            onPress ={ () => this.geoLoc() }
+            >
+            <View style={{
+              justifyContent:'center',
+              alignItems:'center',
+              }}>
+              <MaterialCommunityIcons
+                name="crosshairs" 
+                size={20}
+                height={40}
+                width={60}
+                margin={0}
+                color={this.props.styles.highlightColor}
+                backgroundColor = 'transparent'
+              />
+              <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
+                <MaterialCommunityIcons
+                  name="crosshairs-gps" 
+                  size={20}
+                  height={40}
+                  width={60}
+                  margin={0}
+                  color={this.props.styles.highlightColor}
+                  backgroundColor = 'transparent'
+                />
+              </Animated.View>
+            </View>
+            <Text style={{fontSize:16, marginLeft:15,
+              color: this.state.gpsSearching ? this.props.styles.highlightColor:'grey'
+              }}>
+            Localiser</Text>
+          </TouchableOpacity>
+
+          { this.state.connected && this.state.connected.type != 'none'
+            ? <TouchableOpacity 
+                style={{ marginLeft:5,
+                  flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                  borderColor:'lightgrey',
+                  }}
+                onPress = {() => this.refs['modal-place'].show()} 
+                >
+                <MaterialCommunityIcons
+                  name="magnify"  // search-web  magnify  map-search
+                  style={{
+                    backgroundColor:'transparent',
+                    color:this.props.styles.highlightColor,
+                  }}
+                  size={25}
+                />
+                <Text style={{ fontSize:16, color:'grey'}}>
+                Chercher</Text>
+              </TouchableOpacity>
+            : <View 
+                style={{ marginLeft:5,
+                  flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
+                  borderColor:'lightgrey',
+                  }}
+                >
+                <Text style={{ fontSize:14, color:'lightgrey'}}>
+                Pas de réseau</Text>
+              </View>
+          }
+        </View>
+      </View>
+    );
+  }
+}
 
 //=========================================================================================
 export class ModalPlace extends Component {

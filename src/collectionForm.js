@@ -7,14 +7,9 @@ import {
   Text,
   TextInput,
   Image,
-  Dimensions,
-  Animated,
-  PermissionsAndroid,
   ScrollView,
   AsyncStorage,
   Modal,
-  BackHandler,
-  NetInfo,
   CheckBox,
   NativeModules,
 } from 'react-native'
@@ -26,12 +21,11 @@ import FooterImage from './footerimage';
 // import ImageView from './imageView';
 import LoadingView from './loadingview';
 import ModalFilterPicker from './filterSelect';
-import { deg2dms, dmsFormat } from './formatHelpers.js';
 import {
   ModalHelp,
-  ModalPlace, 
   ImagePicker,
-  Form 
+  LocationPicker,
+  Form,
 } from './widgets.js';
 
 // Spipoll data.
@@ -91,8 +85,7 @@ export default class  CollectionForm extends Component {
     };
 
     this.state = {
-      gpsOpacity:new Animated.Value(1),
-      connected:false,
+
       
       visibleTaxonModal:false,
 
@@ -139,8 +132,6 @@ export default class  CollectionForm extends Component {
       // },
     };
 
-    this.gpsSearching = false;
-    this.toValue = 1;
 
     if(!this.state.collection.storage.path){
       this.storages = [];
@@ -148,17 +139,7 @@ export default class  CollectionForm extends Component {
     }
   }
 
-  componentDidMount(){
-    NetInfo.addEventListener(
-      'connectionChange',
-      this._handleConnectivityChange
-    );
-
-    NetInfo.isConnected.fetch().done(
-        (isConnected) => { 
-          this.setState({'connected':isConnected}); }
-    );
-  
+  componentDidMount(){  
     // Load data that are not part of list item.
     AsyncStorage.getItem(this.props.data.date+'_collection', (err, collection) => {
       if (err) {
@@ -174,26 +155,6 @@ export default class  CollectionForm extends Component {
         }
       }
     });
-
-    // this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
-    //   this.back();
-    //   return true;
-    // });
-  }
-
-  componentWillUnmount(){
-    // this.backHandler.remove();
-    // BackHandler.removeEventListener('hardwareBackPress', this.backButton);
-    NetInfo.removeEventListener(
-        'connectionChange',
-        this._handleConnectivityChange
-    );
-    navigator.geolocation.clearWatch(this.watchID);
-  }
-
-  _handleConnectivityChange = (isConnected) => {
-    console.log(isConnected);
-    this.setState({'connected':isConnected});
   }
 
   getAvailableStorages(){
@@ -276,91 +237,6 @@ export default class  CollectionForm extends Component {
   }
   hideTaxonModal = () => {
     this.setState({visibleTaxonModal: false});
-  }
-
-  geoLoc = async () => {
-    if (this.gpsSearching) return;
-
-    const granted = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
-      PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION]);
-
-    // console.log('geoloc permission requested');
-    
-    if (granted['android.permission.ACCESS_FINE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED
-    &&  granted['android.permission.ACCESS_COARSE_LOCATION'] === PermissionsAndroid.RESULTS.GRANTED){
-
-      // console.log('geoloc permission granted');
-
-      this.gpsSearching = true;
-      this.gpsAnimation();
-      // this.setState({collection:{
-      //   ...this.state.collection,
-      //   place:{
-      //     lat:'',
-      //     long:'', 
-      //   },
-      // }});
-      this.setState({
-        place:{
-          lat:'',
-          long:'', 
-        },
-      });
-
-      this.watchID = navigator.geolocation.watchPosition(
-        (position) => {
-          console.log(position);
-          navigator.geolocation.clearWatch(this.watchID);
-          this.gpsSearching = false;
-
-          // Get place name
-          NativeModules.ioPan.getLocationName(position.coords.latitude, position.coords.longitude)
-          .then((ville) => {
-            this.storeListItem('place', { 
-              ...this.state.collection.place,
-              lat:position.coords.latitude,
-              long:position.coords.longitude, 
-              name: ville,
-            });
-          })          
-          .catch((error) => { 
-            this.storeListItem('place', { 
-              ...this.state.collection.place,
-              lat:position.coords.latitude,
-              long:position.coords.longitude, 
-              name: 'Nom introuvable',
-            });
-          }); 
-
-        },
-        (error) => {
-          this.gpsSearching = false;
-          Alert.alert('Position introuvable.');
-          // console.log('GPS error: ', JSON.stringify(error))
-        },{
-          enableHighAccuracy:true,
-          timeout:500, 
-          maximumAge:1000,
-        }
-      );
-    }
-  }
-
-
-  gpsAnimation() {
-    if (!this.gpsSearching && this.toValue==1){
-      return;
-    }
-
-    this.toValue = (this.toValue==0) ?1:0;
-    Animated.timing(
-      this.state.gpsOpacity,
-      {
-        toValue: this.toValue,
-        useNativeDriver: true,
-      }
-    ).start(() => this.gpsAnimation())  
   }
 
   // TODO: check we don't do this 2X.
@@ -734,105 +610,22 @@ export default class  CollectionForm extends Component {
               Lieu</Text>
 
               <View style={styles.collection_grp}>
-                { this.state.collection.place.lat && this.state.collection.place.long
-                ? <View style={[styles.collection_subgrp,{marginBottom:5, backgroundColor:'white'}]}>
-                    <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                      <Text style={{fontSize:16,
-                        color:'grey'
-                        }}
-                        >{this.state.collection.place.name}
-                      </Text>
-                    </View>
-                    <View style={{flexDirection:'row', flex:1, justifyContent: 'center'}}>
-                      <Text style={{fontSize:16,
-                        color:'grey'
-                        }}
-                        >
-                        { 
-                          dmsFormat(deg2dms(this.state.collection.place.lat, 'lat')) 
-                          + '   ' + 
-                          dmsFormat(deg2dms(this.state.collection.place.long, 'lon'))
-                        }
-                      </Text>
-                    </View>
-                  </View>
-                : <View style={[styles.collection_subgrp,{
-                    padding:5,marginBottom:5, backgroundColor:'white',
-                    flexDirection:'row', flex:1, justifyContent: 'center'}]}>
-                    <Text style={[styles.coll_subtitle,{color:colors.purple}]}>
-                    ...</Text>
-                  </View> 
-                }
-              
-                <View style={[{flexDirection:'row', flex:1, paddingTop:0}]}>           
-                  <TouchableOpacity 
-                    style={{ marginRight:5, 
-                      flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                      borderColor:'lightgrey',
-                    }}
-                    onPress ={ () => this.geoLoc() }
-                    >
-                    <View style={{
-                      justifyContent:'center',
-                      alignItems:'center',
-                      }}>
-                      <MaterialCommunityIcons
-                        name="crosshairs" 
-                        size={20}
-                        height={40}
-                        width={60}
-                        margin={0}
-                        color={colors.greenFlash}
-                        backgroundColor = 'transparent'
-                      />
-                      <Animated.View style={[{position:'absolute'}, { opacity: this.state.gpsOpacity }]}>
-                        <MaterialCommunityIcons
-                          name="crosshairs-gps" 
-                          size={20}
-                          height={40}
-                          width={60}
-                          margin={0}
-                          color={colors.greenFlash}
-                          backgroundColor = 'transparent'
-                        />
-                      </Animated.View>
-                    </View>
-                    <Text style={{fontSize:16, marginLeft:15,
-                      color: this.gpsSearching  ? colors.greenFlash:'grey'
-                      }}>
-                    Localiser</Text>
-                  </TouchableOpacity>
+                <LocationPicker
+                  name={this.state.collection.place.name}
+                  lat={this.state.collection.place.lat} 
+                  long={this.state.collection.place.long}
 
-                  { this.state.connected && this.state.connected.type != 'none'
-                    ? <TouchableOpacity 
-                        style={{ marginLeft:5,
-                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                          borderColor:'lightgrey',
-                          }}
-                        onPress = {() => this.refs['modal-place'].show()} 
-                        >
-                        <MaterialCommunityIcons
-                          name="magnify"  // search-web  magnify  map-search
-                          style={{
-                            backgroundColor:'transparent',
-                            color:colors.greenFlash,
-                          }}
-                          size={25}
-                        />
-                        <Text style={{ fontSize:16, color:'grey'}}>
-                        Chercher</Text>
-                      </TouchableOpacity>
-                    : <View 
-                        style={{ marginLeft:5,
-                          flexDirection:'row', flex:0.5, justifyContent:'center', alignItems:'center', borderWidth:1,
-                          borderColor:'lightgrey',
-                          }}
-                        >
-                        <Text style={{ fontSize:14, color:'lightgrey'}}>
-                        Pas de réseau</Text>
-                      </View>
-                  }
-                </View>
+                  locationChanged={(value) => this.storeListItem('place', value)}
+
+                  styles={{
+                    title:styles.coll_subtitle,
+                    group:styles.collection_subgrp,
+                    highlightColor:colors.greenFlash,
+                    badColor:colors.purple,
+                  }}
+
+                />
+
               </View>
 
               <Text style={styles.collSectionTitle}>
@@ -857,16 +650,6 @@ export default class  CollectionForm extends Component {
               <FooterImage/>
             </ScrollView>
           }
-
-          <ModalPlace
-            ref="modal-place"
-            title="Chercher un lieu"//{this.state.collection.name}
-            lat={this.state.collection.place.lat}
-            lon={this.state.collection.place.long}
-            name={this.state.collection.place.name}
-            highlightColor={colors.greenFlash}
-            onPlace={(data) => this.storeListItem('place', data)} 
-          />
     
           <ModalFilterPicker
             visible={this.state.visibleTaxonModal}
