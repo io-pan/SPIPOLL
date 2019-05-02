@@ -9,27 +9,22 @@ import {
   Text,
   ScrollView,
   Image,
-  Dimensions,
   Slider,
   BackHandler,
-  NativeModules,PanResponder,
-
+  NativeModules,
+  PanResponder,
 } from 'react-native'
 
 import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ImageViewer from 'react-native-image-zoom-viewer';
 // import ImageZoom from 'react-native-image-pan-zoom';
-import { ImageSized } from './widgets.js';
-import FooterImage from './footerimage';
-
 import ImageZoom from 'react-native-view-editor';
-
+// import FooterImage from './footerimage';
 
 const backgroundColor='black',
       thumbBorderColor='black',
       thumbMarginPlusPadding = 2;
-
 
 
 //=========================================================================================
@@ -48,21 +43,6 @@ export class ModalCrop extends Component {
       scale: 1,
       rotation: 0,
     };
-
-    // Image.getSize(
-    //   props.source.url,
-    //   (w,h) => {
-    //     this.setState({
-    //       imageWidth:w,
-    //       imageHeight:h,
-    //       landscape: w > h,
-    //       imageLandscape: w > h,
-    //     }, function(){
-    //            console.log('ooooooooooooooooooooooo');
-    //       console.log(this.state);
-    //     });
-    //   }
-    // );
 
     NativeModules.ioPan.getImageSize(
       this.props.source.url.replace('file://',''),
@@ -114,23 +94,23 @@ export class ModalCrop extends Component {
   }
 
 
-  show(){
+  // show(){
 
 
-    Image.getSize(
-      this.props.source.url,
-      (w,h) => {
-        this.setState({
-          imageWidth:w,
-          imageHeight:h,
-          landscape: w > h,
-          imageLandscape: w > h,
-        }, function(){
+  //   Image.getSize(
+  //     this.props.source.url,
+  //     (w,h) => {
+  //       this.setState({
+  //         imageWidth:w,
+  //         imageHeight:h,
+  //         landscape: w > h,
+  //         imageLandscape: w > h,
+  //       }, function(){
 
-        });
-      }
-    );
-  }
+  //       });
+  //     }
+  //   );
+  // }
 
 
   getContainerSize(e){
@@ -183,10 +163,6 @@ export class ModalCrop extends Component {
     //   }]
     // );
 
-// TODO:
-//  . not ok when cropping a cropped photo
-//  . copie 1 2 3...
-
     let ny = (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2);
     ny = ny * this.state.imageHeight/this.state.cropHeight;
     ny = ny /this.crop.scale;
@@ -198,7 +174,7 @@ export class ModalCrop extends Component {
     let dest_path = this.props.source.url.replace('file://','');
     if(copy){
       dest_path = dest_path.split('.jpg');
-      dest_path = dest_path[0] + '_copie.jpg'
+      dest_path = dest_path[0] + '_' + new Date.getTime() + '.jpg'
     }
 
     NativeModules.ioPan.cropBitmap(
@@ -212,19 +188,14 @@ export class ModalCrop extends Component {
       this.crop.scale,
     )
     .then((msg) => {
-      console.log('cropImage', msg);
+      // console.log('cropImage', msg);
       this.props.imageCroped(dest_path);
-      // todo ioio
-      //  Update image picker & gallery. 
-      // add or update.
+      // TODO: ioio
+      //  Update image picker & gallery. Shall do something like sourc.url+'?t=timestamp'
+
     })
     .catch((err) => {
-      console.log('cropImage ERROR', err);
-      // Alert.alert(
-      //   'Erreur',
-      //   'La photo n\'a pu être supprimée.\n'
-      //   +sources[i].url
-      // );
+      ALert.alert('cropImage ERROR', err);
     });
 
   }
@@ -493,7 +464,7 @@ export default class ImageGallery extends Component {
     this.setState({
       view:'crop',
     }, function(){
-      this.refs['crop-modal'].show();
+      // this.refs['crop-modal'].show();
     })
     // this.refs['crop-modal'].show();
   }

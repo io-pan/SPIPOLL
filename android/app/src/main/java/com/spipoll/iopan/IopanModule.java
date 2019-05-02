@@ -245,16 +245,16 @@ public class IopanModule extends ReactContextBaseJavaModule {
     final Promise promise) {
 
     WritableNativeMap returnValue = new WritableNativeMap();
-      returnValue.putString("0 path src ", src_path);
-      returnValue.putString("0 path dest", dst_path);
-      returnValue.putDouble("0 _w", (float)w);
-      returnValue.putDouble("0 _h", (float)h);
-      returnValue.putDouble("0 __x", (double)x);
-      returnValue.putString("0 __y", ""+y);
-        returnValue.putDouble("0 __y d ", (double)y);
-        returnValue.putDouble("0 __y f", (float)y);
-      returnValue.putDouble("0 rotation", rotation);
-      returnValue.putDouble("0 scale", scale);  
+      // returnValue.putString("0 path src ", src_path);
+      // returnValue.putString("0 path dest", dst_path);
+      // returnValue.putDouble("0 _w", (float)w);
+      // returnValue.putDouble("0 _h", (float)h);
+      // returnValue.putDouble("0 __x", (double)x);
+      // returnValue.putString("0 __y", ""+y);
+      //   returnValue.putDouble("0 __y d ", (double)y);
+      //   returnValue.putDouble("0 __y f", (float)y);
+      // returnValue.putDouble("0 rotation", rotation);
+      // returnValue.putDouble("0 scale", scale);  
 
 
     try {
@@ -290,9 +290,9 @@ public class IopanModule extends ReactContextBaseJavaModule {
       bitmap = rotateBitmap(bitmap, (float)rotation);
       int newW = bitmap.getWidth();
       int newH = bitmap.getHeight();
-        returnValue.putString("40 rotation ok.  ", " ");
-        returnValue.putString("41 newW: ", " " + newW  );
-        returnValue.putString("42 newH: ", " " +   newH);
+        // returnValue.putString("40 rotation ok.  ", " ");
+        // returnValue.putString("41 newW: ", " " + newW  );
+        // returnValue.putString("42 newH: ", " " +   newH);
 
 
       // Keep portion of bitmap based on given scale and translation.
