@@ -802,9 +802,12 @@ export class ImagePicker extends Component {
     );
   }
 
-  imageCroped(copy, path){
+  imageCroped(path){
     console.log('imageCroped');
-    this.scanFolder(path);
+    if(path){
+      this.scanFolder(path);
+    }
+
     // todo goto imageslider
   }
 
@@ -838,7 +841,7 @@ export class ImagePicker extends Component {
             onSelect = {(index, filename)=>this.imageSelected(index, filename)}
             imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
 
-            imageCroped={(copy, path)=> this.imageCroped(copy, path)}
+            imageCroped={(path)=> this.imageCroped(path)}
 
             styles={{
               text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
@@ -988,7 +991,9 @@ export class ImagePicker extends Component {
 
                   <ImageSizedSquare
                     resizeMode="contain"
-                    source={{uri:'file://' + this.props.path +'/'+ this.props.filename + '?' + new Date().getTime() }}
+                    source={{uri:'file://' + this.props.path +'/'+ this.props.filename
+                     // + '?' + new Date().getTime() 
+                    }}
                   />
 
                   { // Photo count.

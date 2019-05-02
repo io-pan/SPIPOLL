@@ -38,7 +38,6 @@ export class ModalCrop extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      visible:false,
       cropWidth:0,
       cropHeight:0,
     }
@@ -50,6 +49,37 @@ export class ModalCrop extends Component {
       rotation: 0,
     };
 
+    // Image.getSize(
+    //   props.source.url,
+    //   (w,h) => {
+    //     this.setState({
+    //       imageWidth:w,
+    //       imageHeight:h,
+    //       landscape: w > h,
+    //       imageLandscape: w > h,
+    //     }, function(){
+    //            console.log('ooooooooooooooooooooooo');
+    //       console.log(this.state);
+    //     });
+    //   }
+    // );
+
+    NativeModules.ioPan.getImageSize(
+      this.props.source.url.replace('file://',''),
+    )
+    .then((msg) => {
+      console.log('getImageSize', msg);
+        this.setState({
+          imageWidth:msg.w,
+          imageHeight:msg.h,
+          landscape: msg.w > msg.h,
+          imageLandscape: msg.w > msg.h,
+        }, function(){
+        });
+    })
+    .catch((err) => {
+      console.log('cropImage ERROR', err);
+    });
 
     this._panResponder = PanResponder.create({
       // Ask to be the responder:
@@ -85,11 +115,12 @@ export class ModalCrop extends Component {
 
 
   show(){
+
+
     Image.getSize(
       this.props.source.url,
       (w,h) => {
         this.setState({
-          visible:true, 
           imageWidth:w,
           imageHeight:h,
           landscape: w > h,
@@ -114,11 +145,6 @@ export class ModalCrop extends Component {
       cropWidth: w,
       cropHeight: w*4/3, // this.state.landscape ? w*3/4 : w*4/3,
     });
-  }
-
-
-  hide(){
-    this.setState({visible:false});
   }
 
   setLandscape(landscape){
@@ -186,17 +212,14 @@ export class ModalCrop extends Component {
       this.crop.scale,
     )
     .then((msg) => {
-      this.setState({visible:false});
-      this.props.imageCroped(copy, dest_path);
+      console.log('cropImage', msg);
+      this.props.imageCroped(dest_path);
       // todo ioio
       //  Update image picker & gallery. 
       // add or update.
-
-      console.log(msg);
-
     })
     .catch((err) => {
-      console.log(err);
+      console.log('cropImage ERROR', err);
       // Alert.alert(
       //   'Erreur',
       //   'La photo n\'a pu être supprimée.\n'
@@ -217,12 +240,13 @@ export class ModalCrop extends Component {
           }
     ;
 
+console.log(this.state)
     return(
       // Avoid loading big image while we do not need it.
-      !this.state.visible ? null:
-      <Modal
-        visible={this.state.visible}
-        onRequestClose={() => this.hide()}>
+      <View
+        style={{flex:1}}        // visible={this.state.visible}
+        // onRequestClose={() => this.hide()}
+        >
              {/* <View style={{position:'absolute', top:-100, left:-300, right:0, bottom:-500, zIndex:9999}}>*/}
 
         <View 
@@ -240,7 +264,8 @@ export class ModalCrop extends Component {
               justifyContent:'center', alignItems:'center', 
               borderRightWidth:1, borderRightColor:'white', 
             }]}
-            onPress={(path) => this.hide()}
+            onPress={(path) => //this.hide()
+             this.props.imageCroped(false) }
             >
             <MaterialCommunityIcons
               name="chevron-left" 
@@ -398,7 +423,7 @@ export class ModalCrop extends Component {
 
 
 
-      </Modal>
+      </View>
     );
   }
 } // ModalCrop
@@ -456,13 +481,21 @@ export default class ImageGallery extends Component {
   }
 
   hide(){
-    this.setState({
-      index:false,
-    })
+    if(this.state.view=='crop'){
+      this.setState({view: 'slide'});
+    }
+    else{
+      this.setState({ index:false});
+    }
   }
 
   showCropModal(){
-    this.refs['crop-modal'].show();
+    this.setState({
+      view:'crop',
+    }, function(){
+      this.refs['crop-modal'].show();
+    })
+    // this.refs['crop-modal'].show();
   }
 
   thumbPress(index, long){
@@ -664,8 +697,9 @@ export default class ImageGallery extends Component {
     this.setState({thumbCols: nbCols});
   }
 
-  imageCroped(copy, path){
-    this.props.imageCroped(copy, path);
+  imageCroped(path){
+    this.setState({view: 'slide'});
+    this.props.imageCroped(path);
   }
 
   render () {
@@ -678,6 +712,7 @@ export default class ImageGallery extends Component {
 
     return (
 
+
       <Modal
         onRequestClose={
           this.state.selectedForAction!==false
@@ -687,16 +722,6 @@ export default class ImageGallery extends Component {
         visible={this.state.index!==false}
         supportedOrientations={['portrait', 'landscape']}
         >
-
-        <ModalCrop
-          ref='crop-modal'
-          // visible={false}
-          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
-          source={this.props.sources[this.state.index]}
-          styles={this.props.styles}
-          imageCroped={(copy, path)=> this.imageCroped(copy, path)}
-        />
-
 
         { this.state.view == 'slide' 
         ? // Slideshow.
@@ -766,7 +791,7 @@ export default class ImageGallery extends Component {
           </View>
 
 
-        : // Thumbnails.
+        : this.state.view == 'thumbs' ? // Thumbnails.
           <View  style = {{flex:1, backgroundColor:backgroundColor}}>
 
             { this.renderHeader(false) }
@@ -886,7 +911,21 @@ export default class ImageGallery extends Component {
               </View>
             }
           </View>
-        }
+        
+        : // crop 
+
+
+        <ModalCrop
+          ref='crop-modal'
+          // visible={false}
+          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
+          source={this.props.sources[this.state.index]}
+          styles={this.props.styles}
+          imageCroped={(path)=> this.imageCroped(path)}
+        />
+
+
+      }
 
 
       </Modal>

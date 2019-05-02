@@ -193,6 +193,44 @@ public class IopanModule extends ReactContextBaseJavaModule {
     
   }
 
+  @ReactMethod
+  public void getImageSize(
+    String src_path, 
+    final Promise promise) {
+      WritableNativeMap returnValue = new WritableNativeMap();
+      
+      try {
+      // Load bitmap.
+      Bitmap bitmap = null;
+      BitmapFactory.Options options = new BitmapFactory.Options();
+      options.inPreferredConfig = Bitmap.Config.ARGB_8888;
+      bitmap = BitmapFactory.decodeFile(src_path, options);
+
+      int w = bitmap.getWidth();
+      int h = bitmap.getHeight();
+
+      // Get image original orientation.
+      ExifInterface exif = new ExifInterface(src_path);
+      int originalOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
+      originalOrientation = exifToDegrees(originalOrientation);
+     
+
+      if(originalOrientation == 0 ||originalOrientation == 180 ){
+        returnValue.putInt("w", w);
+        returnValue.putInt("h", h);      
+      }
+      else {
+        returnValue.putInt("w", h);
+        returnValue.putInt("h", w);      
+      }
+
+      promise.resolve(returnValue);
+    } catch (Exception e) {
+      returnValue.putString("ERROR", e.toString());
+      promise.resolve(returnValue);
+    }
+
+  }
 
   @ReactMethod
   public void cropBitmap(
@@ -207,15 +245,16 @@ public class IopanModule extends ReactContextBaseJavaModule {
     final Promise promise) {
 
     WritableNativeMap returnValue = new WritableNativeMap();
-      // returnValue.putString("0 src_path", src_path);
-      // returnValue.putDouble("0 _w", (float)w);
-      // returnValue.putDouble("0 _h", (float)h);
-      // returnValue.putDouble("0 __x", (double)x);
-      // returnValue.putString("0 __y", ""+y);
-      //   returnValue.putDouble("0 __y d ", (double)y);
-      //   returnValue.putDouble("0 __y f", (float)y);
-      // returnValue.putDouble("0 rotation", rotation);
-      // returnValue.putDouble("0 scale", scale);  
+      returnValue.putString("0 path src ", src_path);
+      returnValue.putString("0 path dest", dst_path);
+      returnValue.putDouble("0 _w", (float)w);
+      returnValue.putDouble("0 _h", (float)h);
+      returnValue.putDouble("0 __x", (double)x);
+      returnValue.putString("0 __y", ""+y);
+        returnValue.putDouble("0 __y d ", (double)y);
+        returnValue.putDouble("0 __y f", (float)y);
+      returnValue.putDouble("0 rotation", rotation);
+      returnValue.putDouble("0 scale", scale);  
 
 
     try {
@@ -251,14 +290,15 @@ public class IopanModule extends ReactContextBaseJavaModule {
       bitmap = rotateBitmap(bitmap, (float)rotation);
       int newW = bitmap.getWidth();
       int newH = bitmap.getHeight();
-        // returnValue.putString("40 rotation ok.  ", " ");
-        // returnValue.putString("41 newW: ", " " + newW  );
-        // returnValue.putString("42 newH: ", " " +   newH);
+        returnValue.putString("40 rotation ok.  ", " ");
+        returnValue.putString("41 newW: ", " " + newW  );
+        returnValue.putString("42 newH: ", " " +   newH);
 
 
       // Keep portion of bitmap based on given scale and translation.
-      int finalWidth = (int)Math.round(w/scale);
-      int finalHeight = (int)Math.round(h/scale);
+      int finalWidth = (int)Math.round(w/scale);//(int)Math.round(w/scale);
+      int finalHeight = (int)Math.round(h/scale);//(int)Math.round(h/scale);
+
 
       int nx = (int)Math.round((newW - w)/2) // Additional width due to rotation
              + (int)Math.round(x);
