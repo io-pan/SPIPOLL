@@ -65,8 +65,6 @@ export class ModalCrop extends Component {
     const w = e.nativeEvent.layout.width,
           h = e.nativeEvent.layout.height;
 
-    console.log('he', w*4/3);
-
     this.setState({
       containerWidth:w,
       containerHeight:h,
@@ -136,14 +134,14 @@ export class ModalCrop extends Component {
       this.crop.scale,
     )
     .then((msg) => {
-      // console.log('cropImage', msg);
+      console.log('cropImage', msg);
       this.props.imageCroped(dest_path);
       // TODO: ioio
       //  Update image picker & gallery. Shall do something like sourc.url+'?t=timestamp'
 
     })
     .catch((err) => {
-      ALert.alert('cropImage ERROR', err);
+      Alert.alert('cropImage ERROR', err);
     });
 
   }
@@ -280,7 +278,7 @@ console.log(this.state)
                     ,
                     }}
                     // resizeMode="contain"
-                    source={{uri:this.props.source.url}}
+                    source={{uri:this.props.source.url + '?t=' + new Date().getTime()}}
                   />
                 </ImageZoom>
             }
@@ -419,6 +417,7 @@ export default class ImageGallery extends Component {
   }
 
   gotoImage(index){
+    console.log('gotoImage', index)
     this.setState({
       view:'slide',
       index:index >=0 ? index : 0,
@@ -618,8 +617,13 @@ export default class ImageGallery extends Component {
   }
 
   imageCroped(path){
-    // this.setState({view: null});
-    this.props.imageCroped(path);
+    if(path){
+      // scan folder. 
+      this.props.imageCroped(path);
+    }
+    else{
+      this.hide(); // hide crop.
+    }
   }
 
   render () {

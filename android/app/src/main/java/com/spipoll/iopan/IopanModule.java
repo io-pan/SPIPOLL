@@ -226,8 +226,7 @@ public class IopanModule extends ReactContextBaseJavaModule {
 
       promise.resolve(returnValue);
     } catch (Exception e) {
-      returnValue.putString("ERROR", e.toString());
-      promise.resolve(returnValue);
+      promise.reject(e);
     }
 
   }
@@ -373,8 +372,7 @@ public class IopanModule extends ReactContextBaseJavaModule {
       promise.resolve(returnValue);
 
     } catch (Exception e) {
-      returnValue.putString("ERROR", e.toString());
-      promise.resolve(returnValue);
+      promise.reject(e);
     }
   }
 

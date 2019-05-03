@@ -749,15 +749,7 @@ export class ImagePicker extends Component {
         this.props.onSelect(this.state.sources[0].url.replace('file://' + this.props.path,''));
       }
       
-      // Show gallery so user can see what he picked... 
-      // TODO : keep this ?
-      this.setState({
-        visibleCamera:false,
-        bigGalleryIndex: this.nbTakenPhoto 
-          ? this.state.sources.length-1
-          : false, // ...unless he came back but did not take any photo.
-      });
-
+      this.setState({ visibleCamera:false });
     }
     else{
       this.nbTakenPhoto++;
@@ -768,13 +760,6 @@ export class ImagePicker extends Component {
     }
   }
 
-  imageCroped(path){
-    console.log('imageCroped');
-    if(path){
-      // this.refs['gallery'].hide();
-      this.scanFolder(path);
-    }
-  }
 
   imageSelected(index, filename) {
     this.setState({index:index});
@@ -840,7 +825,7 @@ export class ImagePicker extends Component {
             onSelect = {(index, filename)=>this.imageSelected(index, filename)}
             imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
 
-            imageCroped={(path)=> this.imageCroped(path)}
+            imageCroped={(path)=> this.scanFolder(path)}
 
             styles={{
               text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
