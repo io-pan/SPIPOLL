@@ -141,7 +141,7 @@ class Collection extends Component {
       },{
         icon:'calendar-clock',
         text:'Session'+(this.props.data.protocole=='flash'?'':'s')
-        // TODO: props might change after mount.
+        // TODO: on new collection, protocole is not set yes so we always have sessionS.
       },{
         icon:'ladybug',
         text:'Insectes'

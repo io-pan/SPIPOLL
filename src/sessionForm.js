@@ -326,7 +326,7 @@ export default class SessionForm extends Component {
   }
 
   cancelSession(){
-      // TODO: warn only if insect has been shot.
+    // TODO: warn only if insect has been shot.
     Alert.alert(
       'Annuler la session ?',
       "Si vous annulez la session, toutes les photos associées seront définitivement perdues.",
@@ -459,7 +459,7 @@ export default class SessionForm extends Component {
       comment:null,
       session:null,
       photo:null,
-      date:null,
+      date:now,
     };
   }
 

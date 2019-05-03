@@ -12,7 +12,6 @@ import {
   Slider,
   BackHandler,
   NativeModules,
-  PanResponder,
 } from 'react-native'
 
 import RNFetchBlob from 'rn-fetch-blob';
@@ -60,58 +59,7 @@ export class ModalCrop extends Component {
     .catch((err) => {
       console.log('cropImage ERROR', err);
     });
-
-    this._panResponder = PanResponder.create({
-      // Ask to be the responder:
-      onStartShouldSetPanResponder: (evt, gestureState) => true,
-      onStartShouldSetPanResponderCapture: (evt, gestureState) => true,
-      onMoveShouldSetPanResponder: (evt, gestureState) => true,
-      onMoveShouldSetPanResponderCapture: (evt, gestureState) => true,
-
-      onStartShouldSetPanResponder: () => true,
-      onPanResponderTerminationRequest: () => false,
-      onPanResponderTerminate: () => {},
-      onPanResponderRelease: (evt, gestureState) => {},
-
-      onPanResponderGrant: (evt, gestureState) => {
-         console.log('ôoooooooooo');
-              console.log(evt.nativeEvent.changedTouches.length);  
-      console.log(gestureState.numberActiveTouches + ' ' + new Date().getTime());
-
-        // The gesture has started. Show visual feedback so the user knows
-        // what is happening!
-        // gestureState.d{x,y} will be set to zero now
-      },
-      onPanResponderMove: (evt, gestureState) => {
-     console.log(evt.nativeEvent.changedTouches.length);  
-      console.log(gestureState.numberActiveTouches + ' ' + new Date().getTime());
-        // The most recent move distance is gestureState.move{X,Y}
-        // The accumulated gesture distance since becoming responder is
-        // gestureState.d{x,y}
-      },
-    })
-    console.log(this._panResponder);
   }
-
-
-  // show(){
-
-
-  //   Image.getSize(
-  //     this.props.source.url,
-  //     (w,h) => {
-  //       this.setState({
-  //         imageWidth:w,
-  //         imageHeight:h,
-  //         landscape: w > h,
-  //         imageLandscape: w > h,
-  //       }, function(){
-
-  //       });
-  //     }
-  //   );
-  // }
-
 
   getContainerSize(e){
     const w = e.nativeEvent.layout.width,
@@ -174,7 +122,7 @@ export class ModalCrop extends Component {
     let dest_path = this.props.source.url.replace('file://','');
     if(copy){
       dest_path = dest_path.split('.jpg');
-      dest_path = dest_path[0] + '_' + new Date.getTime() + '.jpg'
+      dest_path = dest_path[0] + '_' + new Date().getTime() + '.jpg'
     }
 
     NativeModules.ioPan.cropBitmap(
@@ -460,6 +408,23 @@ export default class ImageGallery extends Component {
     }
   }
 
+  toggleView(){
+    this.setState({view:this.state.view=='slide' ? 'thumbs' : 'slide'});
+  }
+
+  setIndex(index){
+    this.setState({
+      index:index,
+    });
+  }
+
+  gotoImage(index){
+    this.setState({
+      view:'slide',
+      index:index >=0 ? index : 0,
+    });
+  }
+
   showCropModal(){
     this.setState({
       view:'crop',
@@ -571,22 +536,6 @@ export default class ImageGallery extends Component {
     );
   }
 
-  toggleView(){
-    this.setState({view:this.state.view=='slide' ? 'thumbs' : 'slide'});
-  }
-
-  setIndex(index){
-    this.setState({
-      index:index,
-    });
-  }
-
-  gotoImage(index){
-    this.setState({
-      view:'slide',
-      index:index,
-    });
-  }
 
   renderHeader(currentIndex){
     return(
@@ -669,7 +618,7 @@ export default class ImageGallery extends Component {
   }
 
   imageCroped(path){
-    this.setState({view: 'slide'});
+    // this.setState({view: null});
     this.props.imageCroped(path);
   }
 
@@ -734,8 +683,15 @@ export default class ImageGallery extends Component {
 
               { this.actions.slide.map((value, index) => {
                 // Do not show 'select' button if current photo is already selected.
-                if(index==this.actions.slide.length-1
-                  && this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected){
+
+                console.log(this.state.index);
+                console.log(this.actions.slide.length);
+                console.log();
+                console.log();
+
+                if(this.state.index>0
+                && index==this.actions.slide.length-1
+                && this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected){
                   return null;
                 }
 

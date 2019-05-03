@@ -709,7 +709,7 @@ export class ImagePicker extends Component {
 
         files.forEach((filename)=> {
           sources.push({ url:'file://' + this.props.path +'/'+ filename });
-                                                              // + '?' + new Date().getTime() });
+                                                        // + '?' + new Date().getTime() });
         });
 
         this.setState({
@@ -718,7 +718,7 @@ export class ImagePicker extends Component {
         });
 
         if(newfilename){
-          this.showImageGallery(index)
+          this.showImageGallery(index);
         }
       }
 
@@ -726,7 +726,7 @@ export class ImagePicker extends Component {
   }
 
   showImageGallery = (index) => {
-    this.refs['gallery'].show(index);
+    this.refs['gallery'].gotoImage(index); // close crop window and open slide.
   }
 
   showCam(){
@@ -738,6 +738,7 @@ export class ImagePicker extends Component {
   }
 
   photoPicked(path){
+    console.log(path);
     if(path=='close'){
 
       // If only one photo, selected it.
@@ -767,6 +768,13 @@ export class ImagePicker extends Component {
     }
   }
 
+  imageCroped(path){
+    console.log('imageCroped');
+    if(path){
+      // this.refs['gallery'].hide();
+      this.scanFolder(path);
+    }
+  }
 
   imageSelected(index, filename) {
     this.setState({index:index});
@@ -800,15 +808,6 @@ export class ImagePicker extends Component {
             </Text>
           </View>
     );
-  }
-
-  imageCroped(path){
-    console.log('imageCroped');
-    if(path){
-      this.scanFolder(path);
-    }
-
-    // todo goto imageslider
   }
 
   render(){
