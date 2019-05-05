@@ -69,7 +69,7 @@ export class ModalCrop extends Component {
       containerWidth:w,
       containerHeight:h,
       cropWidth: w,
-      cropHeight: w*4/3, // this.state.landscape ? w*3/4 : w*4/3,
+      cropHeight: w*4/3,
     });
   }
 
@@ -138,7 +138,7 @@ export class ModalCrop extends Component {
       console.log('cropImage', msg);
       this.props.imageCroped(dest_path);
       // TODO: ioio
-      //  Update image picker & gallery. Shall do something like sourc.url+'?t=timestamp'
+      //  Update image picker
 
     })
     .catch((err) => {
@@ -158,7 +158,8 @@ export class ModalCrop extends Component {
           }
     ;
 
-console.log(this.state)
+console.log('ModalCrop', this.state)
+
     return(
       // Avoid loading big image while we do not need it.
       <View
@@ -213,10 +214,6 @@ console.log(this.state)
             g</Text>
             <Text style={[titleStyle,titleStyleLandscape]}>
             e</Text>
-            {/*
-            <Text style={{ fontSize:18, fontWeight:'bold', textAlign:'center', color:'white', }}>
-            Recadrer  {this.props.title ? this.props.title.replace("\n", " ") : ''} </Text>
-            */}
           </View>
 
           <TouchableOpacity 
@@ -229,7 +226,7 @@ console.log(this.state)
             onPress={()=> this.setLandscape(!this.state.landscape)}
             >
             <MaterialCommunityIcons
-              name="phone-rotate-landscape" //{this.state.landscape ? "crop-landscape" : "crop-portrait" }
+              name="phone-rotate-landscape"
               style={[{ color:'white' }]}
               size={30}
             />
@@ -243,15 +240,19 @@ console.log(this.state)
             backgroundColor:backgroundColor, 
             }}>
 
-
             { !this.state.cropWidth
             ? null
             :  
               <ImageZoom
                 style={{ backgroundColor:'white' }}
                 checkAdjustment={false}
-                imageWidth={ this.state.cropWidth }
-                imageHeight={  this.state.cropHeight }
+
+                imageWidth={ !this.state.imageLandscape 
+                      ? this.state.cropWidth
+                      : this.state.cropHeight}
+                imageHeight={  !this.state.imageLandscape 
+                      ? this.state.cropHeight
+                      : this.state.cropWidth}
 
       
                 imageContainerWidth={this.state.cropWidth }
@@ -268,12 +269,12 @@ console.log(this.state)
                 <Image 
                   ref="limage"
                   style={{
-                    width:!this.state.landscape 
+                    width:!this.state.imageLandscape 
                       ? this.state.cropWidth
-                      : this.state.cropWidth*3/4
+                      : this.state.cropHeight
                     ,
 
-                    height:!this.state.landscape 
+                    height:!this.state.imageLandscape 
                       ? this.state.cropHeight
                       : this.state.cropWidth
                     ,
@@ -506,7 +507,8 @@ export default class ImageGallery extends Component {
                 });
 
                 // Check if selected image has been deteted.
-                if( sources[i].url.split('?')[0].indexOf(this.props.path +'/'+ this.props.selected) > 0 ){
+                if( this.props.selected 
+                &&  sources[i].url.split('?')[0].indexOf(this.props.path +'/'+ this.props.selected) > 0 ){
                   selectedImageDeleted = true;
                 }
 
@@ -626,11 +628,12 @@ export default class ImageGallery extends Component {
   }
 
   render () {
-    if(!this.props.sources.length ||this.state.index===false){
+    if(!this.props.sources.length || this.state.index===false){
       return null;
     }
 
     console.log('render ImageGallery ' + this.props.title);
+
 
     return (
 
@@ -658,20 +661,20 @@ export default class ImageGallery extends Component {
               renderIndicator ={()=> null}
               saveToLocalByLongPress={false}
               // renderHeader={(currentIndex) => this.renderHeader(currentIndex)}
-              renderFooter={() => null} // renders below screnn bottom
+              renderFooter={() => null} // renders below screen bottom
 
-              // renderImage={(props) => 
-              //   <Image  {...props} 
-              //     style={{...props.style, 
-              //       borderWidth: 
-              //         this.state.index!==false && this.props.sources[this.state.index]
-              //         && this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected
-              //         ? 1 : 0,
-              //       borderColor:this.props.styles.highlightColor,
-              //     }}
-              //     // source = {{uri: props.source.uri + '?t=' + new Date().getTime()}}
-              //   />
-              // }
+              renderImage={(props) => 
+                <Image  {...props} 
+                  style={{...props.style, 
+                    borderWidth: 
+                      this.props.selected
+                      && this.state.index!==false && this.props.sources[this.state.index]
+                      && this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected)>0
+                      ? 2 : 0,
+                    borderColor:this.props.styles.highlightColor,
+                  }}
+                />
+              }
 
               onChange={(index) => this.setIndex(index)}
             />
@@ -713,6 +716,7 @@ export default class ImageGallery extends Component {
               )}
 
               { //show 'SELECT' button if current photo is not already selected.
+              this.props.selected && 
               this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected) > 0 
               ? null
               : <TouchableOpacity
@@ -762,7 +766,7 @@ export default class ImageGallery extends Component {
                     key={index}
                     style={{ 
                       borderWidth:1,
-                      borderColor: path.url.indexOf(this.props.path +'/'+this.props.selected) > 0
+                      borderColor: this.props.selected && path.url.indexOf(this.props.path +'/'+this.props.selected) > 0
                       ? this.props.styles.highlightColor : thumbBorderColor,
                       margin:1, padding:1,
                       justifyContent:'center', alignItems:'center',
