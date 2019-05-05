@@ -249,18 +249,22 @@ console.log('ModalCrop', this.state)
 
                 imageWidth={ !this.state.imageLandscape 
                       ? this.state.cropWidth
-                      : this.state.cropHeight}
-                imageHeight={  !this.state.imageLandscape 
+                      : this.state.cropHeight }
+                imageHeight={ !this.state.imageLandscape 
                       ? this.state.cropHeight
-                      : this.state.cropWidth}
+                      : this.state.cropHeight }
 
-      
-                imageContainerWidth={this.state.cropWidth }
+                // isLandscape={ true/* this.state.imageLandscape*/ } 
+                // initialOffsetX={ this.state.imageLandscape? -(this.state.cropHeight-this.state.cropWidth)/2:0}
+                // initialOffsetY={ this.state.imageLandscape?0:0}
+
+                imageContainerWidth={ !this.state.imageLandscape 
+                      ? this.state.cropWidth
+                      : this.state.cropHeight  }
                 imageContainerHeight={ this.state.cropHeight }
 
-                maskPadding={0}
                 rotate={true}
-                initialRotate={ this.state.landscape ? 90 : 0 }
+                initialRotate={ this.state.imageLandscape ? 90 : 0 }
                 maxZoomScale={8}
 
                 onChange={(position, scale, rotate)=> this.onChange(position, scale, rotate) }
@@ -269,26 +273,27 @@ console.log('ModalCrop', this.state)
                 <Image 
                   ref="limage"
                   style={{
+                    // transform:[{ rotate: '90deg', }],
+                    borderColor:'blue', borderWidth:1,
                     width:!this.state.imageLandscape 
                       ? this.state.cropWidth
-                      : this.state.cropHeight
+                      : this.state.cropHeight 
                     ,
-
                     height:!this.state.imageLandscape 
                       ? this.state.cropHeight
-                      : this.state.cropWidth
+                      : this.state.cropWidth 
                     ,
                     }}
-                    // resizeMode="contain"
+
                     source={{uri:this.props.source.url + '?t=' + new Date().getTime()}}
                   />
                 </ImageZoom>
             }
 
-            {/*
+            
             <View style={{backgroundColor:'red', position:'absolute', width:1,top:0,bottom:0,left:180}} />
-            <View style={{backgroundColor:'red', position:'absolute', height:1,left:0,right:0,top:300}}  />
-            */}
+            <View style={{backgroundColor:'red', position:'absolute', height:1,left:0,right:0,top:300}} />
+            
         </View>
 
 
@@ -326,21 +331,7 @@ console.log('ModalCrop', this.state)
             /><Text style={{color:'white', fontWeight:'bold', fontSize:18,}}>
             Copier</Text>
           </TouchableOpacity>
-        {/*
-        <TouchableOpacity style={{
-            backgroundColor:this.props.styles.highlightColor,
-            height:55, justifyContent:'center', textAlign:'center',
-          }}
-          onPress={(path) => this.photoPicked('close')}
-          >
-          <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
-          Retour à la collection</Text>
-          </TouchableOpacity>
-        */}
-
         </View>
-
-
 
       </View>
     );
@@ -662,19 +653,27 @@ export default class ImageGallery extends Component {
               saveToLocalByLongPress={false}
               // renderHeader={(currentIndex) => this.renderHeader(currentIndex)}
               renderFooter={() => null} // renders below screen bottom
-
-              renderImage={(props) => 
-                <Image  {...props} 
-                  style={{...props.style, 
-                    borderWidth: 
-                      this.props.selected
-                      && this.state.index!==false && this.props.sources[this.state.index]
-                      && this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected)>0
-                      ? 2 : 0,
-                    borderColor:this.props.styles.highlightColor,
-                  }}
-                />
-              }
+              // renderImage={(props) => 
+              //   <View
+              //     style={{...props.style,
+              //       borderTopWidth: 
+              //         this.props.selected
+              //         && this.state.index!==false && this.props.sources[this.state.index]
+              //         && this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected)>0
+              //         ? 2 : 0,
+              //       borderColor:this.props.styles.highlightColor,
+              //     }}
+              //     >
+              //     {this.props.selected
+              //         && this.state.index!==false && this.props.sources[this.state.index]
+              //         && this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected)>0
+              //       ? <Text style={{color:'white', textAlign:'center', paddingBottom:10,}}>Sélectionnée</Text>
+              //       :null
+              //     }
+                 
+              //     <Image  {...props} />
+              //   </View>
+              // }
 
               onChange={(index) => this.setIndex(index)}
             />
@@ -861,21 +860,16 @@ export default class ImageGallery extends Component {
           </View>
         
         : // crop 
-
-
-        <ModalCrop
-          ref='crop-modal'
-          // visible={false}
-          title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
-          source={this.props.sources[this.state.index]}
-          styles={this.props.styles}
-          imageCroped={(path)=> this.imageCroped(path)}
-        />
-
+          <ModalCrop
+            ref='crop-modal'
+            // visible={false}
+            title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
+            source={this.props.sources[this.state.index]}
+            styles={this.props.styles}
+            imageCroped={(path)=> this.imageCroped(path)}
+          />
 
       }
-
-
       </Modal>
     )
   }
@@ -884,42 +878,5 @@ export default class ImageGallery extends Component {
 
 
 const styles = StyleSheet.create({
-  container: {
-    marginTop: 20,
-  },
-  flex: {
-    flex: 1,
-  },
-  maskContainer: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-  },
-  mask: {
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    position: 'absolute',
-    overflow: 'hidden',
-  },
-  topBottom: {
-    height: 50,
-    width: 360 - 100,
-    left: 50,
-  },
-  top: {
-    top: 0,
-  },
-  bottom: {
-    top: 360 - 50,
-  },
-  side: {
-    width: 50,
-    height: 360,
-    top: 0,
-  },
-  left: {
-    left: 0,
-  },
-  right: {
-    left: 360 - 50,
-  },
+
 });
