@@ -708,8 +708,8 @@ export class ImagePicker extends Component {
         ;
 
         files.forEach((filename)=> {
-          sources.push({ url:'file://' + this.props.path +'/'+ filename });
-                                                        // + '?' + new Date().getTime() });
+          sources.push({ url:'file://' + this.props.path +'/'+ filename 
+                         + '?' + new Date().getTime() });
         });
 
         this.setState({
@@ -743,9 +743,9 @@ export class ImagePicker extends Component {
 
       // If only one photo, selected it.
       if(this.state.sources.length == 1){
-        console.log('onephoto',this.state.sources[0].url.replace('file://' + this.props.path,''))
-        console.log(this.props.path);
-         console.log(this.state.sources[0].url);
+        // console.log('onephoto',this.state.sources[0].url.replace('file://' + this.props.path,''))
+        // console.log(this.props.path);
+        // console.log(this.state.sources[0].url);
         this.props.onSelect(this.state.sources[0].url.replace('file://' + this.props.path,''));
       }
       

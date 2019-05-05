@@ -44,7 +44,7 @@ export class ModalCrop extends Component {
     };
 
     NativeModules.ioPan.getImageSize(
-      this.props.source.url.replace('file://',''),
+      this.props.source.url.split('?')[0].replace('file://',''),
     )
     .then((msg) => {
       console.log('getImageSize', msg);
@@ -117,14 +117,15 @@ export class ModalCrop extends Component {
     nx = nx * this.state.imageWidth/this.state.cropWidth;
     nx = nx / this.crop.scale;
 
-    let dest_path = this.props.source.url.replace('file://','');
+    let src_path = this.props.source.url.split('?')[0].replace('file://','');
+    let dest_path = src_path;
     if(copy){
       dest_path = dest_path.split('.jpg');
       dest_path = dest_path[0] + '_' + new Date().getTime() + '.jpg'
     }
 
     NativeModules.ioPan.cropBitmap(
-      this.props.source.url.replace('file://',''),
+      src_path,
       dest_path,
       this.state.imageWidth,
       this.state.imageHeight,
@@ -360,11 +361,13 @@ export default class ImageGallery extends Component {
           label:'',//Recadrer
           icon:'crop',
           action: () => this.showCropModal()
-        },{
-          label:'Sélectionner',
-          icon:'paperclip',
-          action: () => this.selectImage()
-        }],
+        },
+        // {
+        //   label:'Sélectionner',
+        //   icon:'paperclip',
+        //   action: () => this.selectImage()
+        // }
+        ],
 
       thumbs:[{
           label:'Annuler',
@@ -379,16 +382,12 @@ export default class ImageGallery extends Component {
 
     this.state = { 
       //sources:this.props.sources,
-                                                            // We could show thumbs to let user choose: 
       index: false,
-      view: 'slide',                                        // this.props.visible < 0 ? 'thumbs' : 'slide',      
+      view: 'slide',    
       thumbCols:0,
       selectedForAction:false,
-
-      visibleCropModal:false, 
     }
     this.maxThumbCols = 1;
-    console.log('CONST ' + this.props.visible);
   }
 
   show(index){
@@ -462,7 +461,7 @@ export default class ImageGallery extends Component {
   selectImage(){
     this.props.onSelect(
       this.state.index,
-      this.props.sources[this.state.index].url.replace('file://'+this.props.path+'/' ,'')
+      this.props.sources[this.state.index].url.split('?')[0].replace('file://'+this.props.path+'/' ,'')
     );
   }
 
@@ -494,7 +493,7 @@ export default class ImageGallery extends Component {
             for (var i = sources.length - 1; i >= 0; i--) {
               if(selectedForAction.indexOf(i) !== -1) {
                 // Delete file.
-                RNFetchBlob.fs.unlink(sources[i].url)
+                RNFetchBlob.fs.unlink(sources[i].url.split('?')[0])
                 .then(() => { 
                   // console.log('photo supprimée' )
                 })
@@ -507,7 +506,7 @@ export default class ImageGallery extends Component {
                 });
 
                 // Check if selected image has been deteted.
-                if( sources[i].url == 'file://' + this.props.path +'/'+ this.props.selected ){
+                if( sources[i].url.split('?')[0].indexOf(this.props.path +'/'+ this.props.selected) > 0 ){
                   selectedImageDeleted = true;
                 }
 
@@ -633,9 +632,7 @@ export default class ImageGallery extends Component {
 
     console.log('render ImageGallery ' + this.props.title);
 
-
     return (
-
 
       <Modal
         onRequestClose={
@@ -653,7 +650,7 @@ export default class ImageGallery extends Component {
 
             { this.renderHeader(this.state.index) }
 
-            <ImageViewer 
+            <ImageViewer
               // backgroundColor={'white'}
               imageUrls={this.props.sources}
               index={this.state.index}
@@ -663,15 +660,18 @@ export default class ImageGallery extends Component {
               // renderHeader={(currentIndex) => this.renderHeader(currentIndex)}
               renderFooter={() => null} // renders below screnn bottom
 
-              renderImage={(props) => 
-                <Image  {...props} style={{...props.style, 
-                    borderWidth: 
-                      this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected
-                      ? 1 : 0,
-                    borderColor:this.props.styles.highlightColor,
-                  }}
-                />
-              }
+              // renderImage={(props) => 
+              //   <Image  {...props} 
+              //     style={{...props.style, 
+              //       borderWidth: 
+              //         this.state.index!==false && this.props.sources[this.state.index]
+              //         && this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected
+              //         ? 1 : 0,
+              //       borderColor:this.props.styles.highlightColor,
+              //     }}
+              //     // source = {{uri: props.source.uri + '?t=' + new Date().getTime()}}
+              //   />
+              // }
 
               onChange={(index) => this.setIndex(index)}
             />
@@ -679,31 +679,25 @@ export default class ImageGallery extends Component {
             <View // Sideshow Action buttons    
               style={{ 
                 height:55,
-                flexDirection:'row', alignItems:'center', justifyContent:'space-around',
+                flexDirection:'row', alignItems:'center', justifyContent:'flex-start',
                 backgroundColor:this.props.styles.highlightColor,
                 borderTopWidth:1, borderTopColor:'white',
               }}
               >
 
-              { this.actions.slide.map((value, index) => {
-                // Do not show 'select' button if current photo is already selected.
+              { this.actions.slide.map((value, index) => //{
+                // // Do not show 'select' button if current photo is already selected.
+                // if(this.state.index>0
+                // && index==this.actions.slide.length-1
+                // && this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected){
+                //   return null;
+                // }
 
-                console.log(this.state.index);
-                console.log(this.actions.slide.length);
-                console.log();
-                console.log();
-
-                if(this.state.index>0
-                && index==this.actions.slide.length-1
-                && this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected){
-                  return null;
-                }
-
-                return(
+                // return(
                   <TouchableOpacity
                     key={index}
                     style={{
-                      minWidth:50,
+                      width:55,
                       flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
                       borderRightWidth:1, 
                       borderRightColor:'white'}}
@@ -711,12 +705,31 @@ export default class ImageGallery extends Component {
                     >
                     <MaterialCommunityIcons   
                       name={value.icon}
-                      style={{fontSize:24, paddingRight:10, color:'white'}}
-                    /><Text style={{color: 'white', fontSize:16,}}>
-                    {value.label}</Text>
+                      style={{fontSize:24, color:'white'}}
+                    />{/*<Text style={{color: 'white', fontSize:16,}}>
+                                        {value.label}</Text>*/}
                   </TouchableOpacity>
-                );
-              })}
+                // );  }
+              )}
+
+              { //show 'SELECT' button if current photo is not already selected.
+              this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected) > 0 
+              ? null
+              : <TouchableOpacity
+                  style={{
+                    flex:1,
+                    flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
+                    borderRightWidth:1, 
+                    borderRightColor:'white'}}
+                  onPress =  {() => this.selectImage()}
+                  >
+                  <MaterialCommunityIcons   
+                    name="paperclip"
+                    style={{fontSize:24, paddingRight:10, color:'white'}}
+                  /><Text style={{color: 'white', fontSize:16,}}>
+                  Sélectionner</Text>
+                </TouchableOpacity>
+              }
 
             </View>
           </View>
@@ -749,7 +762,7 @@ export default class ImageGallery extends Component {
                     key={index}
                     style={{ 
                       borderWidth:1,
-                      borderColor: path.url === 'file://' + this.props.path +'/'+this.props.selected
+                      borderColor: path.url.indexOf(this.props.path +'/'+this.props.selected) > 0
                       ? this.props.styles.highlightColor : thumbBorderColor,
                       margin:1, padding:1,
                       justifyContent:'center', alignItems:'center',
