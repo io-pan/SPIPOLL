@@ -51,7 +51,7 @@ export class ModalCrop extends Component {
         this.setState({
           imageWidth:msg.w,
           imageHeight:msg.h,
-          landscape: msg.w > msg.h,
+          viewLandscape: msg.w > msg.h,
           imageLandscape: msg.w > msg.h,
         }, function(){
         });
@@ -75,7 +75,7 @@ export class ModalCrop extends Component {
 
   setLandscape(landscape){
     this.setState({
-      landscape:landscape,
+      viewLandscape:landscape,
       // cropWidth: this.state.containerWidth,
       // cropHeight: this.state.containerWidth*4/3, // landscape ? this.state.containerWidth*3/4 : this.state.containerWidth*4/3,
     });
@@ -148,7 +148,7 @@ export class ModalCrop extends Component {
   }
 
   render(){
-    const titleStyleLandscape = this.state.landscape 
+    const titleStyleLandscape = this.state.viewLandscape 
             ? {letterSpacing:8, paddingTop:0, transform:[{ rotateZ:'90deg'}]}
             : {}, 
           titleStyle = {
@@ -193,7 +193,7 @@ console.log('ModalCrop', this.state)
             />
           </TouchableOpacity>
 
-          <View style={{flex:1, flexDirection:this.state.landscape?'row-reverse':'row', 
+          <View style={{flex:1, flexDirection:this.state.viewLandscape?'row-reverse':'row', 
              alignItems:'center', justifyContent:'center',
           }}>
             <Text style={[titleStyle,titleStyleLandscape]}>
@@ -223,7 +223,7 @@ console.log('ModalCrop', this.state)
               justifyContent:'center', alignItems:'center', 
               borderRightWidth:1, borderRightColor:'white', 
             }]}
-            onPress={()=> this.setLandscape(!this.state.landscape)}
+            onPress={()=> this.setLandscape(!this.state.viewLandscape)}
             >
             <MaterialCommunityIcons
               name="phone-rotate-landscape"
@@ -264,7 +264,9 @@ console.log('ModalCrop', this.state)
                 imageContainerHeight={ this.state.cropHeight }
 
                 rotate={true}
-                initialRotate={ this.state.imageLandscape ? 90 : 0 }
+                initialRotate={
+                  (  (this.state.viewLandscape && this.state.imageLandscape)  
+                  || (this.state.viewLandscape && !this.state.imageLandscape)) ? 90 : 0 }
                 maxZoomScale={8}
 
                 onChange={(position, scale, rotate)=> this.onChange(position, scale, rotate) }
@@ -273,7 +275,6 @@ console.log('ModalCrop', this.state)
                 <Image 
                   ref="limage"
                   style={{
-                    // transform:[{ rotate: '90deg', }],
                     borderColor:'blue', borderWidth:1,
                     width:!this.state.imageLandscape 
                       ? this.state.cropWidth
