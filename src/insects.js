@@ -1,13 +1,5 @@
 export const insectList =[
 {
-	value:933,
-	label:"Taxon inconnu de la clé",
-	espece:"Inconnue",
-},{
-	value:1053,
-	label:"Photo insuffisante pour l'indentification",
-	espece:"Inconnue",
-},{
 	value:934,
 	label:"L'Abeille Ceratina noire",
 	espece:"Ceratina cucurbitina",
@@ -2512,5 +2504,14 @@ export const insectList =[
 	value:559,
 	label:"Les Zygènes rouges",
 	espece:"Zygaena",
+},
+{
+	value:933,
+	label:"Taxon inconnu de la clé",
+	espece:"Inconnue",
+},{
+	value:1053,
+	label:"Photo insuffisante pour l'indentification",
+	espece:"Inconnue",
 },
 ];

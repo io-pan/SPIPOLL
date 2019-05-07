@@ -40,6 +40,7 @@ export default class ModalFilterPicker extends Component {
   }
 
   show(){
+    // this.previouslength = 0;
     this.setState({
       visible:true,
       filter: '',
@@ -71,7 +72,7 @@ export default class ModalFilterPicker extends Component {
               backgroundColor:this.props.highlightColor
               }}
             >
-{            <TouchableOpacity 
+            <TouchableOpacity 
               style={[{
                 height:55,
                 width:55,
@@ -85,7 +86,7 @@ export default class ModalFilterPicker extends Component {
                 style={[{ color:'white' }]}
                 size={30}
               />
-            </TouchableOpacity>}
+            </TouchableOpacity>
 
             <View 
               // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
@@ -300,6 +301,11 @@ export default class ModalFilterPicker extends Component {
   }
 
   onFilterChange = (text) => {
+    // if(text.length<2 && this.previouslength<text.length){
+    //   return;
+    // }
+    // this.previouslength = text.length;
+
     const { options } = this.props
 
     const filter = text.toLowerCase()
