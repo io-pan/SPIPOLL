@@ -109,40 +109,74 @@ export class ModalCrop extends Component {
     //   }]
     // );
 
-    let ny = (-this.crop.positionY ) +  (this.crop.scale-1)*(this.state.cropHeight/2);
-    ny = ny * this.state.imageHeight/this.state.cropHeight;
-    ny = ny /this.crop.scale;
+    let nx, ny,
+        src_w = this.state.imageWidth,
+        src_h = this.state.imageHeight,
+        scale = this.crop.scale,
+        rotation = this.crop.rotation,
+        switch_oriantation = 0;
 
-    let nx = (-this.crop.positionX ) +  (this.crop.scale-1)*(this.state.cropWidth/2)
-    nx = nx * this.state.imageWidth/this.state.cropWidth;
-    nx = nx / this.crop.scale;
+    // Portrait image
+    if(!this.state.imageLandscape){
+      ny = (-this.crop.positionY ) +  (scale-1)*(this.state.cropHeight/2);
+      ny = ny * src_h/this.state.cropHeight;
+      ny = ny /scale;
+  
+      nx = (-this.crop.positionX ) +  (scale-1)*(this.state.cropWidth/2)
+      nx = nx * src_w/this.state.cropWidth;
+      nx = nx / scale;
+
+      // landscape view (swich)
+      if(this.state.viewLandscape){
+        rotation += 90;
+        switch_oriantation = -90;
+      }
+    }
+
+    // Landscape Image
+    else{
+      nx = (-this.crop.positionY ) +  (scale-1)*(this.state.cropHeight/2);
+      nx = nx * src_w/this.state.cropHeight;
+      nx = nx /scale;
+  
+      ny = (+this.crop.positionX ) +  (scale-1)*(this.state.cropWidth/2)
+      ny = ny * src_h/this.state.cropWidth;
+      ny = ny / scale;
+
+      // Portrait view (swich)
+      if(!this.state.viewLandscape){
+        rotation -= 90;
+        switch_oriantation = 90;
+      }
+    }
 
     let src_path = this.props.source.url.split('?')[0].replace('file://','');
     let dest_path = src_path;
     if(copy){
-      dest_path = dest_path.split('.jpg');
-      dest_path = dest_path[0] + '_' + new Date().getTime() + '.jpg'
+      dest_path = dest_path.split('.jpg')[0] + '_' + new Date().getTime() + '.jpg'
     }
 
     NativeModules.ioPan.cropBitmap(
       src_path,
       dest_path,
-      this.state.imageWidth,
-      this.state.imageHeight,
+      src_w,
+      src_h,
       nx,
       ny,
-      this.crop.rotation,
+      rotation,
       this.crop.scale,
+      switch_oriantation
     )
     .then((msg) => {
-      console.log('cropImage', msg);
-      this.props.imageCroped(dest_path);
-      // TODO: ioio
-      //  Update image picker
+      // console.log('cropImage', msg);
+      if(!msg['999 error '])
+        this.props.imageCroped(dest_path);
+      // TODO:   Update image picker
 
     })
     .catch((err) => {
-      Alert.alert('cropImage ERROR', err);
+      console.log('ERROR CROP', err)
+      // Alert.alert('cropImage ERROR', err);
     });
 
   }
@@ -158,7 +192,9 @@ export class ModalCrop extends Component {
           }
     ;
 
-console.log('ModalCrop', this.state)
+    // console.log('render ModalCrop', this.state)
+
+// TODO: when deleting a photo and next has a diffrent w/h ratio
 
     return(
       // Avoid loading big image while we do not need it.
@@ -242,40 +278,28 @@ console.log('ModalCrop', this.state)
 
             { !this.state.cropWidth
             ? null
-            :  
-              <ImageZoom
+            : <ImageZoom
                 style={{ backgroundColor:'white' }}
                 checkAdjustment={false}
+                maxZoomScale={8}
 
-                imageWidth={ !this.state.imageLandscape 
-                      ? this.state.cropWidth
-                      : this.state.cropHeight }
-                imageHeight={ !this.state.imageLandscape 
-                      ? this.state.cropHeight
-                      : this.state.cropHeight }
+                imageWidth={ this.state.cropHeight }
+                imageHeight={ this.state.cropHeight }
 
-                // isLandscape={ true/* this.state.imageLandscape*/ } 
-                // initialOffsetX={ this.state.imageLandscape? -(this.state.cropHeight-this.state.cropWidth)/2:0}
-                // initialOffsetY={ this.state.imageLandscape?0:0}
-
-                imageContainerWidth={ !this.state.imageLandscape 
-                      ? this.state.cropWidth
-                      : this.state.cropHeight  }
+                imageContainerWidth={ this.state.cropHeight  }
                 imageContainerHeight={ this.state.cropHeight }
 
                 rotate={true}
                 initialRotate={
-                  (  (this.state.viewLandscape && this.state.imageLandscape)  
+                  ((this.state.viewLandscape && this.state.imageLandscape)  
                   || (this.state.viewLandscape && !this.state.imageLandscape)) ? 90 : 0 }
-                maxZoomScale={8}
 
                 onChange={(position, scale, rotate)=> this.onChange(position, scale, rotate) }
-
                 >
                 <Image 
                   ref="limage"
                   style={{
-                    borderColor:'blue', borderWidth:1,
+                    // borderColor:'blue', borderWidth:1,
                     width:!this.state.imageLandscape 
                       ? this.state.cropWidth
                       : this.state.cropHeight 
@@ -284,17 +308,16 @@ console.log('ModalCrop', this.state)
                       ? this.state.cropHeight
                       : this.state.cropWidth 
                     ,
-                    }}
-
-                    source={{uri:this.props.source.url + '?t=' + new Date().getTime()}}
-                  />
-                </ImageZoom>
+                  }}
+                  source={{uri:this.props.source.url + '?t=' + new Date().getTime()}}
+                />
+              </ImageZoom>
             }
 
-            
+            {/*            
             <View style={{backgroundColor:'red', position:'absolute', width:1,top:0,bottom:0,left:180}} />
             <View style={{backgroundColor:'red', position:'absolute', height:1,left:0,right:0,top:300}} />
-            
+            */}
         </View>
 
 

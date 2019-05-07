@@ -31,6 +31,9 @@ import android.location.Geocoder;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Matrix;
+import android.graphics.Canvas;
+import android.graphics.Rect;
+
 import android.util.Base64;
 import java.io.ByteArrayOutputStream;
 import android.media.ExifInterface;
@@ -235,26 +238,25 @@ public class IopanModule extends ReactContextBaseJavaModule {
   public void cropBitmap(
     String src_path, 
     String dst_path, 
-    double w,
-    double h,
+    int w,
+    int h,
     double x,
     double y, 
     double rotation,
     double scale,
+    float switch_orientation,
     final Promise promise) {
 
     WritableNativeMap returnValue = new WritableNativeMap();
       // returnValue.putString("0 path src ", src_path);
       // returnValue.putString("0 path dest", dst_path);
-      // returnValue.putDouble("0 _w", (float)w);
-      // returnValue.putDouble("0 _h", (float)h);
-      // returnValue.putDouble("0 __x", (double)x);
-      // returnValue.putString("0 __y", ""+y);
-      //   returnValue.putDouble("0 __y d ", (double)y);
-      //   returnValue.putDouble("0 __y f", (float)y);
+      // returnValue.putInt("0 _w",  w);
+      // returnValue.putInt("0 _h",  h);
+      // returnValue.putDouble("0 __x", x);
+      // returnValue.putDouble("0 __y", y);
       // returnValue.putDouble("0 rotation", rotation);
       // returnValue.putDouble("0 scale", scale);  
-
+      // returnValue.putDouble("0 switch_orientation", switch_orientation);  
 
     try {
       // Load bitmap.
@@ -265,25 +267,37 @@ public class IopanModule extends ReactContextBaseJavaModule {
         // returnValue.putString("11 w", ""+ bitmap.getWidth());
         // returnValue.putString("12 h", ""+ bitmap.getHeight());
 
-      // Get image original orientation.
+
+      // Get and set original orientation.
       ExifInterface exif = new ExifInterface(src_path);
       int originalOrientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL);
       originalOrientation = exifToDegrees(originalOrientation);
-        // returnValue.putString("19 orientation", ""+originalOrientation);
-     
+      // returnValue.putString("19 orientation", ""+originalOrientation);
       bitmap = Bitmap.createBitmap(
         rotateBitmap(bitmap,originalOrientation),
-        0,0,
-        (int)(w), 
-        (int)(h)
+        0,0, w, h
       );
 
-      if(bitmap==null){
-        returnValue.putString("20 error", "bmp Loaded");
-      }
-        // returnValue.putString("20 ", "bmp Loaded");
-        // returnValue.putString("21 w", ""+ bitmap.getWidth());
-        // returnValue.putString("22 h", ""+ bitmap.getHeight());
+
+      // Make a square image with with margins.
+      int squareDim = (int)Math.max(w,h);
+      Bitmap squareBitmap = Bitmap.createBitmap(squareDim, squareDim, bitmap.getConfig());
+      Canvas canvas = new Canvas(squareBitmap);
+      canvas.drawColor(0xFFFFFFFF);
+
+      canvas.drawBitmap(bitmap, 
+        new Rect(0,0,(int)w,(int)h),
+        new Rect(
+          (int)((squareDim-w)/2),
+          (int)((squareDim-h)/2), 
+          (int)(squareDim-(squareDim-w)/2), 
+          (int)(squareDim-(squareDim-h)/2)
+        ),
+        null
+      );
+      bitmap = squareBitmap;
+      squareBitmap = null;
+
 
       // Rotate.
       bitmap = rotateBitmap(bitmap, (float)rotation);
@@ -297,50 +311,53 @@ public class IopanModule extends ReactContextBaseJavaModule {
       // Keep portion of bitmap based on given scale and translation.
       int finalWidth = (int)Math.round(w/scale);//(int)Math.round(w/scale);
       int finalHeight = (int)Math.round(h/scale);//(int)Math.round(h/scale);
-
+        // returnValue.putString("46 finalWidth", ""+ finalWidth);
+        // returnValue.putString("47 finalHeight", ""+ finalHeight);
 
       int nx = (int)Math.round((newW - w)/2) // Additional width due to rotation
              + (int)Math.round(x);
-              // returnValue.putString("52 nx ", ""+nx);
-
 
       int ny = (int)Math.round((newH - h)/2) // Additional height due to rotation
              + (int)Math.round(y);
-            // returnValue.putString("56 ny ", ""+ny);
+        // returnValue.putString("55 nx ", ""+nx);
+        // returnValue.putString("56 ny ", ""+ny);
+
 
       // Reset vales if out of canvas.
+      if(nx+finalWidth > newW){
+        nx = newW - finalWidth;   // returnValue.putString("57 reset nx ", ""+nx);
+      } 
+
+      if(ny+finalHeight > newH){
+        ny = newH - finalHeight;     // returnValue.putString("58 reset ny ", ""+ny);
+      }
+
       if(nx < 0){
-        nx = 0; // returnValue.putString("57 reset nx ", ""+nx);
+        nx = 0;
+         returnValue.putString("57 reset nx ", ""+nx);
       }
 
       if(ny < 0){ 
-        ny = 0;  // returnValue.putString("58 reset ny ", ""+ny);
-      }
-  
-      if(nx+finalWidth > newW){
-        nx = newW - finalWidth;  // returnValue.putString("57 reset nx ", ""+nx);
-      } 
-      if(ny+finalHeight > newH){
-        ny = newH - finalHeight;  // returnValue.putString("58 reset ny ", ""+ny);
+        ny = 0;  
+         returnValue.putString("58 reset ny ", ""+ny);
       }
 
       bitmap = Bitmap.createBitmap(
-        bitmap, 
+        bitmap,
         nx, 
         ny, 
         finalWidth, 
         finalHeight
       );
 
-      // // BASE 64
-      //   Bitmap bitmap64 = Bitmap.createScaledBitmap(  bitmap, 500, 375,  false);
-      //   ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-      //   bitmap64.compress(Bitmap.CompressFormat.PNG, 30, outputStream);
-      //   String motionBase64 = Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT);
-      //   outputStream = null;
-      //   returnValue.putString("60 motionBase64",motionBase64);
 
-      // Save  as file.
+      // Rotate final bitmap if orientation changed.
+      if(switch_orientation!=0){
+        bitmap = rotateBitmap(bitmap, switch_orientation);
+      }
+
+
+      // Save file.
       // String filname = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/test.jpg";
       String filname = dst_path;
       try {
@@ -358,20 +375,12 @@ public class IopanModule extends ReactContextBaseJavaModule {
           promise.resolve(returnValue);
       }
 
-      // Copy image original orientation.
-      //  ... no need since we took it in consideration when we create new image.
-        // ExifInterface exifSource = new ExifInterface(src_path);
-        // ExifInterface exifDest = new ExifInterface(filname);
-        // exifDest.setAttribute(ExifInterface.TAG_ORIENTATION, exifSource.getAttribute(ExifInterface.TAG_ORIENTATION));
-        // exifDest.saveAttributes();
-        // returnValue.putString("55 ", "copyExifRotation");
-
-
       // returnValue.putString("99", "file saved");
-
       promise.resolve(returnValue);
 
     } catch (Exception e) {
+      // returnValue.putString("999 error ", ""+e);
+      // promise.resolve(returnValue);
       promise.reject(e);
     }
   }
