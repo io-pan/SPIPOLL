@@ -23,7 +23,7 @@ import RNFetchBlob from 'rn-fetch-blob';
 
 import FooterImage from './footerimage';
 import AdvancedList from './advancedList';
-import { Form, checkForm, Timer, ImageSlider,} from './widgets.js';
+import { Form, checkForm, Timer, ImagePicker} from './widgets.js';
 import { colors } from './colors';
 import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 import Cam from './cam';
@@ -457,9 +457,12 @@ export default class SessionForm extends Component {
       taxon_list_id_list:null,
       taxon_name:null,
       comment:null,
-      session:null,
+      session:this.props.data.date + '_' + this.props.data.time_start,
       photo:null,
-      date:now,
+      date:now, // So we now in which folder photos are. 
+
+      occAttr_4:null, // Nombre maximum d'individu
+      occAttr_5:null, //Insecte photographié sur la fleu
     };
   }
 
@@ -475,8 +478,13 @@ export default class SessionForm extends Component {
 
 
   renderInsectForm(data, index){ 
+    return null;
     // RUNNING SESSION
     // No form, launch camera instead.
+
+    // .... TODO: just create item and launch cam from image picker.
+     // return(this.renderInsectListItem(data, index));
+
     return(
       <Modal 
         onRequestClose={() => this.refs['running-insect-list'].selectItem(false)}
@@ -512,7 +520,7 @@ export default class SessionForm extends Component {
                     }}>
                     { data.taxon_extra_info ? data.taxon_extra_info 
                     : data.taxon_name ? data.taxon_name 
-                    : 'Insecte ' + (index+1) }</Text>
+                    : 'Espèce ' + (index+1) }</Text>
                   </ScrollView>
 
                   {/* this.state.sources.length
@@ -562,40 +570,38 @@ export default class SessionForm extends Component {
 
   renderInsectListItem(value, index){ 
     // RUNNING SESSION
+    console.log('renderInsectListItem ' + index, value)
     return(
-      <View style={{flex:1, flexDirection:'row',
-        justifyContent:'center', textAlign:'center'}}>
+      <View style={[styles.collection_grp,{flex:1}]}>
+        <ImagePicker
+          ref={'image-picker'+index}
+          // key="runniing-session-insect"
+          title={ value.taxon_extra_info 
+            ? value.taxon_extra_info 
+            : value.taxon_name ? value.taxon_name 
+            : 'Espèce ' + (index+1) + ' - Non identifié' 
+          }
+          cam = {true}
+          styles={{
+            highlightColor:colors.greenFlash,
+            badColor:colors.purple,
+            container:{marginRight:5, flex:1, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
+          }}
 
+          // path={this.props.collection_storage + '/insects/' + this.props.data.date }
+          path={this.props.collection_storage + '/insects/' + value.date}
+          filename={value.photo}
+          onSelect={(filename)=>{
+            console.log(filename);
+            this.refs['running-insect-list'].storeItemField('photo', filename, index);
+          }}
+        />
 
-        <Text style={{flexDirection:'row', padding:5, paddingLeft:10, paddingTop:0, flex:0.4,}}
-        >{ value.taxon_extra_info 
-        ? value.taxon_extra_info 
-        : value.taxon_name ? value.taxon_name 
-        : 'Insecte ' + (index+1) + '\n' + 'Non identifié' }
-        </Text>
- 
-        <View style={{flex:0.6, justifyContent:'center', textAlign:'center'}}>
-          <ScrollView horizontal={true}>
-          <ImageSlider
-            path={this.props.collection_storage + '/insects/' + value.date}
-            onPress={()=>{}}
-            style={{height:50, flex:1}}
-          />
-          </ScrollView>
-        </View>
-
-        <View style={{padding:10}}>
-          <MaterialCommunityIcons
-            name="camera-enhance" 
-            style={{color:colors.greenFlash, backgroundColor:'transparent'}}
-            size={30}
-            backgroundColor = 'transparent'
-          />
-        </View>
+        <Text>{value.session}</Text>
       </View>
+
     );
   }
-
 
   renderRunningForm(sessionStatus){
     return(
@@ -614,11 +620,14 @@ export default class SessionForm extends Component {
 
         <AdvancedList
           key="running-insect-list"
-          ref="running-insect-list"
+          ref="running-session-insect-list"
+
           localStorage = {this.props.collection_id + "_insects"}
           renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
-          renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
-
+          // renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
+          selectItemAltFunction={(index)=> {
+            this.refs['running-insect-list'].refs['image-picker'+index].refs['button'].touchableHandlePress();
+          }}
           newItem = {(index) => this.newInsect(index)}
           newItemContent = {
             <View style={{backgroundColor:colors.greenFlash, flexDirection:'row', alignItems:'center', justifyContent:'center', height:50}}
@@ -954,6 +963,7 @@ export default class SessionForm extends Component {
                 }
 
                 <Form
+                  // localStorage = {this.props.localStorage}
                   fields={this.form.session}
                   currentValues={this.state.session}
                   fieldChanged={(field, value) => this.storeSession(field, value)}

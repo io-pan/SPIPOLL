@@ -70,9 +70,17 @@ export class Form extends Component {
 
     // TODO: store here so parent component do not need to reRender
     // AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
-
+    // this.storeItemField(key, value);
     this.props.fieldChanged(key, value);
   }
+
+  // storeItemField(key, val){
+  //   let items = this.state.items;
+  //   items[this.state.editing][key] = val;
+  //   this.setState({items:items}, function(){
+  //     AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
+  //   })
+  // }
 
 
   render(){
@@ -609,46 +617,6 @@ export class ModalPlace extends Component {
 
 
 //=========================================================================================
-export class ImageSlider extends Component {
-//-----------------------------------------------------------------------------------------
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      sources:[],
-    };
-  }
-
-  componentWillMount(){
-    if(this.props.path){
-        RNFetchBlob.fs.ls(this.props.path)
-        .then((files) => this.setState({ sources:files }) )
-    }
-  }
-
-  render(){
-    return this.state.sources.map((path, index) => 
-      <TouchableOpacity
-        key={index} 
-        onPress={() => this.props.onPress(index)}
-        >
-        <Image 
-          key={index}
-          style={{
-            marginRight:1,
-            width:50,//this.state.width/5,
-            height:50,//this.state.width/5,
-          }}
-          resizeMode="contain"
-          source={{uri:'file://'+this.props.path+'/'+path}}
-        />
-      </TouchableOpacity>
-    );
-  }
-}
-
-
-//=========================================================================================
 export class ImagePicker extends Component {
 //-----------------------------------------------------------------------------------------
   constructor(props) {
@@ -922,6 +890,7 @@ export class ImagePicker extends Component {
               </Modal>
 
               <TouchableOpacity 
+                ref="button"
                 style={{
                   flex:1,
                   alignItems:'center', 
@@ -976,7 +945,7 @@ export class ImagePicker extends Component {
                   <ImageSizedSquare
                     resizeMode="contain"
                     source={{uri:'file://' + this.props.path +'/'+ this.props.filename
-                     // + '?' + new Date().getTime() 
+                      + '?' + new Date().getTime() 
                     }}
                   />
 

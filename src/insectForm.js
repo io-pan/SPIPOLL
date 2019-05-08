@@ -44,6 +44,15 @@ export default class InsectForm extends Component {
 
     this.form = {insect:[
       {
+        name:'occAttr_5',
+        type:'singleSelect',
+        title:'Insecte photographié sur la fleur de votre station florale',
+        // Avez-vous photographié cet insecte AILLEURS que sur la fleur de votre station florale:
+        values: [ 
+          {label:'Oui', value:0},   // Question inversée ...
+          {label:'Non', value:1},   // ... pour plus de clareté.
+        ],
+      },{
         name:'occAttr_4',
         type:'singleSelect',
         title:'Nombre maximum d\'individus de cette espèce vus simultanément',
@@ -54,16 +63,8 @@ export default class InsectForm extends Component {
           {label:'Ne sais pas', value:126},
         ],
       },
-      {
-        name:'occAttr_5',
-        type:'singleSelect',
-        title:'Insecte photographié sur la fleur de votre station florale',
-        // Avez-vous photographié cet insecte AILLEURS que sur la fleur de votre station florale:
-        values: [ 
-          {label:'Oui', value:0},   // Question inversée ...
-          {label:'Non', value:1},   // ... pour plus de clareté.
-        ],
-      },
+      // TODO: SelectList session id. ganna be tricky to send to spipoll.
+
     ]};
 
     this.state = {
@@ -115,7 +116,7 @@ export default class InsectForm extends Component {
   }
 
   render(){
-    console.log('render InsectForm');
+    console.log('render InsectForm', this.state);
     return(
         <ScrollView style={{flex:1}}>
 
@@ -196,6 +197,12 @@ export default class InsectForm extends Component {
                   onSubmitEditing = {(event) => this.storeInsect('comment', event.nativeEvent.text) }  
                 />
    
+                <View
+                  style={styles.collection_subgrp}
+                  >
+                  <Text>{this.state.insect.session}</Text>
+                </View>
+
                 <Form
                   fields={this.form.insect}
                   currentValues={this.state.insect}
@@ -208,6 +215,7 @@ export default class InsectForm extends Component {
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,
                   }}
+                  // TODO: selectList for session id.
                 />
               </View>
 

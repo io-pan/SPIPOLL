@@ -35,6 +35,7 @@ export default class AdvancedList extends Component {
       items:[],
       editing:false,
       selectedItems:false,
+      loading:true,
     };
     // this.editingRequested = false;
   }
@@ -50,6 +51,7 @@ export default class AdvancedList extends Component {
           console.log('items: ', JSON.parse(items));
          
           this.setState({
+            loading:false,
             items:JSON.parse(items),
             editing: typeof this.props.editing != 'undefined' ? this.props.editing : false,// this.editingRequested,
           }, function(){
@@ -79,19 +81,37 @@ export default class AdvancedList extends Component {
     let items = this.state.items;
     items.push(data);
 
-    this.setState({ 
-      items: items,
-      editing:items.length-1,
-    }, function(){
-      AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
-    });
+    if(this.props.selectItemAltFunction){
+      this.setState({ 
+        items: items,
+        // editing:items.length-1,
+      }, function(){
+        AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
+        this.props.selectItemAltFunction(this.state.items.length-1);
+      });
+    }
+    else{
+      this.setState({ 
+        items: items,
+        editing:items.length-1,
+      }, function(){
+        AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
+      });
+    }
+
 
     // callback ?
   }
 
-  storeItemField(key, val){
+  storeItemField(key, val, index=false){
     let items = this.state.items;
-    items[this.state.editing][key] = val;
+    if(index===false){
+      items[this.state.editing][key] = val;
+    }
+    else{
+      items[index][key] = val;
+    }
+    
     this.setState({items:items}, function(){
       AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
     })
@@ -103,6 +123,7 @@ export default class AdvancedList extends Component {
     }
 
     else{
+      // Deal with action.
       if(this.state.selectedItems!==false){
         let selectedItems = this.state.selectedItems;
         const i = selectedItems.indexOf(index);
@@ -115,7 +136,12 @@ export default class AdvancedList extends Component {
         this.setState({selectedItems:selectedItems}); 
       }
       else{
-        this.setState({editing:index});   
+        if(this.props.selectItemAltFunction){
+          this.props.selectItemAltFunction(index);
+        }
+        else{
+          this.setState({editing:index});      
+        }
       } 
     }
   }
@@ -231,7 +257,7 @@ export default class AdvancedList extends Component {
   render(){
     return(
       <View style={{flex:1}}>
-        { this.state.editing !== false
+        { this.state.editing !== false && this.props.renderDetailedItem
 
           ? this.props.renderDetailedItem(this.state.items[this.state.editing], this.state.editing)
 
@@ -240,7 +266,7 @@ export default class AdvancedList extends Component {
               { !this.state.items.length 
               ? <View style={{flex:1}}>
                   <Text style={{textAlign:'center', padding:20}}>
-                    Aucun élément
+                     { this.state.loading ? 'Chargement' : 'Aucun élément' }
                   </Text>
                   <FooterImage/>
                 </View>
@@ -254,7 +280,7 @@ export default class AdvancedList extends Component {
                   >
 
                   { this.state.items.map((value, index) => 
-                    <TouchableOpacity  
+                    <TouchableOpacity 
                       key={index}
                       style={styles.listItem}
                       onPress = {() => this.selectItem(index)}

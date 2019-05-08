@@ -279,7 +279,7 @@ class Collection extends Component {
         />
 
         <Text>{ 
-          value.taxon_extra_info || value.taxon_name || 'Non identifié' 
+          value.taxon_extra_info || value.taxon_name || ('Espèce ' + (index+1) + ' - Non identifié' )
         }</Text>
 
         <ImageSlider/>
@@ -329,7 +329,7 @@ class Collection extends Component {
 
   //--------------------------------------------------------------------------------
   renderSessionListItem(value, index){
-    console.log(value);
+    console.log('renderSessionListItem '+index, value);
     return(
       <View style={{padding:5, overflow:'hidden'}}>
         <View style={{flexDirection:'row', flex:1}}>

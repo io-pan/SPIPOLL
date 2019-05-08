@@ -108,7 +108,7 @@ export default class App extends Component<Props> {
     // );
 
     // TODO move this to specific component.
-    setInterval(() => {this.testBattery()}, 60000);
+    // setInterval(() => {this.testBattery()}, 60000);
     KeepScreenOn.setKeepScreenOn(true);
 
     this.requestForPermission();
