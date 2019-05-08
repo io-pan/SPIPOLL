@@ -24,7 +24,6 @@ import DateTimePicker from 'react-native-modal-datetime-picker';
 import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 
 import AdvancedList from './advancedList';
-import { ImageSlider } from './widgets.js';
 
 import CollectionForm from './collectionForm';
 import SessionForm from './sessionForm';
@@ -282,7 +281,6 @@ class Collection extends Component {
           value.taxon_extra_info || value.taxon_name || ('Espèce ' + (index+1) + ' - Non identifié' )
         }</Text>
 
-        <ImageSlider/>
       </View>
     );
   }
