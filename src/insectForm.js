@@ -27,7 +27,6 @@ import ModalFilterPicker from './filterSelect';
 
 import {
   ImagePicker,
-  ImageSlider, 
   Form,
 } from './widgets.js';
 
