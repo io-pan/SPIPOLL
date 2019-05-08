@@ -619,9 +619,7 @@ export default class SessionForm extends Component {
 
 
         <AdvancedList
-          key="running-insect-list"
-          ref="running-session-insect-list"
-
+          ref="running-insect-list"
           localStorage = {this.props.collection_id + "_insects"}
           renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
           // renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}

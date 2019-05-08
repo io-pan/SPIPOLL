@@ -370,14 +370,19 @@ export default class ImageGallery extends Component {
 
     this.actions = {
       slide:[{
-          label:'',//Supprimer
+          label:'Supprimer',
           icon:'trash-can-outline',
           action: () => this.deleteImage()
         },{
-          label:'',//Recadrer
-          icon:'crop',
-          action: () => this.showCropModal()
+          label:'',//
+          icon:'image-move',
+          action: () => this.showMoveImage()
         },
+        // {
+        //   label:'Recadrer',
+        //   icon:'crop',
+        //   action: () => this.showCropModal()
+        // },
         // {
         //   label:'Sélectionner',
         //   icon:'paperclip',
@@ -447,6 +452,14 @@ export default class ImageGallery extends Component {
     })
     // this.refs['crop-modal'].show();
   }
+
+  showMoveModal(){
+    // TODO for insects only:
+    // user might have taken a photo that is not from the expected kind
+    //  => create new kind or move photo to another kind.
+  }
+
+
 
   thumbPress(index, long){
 
@@ -720,6 +733,7 @@ export default class ImageGallery extends Component {
                 // }
 
                 // return(
+
                   <TouchableOpacity
                     key={index}
                     style={{
@@ -732,29 +746,59 @@ export default class ImageGallery extends Component {
                     <MaterialCommunityIcons   
                       name={value.icon}
                       style={{fontSize:24, color:'white'}}
-                    />{/*<Text style={{color: 'white', fontSize:16,}}>
-                                        {value.label}</Text>*/}
+                    />
+                    {/*<Text style={{color: 'white', fontSize:16,}}>{value.label}</Text>*/}
                   </TouchableOpacity>
                 // );  }
               )}
 
-              { //show 'SELECT' button if current photo is not already selected.
-              this.props.selected && 
-              this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected) > 0 
-              ? null
-              : <TouchableOpacity
+              { //show small 'CROP' and big 'SELECT' button if current photo is not already selected.
+              !this.props.selected || 
+              this.props.sources[this.state.index].url.split('?')[0].indexOf(this.props.path +'/'+this.props.selected) < 0 
+              ? <React.Fragment>
+                  <TouchableOpacity
+                    style={{
+                      width:55,
+                      flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
+                      borderRightWidth:1, 
+                      borderRightColor:'white'}}
+                    onPress = {() =>  this.showCropModal()}
+                    >
+                    <MaterialCommunityIcons   
+                      name='crop'
+                      style={{fontSize:24, color:'white'}}
+                    />
+                    {/*<Text style={{color: 'white', fontSize:16,}}>{value.label}</Text>*/}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={{
+                      flex:1,
+                      flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
+                      borderRightWidth:1, 
+                      borderRightColor:'white'}}
+                    onPress =  {() => this.selectImage()}
+                    >
+                    <MaterialCommunityIcons   
+                      name="paperclip"
+                      style={{fontSize:24, paddingRight:10, color:'white'}}
+                    /><Text style={{color: 'white', fontSize:16,}}>
+                    Sélectionner</Text>
+                  </TouchableOpacity>
+                </React.Fragment>
+              : //show big 'CROP' button if current photo already selected.
+                <TouchableOpacity
                   style={{
                     flex:1,
                     flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
                     borderRightWidth:1, 
                     borderRightColor:'white'}}
-                  onPress =  {() => this.selectImage()}
+                  onPress =  {() =>  this.showCropModal()}
                   >
                   <MaterialCommunityIcons   
-                    name="paperclip"
+                    name="crop"
                     style={{fontSize:24, paddingRight:10, color:'white'}}
                   /><Text style={{color: 'white', fontSize:16,}}>
-                  Sélectionner</Text>
+                  Recadrer</Text>
                 </TouchableOpacity>
               }
 
