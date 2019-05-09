@@ -294,7 +294,7 @@ class Collection extends Component {
           index={index}
           data={data}
           valueChanged={(key,val) => this.insectChanged(key,val)}
-          // session_id = data.time_start // TODO: list of sessions
+          // session_id = data.time_start // let's keep 1st session the insect kind has benn seen.
         />
       </View>
     );
@@ -417,6 +417,7 @@ class Collection extends Component {
 
   deleteSession(session){
     // TODO: remove session reference on insects.
+    // or delete insect.
   }
 
   //----------------------------------------------------------------------
@@ -500,8 +501,8 @@ class Collection extends Component {
 
 
               // TODO:
-              //
               // . new insects do not appear in tab insect list
+              // refresh insect list on tab select / tab selected
 
               // Close lists.
               if(event.nativeEvent.contentOffset.x == 0){ //  tab = 'flower';     
@@ -702,7 +703,8 @@ export default class CollectionList extends Component {
       <View style={{padding:5, overflow:'hidden'}}>
         <View style={{flexDirection:'row', flex:1}}>
           <MaterialCommunityIcons
-            // TODO: number of insects.
+            // TODO: number of insects & sessions
+            // and insect photo?
             name={ value.protocole == 'flash' 
             ? 'flash-outline' 
             : value.protocole == 'long' 

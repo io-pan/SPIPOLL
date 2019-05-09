@@ -26,9 +26,6 @@ import ImageGallery from './imageGallery';
 import Cam from './cam';
 import { dmsFormat, deg2dms, pad2 } from './formatHelpers.js';
 
-// TODO:  Add locationSelect and others
-//        ... at least take it out of CollectionForm.
-
 //=========================================================================================
 export const checkForm = (structure, data) => {
   let ok = true;

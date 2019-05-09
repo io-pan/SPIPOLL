@@ -326,23 +326,28 @@ export default class SessionForm extends Component {
   }
 
   cancelSession(){
-    // TODO: warn only if insect has been shot.
-    Alert.alert(
-      'Annuler la session ?',
-      "Si vous annulez la session, les espèces d'insectes associées seront définitivement perdues.",
-      [
-        {
-          text: 'Poursuivre la session',
-          onPress: () => {}
-        },
-        {
-          text: 'Annuler la session', 
-          onPress: () => {
-            this.reallyCancelSession();
-          }
-        },
-      ],
-    );
+    // Warn only if insect has been shot.
+    if(this.refs['running-insect-list'].state.items.length){
+      Alert.alert(
+        'Annuler la session ?',
+        "Si vous annulez la session, les espèces d'insectes associées seront définitivement perdues.",
+        [
+          {
+            text: 'Poursuivre la session',
+            onPress: () => {}
+          },
+          {
+            text: 'Annuler la session', 
+            onPress: () => {
+              this.reallyCancelSession();
+            }
+          },
+        ],
+      );     
+    }
+    else {
+      this.reallyCancelSession();
+    }
   }
 
   reallyCancelSession(){
@@ -389,8 +394,8 @@ export default class SessionForm extends Component {
     // console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
 
-    if(now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000){
-      // TODO: warn only if insect has been shot.
+    if(this.refs['running-insect-list'].state.items.length // Warn only if insect has been shot.
+      && now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000){
       Alert.alert(
         'Annuler la session ?',
         "La session doit durer plus de 20 minutes. \n"
@@ -487,6 +492,7 @@ export default class SessionForm extends Component {
     // RUNNING SESSION
     console.log('renderInsectListItem ' + index, value)
 
+// TODO do not remove lower until session ends.
     // For field "how many in insect did you see at once ?"
     //  behave a bit different here.
     const vals = [

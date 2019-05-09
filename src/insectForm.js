@@ -42,6 +42,8 @@ export default class InsectForm extends Component {
   constructor (props, ctx) {
     super(props, ctx);
 
+// TODO: occAttr_4 read only if not null.
+
     this.form = {insect:[
       {
         name:'occAttr_5',
@@ -64,7 +66,7 @@ export default class InsectForm extends Component {
           {label:'Ne sais pas',   value:126},
         ],
       },
-      // TODO: SelectList session id. ganna be tricky to send to spipoll.
+      // TODO: SelectList session id. gonna be tricky to send to spipoll.
 
     ]};
 
