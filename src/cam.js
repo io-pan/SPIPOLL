@@ -1008,23 +1008,23 @@ export default class Cam extends Component<Props> {
         <View>
         <ScrollView horizontal={true} >
 
-          <MaterialCommunityIcons.Button   
-            // Action
-            borderRadius={0} 
+          <TouchableOpacity 
             style={{
-              flexDirection:'column',
-              borderRightWidth:1, borderColor:'#dddddd',
-              marginLeft:5,
+              borderRightWidth:1, borderRightColor:'#dddddd',
+              alignItems: 'center', justifyContent:'center',
+              paddingLeft:10, paddingRight:10,
             }}
-            name='gesture-double-tap' //   th-large      
-            underlayColor={'white'}
-            size={25}
-            margin={0}
-            paddingLeft={10}
-            color= {colors.greenFlash}
-            backgroundColor ={'transparent'}
             onPress = {() => this.toggleMotionSetup('action')}
-          >
+            >
+            <MaterialCommunityIcons   
+              // Action
+              borderRadius={0}
+              name='gesture-double-tap' //   th-large      
+              size={25}
+              paddingLeft={10}
+              color= {colors.greenFlash}
+              backgroundColor ={'transparent'}
+            />
             <Text 
               style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/ 
                 
@@ -1034,95 +1034,97 @@ export default class Cam extends Component<Props> {
                   : 'grey' 
               }}
               >Action</Text>
-          </MaterialCommunityIcons.Button>
+          </TouchableOpacity>
 
-          <MaterialCommunityIcons.Button   
-            // Mask
-            borderRadius={0} 
+          <TouchableOpacity 
             style={{
-              flexDirection:'column',
               borderRightWidth:1, borderRightColor:'#dddddd',
+              alignItems: 'center', justifyContent:'center',
+              paddingLeft:10, paddingRight:10,
             }}
-            name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
-            underlayColor={'white'}
-            size={25}
-            margin={0}
-            color= {colors.greenFlash}
-            backgroundColor ={'transparent'}
             onPress = {() => this.toggleShape()}
-          >
+            >
+            <MaterialCommunityIcons   
+              // Mask
+              borderRadius={0} 
+              name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
+              size={25}
+              color= {colors.greenFlash}
+              backgroundColor ={'transparent'}
+            />
             <Text 
               style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
                 color:this.state.motionInputAreaShape ? colors.greenFlash : 'grey' ,}}
               >Masque</Text>
-          </MaterialCommunityIcons.Button>
+          </TouchableOpacity>
 
-          <MaterialCommunityIcons.Button
-            // Précision
-            borderRadius={0} 
+          <TouchableOpacity 
             style={{
-              flexDirection:'column',
               borderRightWidth:1, borderRightColor:'#dddddd',
+              alignItems: 'center', justifyContent:'center',
+              paddingLeft:10, paddingRight:10,
             }}
-            name='blur' //      grid // view-grid //view-comfy
-            underlayColor={'white'}
-            size={25}
-            margin={0}
-            color= {colors.greenFlash}
-            backgroundColor ={'transparent'}
             onPress = {() => this.toggleMotionSetup('sampleSize')}
           >
+            <MaterialCommunityIcons
+              // Précision
+              borderRadius={0} 
+              name='blur' //      grid // view-grid //view-comfy
+              size={25}
+              color= {colors.greenFlash}
+              backgroundColor ={'transparent'}
+            />
             <Text 
               style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
               color:this.state.motionSetup=='sampleSize' ? colors.greenFlash : 'grey' ,}}
               >Précision</Text>
-          </MaterialCommunityIcons.Button>
+          </TouchableOpacity>
 
-          <MaterialCommunityIcons.Button   
-            // Sensibilité
-            borderRadius={0} 
+          <TouchableOpacity 
             style={{
-              // fontSize :16,
-              flexDirection:'column',
-                alignItems: 'center',
-                justifyContent:'center',
               borderRightWidth:1, borderRightColor:'#dddddd',
+              alignItems: 'center', justifyContent:'center',
+              paddingLeft:10, paddingRight:10,
             }}
-            name='contrast-circle' //   contrast-box     
-            underlayColor={'white'}
-            size={25}
-            color= {colors.greenFlash}
-            backgroundColor ={'transparent'}
             onPress = {() => this.toggleMotionSetup('threshold')}
             onLongPress = {() => this.toggleMotionSetup('threshold-rvb')}
-          >
+            >
+            <MaterialCommunityIcons   
+              // Sensibilité
+              borderRadius={0} 
+              name='contrast-circle' //   contrast-box     
+              size={25}
+              color= {colors.greenFlash}
+              backgroundColor ={'transparent'}
+            />
             <Text 
               style={{fontSize:14, padding:0, margin:0, /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
               color:this.state.motionSetup && this.state.motionSetup.indexOf('threshold') != -1 
                 ? colors.greenFlash : 'grey' ,}}
               >Sensibilité</Text>
-          </MaterialCommunityIcons.Button>
+          </TouchableOpacity>
 
-          <MaterialCommunityIcons.Button   
-            // Bruit
-            borderRadius={0} 
+          <TouchableOpacity 
             style={{
-              flexDirection:'column',
-              marginRight:5,
+              // borderRightWidth:1, borderRightColor:'#dddddd',
+              alignItems: 'center', justifyContent:'center',
+              paddingLeft:10, paddingRight:10,
             }}
-            name='eraser'   
-            underlayColor={'white'}
-            size={25}
-            margin={0}
-            color= {colors.greenFlash}
-            backgroundColor ={'transparent'}
             onPress = {() => this.toggleMotionSetup('minimumPixels')}
-          >
+            >
+            <MaterialCommunityIcons   
+              // Bruit
+              borderRadius={0}
+              name='eraser'   
+              size={25}
+              color= {colors.greenFlash}
+              backgroundColor ={'transparent'}
+            />
             <Text 
               style={{fontSize:14, padding:0, margin:0,  /*marginLeft:-5, marginRight:-7, paddingRight:7,*/
               color:this.state.motionSetup=='minimumPixels' ? colors.greenFlash : 'grey' ,}}
               >Antibruit</Text>
-          </MaterialCommunityIcons.Button>
+          </TouchableOpacity>
         </ScrollView>
         </View>
 
