@@ -329,7 +329,7 @@ export default class SessionForm extends Component {
     // TODO: warn only if insect has been shot.
     Alert.alert(
       'Annuler la session ?',
-      "Si vous annulez la session, toutes les photos associées seront définitivement perdues.",
+      "Si vous annulez la session, les espèces d'insectes associées seront définitivement perdues.",
       [
         {
           text: 'Poursuivre la session',
@@ -346,6 +346,21 @@ export default class SessionForm extends Component {
   }
 
   reallyCancelSession(){
+    // Delete insects & photos attached to that session.
+    let toBeDeleted = [];
+    const insects = this.refs['running-insect-list'].state.items;
+
+    for(i=0; i<insects.length; i++){
+      console.log(insects[i].session)
+      if(insects[i].session == this.state.session.date + '_' + this.state.session.time_start){
+        toBeDeleted.push(i);
+      }
+    }
+    if(toBeDeleted.length){
+      this.refs['running-insect-list'].deleteItems(toBeDeleted); 
+    }
+
+    // Reset session.
     this.setState({
       isDateTimeVisible:false,
       session:{
@@ -359,9 +374,6 @@ export default class SessionForm extends Component {
     this.props.valueChanged('date', '');
     this.props.valueChanged('time_start', '');
     this.props.valueChanged('time_end', '');
-
-    // TODO: Delete insect attach to taht session & photos.
-    
   }
 
   stopSession(){
@@ -457,7 +469,7 @@ export default class SessionForm extends Component {
       taxon_list_id_list:null,
       taxon_name:null,
       comment:null,
-      session:this.props.data.date + '_' + this.props.data.time_start,
+      session:this.props.data.date + '_' + this.props.data.time_start, // + '_' + this.props.data.time_end,
       photo:null,
       date:now, // So we now in which folder photos are. 
 
@@ -466,111 +478,15 @@ export default class SessionForm extends Component {
     };
   }
 
-
-  photoPicked(path){
-  //   if(path=='close'){
-  //     this.setState({visibleCamera:false}) 
-  //   }
-  //   else{
-  //     this.refs["gallery"].addImage(path);
-  //   }
-  }
-
-
   renderInsectForm(data, index){ 
+    // Just launch cam from image picker.
     return null;
-    // RUNNING SESSION
-    // No form, launch camera instead.
-
-    // .... TODO: just create item and launch cam from image picker.
-     // return(this.renderInsectListItem(data, index));
-
-    return(
-      <Modal 
-        onRequestClose={() => this.refs['running-insect-list'].selectItem(false)}
-        >
-
-                <View 
-                  style={{
-                    height:55, flexDirection:'row', 
-                    justifyContent:'center', alignItems:'center',
-                    backgroundColor:colors.greenFlash
-                    }}
-                  >
-                  <TouchableOpacity 
-                    style={[{
-                      height:55,
-                      width:55,
-                      justifyContent:'center', alignItems:'center', 
-                      borderRightWidth:1, borderRightColor:'white', 
-                    }]}
-                    onPress={() => this.refs['running-insect-list'].selectItem(false)}
-                    >
-                    <MaterialCommunityIcons
-                      name="chevron-left" 
-                      style={[{ color:'white' }]}
-                      size={30}
-                    />
-                  </TouchableOpacity>
-
-                  <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
-                    <Text style={{
-                      fontSize:18, fontWeight:'bold', textAlign:'center', 
-                      color:'white', 
-                    }}>
-                    { data.taxon_extra_info ? data.taxon_extra_info 
-                    : data.taxon_name ? data.taxon_name 
-                    : 'Espèce ' + (index+1) }</Text>
-                  </ScrollView>
-
-                  {/* this.state.sources.length
-                  ? <TouchableOpacity 
-                      style={[
-                        {borderLeftWidth:1, borderLeftColor:'white'}, {
-                        flexDirection:'row',
-                        width:60,
-                        justifyContent:'center', alignItems:'center',
-                      }]}
-                      onPress={()=> this.showImageGallery(this.state.sources.length-1)}
-                      >
-                      <Text style={{fontSize:16, color:'white', marginRight:5}}>{this.state.sources.length}</Text>
-                      <MaterialCommunityIcons
-                        name="view-grid"
-                        style={{ color:'white'}}
-                        size={30}
-                      />
-                    </TouchableOpacity>
-                  : null
-                  */}
-
-                </View>
-
-
-        <View style={{flex:1}}
-        >
-        <Cam
-          path={this.props.collection_storage + '/insects/' + data.date}
-          photoPicked={(path) => this.photoPicked(path)}
-        />
-        </View>
-{/*
-        <TouchableOpacity style={{
-            backgroundColor:colors.greenFlash,
-            height:55, justifyContent:'center', textAlign:'center',
-          }}
-          onPress={() => this.refs['running-insect-list'].selectItem(false)}
-          >
-          <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
-          Retour à la session</Text>
-          </TouchableOpacity>
-      */}    
-      </Modal>
-    );
   }
 
   renderInsectListItem(value, index){ 
     // RUNNING SESSION
     console.log('renderInsectListItem ' + index, value)
+
     return(
       <View style={[styles.collection_grp,{flex:1}]}>
         <ImagePicker
@@ -579,7 +495,7 @@ export default class SessionForm extends Component {
           title={ value.taxon_extra_info 
             ? value.taxon_extra_info 
             : value.taxon_name ? value.taxon_name 
-            : 'Espèce ' + (index+1) + ' - Non identifié' 
+            : 'Espèce ' + (index+1) + ' - Non identifiée' 
           }
           cam = {true}
           styles={{
@@ -596,11 +512,35 @@ export default class SessionForm extends Component {
             this.refs['running-insect-list'].storeItemField('photo', filename, index);
           }}
         />
+        {
+          !value.session ? null :
+          <Text style={{fontSize:16}}>
+            Session 
+            de {formatTime(parseInt(value.session.split('_')[1]),10)}
+            {/* end date is not set yet on long protocole.. {formatTime(parseInt(value.session.split('_')[2]),10)}  */}
+            <Text  style={{fontSize:14}}> le {formatDate(parseInt(value.session.split('_')[0]))}</Text>
+          </Text>
+        }
 
-        <Text>{value.session}</Text>
       </View>
 
     );
+  }
+
+  deleteInsectFolder(data) {
+    // Delete photos folder.
+    const folder = this.props.collection_storage + '/insects/' + data.date;
+    RNFetchBlob.fs.unlink(folder)
+    .then(() => { 
+      console.log('insect folder deleted ' + folder)
+    })
+    .catch((err) => {
+      Alert.alert(
+        'Erreur',
+        'Le dossier contenant les photos n\'a pu être supprimé.\n'
+        + folder
+      );
+    }); 
   }
 
   renderRunningForm(sessionStatus){
@@ -638,7 +578,7 @@ export default class SessionForm extends Component {
                Nouvelle espèce d'insecte</Text>
             </View>
           }
-          // deleteItem = {() => this.deleteInsect()}
+          deleteItem = {(data, index) => this.deleteInsectFolder(data, index)}
         />
 
       </Modal>

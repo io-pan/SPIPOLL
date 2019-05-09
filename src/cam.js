@@ -796,7 +796,7 @@ export default class Cam extends Component<Props> {
           width={100}
           margin={0}
           paddingLeft={30}
-          color= { this.state.isTakingPicture ? 'red' : colors.greenFlash}
+          color= { this.state.isTakingPicture ? colors.purple : colors.greenFlash}
           backgroundColor ={'transparent'}
           // onPress = {() =>{}}
           onPress = {() => this.takePicture()}
@@ -813,7 +813,7 @@ export default class Cam extends Component<Props> {
             width={100}
             margin={0}
             paddingLeft={30}
-            color= { this.state.isRecording ? 'red' : colors.greenFlash}
+            color= { this.state.isRecording ? colors.purple : colors.greenFlash}
             backgroundColor ={'transparent'}
 
             onPress={
@@ -835,7 +835,7 @@ export default class Cam extends Component<Props> {
             margin={0}
             paddingLeft={30}
             paddingBottom={12}
-            color= {this.state.motionDetectionMode==MODE_RUN ? 'red' : colors.greenFlash }
+            color= {this.state.motionDetectionMode==MODE_RUN ? colors.purple : colors.greenFlash }
             backgroundColor ={'transparent'}
             onPress = {() => this.onMotionButton()}
           /></View>
@@ -843,7 +843,7 @@ export default class Cam extends Component<Props> {
           { this.state.motionsCount
             ? <Text style={{
                 marginTop:-40, marginLeft:-30, textAlign:'center',
-                height:20,width:20, backgroundColor:'red', borderRadius:20,
+                height:20,width:20, backgroundColor:colors.purple, borderRadius:20,
                 color:'white', fontSize:12, fontWeight:'bold',
                 }}>
                 {this.state.motionsCount}</Text>

@@ -49,7 +49,6 @@ export default class AdvancedList extends Component {
       else {
         if(items){
           console.log('items: ', JSON.parse(items));
-         
           this.setState({
             loading:false,
             items:JSON.parse(items),
@@ -65,6 +64,10 @@ export default class AdvancedList extends Component {
           this.newItem();
           // this.editingRequested = false;
         }
+        else{
+          this.setState({loading:false,});
+        }
+                  
       }
     });
   }
@@ -83,6 +86,7 @@ export default class AdvancedList extends Component {
 
     if(this.props.selectItemAltFunction){
       this.setState({ 
+        loading:false,
         items: items,
         // editing:items.length-1,
       }, function(){
@@ -167,37 +171,37 @@ export default class AdvancedList extends Component {
         {
           text: 'Supprimer', 
           onPress: () => {
-            const selected = this.state.selectedItems,
-                  items = this.state.items;
-
-            // Backward loop to avoid re-index issue.
-            for (var i = items.length - 1; i >= 0; i--) {
-              if(selected.indexOf(i) !== -1) {
-                // Delete folders & co.
-                if(this.props.deleteItem) {
-                  this.props.deleteItem(items[i], i);
-                }
-                // Remove from list.
-                items.splice(i, 1);
-              }
-            }
-
-            // Store purged list.
-            this.setState({
-              items:items,
-              selectedItems:false,
-            }, function(){
-              AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
-            });
+             this.deleteItems(this.state.selectedItems);
           }
         },
       ],
     );
   }
 
-  dele = (txt)=>{
-    alert(txt);
+  deleteItems(selected){
+    const items = this.state.items;
+
+    // Backward loop to avoid re-index issue.
+    for (var i = items.length - 1; i >= 0; i--) {
+      if(selected.indexOf(i) !== -1) {
+        // Delete folders & co.
+        if(this.props.deleteItem) {
+          this.props.deleteItem(items[i], i);
+        }
+        // Remove from list.
+        items.splice(i, 1);
+      }
+    }
+
+    // Store purged list.
+    this.setState({
+      items:items,
+      selectedItems:false,
+    }, function(){
+      AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
+    });
   }
+
 
   //TODO: as props
   actions = [

@@ -453,7 +453,7 @@ export default class ImageGallery extends Component {
     // this.refs['crop-modal'].show();
   }
 
-  showMoveModal(){
+  showMoveImage(){
     // TODO for insects only:
     // user might have taken a photo that is not from the expected kind
     //  => create new kind or move photo to another kind.

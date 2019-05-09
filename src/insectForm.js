@@ -29,6 +29,7 @@ import {
   ImagePicker,
   Form,
 } from './widgets.js';
+import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 
 // Spipoll data.
 import { insectList } from './insects.js';
@@ -56,10 +57,10 @@ export default class InsectForm extends Component {
         type:'singleSelect',
         title:'Nombre maximum d\'individus de cette espèce vus simultanément',
         values: [ 
-          {label:' 1 ',   value:123},
+          {label:' 1 ',           value:123},
           {label:'entre 2 et 5',  value:124},
-          {label:'plus de 5',  value:125},
-          {label:'Ne sais pas', value:126},
+          {label:'plus de 5',     value:125},
+          {label:'Ne sais pas',   value:126},
         ],
       },
       // TODO: SelectList session id. ganna be tricky to send to spipoll.
@@ -122,7 +123,7 @@ export default class InsectForm extends Component {
               <View style={styles.collection_grp}>
                 <ImagePicker
                   key="collection-insect"
-                  title={this.state.insect.taxon_extra_info || this.state.insect.taxon_name || 'Non identifié' }
+                  title={this.state.insect.taxon_extra_info || this.state.insect.taxon_name || 'Non identifiée' }
                   cam = {false}
                   styles={{
                     highlightColor:colors.greenFlash,
@@ -196,11 +197,18 @@ export default class InsectForm extends Component {
                   onSubmitEditing = {(event) => this.storeInsect('comment', event.nativeEvent.text) }  
                 />
    
-                <View
-                  style={styles.collection_subgrp}
-                  >
-                  <Text>{this.state.insect.session}</Text>
-                </View>
+                { !this.state.insect.session ? null :
+                  <View
+                    style={styles.collection_subgrp}
+                    >
+                    <Text style={{fontSize:16}}>
+                      Session 
+                      de {formatTime(parseInt(this.state.insect.session.split('_')[1]),10)}
+                      {/* end date is not set yet on long protocole.. {formatTime(parseInt(value.session.split('_')[2]),10)}  */}
+                      <Text  style={{fontSize:14}}> le {formatDate(parseInt(this.state.insect.session.split('_')[0]))}</Text>
+                    </Text>
+                  </View>
+                }
 
                 <Form
                   fields={this.form.insect}
