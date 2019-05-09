@@ -94,9 +94,6 @@ export class ModalCrop extends Component {
 
   cropImage(copy){
 
-// TODO: on not copy, copy anyway and delete original so refresh will be better.
-// do not forget to reselect it if needed.
-
     // Alert.alert(
     //   'Remplacer la photo originale ?',
     //   'Souhaitez vous remplacer par la photo originale par la photo recadrée '
@@ -115,10 +112,15 @@ export class ModalCrop extends Component {
 
     // Give java real rectange info (x, y, w, h) 
     // instead of orignial x y (based on center of view).
+    const src_path = this.props.source.url.split('?')[0].replace('file://',''),
+          dest_path = copy
+            ? src_path.split('.jpg')[0] + '_' + new Date().getTime() + '.jpg'
+            : src_path,
+          src_w = this.state.imageWidth,
+          src_h = this.state.imageHeight,
+          scale = this.crop.scale;
+
     let nx, ny,
-        src_w = this.state.imageWidth,
-        src_h = this.state.imageHeight,
-        scale = this.crop.scale,
         rotation = this.crop.rotation,
         switch_oriantation = 0;
 
@@ -156,12 +158,6 @@ export class ModalCrop extends Component {
       }
     }
 
-    let src_path = this.props.source.url.split('?')[0].replace('file://','');
-    let dest_path = src_path;
-    if(copy){
-      dest_path = dest_path.split('.jpg')[0] + '_' + new Date().getTime() + '.jpg'
-    }
-
     NativeModules.ioPan.cropBitmap(
       src_path,
       dest_path,
@@ -175,9 +171,10 @@ export class ModalCrop extends Component {
     )
     .then((msg) => {
       // console.log('cropImage', msg);
-      if(!msg['999 error '])
+      if(!msg['999 error ']){
+        // refresh widget.
         this.props.imageCroped(dest_path);
-      // TODO:   Update image picker
+      }
 
     })
     .catch((err) => {
@@ -225,8 +222,7 @@ export class ModalCrop extends Component {
               justifyContent:'center', alignItems:'center', 
               borderRightWidth:1, borderRightColor:'white', 
             }]}
-            onPress={(path) => //this.hide()
-             this.props.imageCroped(false) }
+            onPress={(path) => this.hide()}
             >
             <MaterialCommunityIcons
               name="chevron-left" 
@@ -651,15 +647,7 @@ export default class ImageGallery extends Component {
     this.setState({thumbCols: nbCols});
   }
 
-  imageCroped(path){
-    if(path){
-      // scan folder. 
-      this.props.imageCroped(path);
-    }
-    else{
-      this.hide(); // hide crop.
-    }
-  }
+
 
   render () {
     if(!this.props.sources.length || this.state.index===false){
@@ -940,7 +928,7 @@ export default class ImageGallery extends Component {
             title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
             source={this.props.sources[this.state.index]}
             styles={this.props.styles}
-            imageCroped={(path)=> this.imageCroped(path)}
+            imageCroped={(path)=> this.props.imageCroped(path)}
           />
 
       }

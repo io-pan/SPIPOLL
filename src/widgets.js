@@ -654,6 +654,7 @@ export class ImagePicker extends Component {
       count:0,
       sources:[],
     }
+    this.refresh = new Date().getTime();
   }
 
   componentDidMount(){
@@ -706,6 +707,7 @@ export class ImagePicker extends Component {
                          + '?' + new Date().getTime() });
         });
 
+        this.refresh = new Date().getTime();
         this.setState({
           index: index!=-1 ? index : 0,
           sources:sources,
@@ -753,7 +755,6 @@ export class ImagePicker extends Component {
       this.setState({sources:sources});
     }
   }
-
 
   imageSelected(index, filename) {
     this.setState({index:index});
@@ -971,7 +972,7 @@ export class ImagePicker extends Component {
                   <ImageSizedSquare
                     resizeMode="contain"
                     source={{uri:'file://' + this.props.path +'/'+ this.props.filename
-                      + '?' + new Date().getTime() 
+                      + '?' + this.refresh
                     }}
                   />
 
