@@ -363,12 +363,12 @@ class Collection extends Component {
           <Text style={styles.listItemText}>
           { value.time_start
               ? formatTime(value.time_start) + ' - '
-              : <Text style={{fontWeight:'bold', fontSize:16, color:colors.greenFlash}}>En attente</Text>
+              : <Text style={{fontWeight:'bold', fontSize:16, color:colors.purple}}>En attente</Text>
           }
           { value.time_end 
             ? formatTime(value.time_end)
             : value.time_start
-              ? <Text style={{fontWeight:'bold', fontSize:16, color:colors.greenFlash}}> En cours</Text>
+              ? <Text style={{fontWeight:'bold', fontSize:16, color:colors.purple}}> En cours</Text>
               : ''
           }
           </Text>

@@ -487,8 +487,36 @@ export default class SessionForm extends Component {
     // RUNNING SESSION
     console.log('renderInsectListItem ' + index, value)
 
+    // For field "how many in insect did you see at once ?"
+    //  behave a bit different here.
+    const vals = [
+        {label:' 1 ',           value:123},
+        {label:'entre 2 et 5',  value:124},
+        {label:'plus de 5',     value:125},
+    ];
+    let formFields = [{
+      name:'occAttr_4',
+      type:'singleSelect',
+      title:'Nombre maximum d\'individus de cette espèce vus simultanément',
+      values: [],
+    }];
+    
+    if(!value.occAttr_4 || value.occAttr_4==126){
+      // Let user choose between all values.
+      formFields[0].values = vals;
+      formFields[0].values.push({label:'Ne sais pas', value:126});
+    }
+    else{
+      // Let user choose only between current and greater values.
+      for(i=0; i<vals.length; i++){
+        if(value.occAttr_4 <= vals[i].value){
+          formFields[0].values.push(vals[i]);
+        }
+      }
+    }
+
     return(
-      <View style={[styles.collection_grp,{flex:1}]}>
+      <View style={[styles.collection_grp, {flex:1, borderWidth:1, borderColor:'lightgrey', marginLeft:10,marginRight:10,}]}>
         <ImagePicker
           ref={'image-picker'+index}
           // key="runniing-session-insect"
@@ -501,7 +529,10 @@ export default class SessionForm extends Component {
           styles={{
             highlightColor:colors.greenFlash,
             badColor:colors.purple,
-            container:{marginRight:5, flex:1, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
+            title:{fontSize:16, fontWeight:'bold', height:50, textAlign:'center',  padding:2},
+            container:{marginRight:5, flex:1, padding:5,
+             // borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'
+           }
           }}
 
           // path={this.props.collection_storage + '/insects/' + this.props.data.date }
@@ -512,15 +543,28 @@ export default class SessionForm extends Component {
             this.refs['running-insect-list'].storeItemField('photo', filename, index);
           }}
         />
-        {
+        {/*
           !value.session ? null :
           <Text style={{fontSize:16}}>
             Session 
             de {formatTime(parseInt(value.session.split('_')[1]),10)}
-            {/* end date is not set yet on long protocole.. {formatTime(parseInt(value.session.split('_')[2]),10)}  */}
             <Text  style={{fontSize:14}}> le {formatDate(parseInt(value.session.split('_')[0]))}</Text>
           </Text>
-        }
+        */}
+        <Form
+          fields={formFields}
+          currentValues={value}
+          fieldChanged={(field, value) => this.refs['running-insect-list'].storeItemField(field, value, index) }
+          // style={styles.collection_subgrp}
+          styles={{
+            group:{},//styles.collection_subgrp,
+            title:styles.coll_subtitle,
+            label:{backgroundColor:'white', borderWidth:1, margin:5, padding:5, borderColor:colors.greenFlash},
+            labelText:{fontSize:14, backgroundColor:'white'}, 
+            highlightColor:colors.greenFlash,
+            badColor:colors.purple,
+          }}
+        />
 
       </View>
 
@@ -578,6 +622,7 @@ export default class SessionForm extends Component {
                Nouvelle espèce d'insecte</Text>
             </View>
           }
+
           deleteItem = {(data, index) => this.deleteInsectFolder(data, index)}
         />
 

@@ -82,25 +82,50 @@ export class Form extends Component {
   //   })
   // }
 
-
   render(){
     return (
-      this.props.fields.map((field, index) => 
+      <View style={this.props.style||{}}>
+      { this.props.fields.map((field, index) => 
         <View key={index} style={this.props.styles.group}>
           
-          <Text style={[this.props.styles.title, 
-            ((field.type=='singleSelect' 
-                && this.props.currentValues[field.name] === null)
+          { typeof field.helper == 'undefined'
+          ? <Text style={[this.props.styles.title, 
+              ((field.type=='singleSelect' 
+                  && this.props.currentValues[field.name] === null)
 
-            || (field.type=='multiSelect'  
-                && this.props.currentValues[field.name].length==0)
-            ) 
-              ? {color:this.props.styles.badColor}
-              : {}
-          ]}>
+              || (field.type=='multiSelect'  
+                  && this.props.currentValues[field.name].length==0)
+              ) 
+                ? {color:this.props.styles.badColor}
+                : {}
+            ]}>
+            {field.title}</Text>
 
-          {field.title}</Text>
-          
+          : <TouchableOpacity 
+              style={{flexDirection:'row', justifyContent:'center'}}
+              onPress = {() => this.helper(field.helper)} 
+              >
+              <Text style={[this.props.styles.title, 
+                ((field.type=='singleSelect' 
+                    && this.props.currentValues[field.name] === null)
+
+                || (field.type=='multiSelect'  
+                    && this.props.currentValues[field.name].length==0)
+                ) 
+                  ? {color:this.props.styles.badColor}
+                  : {}
+              ]}>
+              {field.title}  <MaterialCommunityIcons
+                name="help-circle-outline" 
+                style={{color:this.props.styles.highlightColor, backgroundColor:'transparent'}}
+                size={15}
+                backgroundColor = 'transparent'
+              />
+              </Text>
+              
+            </TouchableOpacity>
+          }
+
           { field.type=='int'
 
           ? <View 
@@ -154,7 +179,8 @@ export class Form extends Component {
           : null
           }
         </View>
-      )
+      )}
+      </View>
     );
   }
 }
@@ -898,11 +924,11 @@ export class ImagePicker extends Component {
                 }}
                 onPress = {() => this.showCam()}
                 >
-                <Text style={{ fontSize:14, height:50, textAlign:'center',  padding:2,
-                color: !this.state.sources.length 
-                  ? this.props.styles.badColor 
-                  : 'grey', 
-                }}>
+                <Text style={[ this.props.styles.title,{ 
+                  color: !this.state.sources.length 
+                    ? this.props.styles.badColor 
+                    : 'grey', 
+                  }]}>
                 {this.props.title}</Text>
 
                 <MaterialCommunityIcons

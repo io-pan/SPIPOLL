@@ -93,6 +93,10 @@ export class ModalCrop extends Component {
   }
 
   cropImage(copy){
+
+// TODO: on not copy, copy anyway and delete original so refresh will be better.
+// do not forget to reselect it if needed.
+
     // Alert.alert(
     //   'Remplacer la photo originale ?',
     //   'Souhaitez vous remplacer par la photo originale par la photo recadrée '
@@ -109,6 +113,8 @@ export class ModalCrop extends Component {
     //   }]
     // );
 
+    // Give java real rectange info (x, y, w, h) 
+    // instead of orignial x y (based on center of view).
     let nx, ny,
         src_w = this.state.imageWidth,
         src_h = this.state.imageHeight,

@@ -52,6 +52,7 @@ export default class InsectForm extends Component {
           {label:'Oui', value:0},   // Question inversée ...
           {label:'Non', value:1},   // ... pour plus de clareté.
         ],
+        helper:true,
       },{
         name:'occAttr_4',
         type:'singleSelect',
@@ -128,6 +129,7 @@ export default class InsectForm extends Component {
                   styles={{
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,
+                    title:{fontSize:14, height:50, textAlign:'center',  padding:2},
                     container:{marginRight:5, flex:1, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
 
@@ -197,18 +199,17 @@ export default class InsectForm extends Component {
                   onSubmitEditing = {(event) => this.storeInsect('comment', event.nativeEvent.text) }  
                 />
    
-                { !this.state.insect.session ? null :
+                {/* !this.state.insect.session ? null :
                   <View
                     style={styles.collection_subgrp}
                     >
                     <Text style={{fontSize:16}}>
                       Session 
                       de {formatTime(parseInt(this.state.insect.session.split('_')[1]),10)}
-                      {/* end date is not set yet on long protocole.. {formatTime(parseInt(value.session.split('_')[2]),10)}  */}
                       <Text  style={{fontSize:14}}> le {formatDate(parseInt(this.state.insect.session.split('_')[0]))}</Text>
                     </Text>
                   </View>
-                }
+                */}
 
                 <Form
                   fields={this.form.insect}
@@ -222,7 +223,6 @@ export default class InsectForm extends Component {
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,
                   }}
-                  // TODO: selectList for session id.
                 />
               </View>
 

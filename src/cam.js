@@ -791,7 +791,7 @@ export default class Cam extends Component<Props> {
         <View style={styles.iconButton}>
         <MaterialCommunityIcons.Button   
           name='camera'
-          underlayColor={colors.greenSuperLight}
+          underlayColor={'white'}
           size={40}
           width={100}
           margin={0}
@@ -808,7 +808,7 @@ export default class Cam extends Component<Props> {
           <View style={styles.iconButton}>
           <MaterialCommunityIcons.Button   
             name='video'
-            underlayColor={colors.greenSuperLight}
+            underlayColor={'white'}
             size={40}
             width={100}
             margin={0}
@@ -829,7 +829,7 @@ export default class Cam extends Component<Props> {
           <View style={styles.iconButton}>
           <MaterialCommunityIcons.Button   
             name='cctv'
-            underlayColor={colors.greenSuperLight}
+            underlayColor={'white'}
             size={40}
             width={100}
             margin={0}
@@ -1017,7 +1017,7 @@ export default class Cam extends Component<Props> {
               marginLeft:5,
             }}
             name='gesture-double-tap' //   th-large      
-            underlayColor={colors.greenSuperLight}
+            underlayColor={'white'}
             size={25}
             margin={0}
             paddingLeft={10}
@@ -1044,7 +1044,7 @@ export default class Cam extends Component<Props> {
               borderRightWidth:1, borderRightColor:'#dddddd',
             }}
             name='image-filter-center-focus-weak' //   select-all // selection-ellipse     
-            underlayColor={colors.greenSuperLight}
+            underlayColor={'white'}
             size={25}
             margin={0}
             color= {colors.greenFlash}
@@ -1065,7 +1065,7 @@ export default class Cam extends Component<Props> {
               borderRightWidth:1, borderRightColor:'#dddddd',
             }}
             name='blur' //      grid // view-grid //view-comfy
-            underlayColor={colors.greenSuperLight}
+            underlayColor={'white'}
             size={25}
             margin={0}
             color= {colors.greenFlash}
@@ -1089,7 +1089,7 @@ export default class Cam extends Component<Props> {
               borderRightWidth:1, borderRightColor:'#dddddd',
             }}
             name='contrast-circle' //   contrast-box     
-            underlayColor={colors.greenSuperLight}
+            underlayColor={'white'}
             size={25}
             color= {colors.greenFlash}
             backgroundColor ={'transparent'}
@@ -1111,7 +1111,7 @@ export default class Cam extends Component<Props> {
               marginRight:5,
             }}
             name='eraser'   
-            underlayColor={colors.greenSuperLight}
+            underlayColor={'white'}
             size={25}
             margin={0}
             color= {colors.greenFlash}

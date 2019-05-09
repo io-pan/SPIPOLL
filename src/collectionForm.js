@@ -469,6 +469,7 @@ export default class  CollectionForm extends Component {
                   styles={{
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,
+                    title:{fontSize:14, height:50, textAlign:'center',  padding:2},
                     container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
 
@@ -488,6 +489,7 @@ export default class  CollectionForm extends Component {
                   styles={{
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,
+                    title:{fontSize:14, height:50, textAlign:'center',  padding:2},
                     container:{marginRight:5, flex:0.5, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
 
