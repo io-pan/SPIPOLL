@@ -792,8 +792,8 @@ export class ImagePicker extends Component {
     console.log('render ImagePicker ' + this.props.title);
     // console.log('  props', this.props);
     // console.log('  state', this.state);
-    console.log(this.state.index);
-    console.log(this.state.sources);
+    // console.log(this.state.index);
+    // console.log(this.state.sources);
 
     // const currentImageIsSelected = 
     //   this.state.sources.length 
@@ -818,7 +818,11 @@ export class ImagePicker extends Component {
             imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
 
             imageCroped={(path)=> this.scanFolder(path)}
-            allowMoveImage={this.props.allowMoveImage||false}
+            extractPhotos={this.props.extractPhotos
+              ? (paths, selectedImageMoved)=> this.props.extractPhotos(paths, selectedImageMoved)
+              : false
+            }
+            
             styles={{
               text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
               container:{height:55, alignItems:'center', justifyContent:'center',

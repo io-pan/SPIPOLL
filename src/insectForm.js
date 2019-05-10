@@ -128,7 +128,7 @@ export default class InsectForm extends Component {
                   key="collection-insect"
                   title={this.state.insect.taxon_extra_info || this.state.insect.taxon_name || 'Non identifiée' }
                   cam = {false}
-                  allowMoveImage={true}
+                  extractPhotos={(paths, selectedImageMoved) => this.props.extractPhotos(paths, this.state.insect.session, selectedImageMoved)}
                   styles={{
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,
@@ -202,7 +202,7 @@ export default class InsectForm extends Component {
                   onSubmitEditing = {(event) => this.storeInsect('comment', event.nativeEvent.text) }  
                 />
    
-                {/* !this.state.insect.session ? null :
+                { !this.state.insect.session ? null :
                   <View
                     style={styles.collection_subgrp}
                     >
@@ -212,7 +212,7 @@ export default class InsectForm extends Component {
                       <Text  style={{fontSize:14}}> le {formatDate(parseInt(this.state.insect.session.split('_')[0]))}</Text>
                     </Text>
                   </View>
-                */}
+                }
 
                 <Form
                   fields={this.form.insect}

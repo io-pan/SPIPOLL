@@ -75,12 +75,13 @@ export default class AdvancedList extends Component {
     });
   }
 
-  newItem(){
-    let data = {};
-
-    // Get default data.
-    if(this.props.newItem) {
+  newItem(data=false){
+    // Get default data. // TODO: add prop for initial data and 2nd prop for callback.
+    if(!data && this.props.newItem) {
       data = this.props.newItem(this.state.items.length);
+    }
+    else if(!data){
+      data = {};
     }
 
     // Create & store item.
@@ -103,6 +104,9 @@ export default class AdvancedList extends Component {
         editing:items.length-1,
       }, function(){
         AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
+        if(this.props.newItemCallBack) {
+          this.props.newItemCallBack(data, this.state.editing);
+        }
       });
     }
 

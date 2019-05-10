@@ -377,10 +377,10 @@ export default class ImageGallery extends Component {
           icon:'trash-can-outline',
           action: () => this.deleteImage()
         },{
-          condition:this.props.allowMoveImage,
-          label:'',//
+          condition:this.props.extractPhotos,
+          label:'Extraire',
           icon:'image-move',
-          action: () => this.showMoveImage()
+          action: () => this.moveImage(),
         },
         // {
         //   label:'Recadrer',
@@ -394,15 +394,22 @@ export default class ImageGallery extends Component {
         // }
         ],
 
-      thumbs:[{
-          label:'Annuler',
-          icon:'cancel',
-          action: ()=>this.cancelSelectedForAction()
-        },{
+      thumbs:[
+        // {
+        //   label:'Annuler',
+        //   icon:'cancel',
+        //   action: ()=>this.cancelSelectedForAction()
+        // },
+        {
           label:'Supprimer', 
           icon:'trash-can-outline',
           action: () => this.deleteImage()
-        }],
+        },{
+          condition:this.props.extractPhotos,
+          label:'Extraire',
+          icon:'image-move',
+          action: () => this.moveImage(),
+        }]
     };
 
     this.state = { 
@@ -448,22 +455,13 @@ export default class ImageGallery extends Component {
     });
   }
 
-  showCropModal(show){
+  showCropModal(visible){
     this.setState({
-      view:show ? 'crop':'slide',
+      view:visible ? 'crop':'slide',
     }, function(){
       // this.refs['crop-modal'].show();
     })
-    // this.refs['crop-modal'].show();
   }
-
-  showMoveImage(){
-    // TODO for insects only:
-    // user might have taken a photo that is not from the expected kind
-    //  => create new kind or move photo to another kind.
-  }
-
-
 
   thumbPress(index, long){
 
@@ -565,6 +563,54 @@ export default class ImageGallery extends Component {
           }
         },
       ],
+    );
+  }
+
+  moveImage(){
+    // user might have taken a photo that is not from the expected kind
+    //  => create new kind or move photo to another kind.
+    
+    const sources = this.props.sources,
+          selectedForAction = this.state.selectedForAction===false
+            ? [this.state.index]   // Delete single photo from slider.
+            : this.state.selectedForAction
+    ;
+
+    let selectedImageDeleted = false;
+    for(i=0; i<selectedForAction.length; i++){
+      // Check if selected image has been deteted.
+      if( this.props.selected 
+      &&  sources[selectedForAction[i]].url.split('?')[0].indexOf(this.props.path +'/'+ this.props.selected) > 0 ){
+        selectedImageDeleted = true;
+      }
+
+      selectedForAction[i] = sources[selectedForAction[i]];
+    }
+
+
+    Alert.alert(
+      'Extraire ' + selectedForAction.length + ' photo' + (selectedForAction.length>1?'s':'') +' ?',
+     
+      "Si l'insecte sur la photo n'est pas de la bonne espèce, vous pouvez extraire la photo. "
+      + "Ceci aura pour effet de créer une nouvelle espèce d'insecte et d'y inclure la photo.\n"
+      + "Si l'insecte appartient à une espèce déjà présente dans la liste, vous pourrez fusionner "
+      + "les deux espèces en faisant une touche longue sur la liste.",
+      [
+        {
+          text: 'Retour',
+          // onPress: () => console.log('Cancel Pressed'),
+        },
+        {
+          text: 'Extraire la photo', 
+          onPress: () =>{
+         
+            this.props.extractPhotos(
+              selectedForAction, 
+              selectedImageDeleted
+            );
+          },
+        }
+      ]
     );
   }
 
@@ -721,7 +767,7 @@ export default class ImageGallery extends Component {
               >
 
               { this.actions.slide.map((value, index) => {
-                if(!value.condition){
+                if(typeof value.condition !='undefined' &&  !value.condition){
                  return null;
                 }
 
@@ -899,22 +945,27 @@ export default class ImageGallery extends Component {
                 }}
                 >
 
-                { this.actions.thumbs.map((value, index) => 
-                  <TouchableOpacity
-                    key={index}
-                    style={{
-                      flexDirection:'row', flex:0.5, height:50, alignItems:'center', justifyContent:'center',
-                      borderRightWidth:1, borderRightColor:'white'}}
-                    onPress = {value.action}
-                    >
-                    <MaterialCommunityIcons   
-                      name={value.icon}
-                      style={{fontSize:24, paddingRight:10, color:'white'}}
-                    /><Text style={{color: 'white', fontSize:16,}}>
-                    {value.label}</Text>
-                  </TouchableOpacity>
-                  )
-                }
+                { this.actions.thumbs.map((value, index) => {
+                  if(typeof value.condition !='undefined' &&  !value.condition){
+                   return null;
+                  }
+                  return(
+                    <TouchableOpacity
+                      key={index}
+                      style={{
+                        flexDirection:'row', flex:1, height:50, alignItems:'center', justifyContent:'center',
+                        borderRightWidth:1, borderRightColor:'white'}}
+                      onPress = {value.action}
+                      >
+                      <MaterialCommunityIcons   
+                        name={value.icon}
+                        style={{fontSize:24, paddingRight:10, color:'white'}}
+                      /><Text style={{color: 'white', fontSize:16,}}>
+                      {value.label}</Text>
+                    </TouchableOpacity>
+                  );
+
+                })}
               </View>
             }
           </View>
@@ -926,7 +977,7 @@ export default class ImageGallery extends Component {
             title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
             source={this.props.sources[this.state.index]}
             styles={this.props.styles}
-            imageCroped={(path)=>  path ? this.props.imageCroped(path) : this.showCropModal(false) }
+            imageCroped={(path)=> path ? this.props.imageCroped(path) : this.showCropModal(false) }
           />
 
       }

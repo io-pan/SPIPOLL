@@ -534,7 +534,8 @@ export default class SessionForm extends Component {
             : 'Espèce ' + (index+1) + ' - Non identifiée' 
           }
           cam = {true}
-          allowMoveImage={true}
+// TODO
+//           extractPhotos={(paths) => this.props.extractPhotos(paths, this.state.insect.session)}
           styles={{
             highlightColor:colors.greenFlash,
             badColor:colors.purple,

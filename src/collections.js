@@ -294,10 +294,72 @@ class Collection extends Component {
           index={index}
           data={data}
           valueChanged={(key,val) => this.insectChanged(key,val)}
-          // session_id = data.time_start // let's keep 1st session the insect kind has benn seen.
+          extractPhotos={(paths, session_id, selectedImageMoved)=>this.extractPhotos(paths, session_id, selectedImageMoved)}
         />
       </View>
     );
+  }
+
+  newInsectCallBack(data, index){
+    // Display list after photo extracted.
+    this.refs['insect-list'].selectItem(false);
+  }
+
+  extractPhotos(paths, session_id, selectedImageMoved){
+    const now = date2folderName(),
+          newFolder = this.props.data.storage.path + '/' + this.props.data.date  + '/insects/' + now,
+          newCreatedInsect = {
+            taxon_list_id_list:null,
+            taxon_name:null,
+            comment:null,
+            occAttr_4:null, // Nombre maximum d'individu
+            occAttr_5:null, //Insecte photographié sur la fleu
+            session:session_id,
+            photo:null,
+            date:now, // So we now in which folder photos are. 
+          };
+
+    if(selectedImageMoved){
+      this.refs['insect-list'].storeItemField('photo', null);
+    }
+
+    // Create insect
+    this.refs['insect-list'].newItem(newCreatedInsect);
+
+    // Create new insect photos folder and copy photos.
+    // this.copied=0;
+    RNFetchBlob.fs.mkdir(newFolder)
+    .then(() => { 
+      // Move photo to new folder.
+      for(i=0; i<paths.length; i++){
+        const clean_name = paths[i].url.split('?')[0].replace('file://',''),
+              splited = clean_name.split('/'),
+              dest = splited[splited.length-1];
+
+
+        RNFetchBlob.fs.mv(clean_name,  newFolder + '/' + dest)
+        .then(() => { 
+          // this.copied++;
+          // if(i==paths.length-1){
+          // }
+         })
+        .catch(() => {
+          Alert.alert(
+            'Erreur',
+            "La photo " + dest + " n'a pas été déplacée de vers " + newFolder
+          );
+        })
+      }
+
+    })
+    .catch((err) => { 
+      console.log(err);
+      Alert.alert(
+        'Erreur',
+        'Le dossier de stockage des photos n\'a pu être créé.\n'
+        + newFolder
+      );
+    })
   }
 
   insectChanged(key, val){
@@ -452,6 +514,13 @@ class Collection extends Component {
                 tabSet={(x, tab)=> {
                   this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
                   this.tab = tab;
+
+                  if(tab=='calendar-clock'){
+                    this.refs['session-list'].selectItem(false);
+                  }
+                  else if(tab=='ladybug'){
+                    this.refs['insect-list'].selectItem(false);
+                  }
                 }}
               />
 
@@ -560,7 +629,10 @@ class Collection extends Component {
               localStorage = {this.props.data.date + "_insects"}
               renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
               renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
-              newItemContent = {false}
+              
+              // newItem = {(index) => {}}
+              newItemCallBack = {(data, index) => this.newInsectCallBack(data, index)}
+              newItemContent = {false} // we create new insect here only by extrxting a photo.
               deleteItem = {(data, index) => this.deleteInsect(data, index)}
             />
           </View>
