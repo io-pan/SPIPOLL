@@ -128,6 +128,7 @@ export default class InsectForm extends Component {
                   key="collection-insect"
                   title={this.state.insect.taxon_extra_info || this.state.insect.taxon_name || 'Non identifiée' }
                   cam = {false}
+                  allowMoveImage={true}
                   styles={{
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,

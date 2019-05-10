@@ -416,35 +416,22 @@ class Collection extends Component {
   }
 
   deleteSession(session){
-    // TODO: remove session reference on insects.
-    // or delete insect.
+    // Delete insects attached to that session.
+    let toBeDeleted = [];
+    const insects = this.refs['insect-list'].state.items;
+
+    for(i=0; i<insects.length; i++){
+      // console.log(insects[i].session)
+      if(insects[i].session == session.date + '_' +session.time_start){
+        toBeDeleted.push(i);
+      }
+    }
+    if(toBeDeleted.length){
+      this.refs['running-insect-'].deleteItems(toBeDeleted); 
+    }
   }
 
   //----------------------------------------------------------------------
-  tabSet(x, tab){
-    this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
-    this.tab = tab;
-
-    if(tab=='calendar-clock'){
-
-
-      // Create default flash session if not exist.
-      if(this.props.data.protocole=='flash' && !this.refs['session-list'].state.items.length){
-          // this.refs['session-list'].newItem();
-          this.refs['session-list'].selectItem(0);
-      }
-
-
-      this.refs['session-list'].selectItem(
-        this.props.data.protocole=='flash'
-        ? 0     // Show default flash session
-        : false // Show sessions list
-      );
-    }
-    else if(tab=='ladybug'){
-      this.refs['insect-list'].selectItem(false);
-    }
-  }
 
   render(){
     console.log('render Collection');
@@ -462,7 +449,10 @@ class Collection extends Component {
                 ref="CollectionNavTabs"
                 protocole={this.props.data.protocole}
                 tabs={this.tabs}
-                tabSet={(x, tab)=>this.tabSet(x, tab)}
+                tabSet={(x, tab)=> {
+                  this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
+                  this.tab = tab;
+                }}
               />
 
               <View // Tabs indicator.
@@ -499,11 +489,6 @@ class Collection extends Component {
               // Highlight tab.
               this.refs['CollectionNavTabs'].scroll(event);
 
-
-              // TODO:
-              // . new insects do not appear in tab insect list
-              // refresh insect list on tab select / tab selected
-
               // Close lists.
               if(event.nativeEvent.contentOffset.x == 0){ //  tab = 'flower';     
                 this.tab = 'flower';
@@ -514,7 +499,7 @@ class Collection extends Component {
               else if(event.nativeEvent.contentOffset.x == deviceWidth){ // tab = 'calendar-clock';
                 this.tab = 'calendar-clock';
                 this.refs['insect-list'].selectItem(false);
-                
+
                 // Show/create default flash session.
                 if(this.props.data.protocole=='flash'){ 
                   if(!this.refs['session-list'].state.items.length){
@@ -529,6 +514,7 @@ class Collection extends Component {
               else if(event.nativeEvent.contentOffset.x == 2*deviceWidth){ //  tab = 'ladybug';  
                 this.tab = 'ladybug';
                 this.refs['session-list'].selectItem(this.props.data.protocole=='flash' ? 0 : false);
+                this.refs['insect-list'].refresh();
               }
             }}
           )}

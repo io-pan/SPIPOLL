@@ -15,9 +15,6 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import {colors} from './colors';
 import FooterImage from './footerimage';
 
-
-// TODO: collection date should retrieve earlier session date.
-
 //=========================================================================================
 export default class AdvancedList extends Component {
 //-----------------------------------------------------------------------------------------
@@ -41,34 +38,40 @@ export default class AdvancedList extends Component {
   }
 
   componentWillMount(){
-    console.log('AdvancedList storage:', this.props.localStorage)
-    AsyncStorage.getItem(this.props.localStorage, (err, items) => {
-      if (err) {
-        Alert.alert('ERROR getting items ' + this.props.localStorage + ' ' + JSON.stringify(err));
-      }
-      else {
-        if(items){
-          console.log('items: ', JSON.parse(items));
-          this.setState({
-            loading:false,
-            items:JSON.parse(items),
-            editing: typeof this.props.editing != 'undefined' ? this.props.editing : false,// this.editingRequested,
-          }, function(){
-            // this.editingRequested = false;
-            // console.log(this.props.localStorage, JSON.parse(items));
-          });
-        }
+    this.refresh();
+  }
 
-        // Create item if editing requested.
-        else if( typeof this.props.editing != 'undefined'){
-          this.newItem();
-          // this.editingRequested = false;
+  refresh(){
+    console.log('AdvancedList storage:', this.props.localStorage)
+    this.setState({loading:true},function(){
+      AsyncStorage.getItem(this.props.localStorage, (err, items) => {
+        if (err) {
+          Alert.alert('ERROR getting items ' + this.props.localStorage + ' ' + JSON.stringify(err));
         }
-        else{
-          this.setState({loading:false,});
+        else {
+          if(items){
+            console.log('items: ', JSON.parse(items));
+            this.setState({
+              loading:false,
+              items:JSON.parse(items),
+              editing: typeof this.props.editing != 'undefined' ? this.props.editing : false,// this.editingRequested,
+            }, function(){
+              // this.editingRequested = false;
+              // console.log(this.props.localStorage, JSON.parse(items));
+            });
+          }
+
+          // Create item if editing requested.
+          else if( typeof this.props.editing != 'undefined'){
+            this.newItem();
+            // this.editingRequested = false;
+          }
+          else{
+            this.setState({loading:false,});
+          }
+                    
         }
-                  
-      }
+      });
     });
   }
 

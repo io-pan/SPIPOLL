@@ -818,7 +818,7 @@ export class ImagePicker extends Component {
             imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
 
             imageCroped={(path)=> this.scanFolder(path)}
-
+            allowMoveImage={this.props.allowMoveImage||false}
             styles={{
               text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
               container:{height:55, alignItems:'center', justifyContent:'center',

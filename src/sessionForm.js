@@ -356,7 +356,7 @@ export default class SessionForm extends Component {
     const insects = this.refs['running-insect-list'].state.items;
 
     for(i=0; i<insects.length; i++){
-      console.log(insects[i].session)
+      // console.log(insects[i].session)
       if(insects[i].session == this.state.session.date + '_' + this.state.session.time_start){
         toBeDeleted.push(i);
       }
@@ -507,8 +507,10 @@ export default class SessionForm extends Component {
       values: [],
     }];
     
-    if(!value.occAttr_4 || value.occAttr_4==126){
-      // Let user choose between all values.
+    // Let user choose between all values... 
+    if(!value.occAttr_4 || value.occAttr_4==126 //.. if value not set
+    || value.session == this.state.session.date + '_' + this.state.session.time_start ){ // or insect has been create on current session.
+      
       formFields[0].values = vals;
       formFields[0].values.push({label:'Ne sais pas', value:126});
     }
@@ -532,6 +534,7 @@ export default class SessionForm extends Component {
             : 'Espèce ' + (index+1) + ' - Non identifiée' 
           }
           cam = {true}
+          allowMoveImage={true}
           styles={{
             highlightColor:colors.greenFlash,
             badColor:colors.purple,
@@ -606,7 +609,6 @@ export default class SessionForm extends Component {
         <Text style={{marginTop:20, marginBottom:10, textAlign:'center', 
           fontSize:16, fontWeight:'bold'}} >
         Espèces déjà vues</Text>
-
 
         <AdvancedList
           ref="running-insect-list"

@@ -222,7 +222,7 @@ export class ModalCrop extends Component {
               justifyContent:'center', alignItems:'center', 
               borderRightWidth:1, borderRightColor:'white', 
             }]}
-            onPress={(path) => this.hide()}
+            onPress={(path) => this.props.imageCroped(false)}
             >
             <MaterialCommunityIcons
               name="chevron-left" 
@@ -372,10 +372,12 @@ export default class ImageGallery extends Component {
 
     this.actions = {
       slide:[{
+          condition:true,
           label:'Supprimer',
           icon:'trash-can-outline',
           action: () => this.deleteImage()
         },{
+          condition:this.props.allowMoveImage,
           label:'',//
           icon:'image-move',
           action: () => this.showMoveImage()
@@ -446,9 +448,9 @@ export default class ImageGallery extends Component {
     });
   }
 
-  showCropModal(){
+  showCropModal(show){
     this.setState({
-      view:'crop',
+      view:show ? 'crop':'slide',
     }, function(){
       // this.refs['crop-modal'].show();
     })
@@ -718,16 +720,12 @@ export default class ImageGallery extends Component {
               }}
               >
 
-              { this.actions.slide.map((value, index) => //{
-                // // Do not show 'select' button if current photo is already selected.
-                // if(this.state.index>0
-                // && index==this.actions.slide.length-1
-                // && this.props.sources[this.state.index].url === 'file://' + this.props.path +'/'+this.props.selected){
-                //   return null;
-                // }
+              { this.actions.slide.map((value, index) => {
+                if(!value.condition){
+                 return null;
+                }
 
-                // return(
-
+                return(
                   <TouchableOpacity
                     key={index}
                     style={{
@@ -743,8 +741,8 @@ export default class ImageGallery extends Component {
                     />
                     {/*<Text style={{color: 'white', fontSize:16,}}>{value.label}</Text>*/}
                   </TouchableOpacity>
-                // );  }
-              )}
+                );  
+              })}
 
               { //show small 'CROP' and big 'SELECT' button if current photo is not already selected.
               !this.props.selected || 
@@ -756,7 +754,7 @@ export default class ImageGallery extends Component {
                       flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
                       borderRightWidth:1, 
                       borderRightColor:'white'}}
-                    onPress = {() =>  this.showCropModal()}
+                    onPress = {() =>  this.showCropModal(true)}
                     >
                     <MaterialCommunityIcons   
                       name='crop'
@@ -786,7 +784,7 @@ export default class ImageGallery extends Component {
                     flexDirection:'row', height:50, alignItems:'center', justifyContent:'center',
                     borderRightWidth:1, 
                     borderRightColor:'white'}}
-                  onPress =  {() =>  this.showCropModal()}
+                  onPress =  {() =>  this.showCropModal(true)}
                   >
                   <MaterialCommunityIcons   
                     name="crop"
@@ -928,7 +926,7 @@ export default class ImageGallery extends Component {
             title={this.state.index + this.props.title ? this.props.title.replace("\n", " ") : ''}
             source={this.props.sources[this.state.index]}
             styles={this.props.styles}
-            imageCroped={(path)=> this.props.imageCroped(path)}
+            imageCroped={(path)=>  path ? this.props.imageCroped(path) : this.showCropModal(false) }
           />
 
       }
