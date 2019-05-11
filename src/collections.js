@@ -714,6 +714,33 @@ export default class CollectionList extends Component {
     .then((dirs) => {
       this.setState({hasRemovalStorage:JSON.parse(dirs).length});
     });
+
+
+    this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+
+      if ((this.refs['collections'].state.selectedItems.length)){
+        this.refs['collections'].selectedItems(false);
+        return true;   
+      }
+      else {
+        Alert.alert(
+          "Quiter l'application ?",
+          "",
+          [{
+            text: 'Annuler',
+            // onPress: () => {return false},
+          },{
+            text: 'Quitter', 
+            onPress: () =>{BackHandler.exitApp()},
+          }]
+        );
+        return true;
+      }
+    });
+  }
+
+  componentWillUnmount(){
+    this.backHandler.remove();
   }
 
   newCollection(){
