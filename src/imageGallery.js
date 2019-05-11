@@ -516,7 +516,7 @@ export default class ImageGallery extends Component {
               this.props.imageDeleted(
                 sources, 
                 sources.length==1 // Default select lonely remaining image...
-                ? sources[0].url.replace('file://'+this.props.path+'/' ,'')
+                ? sources[0].url.replace('file://'+this.props.path+'/' ,'').split('?')[0]
                 : selectedImageDeleted ? '' : false); // ... or none.
             });
 

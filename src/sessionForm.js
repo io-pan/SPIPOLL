@@ -326,28 +326,22 @@ export default class SessionForm extends Component {
   }
 
   cancelSession(){
-    // Warn only if insect has been shot.
-    if(this.refs['running-insect-list'].state.items.length){
-      Alert.alert(
-        'Annuler la session ?',
-        "Si vous annulez la session, les espèces d'insectes associées seront définitivement perdues.",
-        [
-          {
-            text: 'Poursuivre la session',
-            onPress: () => {}
-          },
-          {
-            text: 'Annuler la session', 
-            onPress: () => {
-              this.reallyCancelSession();
-            }
-          },
-        ],
-      );     
-    }
-    else {
-      this.reallyCancelSession();
-    }
+    Alert.alert(
+      'Annuler la session ?',
+      "Si vous annulez la session, les espèces d'insectes associées seront définitivement perdues.",
+      [
+        {
+          text: 'Poursuivre la session',
+          onPress: () => {}
+        },
+        {
+          text: 'Annuler la session', 
+          onPress: () => {
+            this.reallyCancelSession();
+          }
+        },
+      ],
+    );     
   }
 
   reallyCancelSession(){
@@ -394,8 +388,7 @@ export default class SessionForm extends Component {
     // console.log(this.state.session.time_start + (flashSessionDuration+60)*1000)
 
 
-    if(this.refs['running-insect-list'].state.items.length // Warn only if insect has been shot.
-      && now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000){
+    if(now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000){
       Alert.alert(
         'Annuler la session ?',
         "La session doit durer plus de 20 minutes. \n"

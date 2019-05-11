@@ -745,7 +745,7 @@ export class ImagePicker extends Component {
         // console.log('onephoto',this.state.sources[0].url.replace('file://' + this.props.path,''))
         // console.log(this.props.path);
         // console.log(this.state.sources[0].url);
-        this.props.onSelect(this.state.sources[0].url.replace('file://' + this.props.path,''));
+        this.props.onSelect(this.state.sources[0].url.replace('file://' + this.props.path+'/' ,''));
       }
       
       this.setState({ visibleCamera:false });

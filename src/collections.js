@@ -48,6 +48,11 @@ class CollectionNavTabs extends Component {
 
     this.state = {
       tab: 'flower', // TODO depending on collection state.
+      status:{
+        flower:false,
+        sessions:false, 
+        insects:false,
+      }
     }
   }
 
@@ -86,6 +91,35 @@ class CollectionNavTabs extends Component {
     }
   }
 
+  formStatus(key, valid){
+    // console.log('formStatus '+ key, valid);
+    // let curTab = this.state.tab;
+    // if(!this.state.status[key] && valid){
+    //   // Whole tab just become valid, go to next tab.
+    //   if (curTab =='flower'){
+    //     curTab = 'calendar-clock';
+    //   }
+    //   else if(curTab == 'calendar-clock'){
+    //     curTab = 'ladybug';
+    //   }
+    //   else{
+
+    //   }
+    // }
+
+    this.setState({
+      // tab:curTab,
+      status:{
+        ...this.state.valid,
+        [key]:valid,        
+      }
+    }, 
+    // function(){
+    //   this.setTab(curTab);
+    // }
+    );
+  }
+
   render(){
     return(
       <View // Tabs.
@@ -106,13 +140,15 @@ class CollectionNavTabs extends Component {
             name={tab.icon}
             style={{
               backgroundColor:'transparent',
-
-              color:colors.greenFlash,
+              // color:colors.greenFlash,
+              color: this.state.status[tab.icon] ? colors.greenFlash :  colors.purple 
             }}
             size={25}
           />
           <Text style={{ fontSize:16, marginLeft:5,
-            color: this.state.tab==tab.icon ? colors.greenFlash :'grey'}}>
+            // color: this.state.tab==tab.icon ? colors.greenFlash :'grey'
+            color: this.state.status[tab.icon] ? colors.greenFlash :  colors.purple 
+          }}>
           {tab.text}</Text>
         </TouchableOpacity>
         )}
@@ -545,6 +581,7 @@ class Collection extends Component {
     }
   }
 
+   
   //----------------------------------------------------------------------
 
   render(){
@@ -647,6 +684,12 @@ class Collection extends Component {
               data={this.props.data}
               valueChanged={(key,val) => this.collectionChanged(key,val)}
               pickPhoto = {(field) => this.pickPhoto(this.props.data.date, field)}
+
+              checkFlower={(valid)=> 
+                 this.refs['CollectionNavTabs']
+                 ? this.refs['CollectionNavTabs'].formStatus('flower',valid)
+                 :{}
+              }
             />
           </View>
 

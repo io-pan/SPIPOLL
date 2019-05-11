@@ -148,6 +148,8 @@ export default class  CollectionForm extends Component {
           this.setState({
             loaded:true,
             collection:JSON.parse(collection)
+          }, function(){
+            this.props.checkFlower(this.flowerValid());
           });
         }
       }
@@ -170,6 +172,7 @@ export default class  CollectionForm extends Component {
 
   storeCollection(commingf){
     AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
+    this.props.checkFlower(this.flowerValid());
   }
 
   storeFlower(field, value){
@@ -319,16 +322,28 @@ export default class  CollectionForm extends Component {
     })
   }
 
-  render () {
-    console.log('render CollectionForm');
-    console.log(this.state.collection);
+  flowerValid(){
+    const envValid = checkForm(this.form.environment, this.state.collection.environment);
+    const lieuValid = this.state.collection.place.lat && this.state.collection.place.long;
+    const indentificationValid = this.state.collection.flower.id_flower_unknown 
+                            ||  this.state.collection.flower.taxon_extra_info
+                            ||  this.state.collection.flower.taxon_list_id_list;
+    const photoValid = this.state.collection.flower.photo &&  this.state.collection.environment.photo;
+console.log('flowerValid', this.state.collection.flower.photo )
+console.log('flowerValid', this.state.collection.environment.photo )
+    return photoValid && indentificationValid && lieuValid && envValid;
+  }
 
+  render () {
     if(!this.state.loaded){
       return <LoadingView/>;
     }
 
-    // Check Environment form validity.
-    const envOk = checkForm(this.form.environment, this.state.collection.environment);
+    const envValid = checkForm(this.form.environment, this.state.collection.environment);
+    const lieuValid = this.state.collection.place.lat && this.state.collection.place.long;
+    const indentificationValid = this.state.collection.flower.id_flower_unknown 
+                            ||  this.state.collection.flower.taxon_extra_info
+                            ||  this.state.collection.flower.taxon_list_id_list;
 
     return (
         
@@ -502,6 +517,10 @@ export default class  CollectionForm extends Component {
                 />
               </View>
 
+              <Text style={[styles.collSectionTitle, 
+                indentificationValid?{}:{backgroundColor:colors.purple}]}>
+              Identification</Text>
+
               <View style={styles.collection_grp}>
 
                 {/* TODO ... one day maybe               
@@ -516,7 +535,6 @@ export default class  CollectionForm extends Component {
                   onPress = {() => this.upd_protocole('Long')}
                 />
                 */}
-              
                 <TouchableOpacity 
                   style={{ marginBottom:10,
                     flexDirection:'row', flex:1, 
@@ -605,8 +623,7 @@ export default class  CollectionForm extends Component {
               </View>
 
               <Text style={[styles.collSectionTitle, 
-                this.state.collection.place.lat&&this.state.collection.place.long
-                ?{}:{backgroundColor:colors.purple}]}>
+                lieuValid?{}:{backgroundColor:colors.purple}]}>
               Lieu</Text>
 
               <View style={styles.collection_grp}>
@@ -629,7 +646,7 @@ export default class  CollectionForm extends Component {
               </View>
 
               <Text style={[styles.collSectionTitle,
-                envOk?{}:{backgroundColor:colors.purple}]}>
+                envValid?{}:{backgroundColor:colors.purple}]}>
               Environnement</Text>
 
               <View style={styles.collection_grp}>
