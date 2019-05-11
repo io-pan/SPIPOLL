@@ -209,6 +209,54 @@ export default class AdvancedList extends Component {
   }
 
 
+  mergeSelected(){
+    Alert.alert(
+      'Fusionner les espèces sélectionées ?',
+      "Seule les information (identification...) de la première espèces sélectionnée seront conservées.",
+      [
+        {
+          text: 'Annuler',
+          onPress: () => console.log('Cancel Pressed'),
+        },
+        {
+          text: 'Fusionner', 
+          onPress: () => {
+             this.mergeItems(this.state.selectedItems);
+          }
+        },
+      ],
+    );
+  }
+
+  mergeItems(selected){
+    const items = this.state.items,
+          keptItem = items[selected[0]];
+    let mergedItems= []; //[selected[0]];
+
+
+    // Backward loop to avoid re-index issue.
+    for (var i = items.length - 1; i >= 0; i--) {
+      if(selected.indexOf(i) !== -1 && i!=selected[0]) {
+        // Remove from list.
+        mergedItems.push(items[i]);
+        items.splice(i, 1);
+      }
+    }
+
+    if(this.props.mergeItems) {
+      this.props.mergeItems(mergedItems, keptItem);
+    }
+
+    // Store purged list.
+    this.setState({
+      items:items,
+      selectedItems:false,
+    }, function(){
+      AsyncStorage.setItem(this.props.localStorage, JSON.stringify( this.state.items ));
+    });
+  }
+
+
   //TODO: as props
   actions = [
   {
@@ -220,6 +268,11 @@ export default class AdvancedList extends Component {
     label:'Supprimer',
     icon:'trash-can-outline',
     action: () => this.deleteSelected()
+  },
+  {
+    label:'Fusionner',
+    icon:'arrow-collapse',
+    action: () => this.mergeSelected()
   }];
 
   renderActions(){

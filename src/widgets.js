@@ -705,6 +705,12 @@ export class ImagePicker extends Component {
         });
 
         this.refresh = new Date().getTime();
+
+        // Select photo if only one.
+        if(files.length==1){
+          this.props.onSelect(files[0]);
+        }
+
         this.setState({
           index: index!=-1 ? index : 0,
           sources:sources,
@@ -803,37 +809,7 @@ export class ImagePicker extends Component {
 
     return(
       <View style={this.props.styles.container}
-        >
-
-       
-        <ImageGallery
-            ref={"gallery"}
-            title={this.props.title ? this.props.title.replace("\n", " ") : ''}
-
-            path={this.props.path}  // collection path
-            selected={this.props.filename}
-
-            sources={this.state.sources}
-            onSelect = {(index, filename)=>this.imageSelected(index, filename)}
-            imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
-
-            imageCroped={(path)=> this.scanFolder(path)}
-            extractPhotos={this.props.extractPhotos
-              ? (paths, selectedImageMoved)=> this.props.extractPhotos(paths, selectedImageMoved)
-              : false
-            }
-            
-            styles={{
-              text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
-              container:{height:55, alignItems:'center', justifyContent:'center',
-                paddingLeft:20, paddingRight:20,
-                backgroundColor:this.props.styles.highlightColor},
-              highlightColor:this.props.styles.highlightColor,
-            }}
-
-            photoPicked={(path) => this.photoPicked(path)}
-          />
-      
+        >     
 
         { // Modal Caméra.
           this.props.cam === false
@@ -948,6 +924,8 @@ export class ImagePicker extends Component {
 
         { // Big selected photo.
           !this.state.sources.length ? null :
+
+
           <TouchableOpacity 
             
             style={{
@@ -963,6 +941,34 @@ export class ImagePicker extends Component {
             }
             >
               
+            <ImageGallery // Modal
+              ref={"gallery"}
+              title={this.props.title ? this.props.title.replace("\n", " ") : ''}
+
+              path={this.props.path}  // collection path
+              selected={this.props.filename}
+
+              sources={this.state.sources}
+              onSelect = {(index, filename)=>this.imageSelected(index, filename)}
+              imageDeleted = {(sources, newSelectedImage)=>this.imageDeleted(sources, newSelectedImage)}
+
+              imageCroped={(path)=> this.scanFolder(path)}
+              extractPhotos={this.props.extractPhotos
+                ? (paths, selectedImageMoved)=> this.props.extractPhotos(paths, selectedImageMoved)
+                : false
+              }
+              
+              styles={{
+                text:{textAlign:'center', color:'white', fontWeight:'bold', fontSize:18},
+                container:{height:55, alignItems:'center', justifyContent:'center',
+                  paddingLeft:20, paddingRight:20,
+                  backgroundColor:this.props.styles.highlightColor},
+                highlightColor:this.props.styles.highlightColor,
+              }}
+
+              photoPicked={(path) => this.photoPicked(path)}
+            />
+
             {
               !this.props.filename 
               ? <Text style={{padding:20, textAlign:'center', color:this.props.styles.badColor}}>

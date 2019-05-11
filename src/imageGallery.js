@@ -370,47 +370,7 @@ export default class ImageGallery extends Component {
   constructor (props, ctx) {
     super(props, ctx)
 
-    this.actions = {
-      slide:[{
-          condition:true,
-          label:'Supprimer',
-          icon:'trash-can-outline',
-          action: () => this.deleteImage()
-        },{
-          condition:this.props.extractPhotos,
-          label:'Extraire',
-          icon:'image-move',
-          action: () => this.moveImage(),
-        },
-        // {
-        //   label:'Recadrer',
-        //   icon:'crop',
-        //   action: () => this.showCropModal()
-        // },
-        // {
-        //   label:'Sélectionner',
-        //   icon:'paperclip',
-        //   action: () => this.selectImage()
-        // }
-        ],
 
-      thumbs:[
-        // {
-        //   label:'Annuler',
-        //   icon:'cancel',
-        //   action: ()=>this.cancelSelectedForAction()
-        // },
-        {
-          label:'Supprimer', 
-          icon:'trash-can-outline',
-          action: () => this.deleteImage()
-        },{
-          condition:this.props.extractPhotos,
-          label:'Extraire',
-          icon:'image-move',
-          action: () => this.moveImage(),
-        }]
-    };
 
     this.state = { 
       //sources:this.props.sources,
@@ -597,11 +557,11 @@ export default class ImageGallery extends Component {
       + "les deux espèces en faisant une touche longue sur la liste.",
       [
         {
-          text: 'Retour',
+          text: 'Annuler',
           // onPress: () => console.log('Cancel Pressed'),
         },
         {
-          text: 'Extraire la photo', 
+          text: 'Extraire ' + selectedForAction.length + ' photo' + (selectedForAction.length>1?'s':''), 
           onPress: () =>{
          
             this.props.extractPhotos(
@@ -701,6 +661,48 @@ export default class ImageGallery extends Component {
     if(!this.props.sources.length || this.state.index===false){
       return null;
     }
+
+    this.actions = {
+      slide:[{
+          label:'Supprimer',
+          icon:'trash-can-outline',
+          action: () => this.deleteImage()
+        },{
+          label:'Extraire',
+          icon:'image-move',
+          condition:this.props.extractPhotos && this.props.sources.length>1,
+          action: () => this.moveImage(),
+        },
+        // {
+        //   label:'Recadrer',
+        //   icon:'crop',
+        //   action: () => this.showCropModal()
+        // },
+        // {
+        //   label:'Sélectionner',
+        //   icon:'paperclip',
+        //   action: () => this.selectImage()
+        // }
+        ],
+
+      thumbs:[
+        // {
+        //   label:'Annuler',
+        //   icon:'cancel',
+        //   action: ()=>this.cancelSelectedForAction()
+        // },
+        {
+          label:'Supprimer', 
+          icon:'trash-can-outline',
+          action: () => this.deleteImage()
+        },{
+          label:'Extraire',
+          icon:'image-move',
+          condition:this.props.extractPhotos && this.props.sources.length>1,
+          action: () => this.moveImage(),
+        }]
+    };
+
 
     console.log('render ImageGallery ' + this.props.title);
 

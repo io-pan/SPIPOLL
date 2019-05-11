@@ -164,8 +164,9 @@ class Collection extends Component {
       }
 
       else if (this.tab == 'calendar-clock'){
-        if (this.refs['session-list'].state.editing!==false
+        if ((this.refs['session-list'].state.editing!==false  || this.refs['session-list'].state.selectedItems.length)
         && this.props.data.protocole!='flash' ){
+          this.refs['session-list'].selectedItems(false);
           this.refs['session-list'].selectItem(false);
         }
         else{
@@ -174,7 +175,8 @@ class Collection extends Component {
       } 
 
       else if (this.tab == 'ladybug'){
-        if (this.refs['insect-list'].state.editing!==false){
+        if (this.refs['insect-list'].state.editing!==false || this.refs['insect-list'].state.selectedItems.length){
+          this.refs['insect-list'].selectedItems(false);
           this.refs['insect-list'].selectItem(false);
         }
         else{
@@ -264,6 +266,7 @@ class Collection extends Component {
   //========================================================================================
 
   renderInsectListItem(value, index){
+    // TODO: number if photos.
     return(
       <View style={{flex:1, flexDirection:'row', padding:5}}>
         <Image
@@ -300,9 +303,56 @@ class Collection extends Component {
     );
   }
 
-  newInsectCallBack(data, index){
-    // Display list after photo extracted.
-    this.refs['insect-list'].selectItem(false);
+  mergeInsects(mergedItems, originalItem){
+    // Move photos to right folder.
+    const dest_folder = this.props.data.storage.path + '/' + this.props.data.date + '/insects/' + originalItem.date;
+     
+    // console.log('mergeInsects',dest_folder);
+    for(i=0; i<mergedItems.length; i++){
+
+      // Scan old folder.
+      const src_folder = this.props.data.storage.path + '/' + this.props.data.date + '/insects/' + mergedItems[i].date;
+      // console.log('SRC FOLDER', src_folder);
+      RNFetchBlob.fs.ls(src_folder)
+      .then((files) => {
+        // console.log(files);
+        this.moveFilesThenDeleteFolder(files, src_folder, dest_folder);
+      });
+    }
+  }
+
+  moveFilesThenDeleteFolder(files, src_folder, dest_folder){
+
+    if(files.length){
+
+      RNFetchBlob.fs.mv(src_folder + '/' + files[0],  dest_folder + '/' + files[0])
+      .then(() => { 
+        // console.log('file moved', files[0])
+        files.shift();
+        this.moveFilesThenDeleteFolder(files , src_folder, dest_folder)
+      })
+      .catch((err) => {
+        // console.log("ERROR: La photo " + files[0] + " n'a pas été déplacée de\n"+ src_folder + "\nvers\n" + dest_folder);
+        // console.log(err);
+        Alert.alert(
+          'Erreur',
+          "La photo " + files[0] + " n'a pas été déplacée de\n"+ src_folder + "\nvers\n" + dest_folder
+        );
+      })
+    }
+    else{
+      // console.log('unlink', src_folder);
+      RNFetchBlob.fs.unlink(src_folder)
+      .then(() => { 
+        // console.log('insects merged');
+      })
+      .catch((err) => {
+        Alert.alert(
+          'Erreur',
+          'Le dossier contenant les photos n\'a pu être supprimé.\n' + src_folder
+        );
+      }); 
+    }
   }
 
   extractPhotos(paths, session_id, selectedImageMoved){
@@ -346,7 +396,7 @@ class Collection extends Component {
         .catch(() => {
           Alert.alert(
             'Erreur',
-            "La photo " + dest + " n'a pas été déplacée de vers " + newFolder
+            "La photo " + dest + " n'a pas été déplacée vers\n" + newFolder
           );
         })
       }
@@ -356,7 +406,7 @@ class Collection extends Component {
       console.log(err);
       Alert.alert(
         'Erreur',
-        'Le dossier de stockage des photos n\'a pu être créé.\n'
+        "Le dossier de stockage des photos n'a pu être créé.\n"
         + newFolder
       );
     })
@@ -477,19 +527,21 @@ class Collection extends Component {
     }
   }
 
-  deleteSession(session){
+  deleteSession(session, index){
     // Delete insects attached to that session.
-    let toBeDeleted = [];
-    const insects = this.refs['insect-list'].state.items;
+    if(session.date && session.time_start){
+      let insectsToDelete = [];
+      const insects = this.refs['insect-list'].state.items;
 
-    for(i=0; i<insects.length; i++){
-      // console.log(insects[i].session)
-      if(insects[i].session == session.date + '_' +session.time_start){
-        toBeDeleted.push(i);
+      for(i=0; i<insects.length; i++){
+        // console.log(insects[i].session)
+        if(insects[i].session == session.date + '_' +session.time_start){
+          insectsToDelete.push(i);
+        }
       }
-    }
-    if(toBeDeleted.length){
-      this.refs['running-insect-'].deleteItems(toBeDeleted); 
+      if(insectsToDelete.length){
+        this.refs['running-insect-'].deleteItems(insectsToDelete); 
+      }
     }
   }
 
@@ -618,7 +670,7 @@ class Collection extends Component {
                   Nouvelle Session</Text>
                 </View>
                }
-              deleteItem = {() => this.deleteSession()}
+              deleteItem = {(data, index)=> this.deleteSession(data, index)}
             />
           </View>
 
@@ -630,10 +682,13 @@ class Collection extends Component {
               renderListItem = {(value, index) => this.renderInsectListItem(value, index)}
               renderDetailedItem = {(data, index) => this.renderInsectForm(data, index)}
               
-              // newItem = {(index) => {}}
-              newItemCallBack = {(data, index) => this.newInsectCallBack(data, index)}
-              newItemContent = {false} // we create new insect here only by extrxting a photo.
+              // newItem = {(index) => {}} // we create new insect here only by extrxting a photo.
+              newItemContent = {false} 
+              // Display list after photo extracted.
+              newItemCallBack = {(data, index) => this.refs['insect-list'].selectItem(false) }
+
               deleteItem = {(data, index) => this.deleteInsect(data, index)}
+              mergeItems={(mergedItems, originalItem)=>this.mergeInsects(mergedItems, originalItem)}
             />
           </View>
 
