@@ -567,7 +567,7 @@ class Collection extends Component {
                   this.refs['bigscroll'].scrollTo({x: x, y: 0, animated: true});
                   this.tab = tab;
 
-                  if(tab=='calendar-clock'){
+                  if(tab=='calendar-clock' && this.props.data.protocole!='flash'){
                     this.refs['session-list'].selectItem(false);
                   }
                   else if(tab=='ladybug'){

@@ -76,7 +76,7 @@ export default class AdvancedList extends Component {
   }
 
   newItem(data=false){
-    // Get default data. // TODO: add prop for initial data and 2nd prop for callback.
+    // Get default data. 
     if(!data && this.props.newItem) {
       data = this.props.newItem(this.state.items.length);
     }
@@ -109,8 +109,6 @@ export default class AdvancedList extends Component {
         }
       });
     }
-
-    // callback ?
   }
 
   storeItemField(key, val, index=false){
@@ -257,25 +255,25 @@ export default class AdvancedList extends Component {
   }
 
 
-  //TODO: as props
-  actions = [
-  {
-    label:'Annuler', 
-    icon:'cancel',
-    action: ()=> this.selectedItems(false)
-  },
-  {
-    label:'Supprimer',
-    icon:'trash-can-outline',
-    action: () => this.deleteSelected()
-  },
-  {
-    label:'Fusionner',
-    icon:'arrow-collapse',
-    action: () => this.mergeSelected()
-  }];
 
   renderActions(){
+
+    //TODO: as props
+    const actions = [{
+      label:'Supprimer',
+      icon:'trash-can-outline',
+      action: () => this.deleteSelected(),
+    }];
+
+    if(this.props.mergeItems&&this.state.selectedItems.length >1){
+      actions.push({
+        label:'Fusionner',
+        icon:'arrow-collapse',
+        action: () => this.mergeSelected(),
+      });
+    }
+
+
     return(
       <View  
         style={{
@@ -287,7 +285,6 @@ export default class AdvancedList extends Component {
         >
 
       { this.state.selectedItems === false
-
       ? // Default button: NEW ITEM
         this.props.newItemContent === false ? null :
         <TouchableOpacity  
@@ -296,12 +293,12 @@ export default class AdvancedList extends Component {
           { this.props.newItemContent }
         </TouchableOpacity>
         
-      : // CANCEL / DELETE 
-        this.actions.map((value, index) => 
+      : // acction CANCEL / DELETE 
+        actions.map((value, index) =>
           <TouchableOpacity
             key={index}
             style={{
-              flexDirection:'row', flex:1/this.actions.length, height:50, alignItems:'center', justifyContent:'center',
+              flexDirection:'row', flex:1/actions.length, height:50, alignItems:'center', justifyContent:'center',
               borderRightWidth:1, borderRightColor:'white'}}
             onPress = {value.action}
             >
@@ -311,7 +308,7 @@ export default class AdvancedList extends Component {
             /><Text style={{color: 'white', fontSize:16,}}>
             {value.label}</Text>
           </TouchableOpacity>
-          )
+        )
       }
       </View>
     )

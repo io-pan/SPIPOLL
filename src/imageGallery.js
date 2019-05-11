@@ -551,10 +551,10 @@ export default class ImageGallery extends Component {
     Alert.alert(
       'Extraire ' + selectedForAction.length + ' photo' + (selectedForAction.length>1?'s':'') +' ?',
      
-      "Si l'insecte sur la photo n'est pas de la bonne espèce, vous pouvez extraire la photo. "
-      + "Ceci aura pour effet de créer une nouvelle espèce d'insecte et d'y inclure la photo.\n"
-      + "Si l'insecte appartient à une espèce déjà présente dans la liste, vous pourrez fusionner "
-      + "les deux espèces en faisant une touche longue sur la liste.",
+      "Si l'insecte sur la photo n'est pas de la bonne espèce, vous pouvez extraire la photo.\n"
+      + "Ceci aura pour effet de créer une nouvelle espèce et d'y inclure la photo.\n\n"
+      + "Si l'insecte appartient à une espèce déjà photoraphiée, vous pourrez fusionner "
+      + "les deux espèces via une touche longue sur la liste.",
       [
         {
           text: 'Annuler',
@@ -563,7 +563,6 @@ export default class ImageGallery extends Component {
         {
           text: 'Extraire ' + selectedForAction.length + ' photo' + (selectedForAction.length>1?'s':''), 
           onPress: () =>{
-         
             this.props.extractPhotos(
               selectedForAction, 
               selectedImageDeleted
