@@ -88,9 +88,9 @@ export default class SessionForm extends Component {
       isTimePickerVisible:false,
       isDatePickerVisible:false,
       session:{...props.data,
-        date: props.data.date ? props.data.date : false,
-        time_start: props.data.time_start ? props.data.time_start : false,
-        time_end: props.data.time_end ? props.data.time_end : false,
+        date: props.data.date ? props.data.date : null,
+        time_start: props.data.time_start ? props.data.time_start : null,
+        time_end: props.data.time_end ? props.data.time_end : null,
       },
       // session:{
       //   date:'', //yyyy-mm-dd //id:cc-3-session-date-1 , cc-3-session-date-2   
@@ -193,11 +193,12 @@ export default class SessionForm extends Component {
 
     this.setState({ 
       isDateTimeVisible: value,
-      // should store session
-      session:{
-        ...this.state.session, 
-        date: !this.state.session.date ? now : this.state.session.date,
-      }
+      // session:{
+      //   ...this.state.session, 
+      //   date:now,
+      // }
+    }, function(){
+      this.storeSession('date', now);
     }) 
   };
 
@@ -367,15 +368,15 @@ export default class SessionForm extends Component {
       isDateTimeVisible:false,
       session:{
       ...this.state.session,
-        date:'',
-        time_start:'',
-        time_end:'',
+        date:null,
+        time_start:null,
+        time_end:null,
       }
     })
     // TODO make multiValueChange
-    this.props.valueChanged('date', '');
-    this.props.valueChanged('time_start', '');
-    this.props.valueChanged('time_end', '');
+    this.props.valueChanged('date',null);
+    this.props.valueChanged('time_start',null);
+    this.props.valueChanged('time_end', null);
   }
 
   stopSession(){
@@ -918,7 +919,7 @@ export default class SessionForm extends Component {
   }
 
   render(){
-    console.log('SessionForm');
+    console.log('render SessionForm', this.state);
 
     // Check form validity.
     const sessionValid = checkForm(this.form.session, this.state.session);

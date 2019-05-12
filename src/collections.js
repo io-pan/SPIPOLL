@@ -548,7 +548,7 @@ class Collection extends Component {
   areValidItems(tab, items){
     let valid = true;
 
-    if(!items.length){
+    if(!items || !items.length){
       valid = false;
     }
     else{
@@ -560,7 +560,9 @@ class Collection extends Component {
     }
 
     // Change tab color.
-    this.refs['CollectionNavTabs'].formStatus(tab, valid);
+    if(this.refs['CollectionNavTabs']){
+      this.refs['CollectionNavTabs'].formStatus(tab, valid);
+    }
 
     // Update main list.
     this.props.storeItemField(
@@ -571,10 +573,7 @@ class Collection extends Component {
 
   //--------------------------------------------------------------------------------
   renderSessionListItem(value, index){
-    console.log('renderSessionListItem '+index, value);
-
     const color = this.isValidItem(value) ? 'grey' : colors.purple;
-
     return(
    
         <View style={{flexDirection:'row', flex:1,  alignItems:'center', justifyContent:'center', height:50, paddingLeft:10,}}>
@@ -599,8 +598,8 @@ class Collection extends Component {
             { value.time_start > new Date().getTime()
             ? <MaterialCommunityIcons
                   name="alarm" 
-                  style={{color:colors.greenFlash, marginRight:10,}}
-                  size={20}
+                  style={{color:colors.purple, marginRight:10, fontWeight:'bold'}}
+                  size={30}
                 /> 
             : null
             }  
@@ -965,7 +964,7 @@ export default class CollectionList extends Component {
   }
 
   renderCollectionListItem(value, index){
-    console.log(value);
+    // console.log(value);
     const color = value.status_flower && value.status_sessions && value.status_insects ? colors.greenFlash : colors.purple;
     return(
     <React.Fragment>
@@ -1007,7 +1006,7 @@ export default class CollectionList extends Component {
             size={18}
           />
 
-          { !this.state.hasRemovalStorage ? null :
+          {/* !this.state.hasRemovalStorage ? null :
             <MaterialCommunityIcons
               name={ value.storage.type == 'phone' 
               ? 'cellphone-android' 
@@ -1023,7 +1022,7 @@ export default class CollectionList extends Component {
                 }]}
               size={18}
             />
-          }
+          */}
 
           <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18, color:color,}]}>
           {value.name}</Text>
