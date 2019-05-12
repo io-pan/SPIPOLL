@@ -49,11 +49,12 @@ class CollectionNavTabs extends Component {
     this.state = {
       tab: 'flower', // TODO depending on collection state.
       status:{
-        flower:false,
-        sessions:false, 
-        insects:false,
+        'flower':false,
+        'calendar-clock':false, 
+        'ladybug':false,
       }
     }
+    this.globalStatus = false;
   }
 
   setTab(value){
@@ -92,7 +93,7 @@ class CollectionNavTabs extends Component {
   }
 
   formStatus(key, valid){
-    // console.log('formStatus '+ key, valid);
+    console.log('formStatus '+ key, valid);
     // let curTab = this.state.tab;
     // if(!this.state.status[key] && valid){
     //   // Whole tab just become valid, go to next tab.
@@ -110,49 +111,96 @@ class CollectionNavTabs extends Component {
     this.setState({
       // tab:curTab,
       status:{
-        ...this.state.valid,
+        ...this.state.status,
         [key]:valid,        
       }
-    }, 
-    // function(){
-    //   this.setTab(curTab);
-    // }
+    },function(){
+        // let globalStatus = true;
+        // for(var index in this.state.status) { 
+        //   if (this.state.status.hasOwnProperty(index)) {
+        //     if(!this.state.status[index]){
+        //       globalStatus = false;
+        //     };
+        //   }
+        // }
+      }
     );
   }
 
   render(){
+    let globalStatus = true;
+    for(var index in this.state.status) { 
+      if (this.state.status.hasOwnProperty(index)) {
+        if(!this.state.status[index]){
+          globalStatus = false;
+        };
+      }
+    }
+
     return(
-      <View // Tabs.
-        style={{margin:0, flexDirection:'row', alignItems:'center', justifyContent:'space-around'}}
-        >
-        {/*<ScrollView horizontal={true}>*/}
-        { this.props.tabs.map((tab, index) =>
-         <TouchableOpacity 
-          key={index}
-          style={{ marginLeft:5, marginRight:5,
-            width:deviceWidth/this.props.tabs.length,
-            flexDirection:'row', justifyContent:'center', alignItems:'center', 
-            // borderRightWidth:1, borderRightColor:'lightgrey',
-          }}
-          onPress = {() => this.setTab(tab.icon)} 
+      <View>
+
+        { !globalStatus ? null :
+        <View // Publish button
           >
-          <MaterialCommunityIcons
-            name={tab.icon}
-            style={{
-              backgroundColor:'transparent',
-              // color:colors.greenFlash,
-              color: this.state.status[tab.icon] ? colors.greenFlash :  colors.purple 
+           <TouchableOpacity 
+            style={{ marginLeft:5, marginRight:5,
+              padding:5, paddingBottom:20,
+              flexDirection:'row', justifyContent:'center', alignItems:'center', 
+              // borderRightWidth:1, borderRightColor:'lightgrey',
             }}
-            size={25}
-          />
-          <Text style={{ fontSize:16, marginLeft:5,
-            // color: this.state.tab==tab.icon ? colors.greenFlash :'grey'
-            color: this.state.status[tab.icon] ? colors.greenFlash :  colors.purple 
-          }}>
-          {tab.text}</Text>
-        </TouchableOpacity>
-        )}
-        {/*</ScrollView>*/}
+            onPress = {() => this.publishCollection()} 
+            >
+            <MaterialCommunityIcons
+              name={'file-send'}
+              style={{
+                backgroundColor:'transparent',
+                // color:colors.greenFlash,
+                color:colors.purple 
+              }}
+              size={35}
+            />
+            <Text style={{ fontSize:16, marginLeft:5, color:colors.purple 
+            }}>
+            Transmettre la collection</Text>
+          </TouchableOpacity>
+        </View>
+        }
+
+        <View // Tabs.
+          style={{margin:0, flexDirection:'row', alignItems:'center', justifyContent:'space-around'}}
+          >
+          {/*<ScrollView horizontal={true}>*/}
+          { this.props.tabs.map((tab, index) =>
+           <TouchableOpacity 
+            key={index}
+            style={{ marginLeft:5, marginRight:5,
+              width:deviceWidth/this.props.tabs.length,
+              flexDirection:'row', justifyContent:'center', alignItems:'center', 
+              // borderRightWidth:1, borderRightColor:'lightgrey',
+            }}
+            onPress = {() => this.setTab(tab.icon)} 
+            >
+            <MaterialCommunityIcons
+              name={tab.icon}
+              style={{
+                backgroundColor:'transparent',
+                // color:colors.greenFlash,
+                color: this.state.status[tab.icon] ? colors.greenFlash :  colors.purple 
+              }}
+              size={25}
+            />
+            <Text style={{ fontSize:16, marginLeft:5,
+              // color: this.state.tab==tab.icon ? colors.greenFlash :'grey'
+              color: this.state.status[tab.icon] ? colors.greenFlash :  colors.purple 
+            }}>
+            {tab.text}</Text>
+          </TouchableOpacity>
+          )}
+          {/*</ScrollView>*/}
+        </View>
+
+
       </View>
     );
   }
@@ -253,6 +301,15 @@ class Collection extends Component {
     else {
       this.props.storeItemField(key,val);
     }
+
+    // Check form validity.
+    flowerStatus = this.refs['collection-form'].flowerStatus()
+    this.props.storeItemField('status_flower', flowerStatus);
+    // Change flower tab color.
+    if(this.refs['CollectionNavTabs']){
+      this.refs['CollectionNavTabs'].formStatus('flower',flowerStatus)
+    }
+
   };
 
   renderCollectionEditableName(){
@@ -302,7 +359,9 @@ class Collection extends Component {
   //========================================================================================
 
   renderInsectListItem(value, index){
-    // TODO: number if photos.
+
+    const color = this.isValidItem(value) ? 'grey' : colors.purple;
+
     return(
       <View style={{flex:1, flexDirection:'row', padding:5}}>
         <Image
@@ -316,7 +375,7 @@ class Collection extends Component {
                     + '/insects/' + value.date + '/' + value.photo}}
         />
 
-        <Text>{ 
+        <Text style={{color:color}}>{ 
           value.taxon_extra_info || value.taxon_name || ('Espèce ' + (index+1) + ' - Non identifiée' )
         }</Text>
 
@@ -455,6 +514,7 @@ class Collection extends Component {
     else {
       this.refs['insect-list'].storeItemField(key,val);
     }
+    this.areValidItems('ladybug', this.refs['insect-list'].state.items);
   }
 
   deleteInsect(data) {
@@ -473,54 +533,95 @@ class Collection extends Component {
     }); 
   }
 
+  isValidItem(item){
+    for(var index in item) { 
+     if (item.hasOwnProperty(index)) {
+        if(item[index] === null){
+          return false;
+        };
+     }
+    }
+    return true;
+  }
+
+
+  areValidItems(tab, items){
+    let valid = true;
+
+    if(!items.length){
+      valid = false;
+    }
+    else{
+      for(var i=0; i<items.length; i++) { 
+        if (!this.isValidItem(items[i])) {
+          valid = false;
+        }
+      }
+    }
+
+    // Change tab color.
+    this.refs['CollectionNavTabs'].formStatus(tab, valid);
+
+    // Update main list.
+    this.props.storeItemField(
+      tab=='flower' ? 'status_flower' // shouldn't append since we check list. ie: sessions or insects.
+      :tab=='calendar-clock' ? 'status_sessions'
+      :'status_insects', valid); 
+  }
+
   //--------------------------------------------------------------------------------
   renderSessionListItem(value, index){
     console.log('renderSessionListItem '+index, value);
-    
+
+    const color = this.isValidItem(value) ? 'grey' : colors.purple;
+
     return(
-      <View style={{padding:5, overflow:'hidden'}}>
-        <View style={{flexDirection:'row', flex:1}}>
+   
+        <View style={{flexDirection:'row', flex:1,  alignItems:'center', justifyContent:'center', height:50, paddingLeft:10,}}>
 
-          { !value.smpAttr_24 ? null :
-            <MaterialCommunityIcons
-              name={ value.smpAttr_24 == 123 
-              ? 'weather-sunny' 
-              : value.smpAttr_24 == 126 
-                ? 'weather-cloudy'
-                : 'weather-partlycloudy'
-              }
-              style={[styles.listItemText,{
-
-                }]}
-              size={25}
-            />
-          }
           
-          <Text style={[styles.listItemText, {fontWeight:'normal', fontSize:16}]}>
+            { !value.smpAttr_24 ? null :
+              <MaterialCommunityIcons
+                name={ value.smpAttr_24 == 123 
+                ? 'weather-sunny' 
+                : value.smpAttr_24 == 126 
+                  ? 'weather-cloudy'
+                  : 'weather-partlycloudy'
+                }
+                style={[styles.listItemText,{
+                  color:color,
+                  marginRight:10,
+                  }]}
+                size={25}
+              />
+            }
+          
             { value.time_start > new Date().getTime()
             ? <MaterialCommunityIcons
                   name="alarm" 
-                  style={{color:colors.greenFlash}}
+                  style={{color:colors.greenFlash, marginRight:10,}}
                   size={20}
                 /> 
-            : ''
-            } {formatDate(value.date)}
+            : null
+            }  
+
+            <Text style={[styles.listItemText, {  fontSize:18, fontWeight:'normal', color:color}]}>
+              {value.date ? formatDate(value.date) + '  ' : '  '}
             </Text>
-        </View>
-        <View> 
-          <Text style={styles.listItemText}>
-          { value.time_start
-              ? formatTime(value.time_start) + ' - '
-              : <Text style={{fontWeight:'bold', fontSize:16, color:colors.purple}}>En attente</Text>
-          }
-          { value.time_end 
-            ? formatTime(value.time_end)
-            : value.time_start
-              ? <Text style={{fontWeight:'bold', fontSize:16, color:colors.purple}}> En cours</Text>
-              : ''
-          }
-          </Text>
-        </View>
+
+            <Text style={[styles.listItemText,{fontSize:16}]}>
+              { value.time_start
+                  ? formatTime(value.time_start) + ' - '
+                  : <Text style={{fontWeight:'bold', fontSize:18, color:colors.purple}}>En attente</Text>
+              }
+              { value.time_end 
+                ? formatTime(value.time_end)
+                : value.time_start
+                  ? <Text style={{fontWeight:'bold', fontSize:18, color:colors.purple}}> En cours</Text>
+                  : ''
+              }
+            </Text>
+    
       </View>  
     );
   }
@@ -535,6 +636,7 @@ class Collection extends Component {
         index={index}
         data={data}
         valueChanged={(key,val) => this.sessionChanged(key,val)}
+
         // pickInsectPhoto = {( session_id, insectKind_id, insect_id) => 
         //   this.props.pickInsectPhoto(this.props.data.date, index, insectKind_id, insect_id)}
       />
@@ -550,7 +652,6 @@ class Collection extends Component {
         smpAttr_25:null,
         smpAttr_26:null,
         smpAttr_27:null,
-        shadow:null
     };
   }
 
@@ -561,6 +662,7 @@ class Collection extends Component {
     else {
       this.refs['session-list'].storeItemField(key,val);
     }
+    this.areValidItems('calendar-clock', this.refs['session-list'].state.items);
   }
 
   deleteSession(session, index){
@@ -585,7 +687,7 @@ class Collection extends Component {
   //----------------------------------------------------------------------
 
   render(){
-    console.log('render Collection');
+    console.log('render COLLECTION');
 
     return(
       <View style={{flex:1}}>
@@ -683,13 +785,12 @@ class Collection extends Component {
               ref="collection-form"
               data={this.props.data}
               valueChanged={(key,val) => this.collectionChanged(key,val)}
-              pickPhoto = {(field) => this.pickPhoto(this.props.data.date, field)}
-
-              checkFlower={(valid)=> 
-                 this.refs['CollectionNavTabs']
-                 ? this.refs['CollectionNavTabs'].formStatus('flower',valid)
-                 :{}
-              }
+// on load
+              // flowerStatus={(valid)=> 
+              //    this.refs['CollectionNavTabs']
+              //    ? this.refs['CollectionNavTabs'].formStatus('flower',valid)
+              //    : {}
+              // }
             />
           </View>
 
@@ -714,6 +815,7 @@ class Collection extends Component {
                 </View>
                }
               deleteItem = {(data, index)=> this.deleteSession(data, index)}
+              onLoad={(items)=> this.areValidItems('calendar-clock',items)}
             />
           </View>
 
@@ -731,6 +833,7 @@ class Collection extends Component {
               newItemCallBack = {(data, index) => this.refs['insect-list'].selectItem(false) }
 
               deleteItem = {(data, index) => this.deleteInsect(data, index)}
+              onLoad={(items)=> this.areValidItems('ladybug', items)}
               mergeItems={(mergedItems, originalItem)=>this.mergeInsects(mergedItems, originalItem)}
             />
           </View>
@@ -862,6 +965,8 @@ export default class CollectionList extends Component {
   }
 
   renderCollectionListItem(value, index){
+    console.log(value);
+    const color = value.status_flower && value.status_sessions && value.status_insects ? colors.greenFlash : colors.purple;
     return(
     <React.Fragment>
       <Image
@@ -895,6 +1000,7 @@ export default class CollectionList extends Component {
               : 'help-circle-outline'
             }
             style={[styles.listItemText,{
+              color:color,
               margin:0,
               marginTop:5,
               }]}
@@ -913,12 +1019,13 @@ export default class CollectionList extends Component {
                 margin:0,
                 marginTop:5,
                 marginRight:5,
+                color:color,
                 }]}
               size={18}
             />
           }
 
-          <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18}]}>
+          <Text style={[styles.listItemText, {fontWeight:'bold', fontSize:18, color:color,}]}>
           {value.name}</Text>
         </View>
         <View>

@@ -49,6 +49,10 @@ export default class AdvancedList extends Component {
           Alert.alert('ERROR getting items ' + this.props.localStorage + ' ' + JSON.stringify(err));
         }
         else {
+          if(this.props.onLoad){
+            this.props.onLoad(JSON.parse(items));
+          }
+          
           if(items){
             console.log('items: ', JSON.parse(items));
             this.setState({

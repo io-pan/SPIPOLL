@@ -96,7 +96,10 @@ export class Form extends Component {
                 ? {color:this.props.styles.badColor}
                 : {}
             ]}>
-            {field.title}</Text>
+            {field.title}
+            {field.type!='multiSelect' ? null :
+              <Text style={{fontSize:14}}>{'\n'}(plusieurs choix possibles)</Text>}
+            </Text>
 
           : <TouchableOpacity 
               style={{flexDirection:'row', justifyContent:'center'}}

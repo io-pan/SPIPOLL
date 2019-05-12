@@ -67,7 +67,7 @@ export default class  CollectionForm extends Component {
         },{
           name:'locAttr_1',
           type:'multiSelect',
-          title:"Type d'habitat \n (plusieurs choix possibles)",
+          title:"Type d'habitat",
           values: [ 
             {label:'Urbain',          value:111},
             {label:'Péri-urbain',     value:112},
@@ -149,7 +149,8 @@ export default class  CollectionForm extends Component {
             loaded:true,
             collection:JSON.parse(collection)
           }, function(){
-            this.props.checkFlower(this.flowerValid());
+            // this.props.flowerStatus(this.flowerStatus());
+            this.props.valueChanged('flower',this.flowerStatus());
           });
         }
       }
@@ -172,7 +173,8 @@ export default class  CollectionForm extends Component {
 
   storeCollection(commingf){
     AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
-    this.props.checkFlower(this.flowerValid());
+    // this.props.flowerStatus(this.flowerStatus());
+    this.props.valueChanged('flower',this.flowerStatus());
   }
 
   storeFlower(field, value){
@@ -322,15 +324,14 @@ export default class  CollectionForm extends Component {
     })
   }
 
-  flowerValid(){
+  flowerStatus(){
     const envValid = checkForm(this.form.environment, this.state.collection.environment);
     const lieuValid = this.state.collection.place.lat && this.state.collection.place.long;
     const indentificationValid = this.state.collection.flower.id_flower_unknown 
                             ||  this.state.collection.flower.taxon_extra_info
                             ||  this.state.collection.flower.taxon_list_id_list;
     const photoValid = this.state.collection.flower.photo &&  this.state.collection.environment.photo;
-console.log('flowerValid', this.state.collection.flower.photo )
-console.log('flowerValid', this.state.collection.environment.photo )
+
     return photoValid && indentificationValid && lieuValid && envValid;
   }
 

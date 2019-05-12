@@ -345,18 +345,21 @@ export default class SessionForm extends Component {
   }
 
   reallyCancelSession(){
-    // Delete insects & photos attached to that session.
-    let toBeDeleted = [];
-    const insects = this.refs['running-insect-list'].state.items;
+    // Delete insects & photos attached to that session
+    // ... unless we cancel a scheduled session (while form is not output yet)
+    if(this.refs['running-insect-list']){
+      let toBeDeleted = [];
+      const insects = this.refs['running-insect-list'].state.items;
 
-    for(i=0; i<insects.length; i++){
-      // console.log(insects[i].session)
-      if(insects[i].session == this.state.session.date + '_' + this.state.session.time_start){
-        toBeDeleted.push(i);
+      for(i=0; i<insects.length; i++){
+        // console.log(insects[i].session)
+        if(insects[i].session == this.state.session.date + '_' + this.state.session.time_start){
+          toBeDeleted.push(i);
+        }
       }
-    }
-    if(toBeDeleted.length){
-      this.refs['running-insect-list'].deleteItems(toBeDeleted); 
+      if(toBeDeleted.length){
+        this.refs['running-insect-list'].deleteItems(toBeDeleted); 
+      }
     }
 
     // Reset session.
@@ -439,6 +442,7 @@ export default class SessionForm extends Component {
       }
     },function(){
       // Store list.
+      // const sessionValid = checkForm(this.form.session, this.state.session);
       this.props.valueChanged(field, value);
     });
   }
@@ -917,7 +921,7 @@ export default class SessionForm extends Component {
     console.log('SessionForm');
 
     // Check form validity.
-    const sessOk = checkForm(this.form.session, this.state.session);
+    const sessionValid = checkForm(this.form.session, this.state.session);
 
     const sessionStatus = this.sessionStatus();
     return(
@@ -939,7 +943,7 @@ export default class SessionForm extends Component {
                   <Text style={{
                     fontSize:18, fontWeight:'bold',/* flex:1, textAlign:'center',*/ 
                     padding:5, 
-                    color: sessOk ? colors.greenFlash : colors.purple,
+                    color: sessionValid ? colors.greenFlash : colors.purple,
                     backgroundColor:'transparent'
                     }}>
                       {formatDate(this.state.session.date)}  {formatTime(this.state.session.time_start)}  -  {formatTime(this.state.session.time_end)}
