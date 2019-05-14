@@ -184,22 +184,28 @@ export default class SessionForm extends Component {
   }
 
   _showDateTime(value) { 
-    let now = new Date();
-    now.setHours(0);
-    now.setMinutes(0);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
-    now = now.getTime();
+    if(value) {
+      let now = new Date();
+      now.setHours(0);
+      now.setMinutes(0);
+      now.setSeconds(0);
+      now.setMilliseconds(0);
+      now = now.getTime();
 
-    this.setState({ 
-      isDateTimeVisible: value,
-      // session:{
-      //   ...this.state.session, 
-      //   date:now,
-      // }
-    }, function(){
-      this.storeSession('date', now);
-    }) 
+      this.setState({ 
+        isDateTimeVisible: true,
+        // session:{
+        //   ...this.state.session, 
+        //   date:now,
+        // }
+      }, function(){
+        this.storeSession('date', now);
+      })
+    }
+    else{
+      this.reallyCancelSession();
+    }
+
   };
 
   _showTimePicker = (field) => {

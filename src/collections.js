@@ -703,7 +703,7 @@ class Collection extends Component {
         }
       }
       if(insectsToDelete.length){
-        this.refs['running-insect-'].deleteItems(insectsToDelete); 
+        this.refs['insect-list'].deleteItems(insectsToDelete); 
       }
     }
   }
@@ -713,6 +713,8 @@ class Collection extends Component {
 
   render(){
     console.log('render COLLECTION');
+    
+// TODO: read-only widgets if collection published.
 
     return(
       <View style={{flex:1}}>
