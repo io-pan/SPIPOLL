@@ -441,7 +441,7 @@ export default class ImageGallery extends Component {
         else{
           selectedForAction.splice(i, 1);
         }
-        this.setState({selectedForAction:selectedForAction}); 
+        this.setState({selectedForAction:selectedForAction.length?selectedForAction:false}); 
       }
       else{
         this.gotoImage(index);
@@ -820,7 +820,7 @@ export default class ImageGallery extends Component {
                     <MaterialCommunityIcons   
                       name="paperclip"
                       style={{fontSize:24, paddingRight:10, color:'white'}}
-                    /><Text style={{color: 'white', fontSize:16,}}>
+                    /><Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
                     Sélectionner</Text>
                   </TouchableOpacity>
                 </React.Fragment>
@@ -836,7 +836,7 @@ export default class ImageGallery extends Component {
                   <MaterialCommunityIcons   
                     name="crop"
                     style={{fontSize:24, paddingRight:10, color:'white'}}
-                  /><Text style={{color: 'white', fontSize:16,}}>
+                  /><Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
                   Recadrer</Text>
                 </TouchableOpacity>
               }
@@ -893,7 +893,8 @@ export default class ImageGallery extends Component {
                       source={{uri: path.url}}
                     />
 
-                    { this.state.selectedForAction === false ? null :
+                    { // Radio button to select photo for action.
+                      this.state.selectedForAction === false ? null :
                       <View style={{
                         position:'absolute', top:10, left:10,
                         borderRadius:10,
@@ -921,20 +922,18 @@ export default class ImageGallery extends Component {
 
             </ScrollView>
 
-            <View style={{backgroundColor:this.props.styles.highlightColor }}>
-              <Slider  
-                ref="sampleSize"
-                style={{height:30,margin:10,backgroundColor:'transparent'}} 
-                thumbTintColor = {'white'}
-                minimumTrackTintColor={'white'}
-                maximumTrackTintColor={'white'}
-                minimumValue={-this.maxThumbCols}
-                maximumValue={-1}
-                step={1}
-                value={-this.state.thumbCols}
-                onValueChange={(value) => this.setThumbCols(-value)} 
-              />
-            </View>
+            <Slider  
+              ref="sampleSize"
+              style={{height:30,margin:10,backgroundColor:'transparent'}} 
+              thumbTintColor = {this.props.styles.highlightColor}
+              minimumTrackTintColor={this.props.styles.highlightColor}
+              maximumTrackTintColor={this.props.styles.highlightColor}
+              minimumValue={-this.maxThumbCols}
+              maximumValue={-1}
+              step={1}
+              value={-this.state.thumbCols}
+              onValueChange={(value) => this.setThumbCols(-value)} 
+            />
 
             { // Thumbnails Action Buttons.
               this.state.selectedForAction === false ? null :
@@ -961,7 +960,7 @@ export default class ImageGallery extends Component {
                       <MaterialCommunityIcons   
                         name={value.icon}
                         style={{fontSize:24, paddingRight:10, color:'white'}}
-                      /><Text style={{color: 'white', fontSize:16,}}>
+                      /><Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
                       {value.label}</Text>
                     </TouchableOpacity>
                   );

@@ -642,51 +642,56 @@ export default class SessionForm extends Component {
 
     return(
             sessionStatus == 'scheduled'
-            ?
-              <View style={[{height:55, margin:0, borderTopWidth:1, borderTopColor:'white'}]}>
+            ? <View style={{
+                height:55,
+                flexDirection:'row',
+                justifyContent:'center', alignItems:'center',
+                backgroundColor:colors.greenFlash, 
+                borderTopWidth:1, borderTopColor:'white',
+                }}>
 
-                  <View style={{flexDirection:'row'}}>
-                    <View
-                      style={{backgroundColor:colors.greenFlash, padding:0, 
-                        flexDirection:'row', justifyContent:'center', textAlign:'center',
-                        borderRightWidth:1, borderRightColor:'white',
-                        flex:1,
-                      }}
-                      >
-                      <MaterialCommunityIcons
-                        name="alarm" 
-                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                        size={25}
-                        backgroundColor = 'transparent'
-                      />
-
-                      <Timer
-                        key="scheduling-timer"
-                        ref="scheduling-timer"
-                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
-                        onTimeout={() => this.launchSession()}
-                        time={this.state.session.time_start}
-                      />
-
-                    </View>
-
-                    <TouchableOpacity
-                      style={{padding:0, flexDirection:'row', justifyContent:'center', textAlign:'center',
-                        backgroundColor: colors.greenFlash,
-                      }}
-                      onPress = {() => this.reallyCancelSession()}
-                      >
-                      <MaterialCommunityIcons
-                        name="close-circle" 
-                        style={{padding:10, backgroundColor:'transparent',
-                          color:'white',  }}
-                        size={25}
-                        backgroundColor = 'transparent'
-                      />
-                    </TouchableOpacity>
+                <View
+                  style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
+                    justifyContent:'center', alignItems:'center',
+                    borderRightWidth:1, borderRightColor:'white',
+                    flex:1,
+                  }}
+                  >
+                  <MaterialCommunityIcons
+                    name="alarm" 
+                    style={{color:'white', padding:10, backgroundColor:'transparent'}}
+                    size={25}
+                    backgroundColor = 'transparent'
+                  />
+                  <View>
+                    <Text style={{color:'white', fontSize:10}}>Lancement dans</Text>
+                    <Timer
+                      key="scheduling-timer"
+                      ref="scheduling-timer"
+                      style={{textAlign:'center', fontWeight:'bold', fontSize:18, color:'white'}}
+                      onTimeout={() => this.launchSession()}
+                      time={this.state.session.time_start}
+                    />
                   </View>
+                </View>
 
+                <TouchableOpacity
+                  style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
+                    backgroundColor:  colors.greenFlash,
+                    borderWidth: 1, borderColor: colors.greenFlash,
+                  }}
+                  onPress = {() => this.reallyCancelSession()}
+                  >
+                  <MaterialCommunityIcons
+                    name="close-circle" 
+                    style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
+                      color: 'white',}}
+                    size={30}
+                    backgroundColor = 'transparent'
+                  />
+                </TouchableOpacity>
               </View>
+
 
             : sessionStatus == 'running' ?
 
@@ -711,7 +716,7 @@ export default class SessionForm extends Component {
                       <Timer
                         key="running-timer"
                         ref="running-timer"
-                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:16, color:'white'}}
+                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:18, color:'white'}}
                         onTimeout={()=>{alert('Session over TODO:setstate to refresh')}}
                         time={
                           this.state.session.time_end
@@ -761,6 +766,7 @@ export default class SessionForm extends Component {
                     flexDirection:'row',
                     justifyContent:'center', alignItems:'center',
                     backgroundColor:colors.greenFlash, 
+                    borderTopWidth:1, borderTopColor:'white',
                     }}>
 
                     <TouchableOpacity

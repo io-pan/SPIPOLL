@@ -150,7 +150,7 @@ export default class  CollectionForm extends Component {
             collection:JSON.parse(collection)
           }, function(){
             // this.props.flowerStatus(this.flowerStatus());
-            this.props.valueChanged('flower',this.flowerStatus());
+            this.props.valueChanged('status_flower', this.flowerStatus());
           });
         }
       }
@@ -174,7 +174,7 @@ export default class  CollectionForm extends Component {
   storeCollection(commingf){
     AsyncStorage.setItem(this.props.data.date+'_collection', JSON.stringify( this.state.collection ));
     // this.props.flowerStatus(this.flowerStatus());
-    this.props.valueChanged('flower',this.flowerStatus());
+    this.props.valueChanged('status_flower',this.flowerStatus());
   }
 
   storeFlower(field, value){
@@ -290,7 +290,7 @@ export default class  CollectionForm extends Component {
           // }
 
           // Update list items.
-          this.props.valueChanged(key,value);
+          this.props.valueChanged(key, value);
 
           // Store on device.
           this.storeCollection();

@@ -57,6 +57,18 @@ class CollectionNavTabs extends Component {
     this.globalStatus = false;
   }
 
+  getGlobalStatus(){
+    let globalStatus = true;
+    for(var index in this.state.status) { 
+      if (this.state.status.hasOwnProperty(index)) {
+        if(!this.state.status[index]){
+          return false;
+        };
+      }
+    }
+    return globalStatus;
+  }
+
   setTab(value){
     let bigScrollX = 0;
 
@@ -128,44 +140,9 @@ class CollectionNavTabs extends Component {
   }
 
   render(){
-    let globalStatus = true;
-    for(var index in this.state.status) { 
-      if (this.state.status.hasOwnProperty(index)) {
-        if(!this.state.status[index]){
-          globalStatus = false;
-        };
-      }
-    }
 
     return(
       <View>
-
-        { !globalStatus ? null :
-        <View // Publish button
-          >
-           <TouchableOpacity 
-            style={{ marginLeft:5, marginRight:5,
-              padding:5, paddingBottom:20,
-              flexDirection:'row', justifyContent:'center', alignItems:'center', 
-              // borderRightWidth:1, borderRightColor:'lightgrey',
-            }}
-            onPress = {() => this.publishCollection()} 
-            >
-            <MaterialCommunityIcons
-              name={'file-send'}
-              style={{
-                backgroundColor:'transparent',
-                // color:colors.greenFlash,
-                color:colors.purple 
-              }}
-              size={35}
-            />
-            <Text style={{ fontSize:16, marginLeft:5, color:colors.purple 
-            }}>
-            Transmettre la collection</Text>
-          </TouchableOpacity>
-        </View>
-        }
 
         <View // Tabs.
           style={{margin:0, flexDirection:'row', alignItems:'center', justifyContent:'space-around'}}
@@ -214,6 +191,7 @@ class Collection extends Component {
     super(props);
     this.state = {
       name: this.props.data.name,
+      published: this.props.data.published,
     }
 
     this.tabIndicatorX = new Animated.Value(0);
@@ -248,7 +226,7 @@ class Collection extends Component {
       }
 
       else if (this.tab == 'calendar-clock'){
-        if ((this.refs['session-list'].state.editing!==false  || this.refs['session-list'].state.selectedItems.length)
+        if ((this.refs['session-list'].state.editing!==false  || Array.isArray(this.refs['session-list'].state.selectedItems))
         && this.props.data.protocole!='flash' ){
           this.refs['session-list'].selectedItems(false);
           this.refs['session-list'].selectItem(false);
@@ -259,7 +237,7 @@ class Collection extends Component {
       } 
 
       else if (this.tab == 'ladybug'){
-        if (this.refs['insect-list'].state.editing!==false || this.refs['insect-list'].state.selectedItems.length){
+        if (this.refs['insect-list'].state.editing!==false || Array.isArray(this.refs['insect-list'].state.selectedItems)){
           this.refs['insect-list'].selectedItems(false);
           this.refs['insect-list'].selectItem(false);
         }
@@ -295,24 +273,41 @@ class Collection extends Component {
   }
 
   collectionChanged(key, val){
+    console.log('collectionChanged: ' + key, val);
     if(key=='editing'){
       this.props.selectItem(false);
     }
-    else {
+
+    else { // name, protocole, storage.
       this.props.storeItemField(key,val);
-    }
 
-    // Check form validity.
-    flowerStatus = this.refs['collection-form'].flowerStatus()
-    this.props.storeItemField('status_flower', flowerStatus);
-    // Change flower tab color.
-    if(this.refs['CollectionNavTabs']){
-      this.refs['CollectionNavTabs'].formStatus('flower',flowerStatus)
+      if(key=='status_flower' && this.refs['CollectionNavTabs']){
+        this.refs['CollectionNavTabs'].formStatus('flower', val)
+      }
     }
-
   };
 
+
+  publishCollection(){
+    // TODO:
+    // Open login modal
+
+    // Do stuff
+
+    // Flag collection as published.
+    this.setState({published:true}, function(){
+      this.refs['collection-form'].storeListItem('published', true);
+    });
+  }
+
+
   renderCollectionEditableName(){
+    console.log('renderCollectionEditableName', this.state);
+
+    const readyForPublication =  this.refs['CollectionNavTabs'] 
+      ? this.refs['CollectionNavTabs'].getGlobalStatus() && !this.state.published
+      : false;
+
     return (
       this.state.name
       ? <View style={{flexDirection:'row', height:50, borderBottomWidth:1, borderBottomColor:'white', }}>
@@ -332,18 +327,49 @@ class Collection extends Component {
             />
           </TouchableOpacity>
 
-          <TouchableOpacity 
-            style={{flexDirection:'row', flex:1}}
-            onPress = {() => this.edit('name')} 
-            >
-            <Text style={[styles.titleTextStyle,{flex:1}]}>{this.state.name}</Text>
-            <MaterialCommunityIcons
-              name="pencil" 
-              style={[{color:'white', paddingTop:10, width:50, backgroundColor:colors.greenFlash} ]}
-              size={25}
-              backgroundColor = 'transparent'
-            />
-          </TouchableOpacity>
+          { !this.state.published
+          ? // Editable name.
+            <TouchableOpacity 
+              style={{flexDirection:'row', flex:1}}
+              onPress = {() => this.edit('name')} 
+              >
+              <Text style={[styles.titleTextStyle,{flex:1}]}>{this.state.name}</Text>
+              <MaterialCommunityIcons
+                name="pencil" 
+                style={[{color:'white', paddingTop:10, width:50, backgroundColor:colors.greenFlash} ]}
+                size={25}
+                backgroundColor = 'transparent'
+              />
+            </TouchableOpacity>
+          : // Readonly name.
+            <View 
+              style={{flexDirection:'row', flex:1,}}
+              onPress = {() => this.edit('name')} 
+              >
+              <Text style={[styles.titleTextStyle,
+                {flex:1, backgroundColor:colors.background, color:colors.greenFlash }]}
+                >{this.state.name}</Text>
+            </View>
+          }
+
+          { // Publish button.
+            !readyForPublication ? null :
+            <TouchableOpacity 
+              style={[{
+                padding:10,
+                borderLeftWidth:1, borderLeftColor:'white', 
+                backgroundColor:colors.purple,
+              }]}
+              onPress = {() => this.publishCollection()}  
+              >
+              <MaterialCommunityIcons
+                name={'file-send'}
+                style={[{ color:'white',
+                }]}
+                size={30}
+              />
+            </TouchableOpacity>
+          }
         </View>
 
       : <TextInput
@@ -785,11 +811,6 @@ class Collection extends Component {
               data={this.props.data}
               valueChanged={(key,val) => this.collectionChanged(key,val)}
 // on load
-              // flowerStatus={(valid)=> 
-              //    this.refs['CollectionNavTabs']
-              //    ? this.refs['CollectionNavTabs'].formStatus('flower',valid)
-              //    : {}
-              // }
             />
           </View>
 
@@ -863,7 +884,7 @@ export default class CollectionList extends Component {
 
     this.backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
 
-      if ((this.refs['collections'].state.selectedItems.length)){
+      if (Array.isArray(this.refs['collections'].state.selectedItems)){
         this.refs['collections'].selectedItems(false);
         return true;   
       }
@@ -894,6 +915,7 @@ export default class CollectionList extends Component {
     // Create stored data.
     AsyncStorage.setItem(now+'_collection', JSON.stringify({
       storage:{type:null, path:null},
+      published:false,
       name:null,
       protocole:null,
 
@@ -965,7 +987,11 @@ export default class CollectionList extends Component {
 
   renderCollectionListItem(value, index){
     // console.log(value);
-    const color = value.status_flower && value.status_sessions && value.status_insects ? colors.greenFlash : colors.purple;
+    const color = value.published 
+      ? 'grey'
+      : value.status_flower && value.status_sessions && value.status_insects 
+      ? colors.greenFlash : colors.purple;
+
     return(
     <React.Fragment>
       <Image

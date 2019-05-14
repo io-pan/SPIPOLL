@@ -145,7 +145,7 @@ export default class AdvancedList extends Component {
         else{
           selectedItems.splice(i, 1);
         }
-        this.setState({selectedItems:selectedItems}); 
+        this.setState({selectedItems:selectedItems.length?selectedItems:false}); 
       }
       else{
         if(this.props.selectItemAltFunction){
@@ -279,26 +279,34 @@ export default class AdvancedList extends Component {
 
 
     return(
-      <View  
-        style={{
-          height:55,
-          flexDirection:'row', alignItems:'center', justifyContent:'center',
-          backgroundColor:colors.greenFlash,
-          borderTopWidth:1, borderTopColor:'white',
-        }}
-        >
-
-      { this.state.selectedItems === false
+      this.state.selectedItems === false
       ? // Default button: NEW ITEM
         this.props.newItemContent === false ? null :
-        <TouchableOpacity  
-          onPress = {() => this.newItem()}
+        <View  
+          style={{
+            height:55,
+            flexDirection:'row', alignItems:'center', justifyContent:'center',
+            backgroundColor:colors.greenFlash,
+            borderTopWidth:1, borderTopColor:'white',
+          }}
           >
-          { this.props.newItemContent }
-        </TouchableOpacity>
+          <TouchableOpacity  
+            onPress = {() => this.newItem()}
+            >
+            { this.props.newItemContent }
+          </TouchableOpacity>
+        </View>
         
-      : // acction CANCEL / DELETE 
-        actions.map((value, index) =>
+      : !this.state.selectedItems.length ? null :
+        <View  
+          style={{
+            height:55,
+            flexDirection:'row', alignItems:'center', justifyContent:'center',
+            backgroundColor:colors.greenFlash,
+            borderTopWidth:1, borderTopColor:'white',
+          }}
+          >
+        { actions.map((value, index) =>
           <TouchableOpacity
             key={index}
             style={{
@@ -309,12 +317,12 @@ export default class AdvancedList extends Component {
             <MaterialCommunityIcons   
               name={value.icon}
               style={{fontSize:24, paddingRight:10, color:'white'}}
-            /><Text style={{color: 'white', fontSize:16,}}>
+            /><Text style={{color: 'white', fontSize:18, fontWeight:'bold',}}>
             {value.label}</Text>
           </TouchableOpacity>
-        )
-      }
+        )}
       </View>
+      
     )
   }
 
@@ -375,10 +383,7 @@ export default class AdvancedList extends Component {
                 </ScrollView>
               }
 
-              { this.props.newItemContent || this.state.selectedItems.length
-              ? this.renderActions() 
-              : null
-              }            
+              { this.renderActions() }            
             </View>
         }
       </View>
