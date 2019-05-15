@@ -304,7 +304,7 @@ export default class SessionForm extends Component {
     }
   };
 
-  launchSession(){
+  launchSession(scheduled){
     // if(!this.state.session.date){
       let now = new Date();
       now.setMilliseconds(0);
@@ -315,16 +315,16 @@ export default class SessionForm extends Component {
         end = now + flashSessionDuration * 1000;
       }
 
-
       this.setState({
         session:{
           ...this.state.session,
           date:now,
           time_start:now,
           time_end:end,
+
+          scheduled:scheduled||false,
         }
       }, function(){
-        // TODO: check if really needed
         this.props.valueChanged('date', now);
         this.props.valueChanged('time_start', now);
         this.props.valueChanged('time_end', end);
@@ -675,7 +675,7 @@ export default class SessionForm extends Component {
                       key="scheduling-timer"
                       ref="scheduling-timer"
                       style={{textAlign:'center', fontWeight:'bold', fontSize:18, color:'white'}}
-                      onTimeout={() => this.launchSession()}
+                      onTimeout={() => this.launchSession(true)}
                       time={this.state.session.time_start}
                     />
                   </View>
@@ -795,6 +795,17 @@ export default class SessionForm extends Component {
                       Lancer la session</Text>
                     </TouchableOpacity>
 
+                    {/*
+                        TODO: scheduled session:
+                        . Warn that it is to be used we motion detector.
+                        . Warn this is experimental.
+                        . Warn only pictures are accept by Spipoll (not videos).
+
+                        . show motion setup button under datetime picker.
+                        . launch motion detector instead of normal running-session form
+                        . Group pictures/vidéos: one species per detected motion.
+                        
+
                     <TouchableOpacity
                       style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
                         backgroundColor:  colors.greenFlash,
@@ -810,6 +821,7 @@ export default class SessionForm extends Component {
                         backgroundColor = 'transparent'
                       />
                     </TouchableOpacity>
+                    */}
                   </View>
                 : 
                   <View>
@@ -828,6 +840,7 @@ export default class SessionForm extends Component {
                         Lancement planifié 
                         </Text>
                       </View>
+
                       <TouchableOpacity
                         style={{padding:0, flexDirection:'row', 
                           justifyContent:'center', alignItems:'center',
@@ -844,6 +857,7 @@ export default class SessionForm extends Component {
                           backgroundColor = 'transparent'
                         />
                       </TouchableOpacity>
+                    
                     </View>
 
                     <View style={[styles.collection_subgrp, {

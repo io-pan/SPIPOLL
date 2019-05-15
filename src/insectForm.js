@@ -206,9 +206,9 @@ export default class InsectForm extends Component {
                   <View
                     style={styles.collection_subgrp}
                     >
-                    <Text style={{fontSize:16}}>
-                      Session: {formatDate(parseInt(this.state.insect.session.split('_')[0]))} 
-                      <Text style={{fontSize:14}}>{formatTime(parseInt(this.state.insect.session.split('_')[1]),10)}</Text>
+                    <Text style={{fontSize:14}}>
+                      Session: {formatDate(parseInt(this.state.insect.session.split('_')[0]))}
+                      {formatTime(parseInt(this.state.insect.session.split('_')[1]),10)}
                     </Text>
                   </View>
                 }

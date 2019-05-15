@@ -273,17 +273,10 @@ class Collection extends Component {
   }
 
   collectionChanged(key, val){
-    console.log('collectionChanged: ' + key, val);
-    if(key=='editing'){
-      this.props.selectItem(false);
-    }
-
-    else { // name, protocole, storage.
-      this.props.storeItemField(key,val);
-
-      if(key=='status_flower' && this.refs['CollectionNavTabs']){
-        this.refs['CollectionNavTabs'].formStatus('flower', val)
-      }
+    // name, protocole, storage.
+    this.props.storeItemField(key,val);
+    if(key=='status_flower' && this.refs['CollectionNavTabs']){
+      this.refs['CollectionNavTabs'].formStatus('flower', val)
     }
   };
 
@@ -310,14 +303,16 @@ class Collection extends Component {
 
     return (
       this.state.name
-      ? <View style={{flexDirection:'row', height:50, borderBottomWidth:1, borderBottomColor:'white', }}>
+      ? <View style={{flexDirection:'row', height:50,
+          // borderBottomWidth:1, borderBottomColor:'white', 
+          }}>
           <TouchableOpacity 
             style={[{
               padding:10,
               borderRightWidth:1, borderRightColor:'white', 
               backgroundColor:colors.greenFlash,
             }]}
-            onPress = {() => this.collectionChanged('editing', false)} 
+            onPress = {() => this.props.selectItem(false)} 
             >
             <MaterialCommunityIcons
               name="chevron-left" 
@@ -343,12 +338,19 @@ class Collection extends Component {
             </TouchableOpacity>
           : // Readonly name.
             <View 
-              style={{flexDirection:'row', flex:1,}}
+              style={{flexDirection:'row', justifyContent:'center', alignItems:'center' , flex:1,}}
               onPress = {() => this.edit('name')} 
               >
               <Text style={[styles.titleTextStyle,
-                {flex:1, backgroundColor:colors.background, color:colors.greenFlash }]}
-                >{this.state.name}</Text>
+                {padding:2, fontSize:16, flex:1, backgroundColor:colors.background, color:colors.greenFlash }]}
+                >
+                <Text style={[styles.titleTextStyle,
+                {fontSize:10,flex:1, backgroundColor:colors.background, color:colors.greenFlash }]}
+                >{ "Collection publiée.\n"}</Text>
+                { this.state.name }
+                </Text>
+
+
             </View>
           }
 
@@ -713,7 +715,7 @@ class Collection extends Component {
 
   render(){
     console.log('render COLLECTION');
-    
+
 // TODO: read-only widgets if collection published.
 
     return(
