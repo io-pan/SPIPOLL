@@ -4066,7 +4066,7 @@
     crit:,
 }, {
     value:979,
-	name:"Les Coléoptères difficiles à déterminer",
+	name:"Les coléoptères difficiles à déterminer",
     warn: "FICHE EN COURS DE REDACTION / MODIFICATION (possibilité d'erreurs)",
     id: 190,
     crit:,
@@ -6868,7 +6868,7 @@
     crit:,
 }, {
     value:1002,
-	name:"Les Lépidoptères difficiles à déterminer",
+	name:"Les   difficiles à déterminer",
 	label:"Lepidoptera",
     warn: "FICHE EN COURS DE REDACTION / MODIFICATION (possibilité d'erreurs)",
     id: 321,
@@ -12124,6 +12124,26 @@
     id: 570,
     crit:,
 }, {
+    value:1044,
+    name:"Les Taupins",
+    label:"Autres",
+    warn: "FICHE EN COURS DE REDACTION / MODIFICATION (possibilité d'erreurs)",
+    classification: {
+        niveau_determin: "plusieurs genres",
+        ordre: "Coléoptères",
+        famille: "Elateridae\nLes Elateridae ou \"Taupins\" ont un corps plat, étroit et allongé, pointu à l'arrière. Ils sont le plus souvent bruns ou noirs. \nLes adultes herbivores peuvent nuire aux cultures ou aux pâtures. \nIls possèdent la caractéristique de pouvoir sauter lorsqu'ils sont sur le dos pour se rétablir sur leurs pattes. \nLa famille compte 231 espèces en France.",
+    },
+    presentation_taxon: {
+        description: "Corps sombre avec des motifs un peu plus clairs.",
+        long_corps_mm: "10 à 15",
+        periode_obs: "de Avril à Octobre",
+        habitat: "En plaine : potentiellement toute la France. \nEn montagne : dans les Pyrénées, les Alpes ou le Massif Central, le Jura ou les Vosges. \nDans le bassin méditerranéen : en France continentale ou Corse. ",
+        status_protection: "non protégé",
+
+    },
+    id: 571,
+    crit:,
+}, {
     value:856,
 	name:"Le Téléphore fauve et autres",
 	label:"Rhagonycha fulva et autres",
@@ -12141,7 +12161,7 @@
         status_protection: "non protégé",
 
     },
-    id: 571,
+    id: 572,
     crit:,
 }, {
     value:857,
@@ -12161,7 +12181,7 @@
         status_protection: "non protégé",
 
     },
-    id: 572,
+    id: 573,
     crit:,
 }, {
     name: "Les Téléphores fauves à thorax noir (Rhagonycha)",
@@ -12180,7 +12200,7 @@
         status_protection: "non protégé",
 
     },
-    id: 573,
+    id: 574,
     crit:,
 }, {
     value:897,
