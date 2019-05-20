@@ -8,6 +8,7 @@ const ordres = {
 	'Neuroptères':"Les Neuroptères sont des Insectes au vol lent, aux antennes assez longues parfois terminées en massue et aux ailes disposées, au repos, en toit au dessus du corps.\nOn retrouve dans ce groupe : les Chrysopes, les Fourmilions et les Ascalaphes.\nOn compte 143 espèces en France.",
 	'Orthoptères':"Orthoptères est un ordre important d'insectes dans lequel on retrouve les criquets, les sauterelles, les grillons et les courtillières.\nIls possèdent des pattes postérieures sauteuses très développées.",
 	'Rhaphidioptères':"Insectes diurnes au corps luisant chassant les pucerons et chenilles. Le thorax allongé forme un long \"cou\".\nOn compte 14 espèces en France.",
+	'Collembola':"Ils ont longtemps été considérés comme des insectes primitifs; ils sont aptères et amétaboles (c’est-à-dire dépourvus d'ailes et ne passant pas par une phase larvaire). On tend à les rapprocher aujourd'hui des crustacés4: beaucoup d'espèces ressemblent à de petites crevettes et certains crustacés, comme les talitres, sont également \"sauteurs\"",
 };
 
 
