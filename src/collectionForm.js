@@ -225,7 +225,7 @@ export default class  CollectionForm extends Component {
         flower:{
           ...this.state.collection.flower,
           taxon_list_id_list:picked.value,
-          taxon_name:picked.label,
+          taxon_name:picked.name,
         },
       },
     }, function(){

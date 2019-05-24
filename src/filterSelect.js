@@ -198,7 +198,7 @@ export default class ModalFilterPicker extends Component {
       selectedOptionTextStyle
     } = this.props
 
-    const { key, label, espece, value } = rowData.item;
+    const { key, name, label, value } = rowData.item;
 
     // let style = styles.optionStyle
     // let textStyle = optionTextStyle||styles.optionTextStyle
@@ -211,6 +211,7 @@ export default class ModalFilterPicker extends Component {
     if (renderOption) {
       return renderOption(rowData, key === selectedOption)
     } else {
+
       return (
         <TouchableOpacity activeOpacity={0.7}
   		    key={value}
@@ -228,12 +229,12 @@ export default class ModalFilterPicker extends Component {
           { !this.state.filter
             ?
             <View>
-              <Text style={{fontSize:14, color:'#333333'}}>{label}</Text>
-              <Text style={{fontSize:12, color:'#888888'}}>{espece}</Text>
+              <Text style={{fontSize:14, color:'#333333'}}>{name}</Text>
+              <Text style={{fontSize:12, color:'#888888'}}>{label}</Text>
             </View>
             :
-            [this.renderLabel(label, this.props.resultLabelStyle, 0),
-            this.renderLabel(espece, this.props.resultEspeceStyle, 1)]
+            [this.renderLabel(name, this.props.resultLabelStyle, 0),
+            this.renderLabel(label, this.props.resultEspeceStyle, 1)]
           }
         </TouchableOpacity>
       )
@@ -242,12 +243,12 @@ export default class ModalFilterPicker extends Component {
 
   renderLabel(label, style, key){
     if(!label) return;
-
+    
     var startIndex = 0, 
         index,
         spited = [],
-        source_lower = label.toLowerCase(),
-        search = this.state.filter.toLowerCase();
+        source_lower = label,//.toLowerCase(),
+        search = this.state.filter;//.toLowerCase();
     const searchLen = search.length;
 
     while ((index = source_lower.indexOf(search, startIndex)) > -1) {
@@ -311,14 +312,21 @@ export default class ModalFilterPicker extends Component {
     const filter = text.toLowerCase()
 
     // apply filter to incoming data
+    // const filtered = (!filter.length)
+    //   ? options
+    //   : options.filter(({ searchKey, name, label, key }) => (
+    //     (    0 <= name.toLowerCase().indexOf(filter) 
+    //       || label&&0  <= label.toLowerCase().indexOf(filter)) ||
+    //       (searchKey && 0 <= searchKey.toLowerCase().indexOf(filter))
+    //   ))
+console.log(options)
     const filtered = (!filter.length)
       ? options
-      : options.filter(({ searchKey, label, espece, key }) => (
-        (    0 <= label.toLowerCase().indexOf(filter) 
-          || espece&&0  <= espece.toLowerCase().indexOf(filter)) ||
+      : options.filter(({ searchKey, name, label, key }) => (
+        (    0 <= name.indexOf(filter) 
+          || label&&0  <= label.indexOf(filter)) ||
           (searchKey && 0 <= searchKey.toLowerCase().indexOf(filter))
       ))
-
 
     this.setState({
       filter: text.toLowerCase(),

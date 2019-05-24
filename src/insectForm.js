@@ -36,6 +36,75 @@ import { insectList } from './insects.js';
 import { colors } from './colors';
 
 
+//=========================================================================================
+class taxonModal extends Component {
+//-----------------------------------------------------------------------------------------
+
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      visible:false;
+    }
+  }
+
+  render(){
+    return (
+   <Modal
+        onRequestClose={() => this.hide()}
+        {...modal}
+        visible={this.state.visible}
+        >
+
+          <View 
+            style={{
+              height:55, flexDirection:'row', 
+              justifyContent:'center', alignItems:'center',
+              backgroundColor:this.props.highlightColor
+              }}
+            >
+            <TouchableOpacity 
+              style={[{
+                height:55,
+                width:55,
+                justifyContent:'center', alignItems:'center', 
+                borderRightWidth:1, borderRightColor:'white', 
+              }]}
+              onPress={() =>  this.hide()}
+              >
+              <MaterialCommunityIcons
+                name="chevron-left" 
+                style={[{ color:'white' }]}
+                size={30}
+              />
+            </TouchableOpacity>
+
+            <View 
+              // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
+              style={{flex:1,
+               alignItems:'center', justifyContent:'center',
+              }}>
+              <Text style={{
+                fontSize:18, fontWeight:'bold', textAlign:'center', 
+                color:'white', 
+              }}>
+               titre</Text>
+            </View>
+
+          </View>
+          
+          <View style={{flex:1}}>
+
+
+          
+          </View>
+ 
+      </Modal>
+    );
+  }
+}
+
+
 //-----------------------------------------------------------------------------------------
 export default class InsectForm extends Component {
 //-----------------------------------------------------------------------------------------
@@ -93,13 +162,13 @@ export default class InsectForm extends Component {
         // insect:{
         //   ...this.state.insect,
         //   taxon_list_id_list:value.value,
-        //   taxon_name:value.label,
+        //   taxon_name:value.name,
         // },
         // visibleTaxonModal: false,
       },function(){
         // Update list. ... TODO: multival
         this.props.valueChanged('taxon_list_id_list', value.value);
-        this.props.valueChanged('taxon_name', value.label);
+        this.props.valueChanged('taxon_name', value.name);
       });
     }
     else{
@@ -207,7 +276,8 @@ export default class InsectForm extends Component {
                     style={styles.collection_subgrp}
                     >
                     <Text style={{fontSize:14}}>
-                      Session: {formatDate(parseInt(this.state.insect.session.split('_')[0]))}
+                      Session: 
+                      {formatDate(parseInt(this.state.insect.session.split('_')[0]))}
                       {formatTime(parseInt(this.state.insect.session.split('_')[1]),10)}
                     </Text>
                   </View>
