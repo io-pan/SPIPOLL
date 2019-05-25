@@ -342,7 +342,7 @@ export default class Cam extends Component<Props> {
               // Send photo back to form.
 
               // if (this.props.trigger=='collection')){
-                this.props.photoPicked(filename);
+                if(this.props.photoPicked) this.props.photoPicked(filename);
                 // const collId =  this.state.cam.split('--')[1];
                 // const field =  this.state.cam.split('--')[2];
                 // this.setState({
@@ -375,22 +375,24 @@ export default class Cam extends Component<Props> {
 
 
   async takeVideo() {
-    console.log('takeVideo');
-
     if (this.camera) {
       try {
-        const filename = this.formatedDate() ;
-        const path = this.state.storage + '/' + filename + '.mp4';
-        // console.log(this.motionSartTime );
-        // console.log( this.state.motionAction.until);
+
+        const filename = 
+          (this.props.path || RNFetchBlob.fs.dirs.DCIMDir)
+          + '/' 
+          + date2folderName()
+          + '.mp4'
 
         const promise = this.camera.recordAsync({
-          path: path,
-          maxDuration: this.motionActionVideo ? this.state.motionAction.videoLength : 30,
+          path: filename,
+          maxDuration: this.motionActionVideo ? this.state.motionAction.videoLength : 60,
         });
 
         if (promise) {
-          this.sendMessage(this.state.connectedTo, 'distantRec', true);
+          if(this.props.recording){
+            this.props.recording(true);
+          }
           this.setState({ isRecording: true });
 
           const {uri} = await promise;
@@ -398,7 +400,9 @@ export default class Cam extends Component<Props> {
           if (this.stopRecordRequested || this.motionActionVideo) {
             this.motionActionRunning = false;
             this.motionActionVideo = false;
-            this.sendMessage(this.state.connectedTo, 'distantRec', false);
+            if(this.props.recording){
+              this.props.recording(false);
+            }
             this.setState({isRecording: false});
           }
           else {
@@ -406,9 +410,8 @@ export default class Cam extends Component<Props> {
           }
 
           // Store video thumb.
-          RNThumbnail.get(path).then((result) => {
-            // TODO: folder accordering to collection/session folder
-            const thumbDest = this.state.storage + '/thumb/' + filename + '.jpg';
+          RNThumbnail.get(filename).then((result) => {
+            const thumbDest = filename.replace('.mp4', '.jpg');
             
             RNFetchBlob.fs.mv(
               result.path.replace('file://',''),
@@ -422,9 +425,10 @@ export default class Cam extends Component<Props> {
         }
       }
       catch (err) {
+        console.log(err);
         alert(JSON.stringify({'recording error':err}, undefined, 2));
         this.setState({isRecording:false});
-        this.sendMessage(this.state.connectedTo, 'distantRec', false);
+     // TODO:   this.sendMessage(this.state.connectedTo, 'distantRec', false);
       }
     }
   };
