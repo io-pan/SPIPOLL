@@ -1,4 +1,5 @@
-import React, { Component } from 'react'
+import React, { Component } from 'react';
+import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import {
   Alert,
   StyleSheet,
@@ -17,8 +18,9 @@ import {
   NetInfo,
   CheckBox,
   NativeModules,
-} from 'react-native'
+} from 'react-native';
 
+import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import FooterImage from './footerimage';
@@ -33,26 +35,104 @@ import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 
 // Spipoll data.
 import { insectList } from './insects.js';
+import { criteria } from './criteres.js';
 import { colors } from './colors';
 
 
 //=========================================================================================
-class taxonModal extends Component {
+class TaxonModal extends Component {
 //-----------------------------------------------------------------------------------------
 
   constructor(props) {
     super(props);
 
     this.state = {
-      visible:false;
+      visible:false,
+      step:1,
+      pictos:[],
     }
+
+//img/criteres/pictos
+    if (__DEV__) {
+      this.footer_source = { uri: `${resolveAssetSource(require('../img/footer.png')).uri}` };
+    } else {
+      this.footer_source = {uri: 'asset:/img/footer.png'};
+    }
+  }
+
+  componentDidMount(){
+        console.log(insectList);
+    console.log(criteria);
+    this.getPictos(this.state.step);
+  }
+
+  imgSource(path){
+    //criteres/pictos/1-0.png
+    if (__DEV__) {
+      // this.footer_source = { uri: `${resolveAssetSource(require('../img/criteres/pictos/1-1.png')).uri}` };
+this.footer_source = { uri:'../img/criteres/pictos/1-1.png' };
+  return {uri: 'asset:/img/'+path};
+      return this.footer_source ;
+    } else {
+      return {uri: 'asset:/img/'+path};
+    }
+  }
+
+  getPictos(step){  
+
+
+    const sources = [];
+
+
+    // RNFetchBlob.ls(this.imgSource(dir))
+    // .then((files) => {
+    // });
+
+    // RNFetchBlob.fs.ls(dir)
+    // .then((files) => {
+console.log( criteria[step].values);
+
+for (var key in criteria[step].values) {
+    // skip loop if the property is from prototype
+    if (!criteria[step].values.hasOwnProperty(key)) continue;
+
+    // var obj = criteria[step].values[key];
+  
+  sources.push(this.imgSource('criteres/pictos/'+step+'-'+key+'.png'));
+}
+
+      // criteria[step].values.forEach( (crit)=> {
+      //     sources.push({uri: this.imgSource('criteres/pictos/'+step+'-'+crit+'.jpg')});
+      // });
+
+// console.log(files);
+
+      // if(files.length){
+      //   files.sort();
+
+      //   files.forEach((filename)=> {
+      //     sources.push(this.imgSource('criteres/pictos/'+filename));
+      //   });
+      // }
+
+      console.log(sources)
+      this.setState({pictos:sources})
+    // });  
+  // }
+  }
+
+  show(){
+    this.setState({visible:true});
+  }
+
+  hide(){
+    this.setState({visible:false});
   }
 
   render(){
     return (
    <Modal
         onRequestClose={() => this.hide()}
-        {...modal}
         visible={this.state.visible}
         >
 
@@ -60,7 +140,7 @@ class taxonModal extends Component {
             style={{
               height:55, flexDirection:'row', 
               justifyContent:'center', alignItems:'center',
-              backgroundColor:this.props.highlightColor
+              backgroundColor:colors.greenFlash,
               }}
             >
             <TouchableOpacity 
@@ -95,8 +175,18 @@ class taxonModal extends Component {
           
           <View style={{flex:1}}>
 
+            { this.state.pictos.map((value, index) => {
+                
+                return (
+                  <Image
+                    key={index}
+                     source={value} style={{width:200, height:200}} 
 
-          
+                      resizeMode="contain"/>
+                );
+               
+            })}
+
           </View>
  
       </Modal>
@@ -183,10 +273,6 @@ export default class InsectForm extends Component {
     }
   }
 
-  showTaxonModal = () => {
-    this.refs['modal-insect-list'].show();
-  }
-
   render(){
     console.log('render InsectForm', this.state);
     return(
@@ -218,7 +304,7 @@ export default class InsectForm extends Component {
                     padding:1,
                     flexDirection:'row',
                     backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}}
-                  onPress={this.showTaxonModal}
+                  onPress={() => this.refs['modal-insect-list'].show()}
                   >
                   <View
                     style={{ justifyContent:'center', alignItems:'center',
@@ -258,6 +344,41 @@ export default class InsectForm extends Component {
                   onEndEditing = {(event) => this.storeInsect('taxon_extra_info',event.nativeEvent.text) } 
                   onSubmitEditing = {(event) => this.storeInsect('taxon_extra_info', event.nativeEvent.text) }                        
                 />
+
+                <TouchableOpacity 
+                  style={{
+                    marginBottom:10,
+                    padding:1,
+                    flexDirection:'row',
+                    backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}}
+                    onPress={()=>this.refs['modal-taxon-search'].show()}
+                  >
+                  <View
+                    style={{ justifyContent:'center', alignItems:'center',
+                      backgroundColor:colors.greenFlash,
+                       padding:5, marginRight:5,
+                      }}
+                    >
+                    <MaterialCommunityIcons
+                      name="bug" //table-search 
+                      style={{ color:'white',backgroundColor:colors.greenFlash }}
+                      size={22}
+                    />
+                  </View>
+                  <Text style={{
+                    flex:1,
+                    padding:5,
+                    fontSize:14,
+                    backgroundColor:'white',
+                    color:this.state.insect.taxon_list_id_list?colors.greenFlash:'grey'
+                    }}>
+                    { this.state.insect.taxon_list_id_list
+                      ? this.state.insect.taxon_name
+                      : "Outil d'ident." 
+                    }
+                  </Text>
+                </TouchableOpacity>  
+                <TaxonModal ref={"modal-taxon-search"}/>
 
                 <TextInput
                   placeholder='Commentaire'
