@@ -1,5 +1,4 @@
 import React, { Component } from 'react';
-import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource';
 import {
   Alert,
   StyleSheet,
@@ -20,7 +19,6 @@ import {
   NativeModules,
 } from 'react-native';
 
-import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import FooterImage from './footerimage';
@@ -48,78 +46,135 @@ class TaxonModal extends Component {
 
     this.state = {
       visible:false,
-      step:1,
-      pictos:[],
-    }
+      curCrit_id:'1',
+      curCrit:criteria['1'],
+      selectedCrit_ids:[],
+      remainings:insectList,
 
-//img/criteres/pictos
-    if (__DEV__) {
-      this.footer_source = { uri: `${resolveAssetSource(require('../img/footer.png')).uri}` };
-    } else {
-      this.footer_source = {uri: 'asset:/img/footer.png'};
+      remainingsCrit:[],
     }
+    this.pastCrit=[];
+    this.pastCrit_ids=[];
+    this.pastCrit_valkey=[];
+    this.pastCrit_valkey=[];
   }
 
   componentDidMount(){
-        console.log(insectList);
+    console.log(insectList);
     console.log(criteria);
-    this.getPictos(this.state.step);
+    this.selectCrit(this.state.curCrit_id);
   }
 
-  imgSource(path){
-    //criteres/pictos/1-0.png
-    if (__DEV__) {
-      // this.footer_source = { uri: `${resolveAssetSource(require('../img/criteres/pictos/1-1.png')).uri}` };
-this.footer_source = { uri:'../img/criteres/pictos/1-1.png' };
-  return {uri: 'asset:/img/'+path};
-      return this.footer_source ;
-    } else {
-      return {uri: 'asset:/img/'+path};
+  selectCrit(id){
+    this.setState({
+      curCrit_id:id,
+      curCrit:criteria[id]
+    });
+  }
+
+
+  addCrit(crit_val_id, crit_val_key){
+alert(crit_val_id + ' ' +crit_val_key);
+
+    this.pastCrit_ids.push(this.state.curCrit_id);
+    this.pastCrit_valkey.push([crit_val_key]); // TODO: possible multi select
+
+    this.pastCrit_valkey[this.state.curCrit_id] = [crit_val_key];// to check crits
+    this.pastCrit[this.state.curCrit_id] = [crit_val_id];// to check insect//TODO: possible multi select
+
+
+    // Get remainings insects (that fit all set crits).
+    // ex: crit:[{cid:0,stat:[5,6,7,8]},
+    //      {cid:1,stat:[13]},
+    //      {cid:2,stat:[19]},
+    //      {cid:68,stat:[272,273,274]},
+    // if crit 68 is set, one of past crit values must be one of 272, 273, 274.
+
+    // console.log('remainings insects');
+    let remainings = [];
+    insectList.forEach((i) => {
+      let condOK = true;
+      i.crit.forEach((ic) => {
+
+        // console.log('crit '+ic.cid + ':' , criteria[''+ic.cid].name);
+        // console.log(this.pastCrit_ids)
+
+        if(this.pastCrit_ids.indexOf(''+ic.cid) != -1 ){
+          // console.log();
+          // Array intersection.
+          const inter = ic.stat.filter(value => -1 !== this.pastCrit[ic.cid].indexOf(value));
+          if(!inter.length){    
+            condOK = false;
+            // break;
+          }
+        }
+        else{
+           // console.log('no');
+        }
+
+      });
+      if(condOK){
+        remainings.push(i);
+      }
+    });
+
+
+    // Get newly available criteria.
+
+
+    let remainingsCrit = [];
+    for (var key in criteria) {
+      // Go on if that crit has already been set.
+      if (!criteria.hasOwnProperty(key)
+      || this.pastCrit_ids.indexOf(key)!=-1) continue;
+
+      const cond = criteria[key].condition;
+      console.log('crit name',criteria[key].name);
+      console.log('crit cond',cond);
+      // All conditions must be true ...
+          // ex: condition = {'2':[0], '3':[0,2]},
+          // crit 2 must be 0  AND  crit 3 must be 0 or 2
+      let condOK = true;
+      if(cond){
+        for (var c in cond) {
+          if (!cond.hasOwnProperty(c)) continue;
+
+          // false if Condition has a crit that we haven't set yet.
+          if(this.pastCrit_ids.indexOf(c) == -1) {
+            condOK = false;
+            break;
+          }
+
+          // false if (one or more) past crit do not fit condition.
+          else {
+            // Array intersection.
+            const inter = cond[c].filter(value => -1 !== this.pastCrit_valkey[c].indexOf(value));
+            if(!inter.length){    
+              condOK = false;
+              break;
+            }
+          }
+        }        
+      }
+      if(condOK){
+        remainingsCrit.push({...criteria[key], id:key});
+      }
+
     }
+    // TODO: remove crit that are not part of remaining insects.
+
+
+    const selectedCrit_ids = this.state.selectedCrit_ids;
+    selectedCrit_ids.push(crit_val_id);
+    this.setState({
+      curCrit_id:false,
+      curCrit: false,
+      selectedCrit_ids:selectedCrit_ids,
+      remainings:remainings,
+      remainingsCrit:remainingsCrit,
+    });
   }
 
-  getPictos(step){  
-
-
-    const sources = [];
-
-
-    // RNFetchBlob.ls(this.imgSource(dir))
-    // .then((files) => {
-    // });
-
-    // RNFetchBlob.fs.ls(dir)
-    // .then((files) => {
-console.log( criteria[step].values);
-
-for (var key in criteria[step].values) {
-    // skip loop if the property is from prototype
-    if (!criteria[step].values.hasOwnProperty(key)) continue;
-
-    // var obj = criteria[step].values[key];
-  
-  sources.push(this.imgSource('criteres/pictos/'+step+'-'+key+'.png'));
-}
-
-      // criteria[step].values.forEach( (crit)=> {
-      //     sources.push({uri: this.imgSource('criteres/pictos/'+step+'-'+crit+'.jpg')});
-      // });
-
-// console.log(files);
-
-      // if(files.length){
-      //   files.sort();
-
-      //   files.forEach((filename)=> {
-      //     sources.push(this.imgSource('criteres/pictos/'+filename));
-      //   });
-      // }
-
-      console.log(sources)
-      this.setState({pictos:sources})
-    // });  
-  // }
-  }
 
   show(){
     this.setState({visible:true});
@@ -130,6 +185,12 @@ for (var key in criteria[step].values) {
   }
 
   render(){
+    console.log('render modal-taxon-search');
+  
+    console.log('this.state.curCrit_id',this.state.curCrit_id)
+    console.log('this.state.curCrit', this.state.curCrit);
+    // console.log(Object.entries(this.state.curCrit.values));
+
     return (
    <Modal
         onRequestClose={() => this.hide()}
@@ -168,26 +229,181 @@ for (var key in criteria[step].values) {
                 fontSize:18, fontWeight:'bold', textAlign:'center', 
                 color:'white', 
               }}>
-               titre</Text>
+               Reste: {this.state.remainings.length}</Text>
             </View>
-
           </View>
           
-          <View style={{flex:1}}>
 
-            { this.state.pictos.map((value, index) => {
-                
-                return (
-                  <Image
-                    key={index}
-                     source={value} style={{width:200, height:200}} 
+          <View // Photo to be indetified.
+            // TODO zoomable.
+            style={{flexDirection:'row'}}>
+            <Image 
+              source={this.props.source}
+              resizeMode="contain"
+              style={{
+                width: Dimensions.get('window').width/2, 
+                height: Dimensions.get('window').width/2 }}
+            />
 
-                      resizeMode="contain"/>
-                );
-               
-            })}
-
+            <View 
+              // remainigs insects.
+              >
+            </View>
           </View>
+
+          { this.pastCrit_ids.length <1 ? null :
+          <View
+            // Past selected criteria.
+            style={{}}
+            >
+            <Text style={{
+              color:'white',
+              backgroundColor:colors.greenFlash,
+              fontWeight:'bold', fontSize:16,
+              color:'white', textAlign:'center', padding:5
+              }}>
+              Historique
+            </Text>
+
+            { this.pastCrit_ids.map((value, key)=>
+              <View key={key}
+                style={{paddingLeft:10,paddingRight:10,paddingTop:5}}
+                >
+                <Text style={{fontWeight:'bold'}}>
+                  {criteria[value].name + ' '} 
+                  <Text style={{fontWeight:'normal'}}>
+                    {criteria[value].values[this.pastCrit_valkey[key]].name}
+                  </Text>
+                </Text>
+              </View>           
+            )}
+          </View>
+          }
+
+          { // Current criteria description.
+            this.state.curCrit !== false
+            ? <View style={{flexDirection:'row', backgroundColor:colors.greenFlash}}>
+                <Image
+                  source={{uri:'asset:/img/criteres/pictos/'
+                    + this.state.curCrit_id + '.png'}}
+                  style={{
+                    width: Dimensions.get('window').width/4,
+                    height: Dimensions.get('window').width/4 }} 
+                  resizeMode="contain"
+                />
+                <View style={{flex:1, paddingRight:15, }}>
+                  <Text style={{
+                    color:'white',
+                    // textAlign:'center',
+                    fontWeight:'bold', 
+                    fontSize:16,
+                    }}>
+                    {this.state.curCrit.name + ' '}
+                    <Text 
+                      style={{
+                        fontSize:14,
+                        fontWeight:'normal', 
+                        color:'white',
+                      }}>
+                      {this.state.curCrit.detail}
+                      </Text>
+                  </Text>
+
+
+                </View>
+              </View>
+
+            : <View>
+                <Text style={{
+                  padding:5,
+                  backgroundColor:colors.greenFlash,
+                  color:'white',
+                  textAlign:'center',
+                  fontWeight:'bold', 
+                  fontSize:16,
+                  }}>
+                  Sélectionnez un critère:
+                  </Text>
+              </View>
+            }
+
+
+          <ScrollView horizontal style={{flex:1}}>
+
+            { !this.state.curCrit
+              ? // Choose a criteria.
+                this.state.remainingsCrit.map((value, key)=>{
+                  return (
+                    <TouchableOpacity 
+                      key={key}
+                      style={{
+                        width:100, alignItems:'center',
+                        borderRightWidth:1, borderRightColor:'white',
+                      }}
+                      onPress={()=> this.selectCrit(value.id)}
+                      >
+                      <Image
+                        source={{uri:'asset:/img/'
+                          +'criteres/pictos/'
+                          + value.id
+                          +'.png'}}
+                        style={{width:100, height:100,
+                        backgroundColor:colors.greenFlash}} 
+                        resizeMode="contain"
+                      />
+                      <Text style={{fontWeight:'bold',textAlign:'center'}}>
+                      {value.id}
+                      </Text>
+
+                      <Text style={{fontWeight:'bold',textAlign:'center'}}>
+                      {value.name}
+                      </Text>
+                      <Text>
+                      {value.detail}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })
+
+              : // Criteria choosen => output criteria values.
+                Object.entries(this.state.curCrit.values).map((value, key) => {
+                // this.state.curCrit.values((value, index) => {
+
+                  value=value[1];
+                  // console.log(key)
+                  // console.log(value)
+
+                  return (
+                    <TouchableOpacity 
+                      key={key}
+                      style={{
+                        width:100, alignItems:'center',
+                        borderRightWidth:1, borderRightColor:'white',
+                      }}
+                      onPress={()=>this.addCrit(value.id, key)}
+                      >
+                      <Image
+                        source={{uri:'asset:/img/'
+                          +'criteres/pictos/'
+                          +this.state.curCrit_id
+                          +'-'
+                          + key //value.id
+                          +'.png'}}
+                        style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                        resizeMode="contain"
+                      />
+                      <Text style={{fontWeight:'bold',textAlign:'center'}}>
+                      {value.name}
+                      </Text>
+                      <Text>
+                      {value.detail}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                 
+              })}
+
+          </ScrollView>
  
       </Modal>
     );
@@ -378,7 +594,13 @@ export default class InsectForm extends Component {
                     }
                   </Text>
                 </TouchableOpacity>  
-                <TaxonModal ref={"modal-taxon-search"}/>
+                <TaxonModal 
+                  ref={"modal-taxon-search"}
+                  source= {{uri:'file://'
+                      +this.props.collection_storage + '/insects/'
+                      + this.props.data.date 
+                      + '/' + this.state.insect.photo}}
+                />
 
                 <TextInput
                   placeholder='Commentaire'
