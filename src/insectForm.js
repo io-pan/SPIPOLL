@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-
+import RNFetchBlob from 'rn-fetch-blob';
 import FooterImage from './footerimage';
 // import ImageView from './imageView';
 import ModalFilterPicker from './filterSelect';
@@ -92,6 +92,7 @@ alert(crit_val_id + ' ' +crit_val_key);
 
     // console.log('remainings insects');
     let remainings = [];
+    const insectRemainingCrit={};
     insectList.forEach((i) => {
       let condOK = true;
       i.crit.forEach((ic) => {
@@ -100,7 +101,6 @@ alert(crit_val_id + ' ' +crit_val_key);
         // console.log(this.pastCrit_ids)
 
         if(this.pastCrit_ids.indexOf(''+ic.cid) != -1 ){
-          // console.log();
           // Array intersection.
           const inter = ic.stat.filter(value => -1 !== this.pastCrit[ic.cid].indexOf(value));
           if(!inter.length){    
@@ -108,8 +108,8 @@ alert(crit_val_id + ' ' +crit_val_key);
             // break;
           }
         }
-        else{
-           // console.log('no');
+        else{ // Other crit available. Keep it for later.
+          insectRemainingCrit[ic.cid] = true;
         }
 
       });
@@ -120,8 +120,6 @@ alert(crit_val_id + ' ' +crit_val_key);
 
 
     // Get newly available criteria.
-
-
     let remainingsCrit = [];
     for (var key in criteria) {
       // Go on if that crit has already been set.
@@ -157,11 +155,18 @@ alert(crit_val_id + ' ' +crit_val_key);
         }        
       }
       if(condOK){
-        remainingsCrit.push({...criteria[key], id:key});
+        // Keep crit only if present in remaining insects.
+        if(insectRemainingCrit[key]){
+          remainingsCrit.push({...criteria[key], id:key});       
+
+
+          this.getCriteriaPhoto(key);
+
+        }
       }
 
     }
-    // TODO: remove crit that are not part of remaining insects.
+    
 
 
     const selectedCrit_ids = this.state.selectedCrit_ids;
@@ -175,6 +180,50 @@ alert(crit_val_id + ' ' +crit_val_key);
     });
   }
 
+//this.props.collection_storage + '/insects/' + this.props.data.date 
+
+  getTaxonPhotos(folder_id){
+    RNFetchBlob.fs.ls(folderName)
+    .then((files) => {
+
+      if(files.length){
+        files.sort();
+        return true;
+      }
+
+    });  
+  }
+  getCriteriaPhoto(crit_id){
+    const { fs } = RNFetchBlob;
+ let path =  RNFetchBlob.fs.dirs.DCIMDir;
+     console.log(path);
+fs.ls(
+    path
+).then(data => {
+    console.log(data);
+})    
+.catch((error) => { 
+     console.log('getCrtiPhoto ERROR', error);
+    });
+
+
+    folderName = '/';
+    // let path = RNFetchBlob.fs.asset(folderName)
+
+    // RNFetchBlob.fs.ls(path)
+    // .then((files) => {
+
+    //   if(files.length){
+    //     files.sort();
+    //     console.log('getCrtiPhoto', files)
+    //     return true;
+    //   }
+
+    // })
+    // .catch((error) => { 
+    //  console.log('getCrtiPhoto ERROR', error);
+    // }); 
+  }
 
   show(){
     this.setState({visible:true});
@@ -234,7 +283,7 @@ alert(crit_val_id + ' ' +crit_val_key);
           </View>
           
 
-          <View // Photo to be indetified.
+          <View // Photo to be indentified.
             // TODO zoomable.
             style={{flexDirection:'row'}}>
             <Image 
@@ -245,15 +294,30 @@ alert(crit_val_id + ' ' +crit_val_key);
                 height: Dimensions.get('window').width/2 }}
             />
 
-            <View 
-              // remainigs insects.
-              >
-            </View>
+            <ScrollView horizontal
+              // Remainings insects.
+              > 
+              
+              {this.state.remainings.map((value, index) => //{
+                <View key={index} style={{width:100}}>
+                  <Text style={{fontWeight:'bold'}}>
+                    {value.name + ' '} 
+                    <Text style={{fontWeight:'normal'}}>
+                      {value.label}
+                    </Text>
+                  </Text>
+                </View>
+
+              //}
+              )}
+
+              
+            </ScrollView>
           </View>
 
-          { this.pastCrit_ids.length <1 ? null :
+          { // Past selected criteria.
+          this.pastCrit_ids.length <1 ? null :
           <View
-            // Past selected criteria.
             style={{}}
             >
             <Text style={{
@@ -495,6 +559,7 @@ export default class InsectForm extends Component {
         <ScrollView style={{flex:1}}>
 
               <View style={styles.collection_grp}>
+                <View style={{flexDirection:'row', justifyContent:'center', alignItems:'center'}}>
                 <ImagePicker
                   key="collection-insect"
                   title={this.state.insect.taxon_extra_info || this.state.insect.taxon_name || 'Non identifiée' }
@@ -504,13 +569,14 @@ export default class InsectForm extends Component {
                     highlightColor:colors.greenFlash,
                     badColor:colors.purple,
                     title:{fontSize:14, height:50, textAlign:'center',  padding:2},
-                    container:{marginRight:5, flex:1, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
+                    container:{marginRight:5, flex:0.75, padding:5, borderWidth:1, borderColor:'lightgrey', backgroundColor:'white'}
                   }}
 
                   path={this.props.collection_storage + '/insects/' + this.props.data.date }
                   filename={this.state.insect.photo}
                   onSelect={(filename)=>this.storeInsect('photo', filename)}
                 />
+                </View>
               </View>
 
               <View style={styles.collection_grp}>
