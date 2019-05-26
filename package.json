@@ -12,6 +12,7 @@
     "react-native-bluetooth-cross-platform": "0.0.9",
     "react-native-camera": "^1.10.1",
     "react-native-elements": "^1.0.0",
+    "react-native-fs": "^2.13.3",
     "react-native-image-pan-zoom": "^2.1.11",
     "react-native-image-zoom-viewer": "^2.2.25",
     "react-native-keep-screen-on": "^1.2.0",

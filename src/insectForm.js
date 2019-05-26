@@ -20,7 +20,7 @@ import {
 } from 'react-native';
 
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import RNFetchBlob from 'rn-fetch-blob';
+import RNFS  from'react-native-fs';
 import FooterImage from './footerimage';
 // import ImageView from './imageView';
 import ModalFilterPicker from './filterSelect';
@@ -46,8 +46,8 @@ class TaxonModal extends Component {
 
     this.state = {
       visible:false,
-      curCrit_id:'1',
-      curCrit:criteria['1'],
+      curCrit_id:false,
+      curCrit:false,
       selectedCrit_ids:[],
       remainings:insectList,
 
@@ -60,22 +60,56 @@ class TaxonModal extends Component {
   }
 
   componentDidMount(){
-    console.log(insectList);
-    console.log(criteria);
-    this.selectCrit(this.state.curCrit_id);
+    this.selectCrit('1');
   }
 
-  selectCrit(id){
+
+  async selectCrit(id){
+
+
+
+         // Get current criteria photos.
+
+          //    /img/criteres/photos/750/etat_750_01&1376208047518
+          // this.critPhotos[key]= this.getCriteriaPhoto(key);
+          const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
+          const critPhotos = {};
+          files.forEach((f)=>{
+            if(f.isFile){
+              // Get crit values.
+              let sub = f.name.substring(0,11).split('_');
+              sub = ''+(parseInt(sub[2],10)-1); // remove leading 0.
+              if(typeof critPhotos[sub] == 'undefined'){
+               critPhotos[sub] = [];
+              }
+             critPhotos[sub].push(f.path);
+            }
+//             {
+//   name: string;     // The name of the item
+//   path: string;     // The absolute path to the item
+//   size: string;     // Size in bytes.
+//               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
+//               // `size` will be set to -1 in this case.
+//   isFile: () => boolean;        // Is the file just a file?
+//   isDirectory: () => boolean;   // Is the file a directory?
+// };
+
+          });
+      
+
     this.setState({
       curCrit_id:id,
-      curCrit:criteria[id]
+      curCrit:{...criteria[id],
+        photos:critPhotos,
+      },
     });
   }
 
 
-  addCrit(crit_val_id, crit_val_key){
-alert(crit_val_id + ' ' +crit_val_key);
+   addCrit(crit_val_id, crit_val_key) {
 
+    alert(crit_val_id + ' ' +crit_val_key);
+    this.critPhotos = {};
     this.pastCrit_ids.push(this.state.curCrit_id);
     this.pastCrit_valkey.push([crit_val_key]); // TODO: possible multi select
 
@@ -158,9 +192,36 @@ alert(crit_val_id + ' ' +crit_val_key);
         // Keep crit only if present in remaining insects.
         if(insectRemainingCrit[key]){
           remainingsCrit.push({...criteria[key], id:key});       
+       
 
+//           // Get current criteria photos.
 
-          this.getCriteriaPhoto(key);
+//           //    /img/criteres/photos/750/etat_750_01&1376208047518
+//           // this.critPhotos[key]= this.getCriteriaPhoto(key);
+//           const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[key].photo_etat);
+//           this.critPhotos[key] = {};
+//           files.forEach((f)=>{
+//             if(f.isFile){
+//               // Get crit values.
+//               let sub = f.name.substring(0,11).split('_');
+//               sub = ''+parseInt(sub[2]); // remove leading 0.
+//               if(typeof  this.critPhotos[key][sub] == 'undefined'){
+//                 this.critPhotos[key][sub] = [];
+//               }
+//               this.critPhotos[key][sub].push(f.path);
+//             }
+// //             {
+// //   name: string;     // The name of the item
+// //   path: string;     // The absolute path to the item
+// //   size: string;     // Size in bytes.
+// //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
+// //               // `size` will be set to -1 in this case.
+// //   isFile: () => boolean;        // Is the file just a file?
+// //   isDirectory: () => boolean;   // Is the file a directory?
+// // };
+
+//           });
+      
 
         }
       }
@@ -183,46 +244,7 @@ alert(crit_val_id + ' ' +crit_val_key);
 //this.props.collection_storage + '/insects/' + this.props.data.date 
 
   getTaxonPhotos(folder_id){
-    RNFetchBlob.fs.ls(folderName)
-    .then((files) => {
 
-      if(files.length){
-        files.sort();
-        return true;
-      }
-
-    });  
-  }
-  getCriteriaPhoto(crit_id){
-    const { fs } = RNFetchBlob;
- let path =  RNFetchBlob.fs.dirs.DCIMDir;
-     console.log(path);
-fs.ls(
-    path
-).then(data => {
-    console.log(data);
-})    
-.catch((error) => { 
-     console.log('getCrtiPhoto ERROR', error);
-    });
-
-
-    folderName = '/';
-    // let path = RNFetchBlob.fs.asset(folderName)
-
-    // RNFetchBlob.fs.ls(path)
-    // .then((files) => {
-
-    //   if(files.length){
-    //     files.sort();
-    //     console.log('getCrtiPhoto', files)
-    //     return true;
-    //   }
-
-    // })
-    // .catch((error) => { 
-    //  console.log('getCrtiPhoto ERROR', error);
-    // }); 
   }
 
   show(){
@@ -282,7 +304,7 @@ fs.ls(
             </View>
           </View>
           
-
+        <ScrollView>
           <View // Photo to be indentified.
             // TODO zoomable.
             style={{flexDirection:'row'}}>
@@ -434,10 +456,12 @@ fs.ls(
                 // this.state.curCrit.values((value, index) => {
 
                   value=value[1];
-                  // console.log(key)
-                  // console.log(value)
-
+                  console.log(key)
+                  console.log(value)
+           console.log(this.state.curCrit.photos);
+                       
                   return (
+     
                     <TouchableOpacity 
                       key={key}
                       style={{
@@ -446,6 +470,7 @@ fs.ls(
                       }}
                       onPress={()=>this.addCrit(value.id, key)}
                       >
+                      
                       <Image
                         source={{uri:'asset:/img/'
                           +'criteres/pictos/'
@@ -462,13 +487,28 @@ fs.ls(
                       <Text>
                       {value.detail}
                       </Text>
+
+                      <Text> Examples: </Text>
+                      { // Criteria value photo sample.
+                        // TODO: zoom.
+                        this.state.curCrit.photos[key].map((path, pathindex)=>
+                          <Image
+                            key={pathindex}
+                            source={{uri:'asset:/'+path}}
+                            style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                            resizeMode="contain"
+                          /> 
+                        )
+                      }  
+
+                      
                     </TouchableOpacity>
                   );
                  
               })}
 
           </ScrollView>
- 
+                </ScrollView>
       </Modal>
     );
   }
