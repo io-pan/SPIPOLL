@@ -55,8 +55,8 @@ class TaxonModal extends Component {
     }
     this.pastCrit=[];
     this.pastCrit_ids=[];
-    this.pastCrit_valkey=[];
-    this.pastCrit_valkey=[];
+    this.pastCrit_valkey={};
+    // this.pastCrit_valkey=[];
   }
 
   componentDidMount(){
@@ -65,14 +65,13 @@ class TaxonModal extends Component {
 
 
   async selectCrit(id){
-
-
-
+    console.log('selectCrit', id);
          // Get current criteria photos.
 
           //    /img/criteres/photos/750/etat_750_01&1376208047518
           // this.critPhotos[key]= this.getCriteriaPhoto(key);
           const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
+          files.sort();
           const critPhotos = {};
           files.forEach((f)=>{
             if(f.isFile){
@@ -84,16 +83,15 @@ class TaxonModal extends Component {
               }
              critPhotos[sub].push(f.path);
             }
-//             {
-//   name: string;     // The name of the item
-//   path: string;     // The absolute path to the item
-//   size: string;     // Size in bytes.
-//               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
-//               // `size` will be set to -1 in this case.
-//   isFile: () => boolean;        // Is the file just a file?
-//   isDirectory: () => boolean;   // Is the file a directory?
-// };
-
+                    //             {
+                    //   name: string;     // The name of the item
+                    //   path: string;     // The absolute path to the item
+                    //   size: string;     // Size in bytes.
+                    //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
+                    //               // `size` will be set to -1 in this case.
+                    //   isFile: () => boolean;        // Is the file just a file?
+                    //   isDirectory: () => boolean;   // Is the file a directory?
+                    // };
           });
       
 
@@ -106,12 +104,11 @@ class TaxonModal extends Component {
   }
 
 
-   addCrit(crit_val_id, crit_val_key) {
+  async addCrit(crit_val_id, crit_val_key) {
 
-    alert(crit_val_id + ' ' +crit_val_key);
     this.critPhotos = {};
     this.pastCrit_ids.push(this.state.curCrit_id);
-    this.pastCrit_valkey.push([crit_val_key]); // TODO: possible multi select
+    // this.pastCrit_valkey.push([crit_val_key]); // TODO: possible multi select
 
     this.pastCrit_valkey[this.state.curCrit_id] = [crit_val_key];// to check crits
     this.pastCrit[this.state.curCrit_id] = [crit_val_id];// to check insect//TODO: possible multi select
@@ -127,9 +124,10 @@ class TaxonModal extends Component {
     // console.log('remainings insects');
     let remainings = [];
     const insectRemainingCrit={};
-    insectList.forEach((i) => {
+    for (const i of insectList) {
+      
       let condOK = true;
-      i.crit.forEach((ic) => {
+      for (const ic of i.crit) {
 
         // console.log('crit '+ic.cid + ':' , criteria[''+ic.cid].name);
         // console.log(this.pastCrit_ids)
@@ -139,19 +137,42 @@ class TaxonModal extends Component {
           const inter = ic.stat.filter(value => -1 !== this.pastCrit[ic.cid].indexOf(value));
           if(!inter.length){    
             condOK = false;
-            // break;
+            break;
           }
         }
         else{ // Other crit available. Keep it for later.
           insectRemainingCrit[ic.cid] = true;
         }
 
-      });
+      };
+
       if(condOK){
+       // Get insect  photos.
+       const photos = [];
+       let firstPhoto = false;
+        // /img/taxons_photos/[id]/taxon_04800&....
+        // this.critPhotos[key]= this.getCriteriaPhoto(key);
+        const files = await RNFS.readDirAssets('img/taxons_photos/' + i.id);
+        files.sort();
+        files.forEach((f)=>{
+          if(f.isFile){
+            if(f.path.indexOf('_01')){
+              firstPhoto = f.path;
+            }
+            else{
+              photos.push(f.path);
+            }
+          }
+        });
+        if(firstPhoto){
+          photos.unshift(firstPhoto);
+        }
+
+        i.photos=photos;
         remainings.push(i);
       }
-    });
-
+    };
+    // console.log(remainings);
 
     // Get newly available criteria.
     let remainingsCrit = [];
@@ -161,7 +182,7 @@ class TaxonModal extends Component {
       || this.pastCrit_ids.indexOf(key)!=-1) continue;
 
       const cond = criteria[key].condition;
-      console.log('crit name',criteria[key].name);
+      console.log('crit name',criteria[key]);
       console.log('crit cond',cond);
       // All conditions must be true ...
           // ex: condition = {'2':[0], '3':[0,2]},
@@ -192,43 +213,9 @@ class TaxonModal extends Component {
         // Keep crit only if present in remaining insects.
         if(insectRemainingCrit[key]){
           remainingsCrit.push({...criteria[key], id:key});       
-       
-
-//           // Get current criteria photos.
-
-//           //    /img/criteres/photos/750/etat_750_01&1376208047518
-//           // this.critPhotos[key]= this.getCriteriaPhoto(key);
-//           const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[key].photo_etat);
-//           this.critPhotos[key] = {};
-//           files.forEach((f)=>{
-//             if(f.isFile){
-//               // Get crit values.
-//               let sub = f.name.substring(0,11).split('_');
-//               sub = ''+parseInt(sub[2]); // remove leading 0.
-//               if(typeof  this.critPhotos[key][sub] == 'undefined'){
-//                 this.critPhotos[key][sub] = [];
-//               }
-//               this.critPhotos[key][sub].push(f.path);
-//             }
-// //             {
-// //   name: string;     // The name of the item
-// //   path: string;     // The absolute path to the item
-// //   size: string;     // Size in bytes.
-// //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
-// //               // `size` will be set to -1 in this case.
-// //   isFile: () => boolean;        // Is the file just a file?
-// //   isDirectory: () => boolean;   // Is the file a directory?
-// // };
-
-//           });
-      
-
         }
       }
-
     }
-    
-
 
     const selectedCrit_ids = this.state.selectedCrit_ids;
     selectedCrit_ids.push(crit_val_id);
@@ -239,12 +226,6 @@ class TaxonModal extends Component {
       remainings:remainings,
       remainingsCrit:remainingsCrit,
     });
-  }
-
-//this.props.collection_storage + '/insects/' + this.props.data.date 
-
-  getTaxonPhotos(folder_id){
-
   }
 
   show(){
@@ -262,6 +243,7 @@ class TaxonModal extends Component {
     console.log('this.state.curCrit', this.state.curCrit);
     // console.log(Object.entries(this.state.curCrit.values));
 
+// TODO ERRO map of undefined crit 10 motifs sur élytres
     return (
    <Modal
         onRequestClose={() => this.hide()}
@@ -320,14 +302,67 @@ class TaxonModal extends Component {
               // Remainings insects.
               > 
               
-              {this.state.remainings.map((value, index) => //{
+              { this.state.remainings.map((value, index) => // {
                 <View key={index} style={{width:100}}>
+                    <Text style={{fontWeight:'normal'}}>
+                      {value.id}
+                    </Text>
                   <Text style={{fontWeight:'bold'}}>
                     {value.name + ' '} 
                     <Text style={{fontWeight:'normal'}}>
                       {value.label}
                     </Text>
                   </Text>
+
+                  { // Insect photo sample.
+                    // TODO: zoom.
+
+                  // all photos
+                    !value.photos 
+                    ? null 
+                    : value.photos.map((path, pathindex)=>{
+                      if(this.state.remainings.length>10){
+                        if(path.indexOf('_01')!=-1){
+                          return(
+                            <Image
+                              key={pathindex}
+                              source={{uri:'asset:/'+path}}
+                              style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                              resizeMode="contain"
+                            /> 
+                          );
+                        }
+                      }
+                      else{
+                        return(
+                            <Image
+                              key={pathindex}
+                              source={{uri:'asset:/'+path}}
+                              style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                              resizeMode="contain"
+                            /> 
+                        );
+                      }
+
+                    })
+
+                    // !value.photos 
+                    // ? null 
+                    // : this.state.remainings.length > 10
+                    //   ? <Image
+                    //       source={{uri:'asset:/'+value.photos[0]}}
+                    //       style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                    //       // resizeMode="contain"
+                    //     /> 
+                    //   : value.photos.map((path, pathindex)=>
+                    //       <Image
+                    //         key={pathindex}
+                    //         source={{uri:'asset:/'+path}}
+                    //         style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                    //         // resizeMode="contain"
+                    //       /> 
+                    //     )
+                    // }
                 </View>
 
               //}
@@ -351,17 +386,27 @@ class TaxonModal extends Component {
               Historique
             </Text>
 
-            { this.pastCrit_ids.map((value, key)=>
-              <View key={key}
-                style={{paddingLeft:10,paddingRight:10,paddingTop:5}}
-                >
-                <Text style={{fontWeight:'bold'}}>
-                  {criteria[value].name + ' '} 
-                  <Text style={{fontWeight:'normal'}}>
-                    {criteria[value].values[this.pastCrit_valkey[key]].name}
+            { this.pastCrit_ids.map((value, key)=>{
+              // console.log(key);
+              // console.log(criteria[value].name);
+              // console.log(criteria[value].values);
+
+              // console.log(this.pastCrit_valkey);
+              // console.log(criteria[value].values[this.pastCrit_valkey[key]])
+              return(
+                <View key={key}
+                  style={{paddingLeft:10,paddingRight:10,paddingTop:5}}
+                  >
+                  <Text style={{fontWeight:'bold'}}>
+                    {criteria[value].name + ' '} 
+                    <Text style={{fontWeight:'normal'}}>
+                      {criteria[value].values[this.pastCrit_valkey[key]].name}
+                    </Text>
                   </Text>
-                </Text>
-              </View>           
+                </View>
+              );
+
+              }    
             )}
           </View>
           }
@@ -456,9 +501,9 @@ class TaxonModal extends Component {
                 // this.state.curCrit.values((value, index) => {
 
                   value=value[1];
-                  console.log(key)
-                  console.log(value)
-           console.log(this.state.curCrit.photos);
+                  // console.log(key)
+                  // console.log(value)
+                  // console.log(this.state.curCrit.photos);
                        
                   return (
      
@@ -479,7 +524,7 @@ class TaxonModal extends Component {
                           + key //value.id
                           +'.png'}}
                         style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
-                        resizeMode="contain"
+                        // resizeMode="contain"
                       />
                       <Text style={{fontWeight:'bold',textAlign:'center'}}>
                       {value.name}
