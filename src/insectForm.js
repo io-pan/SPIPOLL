@@ -71,29 +71,30 @@ class TaxonModal extends Component {
 
           //    /img/criteres/photos/750/etat_750_01&1376208047518
           // this.critPhotos[key]= this.getCriteriaPhoto(key);
-          const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
-          files.sort();
-          const critPhotos = {};
-          files.forEach((f)=>{
-            if(f.isFile){
-              // Get crit values.
-              let sub = f.name.substring(0,11).split('_');
-              sub = ''+(parseInt(sub[2],10)-1); // remove leading 0.
-              if(typeof critPhotos[sub] == 'undefined'){
-               critPhotos[sub] = [];
-              }
-             critPhotos[sub].push(f.path);
-            }
-                    //             {
-                    //   name: string;     // The name of the item
-                    //   path: string;     // The absolute path to the item
-                    //   size: string;     // Size in bytes.
-                    //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
-                    //               // `size` will be set to -1 in this case.
-                    //   isFile: () => boolean;        // Is the file just a file?
-                    //   isDirectory: () => boolean;   // Is the file a directory?
-                    // };
-          });
+  
+    const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
+    files.sort();
+    const critPhotos = {};
+    files.forEach((f)=>{
+      if(f.isFile){
+        // Get crit values.
+        let sub = f.name.substring(0,11).split('_');
+        sub = ''+(parseInt(sub[2],10)-1); // remove leading 0.
+        if(typeof critPhotos[sub] == 'undefined'){
+         critPhotos[sub] = [];
+        }
+       critPhotos[sub].push(f.path);
+      }
+              //             {
+              //   name: string;     // The name of the item
+              //   path: string;     // The absolute path to the item
+              //   size: string;     // Size in bytes.
+              //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
+              //               // `size` will be set to -1 in this case.
+              //   isFile: () => boolean;        // Is the file just a file?
+              //   isDirectory: () => boolean;   // Is the file a directory?
+              // };
+    });
       
 
     this.setState({
@@ -242,7 +243,7 @@ class TaxonModal extends Component {
   
     console.log('this.state.curCrit_id',this.state.curCrit_id)
     console.log('this.state.curCrit', this.state.curCrit);
-    // console.log(Object.entries(this.state.curCrit.values));
+    console.log(this.state.curCrit.values);
 
     return (
       <Modal
@@ -383,7 +384,7 @@ class TaxonModal extends Component {
                 <View key={key}
                   style={{paddingLeft:10,paddingRight:10,paddingTop:5}}
                   >
-                  <Text style={{fontWeight:'bold', minHeight:50,}}>
+                  <Text style={{fontWeight:'bold'}}>
                     {criteria[value].name + ' '} 
                     <Text style={{fontWeight:'normal'}}>
                       {/*criteria[value].values[this.pastCrit_valkey[key]].name*/}
@@ -400,6 +401,8 @@ class TaxonModal extends Component {
           { // Current criteria description.
             this.state.curCrit !== false
             ? <View style={{flexDirection:'row', backgroundColor:colors.greenFlash}}>
+                
+                {/*
                 <Image
                   source={{uri:'asset:/img/criteres/pictos/'
                     + this.state.curCrit_id + '.png'}}
@@ -408,26 +411,28 @@ class TaxonModal extends Component {
                     height: Dimensions.get('window').width/4 }} 
                   resizeMode="contain"
                 />
-                <View style={{flex:1, paddingRight:15, }}>
-                  <Text style={{
-                    color:'white',
-                    // textAlign:'center',
-                    fontWeight:'bold', 
-                    fontSize:16,
+                */}
+
+                <Text style={{
+                  color:'white',
+                  // textAlign:'center',
+                  fontWeight:'bold', 
+                  fontSize:16,
+                  padding:10, 
+                  }}>
+
+                  {this.state.curCrit.name + ': '}
+
+                  <Text 
+                    style={{
+                      fontSize:16,
+                      fontWeight:'normal', 
+                      color:'white',
                     }}>
-                    {this.state.curCrit.name + ' '}
-                    <Text 
-                      style={{
-                        fontSize:14,
-                        fontWeight:'normal', 
-                        color:'white',
-                      }}>
-                      {this.state.curCrit.detail}
-                      </Text>
+                    {this.state.curCrit.detail}
                   </Text>
+                </Text>
 
-
-                </View>
               </View>
 
             : <View>
@@ -460,11 +465,12 @@ class TaxonModal extends Component {
                     <TouchableOpacity 
                       key={key}
                       style={{
-                        width:colWidth, alignItems:'center', marginRight:1,
+                        width:colWidth, alignItems:'center', marginLeft:1,
                         // borderRightWidth:1, borderRightColor:'white',
                       }}
                       onPress={()=> this.selectCrit(value.id)}
                       >
+
                       <View style={{alignItems:'center', width:colWidth, backgroundColor:colors.greenFlash }}>
                       <Image
                         source={{uri:'asset:/img/'
@@ -506,7 +512,7 @@ class TaxonModal extends Component {
                     <TouchableOpacity 
                       key={key}
                       style={{
-                       width:colWidth, alignItems:'center', marginRight:1,
+                       width:colWidth, alignItems:'center', marginLeft:1,
                         // borderRightWidth:2, borderRightColor:'white',
                       }}
                       onPress={()=>this.addCrit(value.id, key)}
@@ -524,10 +530,10 @@ class TaxonModal extends Component {
                         // resizeMode="contain"
                       />
                       </View>
-                      <Text style={{minHeight:50,fontWeight:'bold',textAlign:'center'}}>
+                      <Text style={{marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center'}}>
                       {value.name} 
                       </Text>
-                      <Text>
+                      <Text style={{textAlign:'center'}}>
                         {value.detail}
                       </Text>
 
@@ -538,7 +544,7 @@ class TaxonModal extends Component {
                             key={pathindex}
                             source={{uri:'asset:/'+path}}
                             style={{
-                              marginHeight:10, 
+                              marginTop:10, 
                               width:colWidth, 
                               height:colWidth, 
                               backgroundColor:colors.greenFlash,

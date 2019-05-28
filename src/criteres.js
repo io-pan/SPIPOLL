@@ -1,7 +1,7 @@
 export const criteria ={
 	'0':{	name:"Période d'observation",
 			detail:"Période pendant laquelle vous avez photographié votre spécimen.",
-			photo_etat:null,
+			photo_etat:900,
 			values:{
 				'0':{	id:0,name:'Janvier'},
 				'1':{	id:1,name:'Février'},
