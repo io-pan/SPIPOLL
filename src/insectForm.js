@@ -11,6 +11,7 @@ import {
   Animated,
   PermissionsAndroid,
   ScrollView,
+  FlatList,
   AsyncStorage,
   Modal,
   BackHandler,
@@ -243,9 +244,8 @@ class TaxonModal extends Component {
     console.log('this.state.curCrit', this.state.curCrit);
     // console.log(Object.entries(this.state.curCrit.values));
 
-// TODO ERRO map of undefined crit 10 motifs sur élytres
     return (
-   <Modal
+      <Modal
         onRequestClose={() => this.hide()}
         visible={this.state.visible}
         >
@@ -286,90 +286,76 @@ class TaxonModal extends Component {
             </View>
           </View>
           
-        <ScrollView>
-          <View // Photo to be indentified.
-            // TODO zoomable.
-            style={{flexDirection:'row'}}>
-            <Image 
-              source={this.props.source}
-              resizeMode="contain"
-              style={{
-                width: Dimensions.get('window').width/2, 
-                height: Dimensions.get('window').width/2 }}
-            />
+          <ScrollView>
+            <View style={{flexDirection:'row'}}>
+              <Image 
+                // Photo to be indentified.
+                // TODO zoomable & slidable.
+                source={this.props.source}
+                resizeMode="contain"
+                style={{
+                  width: Dimensions.get('window').width/2, 
+                  height: Dimensions.get('window').width/2 }}
+              />
 
-            <ScrollView horizontal
-              // Remainings insects.
-              > 
-              
-              { this.state.remainings.map((value, index) => // {
-                <View key={index} style={{width:100}}>
-                    <Text style={{fontWeight:'normal'}}>
-                      {value.id}
-                    </Text>
-                  <Text style={{fontWeight:'bold'}}>
-                    {value.name + ' '} 
-                    <Text style={{fontWeight:'normal'}}>
-                      {value.label}
-                    </Text>
-                  </Text>
+              <FlatList
+                horizontal
+                keyExtractor ={(item, index) => ''+item.value}
+                data={this.state.remainings}
+                
+                renderItem={(row)=>{
+                  const value = row.item;
+                  return(
+                    <View 
+                      key={value.id} 
+                      style={{
+                          width:150
+                    }}>
 
-                  { // Insect photo sample.
-                    // TODO: zoom.
+                      { // Insect photo sample.
+                        // TODO: zoom.
+                        !value.photos 
+                        ? null 
+                        : value.photos.map((path, pathindex)=>{
+                          if(this.state.remainings.length>10){
+                            if(pathindex==0){
+                              return(
+                                <Image
+                                  key={pathindex}
+                                  source={{uri:'asset:/'+path}}
+                                  style={{width:150, height:150, backgroundColor:colors.greenFlash}} 
+                                  resizeMode="contain"
+                                /> 
+                              );
+                            }
+                          }
+                          else{
+                            return(
+                                <Image
+                                  key={pathindex}
+                                  source={{uri:'asset:/'+path}}
+                                  style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                                  resizeMode="contain"
+                                /> 
+                            );
+                          }
 
-                  // all photos
-                    !value.photos 
-                    ? null 
-                    : value.photos.map((path, pathindex)=>{
-                      if(this.state.remainings.length>10){
-                        if(path.indexOf('_01')!=-1){
-                          return(
-                            <Image
-                              key={pathindex}
-                              source={{uri:'asset:/'+path}}
-                              style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
-                              resizeMode="contain"
-                            /> 
-                          );
-                        }
+                        })
                       }
-                      else{
-                        return(
-                            <Image
-                              key={pathindex}
-                              source={{uri:'asset:/'+path}}
-                              style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
-                              resizeMode="contain"
-                            /> 
-                        );
-                      }
+                    
+                      <Text style={{textAlign:'center'}}>
+                        {value.name} 
+                        {/*<Text style={{fontWeight:'normal'}}>
+                          {value.label} {value.id}
+                        </Text>*/}
+                      </Text>
 
-                    })
+                      </View>
+                  );
+                }}
+              />
 
-                    // !value.photos 
-                    // ? null 
-                    // : this.state.remainings.length > 10
-                    //   ? <Image
-                    //       source={{uri:'asset:/'+value.photos[0]}}
-                    //       style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
-                    //       // resizeMode="contain"
-                    //     /> 
-                    //   : value.photos.map((path, pathindex)=>
-                    //       <Image
-                    //         key={pathindex}
-                    //         source={{uri:'asset:/'+path}}
-                    //         style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
-                    //         // resizeMode="contain"
-                    //       /> 
-                    //     )
-                    // }
-                </View>
 
-              //}
-              )}
-
-              
-            </ScrollView>
           </View>
 
           { // Past selected criteria.
@@ -397,10 +383,10 @@ class TaxonModal extends Component {
                 <View key={key}
                   style={{paddingLeft:10,paddingRight:10,paddingTop:5}}
                   >
-                  <Text style={{fontWeight:'bold'}}>
+                  <Text style={{fontWeight:'bold', minHeight:50,}}>
                     {criteria[value].name + ' '} 
                     <Text style={{fontWeight:'normal'}}>
-                      {criteria[value].values[this.pastCrit_valkey[key]].name}
+                      {/*criteria[value].values[this.pastCrit_valkey[key]].name*/}
                     </Text>
                   </Text>
                 </View>
@@ -464,15 +450,22 @@ class TaxonModal extends Component {
             { !this.state.curCrit
               ? // Choose a criteria.
                 this.state.remainingsCrit.map((value, key)=>{
+
+                  // TODO: don't compute colWidth for each item.
+                  const colWidth = this.state.remainingsCrit.length < 3
+                    ? Dimensions.get('window').width/2
+                    : Dimensions.get('window').width/2.5;
+
                   return (
                     <TouchableOpacity 
                       key={key}
                       style={{
-                        width:100, alignItems:'center',
-                        borderRightWidth:1, borderRightColor:'white',
+                        width:colWidth, alignItems:'center', marginRight:1,
+                        // borderRightWidth:1, borderRightColor:'white',
                       }}
                       onPress={()=> this.selectCrit(value.id)}
                       >
+                      <View style={{alignItems:'center', width:colWidth, backgroundColor:colors.greenFlash }}>
                       <Image
                         source={{uri:'asset:/img/'
                           +'criteres/pictos/'
@@ -482,16 +475,15 @@ class TaxonModal extends Component {
                         backgroundColor:colors.greenFlash}} 
                         resizeMode="contain"
                       />
-                      <Text style={{fontWeight:'bold',textAlign:'center'}}>
-                      {value.id}
-                      </Text>
+                      </View>
 
-                      <Text style={{fontWeight:'bold',textAlign:'center'}}>
+                      <Text style={{fontWeight:'bold',textAlign:'center', marginBottom:10,}}>
                       {value.name}
                       </Text>
-                      <Text>
+                      <Text style={{fontWeight:'normal',textAlign:'center'}}>
                       {value.detail}
                       </Text>
+
                     </TouchableOpacity>
                   );
                 })
@@ -505,17 +497,22 @@ class TaxonModal extends Component {
                   // console.log(value)
                   // console.log(this.state.curCrit.photos);
                        
+                  const colWidth = Object.keys(this.state.curCrit.values).length < 3
+                              ? Dimensions.get('window').width/2
+                              : Dimensions.get('window').width/2.5;
+
                   return (
-     
+                  
                     <TouchableOpacity 
                       key={key}
                       style={{
-                        width:100, alignItems:'center',
-                        borderRightWidth:1, borderRightColor:'white',
+                       width:colWidth, alignItems:'center', marginRight:1,
+                        // borderRightWidth:2, borderRightColor:'white',
                       }}
                       onPress={()=>this.addCrit(value.id, key)}
                       >
                       
+                      <View style={{alignItems:'center', width:colWidth, backgroundColor:colors.greenFlash }}>
                       <Image
                         source={{uri:'asset:/img/'
                           +'criteres/pictos/'
@@ -526,21 +523,26 @@ class TaxonModal extends Component {
                         style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
                         // resizeMode="contain"
                       />
-                      <Text style={{fontWeight:'bold',textAlign:'center'}}>
-                      {value.name}
+                      </View>
+                      <Text style={{minHeight:50,fontWeight:'bold',textAlign:'center'}}>
+                      {value.name} 
                       </Text>
                       <Text>
-                      {value.detail}
+                        {value.detail}
                       </Text>
 
-                      <Text> Examples: </Text>
                       { // Criteria value photo sample.
                         // TODO: zoom.
                         this.state.curCrit.photos[key].map((path, pathindex)=>
                           <Image
                             key={pathindex}
                             source={{uri:'asset:/'+path}}
-                            style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                            style={{
+                              marginHeight:10, 
+                              width:colWidth, 
+                              height:colWidth, 
+                              backgroundColor:colors.greenFlash,
+                            }} 
                             resizeMode="contain"
                           /> 
                         )
