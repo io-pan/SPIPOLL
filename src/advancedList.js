@@ -356,7 +356,7 @@ export default class AdvancedList extends Component {
                       key={index}
                       style={styles.listItem}
                       onPress = {() => this.selectItem(index)}
-                      onLongPress = {() => this.selectedItems(index)}
+                      onLongPress = {() => this.selectItem(index)}//this.selectedItems(index)}
                       >
                       { this.state.selectedItems === false ? null :
                         <View style={{
