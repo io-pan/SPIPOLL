@@ -17,7 +17,6 @@ import {
 } from 'react-native'
 
 import RNFetchBlob from 'rn-fetch-blob';
-import ImageViewer from 'react-native-image-zoom-viewer';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import MapView from 'react-native-maps';
 

@@ -26,6 +26,9 @@ import FooterImage from './footerimage';
 // import ImageView from './imageView';
 import ModalFilterPicker from './filterSelect';
 
+import RNFetchBlob from 'rn-fetch-blob';
+import ImageViewer from 'react-native-image-zoom-viewer';
+
 import {
   ImagePicker,
   Form,
@@ -46,6 +49,8 @@ class TaxonModal extends Component {
     super(props);
 
     this.state = {
+      detailsVisible:false,
+      sources:false, // photos of insect to be indentified.
       curCrit_id:false,
       curCrit:false,
       remainings:insectList,
@@ -61,6 +66,36 @@ class TaxonModal extends Component {
 
   componentDidMount(){
     this.selectCrit('1');
+
+ 
+    RNFetchBlob.fs.ls(this.props.sourcesPath)
+    .then((files) => {
+      if(files.length){
+        files.sort();
+
+        const sources = [];
+        files.forEach((filename)=> {
+          sources.push({ url:'file://' + this.props.sourcesPath +'/'+ filename });
+        });
+        this.setState({
+          sources:sources,
+        });
+
+
+//         this.setState({
+//           sources:[
+// {url: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"},
+// {url: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"}
+// ],
+//         });
+
+      }
+
+    });  
+
+
+              
+
   }
 
   async selectCrit(id){
@@ -206,11 +241,14 @@ class TaxonModal extends Component {
       remainings:remainings.insects,
       remainingsCrit:remainingsCrit,
     }, function(){
-      this.refs['remaining-insects'].scrollToIndex({'index':0});
+      if(remainings.insects.length){
+        this.refs['remaining-insects'].scrollToIndex({'index':0});
+      }
     });
   }
 
   async loadRemainingInsectPhotos(id){
+    console.log('loading' + 'img/taxons_photos/' + id)
     const photos = [];
     let firstPhoto = false;
       
@@ -244,7 +282,7 @@ class TaxonModal extends Component {
     }
     this.pastCrit_ids.splice(key);
 
-    // Compute remainnigs insects & criteria.
+    // Compute remainigs insects & criteria.
     const remainings = this.filterInsects(),
           remainingsCrit = this.filterCiteria(remainings.criteria);
 
@@ -256,6 +294,129 @@ class TaxonModal extends Component {
     });
   }
 
+  showDetailsModal(taxonId, listIndex){
+    this.setState({ detailsVisible:taxonId }, function(){
+      console.log(listIndex);
+      // TODO !!! or make own slider :((
+      // this.refs['remaining-insects-list'].scrollToIndex({'index':listIndex, animated: false})
+    });
+  }
+
+  closeDetailsModal(){
+    this.setState({ detailsVisible:false });
+  }
+
+  _scrollToIndex() {
+
+  }
+
+  renderDetailsModal(){
+    return(
+      <Modal 
+        ref={'remaining-insects-modal'}
+        visible={this.state.detailsVisible!==false}
+        onRequestClose={() => this.closeDetailsModal()}
+        >
+
+        <FlatList
+          style={{width:screenWidth, owerflow:'hidden'}}
+          // Remaining Insects.
+          ref={'remaining-insects-list'}
+          horizontal pagingEnabled
+          style={{}}
+          keyExtractor ={(item, index) => ''+index}
+          data={this.state.remainings}
+          extraData={this.state.remainingInsectPhotos}
+          onLayout={() => this._scrollToIndex()}
+          renderItem={(row)=>{
+            if(!this.state.remainingInsectPhotos[row.item.id]){
+              this.loadRemainingInsectPhotos(row.item.id);
+            }
+
+            return(
+            <View 
+              style={{
+                width:screenWidth,
+                flex:1, 
+                justifyContent:'center', alignItems:'center',
+                }}
+              >
+              <View 
+                style={{
+                  height:55, flexDirection:'row', 
+                  justifyContent:'center', alignItems:'center',
+                  backgroundColor:colors.greenFlash,
+                  }}
+                >
+                <TouchableOpacity 
+                  style={[{
+                    height:55,
+                    width:55,
+                    justifyContent:'center', alignItems:'center', 
+                    borderRightWidth:1, borderRightColor:'white', 
+                  }]}
+                  onPress={() => this.closeDetailsModal()}
+                  >
+                  <MaterialCommunityIcons
+                    name="chevron-left" 
+                    style={[{ color:'white' }]}
+                    size={30}
+                  />
+                </TouchableOpacity>
+
+                <View 
+                  // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
+                  style={{flex:1,
+                   alignItems:'center', justifyContent:'center',
+                  }}>
+                  <Text style={{
+                    fontSize:18, fontWeight:'bold', textAlign:'center', 
+                    color:'white', 
+                  }}>
+                  Taxons restant {row.index + 1} / {this.state.remainings.length}
+                  </Text>
+                </View>
+              </View>
+
+              <ScrollView>
+            
+                <Text style={{
+                  fontSize:18, fontWeight:'bold', textAlign:'center', 
+                  // color:'white', 
+                }}>
+                { row.item.name}
+                </Text>
+                <Text style={{
+                  fontSize:18, fontWeight:'normal', textAlign:'center', 
+                  // color:'white', 
+                }}>
+                { row.item.label}
+                </Text>
+
+                { this.state.remainingInsectPhotos[row.item.id]
+                  ? this.state.remainingInsectPhotos[row.item.id].map((path, pathindex)=>
+                      <Image
+                        key={pathindex}
+                        source={{uri:'asset:/'+path}}
+                        style={{width:screenWidth, height:screenWidth, backgroundColor:colors.greenFlash}} 
+                        resizeMode="contain"
+                      /> 
+                    )
+                  : <Text> CHARGEMENT PAS D'IMAGE </Text>
+                  
+                }
+                
+              </ScrollView>
+            </View>
+            );
+          }}
+          
+        />    
+
+      </Modal>
+    );
+  }
+
   render(){
     // console.log('render modal-taxon-search');
     // console.log('this.state.remainingsCrit',this.state.remainingsCrit)
@@ -264,6 +425,9 @@ class TaxonModal extends Component {
     // console.log(this.state.curCrit.values);
 
     return (
+      this.state.detailsVisible !== false
+              ? this.renderDetailsModal()
+              :
       <Modal
         onRequestClose={() => this.props.close()}
         visible={true}
@@ -298,7 +462,7 @@ class TaxonModal extends Component {
               }}>
               <Text style={{
                 fontSize:18, fontWeight:'bold', textAlign:'center', 
-                color:'white', 
+                color:this.state.remainings.length ? 'white' : colors.purple, 
               }}>
               { this.state.remainings.length} taxons restants
               </Text>
@@ -306,17 +470,37 @@ class TaxonModal extends Component {
           </View>
           
           <ScrollView>
-            <View style={{flexDirection:'row'}}>
-              <Image 
-                // Photo to be indentified.
-                // TODO zoomable & slidable.
-                source={this.props.source}
-                // resizeMode="contain"
-                style={{
-                  width: screenWidth/2, 
-                  height: screenWidth/2 }}
-              />
+                {/*
+                <Image 
+                  // Photo to be indentified.
+                  source={{uri: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"}}
+                  // resizeMode="contain"
+                  style={{
+                    width: screenWidth, 
+                    height: screenWidth }}
+                />
+                */}
 
+              {  this.state.sources
+                ? <ImageViewer
+                    backgroundColor={'black'}
+                    style={{flex:1, backgroundColor:'black',
+                          width: screenWidth*2/3, 
+                          height: screenWidth*2/3}}
+                    imageUrls={this.state.sources}
+                    enablePreload={true}
+                    renderIndicator ={()=> null}
+                    saveToLocalByLongPress={false}
+                    renderHeader={(currentIndex) => null}
+                    renderFooter={() => null}
+                    />
+                : null
+              }
+
+                
+
+            <View style={{flexDirection:'row'}}>
+ 
               <FlatList
                 // Remaining Insects.
                 ref={'remaining-insects'}
@@ -346,16 +530,24 @@ class TaxonModal extends Component {
                   }
                   else{
                     return(
-                      <View 
+                      <TouchableOpacity 
                         key={value.id} 
-                        style={{
-                            width:150
-                      }}>
+                        style={{width:150, height:150}}
+                        onPress={()=>this.showDetailsModal( row.item.id, row.index)}
+                        >
 
                         { // Insect photo sample.
-                          // TODO: zoom.
-             
-                          this.state.remainingInsectPhotos[value.id].map((path, pathindex)=>{
+                          // TODO: zoom & detailed info.
+                          this.state.remainingInsectPhotos[value.id][0]
+                          ? <Image
+                              source={{uri:'asset:/'+this.state.remainingInsectPhotos[value.id][0]}}
+                              style={{width:150, height:150, backgroundColor:colors.greenFlash}} 
+                              resizeMode="contain"
+                            /> 
+                          : null
+                        }
+                        {/*
+                           this.state.remainingInsectPhotos[value.id].map((path, pathindex)=>{
                             if(this.state.remainings.length > 20){
                               if(pathindex==0){
                                 return(
@@ -380,7 +572,7 @@ class TaxonModal extends Component {
                             }
 
                           })
-                        }
+                        */}
                       
                         <Text style={{textAlign:'center'}}>
                           {value.name} 
@@ -388,7 +580,7 @@ class TaxonModal extends Component {
                             {value.label} {value.id}
                           </Text>*/}
                         </Text>
-                      </View>
+                      </TouchableOpacity>
                     );
                   }
                 }}
@@ -815,6 +1007,7 @@ export default class InsectForm extends Component {
                   <TaxonModal 
                     ref={"modal-taxon-search"}
                     close={()=>this.hideTaxonModal()}
+                    sourcesPath={ this.props.collection_storage + '/insects/' + this.props.data.date }
                     source= {{uri:'file://'
                         +this.props.collection_storage + '/insects/'
                         + this.props.data.date 
