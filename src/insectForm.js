@@ -179,7 +179,10 @@ class TaxonModal extends Component {
       }
       if(condOK){
         // Keep crit only if present in remaining insects.
-        // TODO: ? we'll could also keep only values present in remaining insects .
+        // TODO: ? 
+        // . Keep only values present in remaining insects.
+        // . Exclude criteria present in all remaining insects with all same value.
+        //  (ex: all remaining insects have thorax blue => remove crit thorax color)
         if(insectsCriteria && insectsCriteria[key]){
           remainingsCrit.push({...criteria[key], id:key});       
         }

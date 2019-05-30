@@ -666,7 +666,7 @@ export const criteria ={
 				}
 		},
 		'54':{	name:"Couleurs et motifs sur le dessous des ailes",
-				condition:{'1':[1], '2':[0], '3':[1,2] '52':[3]},
+				condition:{'1':[1], '2':[0], '3':[1,2], '52':[3]},
 				detail:"La couleur principale est la couleur de fond sur laquelle peuvent se superposer des motifs. Les motifs sont des ornements qui peuvent être de différentes formes et couleurs.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 				photo_etat:170,
 				values:{
