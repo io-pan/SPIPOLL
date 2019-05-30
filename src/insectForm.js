@@ -106,6 +106,10 @@ class TaxonModal extends Component {
     //            {cid:68,stat:[272,273,274]} ]
     // if crit 68 is set, one of past crit values must be one of 272, 273, 274.
 
+
+    // Test passed for Insect name:"Le Ramoneur", id: 473, 
+    // crit 64:avec ou sans tache. Si tache 65 blanche
+
     let remainings = [];
     const insectRemainingCrit={};
     for (const i of insectList) {
@@ -175,6 +179,7 @@ class TaxonModal extends Component {
       }
       if(condOK){
         // Keep crit only if present in remaining insects.
+        // TODO: ? we'll could also keep only values present in remaining insects .
         if(insectsCriteria && insectsCriteria[key]){
           remainingsCrit.push({...criteria[key], id:key});       
         }

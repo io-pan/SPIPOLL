@@ -95,7 +95,21 @@ export const criteria ={
 				}
 		},
 	'6':{	name:"Présence ou absence d'un \"nez\"",
-			condition:{'1':[0], '4':[0]},
+			condition:{'1':[0,2,5]},
+						// 		Coléo et élytres droites  //'1':[0],'4':[0]
+						// 		Abeilles
+						// 		Autres
+						// Argh !!! Should do something like
+						// 'allure_1':{
+						//		0(coléo): {
+						//			type_élytre:{
+						//				0(droites): true
+						//				1(blabla):{y: true}
+						//			}, 
+						//			blabla:{true}
+						//		}
+						//      2(abeille):true    
+						//		5(autre):true
 			detail:"Présence ou absence d'un long \"nez\" (rostre) sur lequel s'insèrent les antennes. Il s'agit du prolongement de la tête, la bouche se trouvant à l'extrémité.",
 			photo_etat:360,
 			values:{
@@ -108,7 +122,7 @@ export const criteria ={
 				}
 		},
 
-	'7':{	name:"Taille (Coléoptère, Hémiptère)",
+	'7':{	name:"Taille",// (Coléoptère, Hémiptère)
 			detail:"La taille se mesure de l'extrémité de la tête à l'extrémité de l'abdomen.",
 			condition:{'1':[0], '4':[0]},
 			photo_etat:370,
@@ -157,7 +171,7 @@ export const criteria ={
 				}
 		},
 	'11':{	name:"Couleurs principales des élytres ou demi-élytres",
-			condition:{'1':[0], '10':[0]},
+			condition:{'1':[0], '10':[0,1]},
 			detail:"Les élytres sont les ailes coriaces des Coléoptères (scarabés, coccinelles...). Les demi-élytres sont des ailes mi-coriace mi-membraneuse de certains Hémiptères (punaises). \nIl est parfois difficile de discerner la couleur des demi-élytres, dans ce cas, ne renseignez pas ce caractère.",
 			photo_etat:410,
 			values:{
@@ -181,7 +195,7 @@ export const criteria ={
 				'2': {id:49, name:"Autres motifs"},
 			}
 		},
-	'13':{	name:"Présence ou absence de motifs sur le thorax (Coléoptère, Hémiptère)",
+	'13':{	name:"Présence ou absence de motifs sur le thorax",// (Coléoptère, Hémiptère)
 			condition:{'1':[0]},
 			detail:"Le thorax est la partie médiane du corps, entre la tête et l'abdomen.\nLa coloration du thorax peut être unie (et donc sans aucun motif) ou avec des motifs bien distincts.",
 			photo_etat:430,
@@ -190,7 +204,7 @@ export const criteria ={
 				'1': {id:51, name:"Absence de motifs", detail:"Le thorax est composé d'une seule couleur. De légères nuances sont toutefois possibles."},
 			}
 		},
-	'14':{	name:"Couleur du thorax (Coléoptère, Hémiptère)",
+	'14':{	name:"Couleur du thorax",// (Coléoptère, Hémiptère)
 			condition:{'1':[0], '13':[1]},
 			detail:"Le thorax est la partie médiane du corps, entre la tête et l'abdomen.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 			photo_etat:440,
@@ -205,7 +219,7 @@ export const criteria ={
 				'7': {id:59, name:"Autres couleurs"},
 			}		
 		},
-	'15':{	name:"Motifs sur le thorax (Coléoptère, Hémiptère)",
+	'15':{	name:"Motifs sur le thorax",//(Coléoptère, Hémiptère)
 			condition:{'1':[0], '13':[0]},
 			detail:"Le thorax est la partie médiane du corps, entre la tête et l'abdomen.\nLes motifs sont bien distincts de la couleur de fond.",
 			photo_etat:450,
@@ -449,6 +463,7 @@ export const criteria ={
 			}	
 		},
 	'37':{	name:"Forme du corps",
+			condition:{'1':[2,3]},
 			detail:null,
 			photo_etat:800,
 			values:{
@@ -458,7 +473,7 @@ export const criteria ={
 		},
 
 		// coleo
-	'38':{	name:"Forme du corps (Coléoptère, Hémiptère)",
+	'38':{	name:"Forme du corps",// (Coléoptère, Hémiptère)
 			condition:{'1':[0]},
 			detail:null,
 			photo_etat:810,
@@ -484,6 +499,7 @@ export const criteria ={
 			}	
 		},
 	'41':{	name:"Type de coloration du corps",
+			condition:{'1':[5]},
 			detail:"La coloration du corps peut être unie (et donc sans aucun motif) ou avec des couleurs bien distinctes.",
 			photo_etat:840,
 			values:{
@@ -492,6 +508,7 @@ export const criteria ={
 			}
 		},
 	'42':{	name:"Couleur principale du corps",
+			condition:{'1':[5]},
 			detail:"On ne considère ni les yeux, ni les antennes, ni les pattes mais uniquement la tête, le thorax et les élytres ou demi-élytres. \nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 			photo_etat:850,
 			values:{
@@ -507,7 +524,7 @@ export const criteria ={
 	},
 		//coleo
 	'43':{	name:"Couleur principale des élytres ou demi-élytres",
-			condition:{'1':[0]},
+			condition:{'1':[0],'10':[0,1]},
 			detail:"Les élytres sont les ailes coriaces des coléoptères de type \"scarabé\" et certaines punaises, les demi-élytres sont des ailes mi-coriace mi-membraneuses de certaines punaises. Il est parfois difficile de voir la couleur des demi-élytres.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 			photo_etat:860,
 			values:{
@@ -522,6 +539,7 @@ export const criteria ={
 			}
 	},
 	'44':{	name:"Présence ou absence d'une trompe, d'un rostre ou d'un \"bec\"",
+			condition:{'1':[0,],'10':[0,1]},
 			// TODO: condition.
 			detail:"La trompe est l'organe avec lequel certains pollinisateurs s'alimentent. Malgré une même utilisation, il existe une diversité de formes et conduit à des comportements alimentaires différents.",
 			photo_etat:870,
@@ -572,7 +590,7 @@ export const criteria ={
 			}
 	},
 	'48':{	name:"Motifs du dessus des ailes antérieures",
-			condition:{'1':[1], '2':[0],  '3':[0,2]},
+			condition:{'1':[1], '2':[0],  '3':[0,2], '47':[3,5,6]},
 			detail:null,
 			photo_etat:970,
 			values:{
@@ -634,32 +652,30 @@ export const criteria ={
 				'5': {id:211, name:"Rouge"},
 			}
 	},
-	'53':{	name:"Motifs du dessous des ailes",
-	//ioio 53 - 54  condition en plus
-			condition:{'1':[1], '3':[1,2]},
-			detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
-			photo_etat:230,
-			values:{
-				'0': {id:212, name:"Marbré de vert"},
-				'1': {id:213, name:"Nervures grises"},
-				'2': {id:214, name:"Motifs noirs"},
-				'3': {id:215, name:"Motifs noirs et rouges"},
-				'4': {id:216, name:"Autres"},
-				'5': {id:217, name:"Sans motif"},
-			}
-	},
-	'54':{	name:"Couleurs et motifs sur le dessous des ailes",
-	//ioio 53 - 54  condition en plus
-			condition:{'1':[1], '3':[1,2]},
-			detail:"La couleur principale est la couleur de fond sur laquelle peuvent se superposer des motifs. Les motifs sont des ornements qui peuvent être de différentes formes et couleurs.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
-			photo_etat:170,
-			values:{
-				'0': {id:218, name:"Blanc, orange et/ou pourpre avec des motifs variés"},
-				'1': {id:219, name:"Marron et/ou gris avec de fines bandes blanches"},
-				'2': {id:220, name:"Marron, orange et/ou gris finement tacheté de noir"},
-				'3': {id:221, name:"Marron, orange et/ou gris avec des ocelles"},
-				'4': {id:222, name:"Autres couleurs et/ou motifs"},
-			}
+		'53':{	name:"Motifs du dessous des ailes",
+				condition:{'1':[1], '2':[0], '3':[1,2], '52':[0]},
+				detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
+				photo_etat:230,
+				values:{
+					'0': {id:212, name:"Marbré de vert"},
+					'1': {id:213, name:"Nervures grises"},
+					'2': {id:214, name:"Motifs noirs"},
+					'3': {id:215, name:"Motifs noirs et rouges"},
+					'4': {id:216, name:"Autres"},
+					'5': {id:217, name:"Sans motif"},
+				}
+		},
+		'54':{	name:"Couleurs et motifs sur le dessous des ailes",
+				condition:{'1':[1], '2':[0], '3':[1,2] '52':[3]},
+				detail:"La couleur principale est la couleur de fond sur laquelle peuvent se superposer des motifs. Les motifs sont des ornements qui peuvent être de différentes formes et couleurs.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
+				photo_etat:170,
+				values:{
+					'0': {id:218, name:"Blanc, orange et/ou pourpre avec des motifs variés"},
+					'1': {id:219, name:"Marron et/ou gris avec de fines bandes blanches"},
+					'2': {id:220, name:"Marron, orange et/ou gris finement tacheté de noir"},
+					'3': {id:221, name:"Marron, orange et/ou gris avec des ocelles"},
+					'4': {id:222, name:"Autres couleurs et/ou motifs"},
+				}
 	},
 	'55':{	name:"Couleur du dessous des ailes antérieures",
 			condition:{'1':[1], '2':[0], '3':[1,2]},
@@ -735,7 +751,7 @@ export const criteria ={
 			}
 	},
 	'62':{	name:"Aspect de la bordure des ailes",
-			condition:{'1':[1]},	// ioio nuit}?
+			condition:{'1':[1], '2':[1], '61':[1,7]}, // pap nuit, Silhouette grand sphinx et autres.
 			detail:"Certains papillons ont les ailes bien plus découpées que d'autres.\nAttention cependant à ne pas confondre avec un papillon abîmé.",
 			photo_etat:270,
 			values:{
@@ -743,8 +759,10 @@ export const criteria ={
 				'1': {id:247, name:"Bordure des ailes non découpée", detail:"La bordure des ailes antérieures et postérieures est arrondie ou droite."},
 			}
 	},
+
+	// ioio jour et nuit ?
 	'63':{	name:"Couleur principale du dessus des ailes antérieures",
-			condition:{'1':[1],  '2':[0], '3':[0,2]},
+			condition:{'1':[1], '2':[1], '61':[1,7]}, //ioio  '2':[0], 3':[0,2]},
 			detail:"La couleur principale est la couleur de fond sur laquelle peuvent se superposer les motifs.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 			photo_etat:280,
 			values:{
@@ -759,7 +777,7 @@ export const criteria ={
 			}
 	},
 	'64':{	name:"Motifs sur le dessus des ailes antérieures",
-			condition:{'1':[1], '2':[0], '3':[0,2]},
+			condition:{'1':[1], '2':[1], '61':[1,7]}, //ioio  '2':[0], 3':[0,2]}, 
 			detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes fermées en permanence lorsqu'ils sont posés, il n'est alors pas possible de voir les motifs du dessus des ailes.",
 			photo_etat:250,
 			values:{
@@ -769,7 +787,7 @@ export const criteria ={
 			}
 	},
 	'65':{	name:"Couleur des principaux motifs sur le dessus des ailes antérieures",
-			condition:{'1':[1], '2':[0], '3':[0,2]},
+			condition:{'1':[1], '2':[1], '61':[1,7], '64':[0,1]}, //'1':[1], '2':[0], '3':[0,2]}, 
 			detail:"Attention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 			photo_etat:260,
 			values:{
@@ -782,7 +800,7 @@ export const criteria ={
 			}
 	},
 	'66':{	name:"Le dessus des ailes antérieures et postérieures sont-ils de couleurs semblables ?",
-			condition:{'1':[1], '2':[1]},
+			condition:{'1':[1], '2':[1]}, // pap nuit
 			detail:"Attention, les ailes postérieures ne sont pas toujours visibles. En effet, elles sont parfois recouvertes par les ailes antérieures.",
 			photo_etat:290,
 			values:{

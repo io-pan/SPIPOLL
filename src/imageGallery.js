@@ -14,6 +14,7 @@ import {
   NativeModules,
 } from 'react-native'
 
+import RNFetchBlob from 'rn-fetch-blob';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import ImageViewer from 'react-native-image-zoom-viewer';
 // import ImageZoom from 'react-native-image-pan-zoom';
