@@ -51,7 +51,7 @@ class TaxonModal extends Component {
     this.state = {
       detailsVisible:false,
       historyVisible:false,
-      currentCriteriaDetailsVisible:false,
+      currentCriteriaDescriptionVisible:false,
       detailsIndex:0,
 
       sources:false, // photos of insect to be indentified.
@@ -81,25 +81,10 @@ class TaxonModal extends Component {
         files.forEach((filename)=> {
           sources.push({ url:'file://' + this.props.sourcesPath +'/'+ filename });
         });
-        this.setState({
-          sources:sources,
-        });
-
-
-//         this.setState({
-//           sources:[
-// {url: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"},
-// {url: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"}
-// ],
-//         });
-
+        this.setState({ sources:sources });
       }
 
-    });  
-
-
-              
-
+    });      
   }
 
   async selectCrit(id){
@@ -240,7 +225,7 @@ class TaxonModal extends Component {
           remainingsCrit = this.filterCiteria(remainings.criteria);
 
     this.setState({
-      currentCriteriaDetailsVisible:false,
+      currentCriteriaDescriptionVisible:false,
       curCrit_id:false,
       curCrit: false,
       remainings:remainings.insects,
@@ -281,8 +266,8 @@ class TaxonModal extends Component {
   }
 
   toggleCurrentCriteriaDetails(){
-    console.log(this.state.currentCriteriaDetailsVisible);
-    this.setState({currentCriteriaDetailsVisible:!this.state.currentCriteriaDetailsVisible});
+    console.log(this.state.currentCriteriaDescriptionVisible);
+    this.setState({currentCriteriaDescriptionVisible:!this.state.currentCriteriaDescriptionVisible});
   }
 
   toggleHistory(){
@@ -310,10 +295,13 @@ class TaxonModal extends Component {
   }
 
   showDetailsModal(taxonId, listIndex){
+    console.log(taxonId)
+      console.log(listIndex)
     this.setState({ detailsVisible:listIndex }, function(){
+      console.log( this.state.detailsVisible);
       // TODO !!! or make own slider :((
-      //  console.log('showDetailsModal',this.state.detailsVisible)
-      // this.refs['remaining-insects-list'].scrollToIndex({'index':listIndex, animated: false})
+      //  console.log('showDetailsModal',this.state.detailsVisible) ioio
+      // this.scrollDetailsToIndex();
     });
   }
 
@@ -322,18 +310,69 @@ class TaxonModal extends Component {
   }
 
   scrollDetailsToIndex() {
-    this.refs['remaining-insects-list'].scrollToIndex({'index':this.state.detailsVisible, animated: false})
+    console.log(this.state.detailsVisible)
+    this.refs['remaining-insects-list'].scrollToIndex({
+      index:this.state.detailsVisible, 
+      animated: false
+    })
   }
 
   onViewableItemsChanged = (viewableItems) => {
-    // Update index on header.
     console.log(viewableItems);
-    if(viewableItems.viewableItems){
-      this.setState({detailsIndex:viewableItems.viewableItems[0].index })
+    if(viewableItems.viewableItems && viewableItems.viewableItems.length){
+      this.setState({detailsIndex:viewableItems.viewableItems[0].index });
     }
   }
 
+  renderTaxonDetails = ({item}) => {
+        
+    if(!this.state.remainingInsectPhotos[item.id]){
+      this.loadRemainingInsectPhotos(item.id);
+    }
+
+    return(
+    <View 
+      style={{
+        width:screenWidth,
+        flex:1, 
+        justifyContent:'center', alignItems:'center',
+        }}
+      >
+
+      <ScrollView>
+        <Text style={{
+          fontSize:18, fontWeight:'bold', textAlign:'center', 
+          // color:'white', 
+        }}>
+        { item.name}
+        </Text>
+        <Text style={{
+          fontSize:18, fontWeight:'normal', textAlign:'center', 
+          // color:'white', 
+        }}>
+        { item.label}
+        </Text>
+
+        { this.state.remainingInsectPhotos[item.id]
+          ? this.state.remainingInsectPhotos[item.id].map((path, pathindex)=>
+              <Image
+                key={pathindex}
+                source={{uri:'asset:/'+path}}
+                style={{width:screenWidth, height:screenWidth, backgroundColor:colors.greenFlash}} 
+                resizeMode="contain"
+              /> 
+            )
+          : <Text> CHARGEMENT PAS D'IMAGE </Text>
+          
+        }
+        
+      </ScrollView>
+    </View>
+    );
+  }
+
   renderDetailsModal(){
+    console.log(this.state.detailsIndex)
     return(
       <Modal 
         ref={'remaining-insects-modal'}
@@ -381,72 +420,23 @@ class TaxonModal extends Component {
         <FlatList horizontal pagingEnabled
           // Remaining insects Photos.
           ref={'remaining-insects-list'}
-
-          onViewableItemsChanged={this.onViewableItemsChanged} // to update header
           keyExtractor ={(item, index) => ''+index}
           data={this.state.remainings}
           extraData={this.state.remainingInsectPhotos}
-          onLayout={() => this.scrollDetailsToIndex()}
-          getItemLayout={(data, index) => { return {length:screenWidth, index, offset: index*screenWidth} }} 
-
-          renderItem={(row)=>{
-            if(!this.state.remainingInsectPhotos[row.item.id]){
-              this.loadRemainingInsectPhotos(row.item.id);
-            }
-
-            return(
-            <View 
-              style={{
-                width:screenWidth,
-                flex:1, 
-                justifyContent:'center', alignItems:'center',
-                }}
-              >
-
-              <ScrollView>
-                <Text style={{
-                  fontSize:18, fontWeight:'bold', textAlign:'center', 
-                  // color:'white', 
-                }}>
-                { row.item.name}
-                </Text>
-                <Text style={{
-                  fontSize:18, fontWeight:'normal', textAlign:'center', 
-                  // color:'white', 
-                }}>
-                { row.item.label}
-                </Text>
-
-                { this.state.remainingInsectPhotos[row.item.id]
-                  ? this.state.remainingInsectPhotos[row.item.id].map((path, pathindex)=>
-                      <Image
-                        key={pathindex}
-                        source={{uri:'asset:/'+path}}
-                        style={{width:screenWidth, height:screenWidth, backgroundColor:colors.greenFlash}} 
-                        resizeMode="contain"
-                      /> 
-                    )
-                  : <Text> CHARGEMENT PAS D'IMAGE </Text>
-                  
-                }
-                
-              </ScrollView>
-            </View>
-            );
-          }}
-        />    
-
+          onViewableItemsChanged={this.onViewableItemsChanged} //Update header.
+          onLayout={() => this.scrollDetailsToIndex()}  // Initial scroll.
+          // instead of
+          // initialNumToRender={this.state.detailsVisible+1}
+          // initialScrollIndex={this.state.detailsVisible}
+          // getItemLayout={(data, index) => ({length:screenWidth, offset:screenWidth * index, index})}
+    
+          renderItem={this.renderTaxonDetails}
+        />
       </Modal>
     );
   }
 
   render(){
-    // console.log('render modal-taxon-search');
-    // console.log('this.state.remainingsCrit',this.state.remainingsCrit)
-    // console.log('this.state.curCrit_id',this.state.curCrit_id)
-    // console.log('this.state.curCrit', this.state.curCrit);
-    // console.log(this.state.curCrit.values);
-
     const 
       critColWidth =  this.state.curCrit
                           && Object.keys(this.state.curCrit.values).length < 3
@@ -577,16 +567,8 @@ class TaxonModal extends Component {
             <View style={{flex:1}}>
 
               { // Photo(s) to be indentified.
-              this.state.sources 
-              ? <ImageViewer
-                  // <Image 
-                  //   
-                  //   source={{uri: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"}}
-                  //   // resizeMode="contain"
-                  //   style={{
-                  //     width: screenWidth, 
-                  //     height: screenWidth }}
-                  // />
+                !this.state.sources ? null :
+                <ImageViewer
                   backgroundColor={'black'}
                   style={{flex:1, backgroundColor:'black',
                         width: screenWidth*2/3, 
@@ -598,7 +580,6 @@ class TaxonModal extends Component {
                   renderHeader={(currentIndex) => null}
                   renderFooter={() => null}
                   />
-              : null
               }
 
               <FlatList
@@ -726,7 +707,7 @@ class TaxonModal extends Component {
                       }
                     </Text>
 
-                    { !this.state.currentCriteriaDetailsVisible || !this.state.curCrit.detail ? null :
+                    { !this.state.currentCriteriaDescriptionVisible || !this.state.curCrit.detail ? null :
                     <Text 
                       style={{
                         color:'white',
@@ -997,10 +978,10 @@ export default class InsectForm extends Component {
                     <MaterialCommunityIcons
                       name="database-search" //table-search 
                       style={{ color:'white',backgroundColor:colors.greenFlash }}
-                      size={25}
+                      size={30}
                     />
                     <Text style={{
-                    padding:5,
+                    padding:7,
                     fontSize:16,
                     fontWeight:'bold',
                     color:'white',
