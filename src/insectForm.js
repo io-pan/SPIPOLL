@@ -50,6 +50,10 @@ class TaxonModal extends Component {
 
     this.state = {
       detailsVisible:false,
+      historyVisible:false,
+      currentCriteriaDetailsVisible:false,
+      detailsIndex:0,
+
       sources:false, // photos of insect to be indentified.
       curCrit_id:false,
       curCrit:false,
@@ -236,6 +240,7 @@ class TaxonModal extends Component {
           remainingsCrit = this.filterCiteria(remainings.criteria);
 
     this.setState({
+      currentCriteriaDetailsVisible:false,
       curCrit_id:false,
       curCrit: false,
       remainings:remainings.insects,
@@ -275,6 +280,15 @@ class TaxonModal extends Component {
     }});
   }
 
+  toggleCurrentCriteriaDetails(){
+    console.log(this.state.currentCriteriaDetailsVisible);
+    this.setState({currentCriteriaDetailsVisible:!this.state.currentCriteriaDetailsVisible});
+  }
+
+  toggleHistory(){
+    this.setState({historyVisible:!this.state.historyVisible});
+  }
+
   deleteHistory(key, value){
     for(var i=key; i<this.pastCrit_ids.length;i++){
       delete this.pastCrit[this.pastCrit_ids[i]];
@@ -287,6 +301,7 @@ class TaxonModal extends Component {
           remainingsCrit = this.filterCiteria(remainings.criteria);
 
     this.setState({
+      historyVisible:false,
       remainings:remainings.insects,
       remainingsCrit:remainingsCrit,
     }, function(){
@@ -295,9 +310,9 @@ class TaxonModal extends Component {
   }
 
   showDetailsModal(taxonId, listIndex){
-    this.setState({ detailsVisible:taxonId }, function(){
-      console.log(listIndex);
+    this.setState({ detailsVisible:listIndex }, function(){
       // TODO !!! or make own slider :((
+      //  console.log('showDetailsModal',this.state.detailsVisible)
       // this.refs['remaining-insects-list'].scrollToIndex({'index':listIndex, animated: false})
     });
   }
@@ -306,8 +321,16 @@ class TaxonModal extends Component {
     this.setState({ detailsVisible:false });
   }
 
-  _scrollToIndex() {
+  scrollDetailsToIndex() {
+    this.refs['remaining-insects-list'].scrollToIndex({'index':this.state.detailsVisible, animated: false})
+  }
 
+  onViewableItemsChanged = (viewableItems) => {
+    // Update index on header.
+    console.log(viewableItems);
+    if(viewableItems.viewableItems){
+      this.setState({detailsIndex:viewableItems.viewableItems[0].index })
+    }
   }
 
   renderDetailsModal(){
@@ -318,16 +341,54 @@ class TaxonModal extends Component {
         onRequestClose={() => this.closeDetailsModal()}
         >
 
-        <FlatList
-          style={{width:screenWidth, owerflow:'hidden'}}
-          // Remaining Insects.
+        <View 
+          style={{
+            height:55, flexDirection:'row', 
+            justifyContent:'center', alignItems:'center',
+            backgroundColor:colors.greenFlash,
+            }}
+          >
+          <TouchableOpacity 
+            style={[{
+              height:55,
+              width:55,
+              justifyContent:'center', alignItems:'center', 
+              borderRightWidth:1, borderRightColor:'white', 
+            }]}
+            onPress={() => this.closeDetailsModal()}
+            >
+            <MaterialCommunityIcons
+              name="chevron-left" 
+              style={[{ color:'white' }]}
+              size={30}
+            />
+          </TouchableOpacity>
+
+          <View 
+            // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
+            style={{flex:1,
+             alignItems:'center', justifyContent:'center',
+            }}>
+            <Text style={{
+              fontSize:18, fontWeight:'bold', textAlign:'center', 
+              color:'white', 
+            }}>
+            Taxons restant {this.state.detailsIndex + 1} / {this.state.remainings.length}
+            </Text>
+          </View>
+        </View>
+
+        <FlatList horizontal pagingEnabled
+          // Remaining insects Photos.
           ref={'remaining-insects-list'}
-          horizontal pagingEnabled
-          style={{}}
+
+          onViewableItemsChanged={this.onViewableItemsChanged} // to update header
           keyExtractor ={(item, index) => ''+index}
           data={this.state.remainings}
           extraData={this.state.remainingInsectPhotos}
-          onLayout={() => this._scrollToIndex()}
+          onLayout={() => this.scrollDetailsToIndex()}
+          getItemLayout={(data, index) => { return {length:screenWidth, index, offset: index*screenWidth} }} 
+
           renderItem={(row)=>{
             if(!this.state.remainingInsectPhotos[row.item.id]){
               this.loadRemainingInsectPhotos(row.item.id);
@@ -341,45 +402,8 @@ class TaxonModal extends Component {
                 justifyContent:'center', alignItems:'center',
                 }}
               >
-              <View 
-                style={{
-                  height:55, flexDirection:'row', 
-                  justifyContent:'center', alignItems:'center',
-                  backgroundColor:colors.greenFlash,
-                  }}
-                >
-                <TouchableOpacity 
-                  style={[{
-                    height:55,
-                    width:55,
-                    justifyContent:'center', alignItems:'center', 
-                    borderRightWidth:1, borderRightColor:'white', 
-                  }]}
-                  onPress={() => this.closeDetailsModal()}
-                  >
-                  <MaterialCommunityIcons
-                    name="chevron-left" 
-                    style={[{ color:'white' }]}
-                    size={30}
-                  />
-                </TouchableOpacity>
-
-                <View 
-                  // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
-                  style={{flex:1,
-                   alignItems:'center', justifyContent:'center',
-                  }}>
-                  <Text style={{
-                    fontSize:18, fontWeight:'bold', textAlign:'center', 
-                    color:'white', 
-                  }}>
-                  Taxons restant {row.index + 1} / {this.state.remainings.length}
-                  </Text>
-                </View>
-              </View>
 
               <ScrollView>
-            
                 <Text style={{
                   fontSize:18, fontWeight:'bold', textAlign:'center', 
                   // color:'white', 
@@ -410,7 +434,6 @@ class TaxonModal extends Component {
             </View>
             );
           }}
-          
         />    
 
       </Modal>
@@ -424,10 +447,21 @@ class TaxonModal extends Component {
     // console.log('this.state.curCrit', this.state.curCrit);
     // console.log(this.state.curCrit.values);
 
+    const 
+      critColWidth =  this.state.curCrit
+                          && Object.keys(this.state.curCrit.values).length < 3
+                          ? screenWidth/2
+                          : screenWidth/2.5,
+      critChoiceColWidth =  this.state.remainingsCrit
+                            && this.state.remainingsCrit.length < 3
+                            ? screenWidth/2
+                            : screenWidth/2.5;
+
+
     return (
       this.state.detailsVisible !== false
-              ? this.renderDetailsModal()
-              :
+      ? this.renderDetailsModal()
+      :
       <Modal
         onRequestClose={() => this.props.close()}
         visible={true}
@@ -467,40 +501,106 @@ class TaxonModal extends Component {
               { this.state.remainings.length} taxons restants
               </Text>
             </View>
-          </View>
-          
-          <ScrollView>
-                {/*
-                <Image 
-                  // Photo to be indentified.
-                  source={{uri: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"}}
-                  // resizeMode="contain"
-                  style={{
-                    width: screenWidth, 
-                    height: screenWidth }}
-                />
-                */}
 
-              {  this.state.sources
-                ? <ImageViewer
-                    backgroundColor={'black'}
-                    style={{flex:1, backgroundColor:'black',
-                          width: screenWidth*2/3, 
-                          height: screenWidth*2/3}}
-                    imageUrls={this.state.sources}
-                    enablePreload={true}
-                    renderIndicator ={()=> null}
-                    saveToLocalByLongPress={false}
-                    renderHeader={(currentIndex) => null}
-                    renderFooter={() => null}
-                    />
-                : null
+            { // History button
+            this.pastCrit_ids.length < 1 ? null :
+              <TouchableOpacity 
+                style={[{
+                  height:55,
+                  width:55,
+                  justifyContent:'center', alignItems:'center', 
+                  borderLeftWidth:1, borderLeftColor:'white', 
+                }]}
+                onPress={() => this.toggleHistory()}
+                >
+                <MaterialCommunityIcons
+                  name="undo-variant" 
+                  style={[{ color:'white' }]}
+                  size={30}
+                />
+              </TouchableOpacity>
+            }
+          </View>
+
+
+          <ScrollView style={{ flex:1}} >
+          { this.pastCrit_ids.length && this.state.historyVisible
+          
+          ? // History
+            this.pastCrit_ids.map((value, key)=> //{
+                // console.log(value);
+                // console.log(criteria[value].name);
+                // console.log(criteria[value].values);
+
+                // console.log(this.pastCrit_valkey);
+                // console.log(this.pastCrit_valkey[value]);
+                // this.pastCrit_valkey[value].map((v,k)=>{
+                //   console.log(v);
+                //   console.log(criteria[value].values[v].name)
+                // })
+
+                // console.log(criteria[value].values[this.pastCrit_valkey[value]])
+                // console.log(criteria[value].values[this.pastCrit_valkey[value]].name)
+                // return(
+                
+                // <Text style={{
+                //   marginTop:1,
+                //   color:'white',
+                //   backgroundColor:colors.greenFlash,
+                //   fontWeight:'bold', fontSize:16,
+                //   color:'white', textAlign:'center', padding:5,
+                //   }}>
+                //   Historique
+                // </Text> 
+                  <TouchableOpacity 
+                    key={key}
+                    style={{padding:10,
+                      borderBottomWidth:1, borderBottomColor:'lightgrey'}}
+                    onPress={()=> this.deleteHistory(key, value)}
+                    >
+                    <Text style={{fontSize:16, fontWeight:'bold'}}>
+                      {criteria[value].name + ' '} 
+                      { // loop selected values.
+                        this.pastCrit_valkey[value].map((v,k)=>
+                          <Text key={k} style={{fontWeight:'normal'}}>
+                          { criteria[value].values[v].name }</Text>
+                        )
+                      }
+                      
+                    </Text>
+                  </TouchableOpacity>
+                // );
+                // }    
+              )
+
+          : // Indentifiction tool.
+            <View style={{flex:1}}>
+
+              { // Photo(s) to be indentified.
+              this.state.sources 
+              ? <ImageViewer
+                  // <Image 
+                  //   
+                  //   source={{uri: "file:///storage/6465-6631/Android/data/com.spipoll/files/2019-04-06_04-07-40/insects/2019-05-08_21-14-09/2019-05-08_22-09-50.jpg"}}
+                  //   // resizeMode="contain"
+                  //   style={{
+                  //     width: screenWidth, 
+                  //     height: screenWidth }}
+                  // />
+                  backgroundColor={'black'}
+                  style={{flex:1, backgroundColor:'black',
+                        width: screenWidth*2/3, 
+                        height: screenWidth*2/3}}
+                  imageUrls={this.state.sources}
+                  enablePreload={true}
+                  renderIndicator ={()=> null}
+                  saveToLocalByLongPress={false}
+                  renderHeader={(currentIndex) => null}
+                  renderFooter={() => null}
+                  />
+              : null
               }
 
-                
-
-            <View style={{flexDirection:'row'}}>
- 
               <FlatList
                 // Remaining Insects.
                 ref={'remaining-insects'}
@@ -586,225 +686,182 @@ class TaxonModal extends Component {
                 }}
               />
 
-          </View>
 
-          { // Past selected criteria.
-          this.pastCrit_ids.length <1 ? null :
-          <View
-            style={{marginBottom:5}}
-            >
-            <Text style={{
-              color:'white',
-              backgroundColor:colors.greenFlash,
-              fontWeight:'bold', fontSize:16,
-              color:'white', textAlign:'center', padding:5,
-              }}>
-              Historique
-            </Text>
+              { // Current criteria.
+              this.state.curCrit !== false
+              ? <View style={{flex:1}}>
+                  <TouchableOpacity
+                    style={{backgroundColor:colors.greenFlash, marginBottom:1,}}
+                    onPress = {() => this.toggleCurrentCriteriaDetails()} 
+                    >
+                    {/*
+                    <Image
+                      source={{uri:'asset:/img/criteres/pictos/'
+                        + this.state.curCrit_id + '.png'}}
+                      style={{
+                        width: screenWidth/4,
+                        height: screenWidth/4 }} 
+                      resizeMode="contain"
+                    />
+                    */}
+                    <Text // Current criteria name &description
+                      style={{
+                        color:'white',
+                        textAlign:'center',
+                        fontWeight:'bold', 
+                        fontSize:16,
+                        padding:10, 
+                      }}
+                      >
 
-            { this.pastCrit_ids.map((value, key)=> //{
-              // console.log(value);
-              // console.log(criteria[value].name);
-              // console.log(criteria[value].values);
+                      {this.state.curCrit.name + ' '}
 
-              // console.log(this.pastCrit_valkey);
-              // console.log(this.pastCrit_valkey[value]);
-              // this.pastCrit_valkey[value].map((v,k)=>{
-              //   console.log(v);
-              //   console.log(criteria[value].values[v].name)
-              // })
+                      { !this.state.curCrit.detail ? null :
+                        <MaterialCommunityIcons
+                          name="help-circle-outline" 
+                          style={{color:'white', backgroundColor:'transparent'}}
+                          size={15}
+                          backgroundColor = 'transparent'
+                        />
+                      }
+                    </Text>
 
-              // console.log(criteria[value].values[this.pastCrit_valkey[value]])
-              // console.log(criteria[value].values[this.pastCrit_valkey[value]].name)
-              // return(
-                <TouchableOpacity 
-                  key={key}
-                  style={{padding:5, paddingLeft:10,paddingRight:10,
-                    borderBottomWidth:1, borderBottomColor:'lightgrey'}}
-                  onPress={()=> this.deleteHistory(key, value)}
-                  >
-                  <Text style={{fontWeight:'bold'}}>
-                    {criteria[value].name + ' '} 
-                    { // loop selected values.
-                      this.pastCrit_valkey[value].map((v,k)=>
-                        <Text key={k} style={{fontWeight:'normal'}}>
-                        { criteria[value].values[v].name }</Text>
-                      )
+                    { !this.state.currentCriteriaDetailsVisible || !this.state.curCrit.detail ? null :
+                    <Text 
+                      style={{
+                        color:'white',
+                        textAlign:'center',
+                        fontWeight:'normal', 
+                        fontSize:16,
+                        padding:10, 
+                      }}>
+                      { this.state.curCrit.detail }
+                    </Text>
                     }
-                    
-                  </Text>
-                </TouchableOpacity>
-              // );
-              // }    
-            )}
-          </View>
-          }
+                  </TouchableOpacity>
 
-          { // Current criteria description.
-            this.state.curCrit !== false
-            ? <View style={{flexDirection:'row', backgroundColor:colors.greenFlash}}>
-                
-                {/*
-                <Image
-                  source={{uri:'asset:/img/criteres/pictos/'
-                    + this.state.curCrit_id + '.png'}}
-                  style={{
-                    width: screenWidth/4,
-                    height: screenWidth/4 }} 
-                  resizeMode="contain"
-                />
-                */}
+                  <ScrollView horizontal>
+                    { // Current criteria choices.
+                    Object.entries(this.state.curCrit.values).map((value, key) => {
+                    // this.state.curCrit.values((value, index) => {
 
-                <Text style={{
-                  color:'white',
-                  // textAlign:'center',
-                  fontWeight:'bold', 
-                  fontSize:16,
-                  padding:10, 
-                  }}>
+                      value=value[1];
+                      // console.log(key)
+                      // console.log(value)
+                      // console.log(this.state.curCrit.photos);
 
-                  {this.state.curCrit.name + ': '}
+                      return (
+                        <TouchableOpacity 
+                          key={key}
+                          style={{
+                           width:critColWidth, alignItems:'center', marginLeft:1,
+                            // borderRightWidth:2, borderRightColor:'white',
+                          }}
+                          onPress={()=>this.setCriteria(value.id, key)}
+                          >
+                          
+                          <View style={{alignItems:'center', width:critColWidth, backgroundColor:colors.greenFlash }}>
+                          <Image
+                            source={{uri:'asset:/img/'
+                              +'criteres/pictos/'
+                              +this.state.curCrit_id
+                              +'-'
+                              + key //value.id
+                              +'.png'}}
+                            style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                            // resizeMode="contain"
+                          />
+                          </View>
+                          <Text style={{marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center'}}>
+                          {value.name} 
+                          </Text>
+                          <Text style={{textAlign:'center'}}>
+                            {value.detail}
+                          </Text>
 
-                  <Text 
-                    style={{
-                      fontSize:16,
-                      fontWeight:'normal', 
-                      color:'white',
+                          { // Criteria value photo sample.
+                            // TODO: zoom.
+                            this.state.curCrit.photos && this.state.curCrit.photos[key]
+                            ? this.state.curCrit.photos[key].map((path, pathindex)=>
+                                <Image
+                                  key={pathindex}
+                                  source={{uri:'asset:/'+path}}
+                                  style={{
+                                    marginTop:10, 
+                                    width:critColWidth, 
+                                    height:critColWidth, 
+                                    backgroundColor:colors.greenFlash,
+                                  }} 
+                                  resizeMode="contain"
+                                /> 
+                              )
+                            : null
+                          }  
+
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </ScrollView>
+                </View>
+
+              : <View // Choose a criteria.
+                  >
+                  <Text style={{
+                    padding:5,
+                    backgroundColor:colors.greenFlash,
+                    color:'white',
+                    textAlign:'center',
+                    fontWeight:'bold', 
+                    fontSize:16,
                     }}>
-                    {this.state.curCrit.detail}
+                    Sélectionnez un critère:
                   </Text>
-                </Text>
+                  <ScrollView horizontal>
+                    { this.state.remainingsCrit.map((value, key)=>
+                      <TouchableOpacity 
+                        key={key}
+                        style={{
+                          width:critChoiceColWidth, alignItems:'center', marginLeft:1,
+                          // borderRightWidth:1, borderRightColor:'white',
+                        }}
+                        onPress={()=> this.selectCrit(value.id)}
+                        >
 
-              </View>
+                        <View style={{alignItems:'center', width:critChoiceColWidth, backgroundColor:colors.greenFlash }}>
+                        <Image
+                          source={{uri:'asset:/img/'
+                            +'criteres/pictos/'
+                            + value.id
+                            +'.png'}}
+                          style={{width:100, height:100,
+                          backgroundColor:colors.greenFlash}} 
+                          resizeMode="contain"
+                        />
+                        </View>
 
-            : <View>
-                <Text style={{
-                  padding:5,
-                  backgroundColor:colors.greenFlash,
-                  color:'white',
-                  textAlign:'center',
-                  fontWeight:'bold', 
-                  fontSize:16,
-                  }}>
-                  Sélectionnez un critère:
-                  </Text>
-              </View>
-            }
-
-
-          <ScrollView horizontal style={{flex:1}}>
-
-            { !this.state.curCrit
-              ? // Choose a criteria.
-                this.state.remainingsCrit.map((value, key)=>{
-
-                  // TODO: don't compute colWidth for each item.
-                  const colWidth = this.state.remainingsCrit.length < 3
-                    ? screenWidth/2
-                    : screenWidth/2.5;
-
-                  return (
-                    <TouchableOpacity 
-                      key={key}
-                      style={{
-                        width:colWidth, alignItems:'center', marginLeft:1,
-                        // borderRightWidth:1, borderRightColor:'white',
-                      }}
-                      onPress={()=> this.selectCrit(value.id)}
-                      >
-
-                      <View style={{alignItems:'center', width:colWidth, backgroundColor:colors.greenFlash }}>
-                      <Image
-                        source={{uri:'asset:/img/'
-                          +'criteres/pictos/'
-                          + value.id
-                          +'.png'}}
-                        style={{width:100, height:100,
-                        backgroundColor:colors.greenFlash}} 
-                        resizeMode="contain"
-                      />
-                      </View>
-
-                      <Text style={{fontWeight:'bold',textAlign:'center', marginBottom:10,}}>
-                      {value.name}
-                      </Text>
-                      <Text style={{fontWeight:'normal',textAlign:'center'}}>
-                      {value.detail}
-                      </Text>
-
-                    </TouchableOpacity>
-                  );
-                })
-
-              : // Criteria choosen => output criteria values.
-                Object.entries(this.state.curCrit.values).map((value, key) => {
-                // this.state.curCrit.values((value, index) => {
-
-                  value=value[1];
-                  // console.log(key)
-                  // console.log(value)
-                  // console.log(this.state.curCrit.photos);
-                       
-                  const colWidth = Object.keys(this.state.curCrit.values).length < 3
-                              ? screenWidth/2
-                              : screenWidth/2.5;
-
-                  return (
-                  
-                    <TouchableOpacity 
-                      key={key}
-                      style={{
-                       width:colWidth, alignItems:'center', marginLeft:1,
-                        // borderRightWidth:2, borderRightColor:'white',
-                      }}
-                      onPress={()=>this.setCriteria(value.id, key)}
-                      >
-                      
-                      <View style={{alignItems:'center', width:colWidth, backgroundColor:colors.greenFlash }}>
-                      <Image
-                        source={{uri:'asset:/img/'
-                          +'criteres/pictos/'
-                          +this.state.curCrit_id
-                          +'-'
-                          + key //value.id
-                          +'.png'}}
-                        style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
-                        // resizeMode="contain"
-                      />
-                      </View>
-                      <Text style={{marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center'}}>
-                      {value.name} 
-                      </Text>
-                      <Text style={{textAlign:'center'}}>
+                        <Text style={{fontWeight:'bold',textAlign:'center', marginBottom:10,}}>
+                        {value.name}
+                        </Text>
+                        <Text style={{fontWeight:'normal',textAlign:'center'}}>
                         {value.detail}
-                      </Text>
+                        </Text>
 
-                      { // Criteria value photo sample.
-                        // TODO: zoom.
-                        this.state.curCrit.photos && this.state.curCrit.photos[key]
-                        ? this.state.curCrit.photos[key].map((path, pathindex)=>
-                            <Image
-                              key={pathindex}
-                              source={{uri:'asset:/'+path}}
-                              style={{
-                                marginTop:10, 
-                                width:colWidth, 
-                                height:colWidth, 
-                                backgroundColor:colors.greenFlash,
-                              }} 
-                              resizeMode="contain"
-                            /> 
-                          )
-                        : null
-                      }  
+                      </TouchableOpacity>
+                    )}
+                  </ScrollView>
+                </View>
+                }
 
-                    </TouchableOpacity>
-                  );
-                 
-              })}
+
+        </View>
+      }
+
 
           </ScrollView>
-        </ScrollView>
+
+          
+
+
       </Modal>
     );
   }
@@ -922,7 +979,37 @@ export default class InsectForm extends Component {
                 </View>
               </View>
 
+
               <View style={styles.collection_grp}>
+
+                <TouchableOpacity 
+                  style={{
+                    justifyContent:'center', alignItems:'center',
+                    marginBottom:10,
+                    padding:1,
+                    flexDirection:'row',
+                    backgroundColor:colors.greenFlash,
+                    // borderColor:'lightgrey', borderWidth:1
+                  }}
+                  onPress={()=>this.showTaxonModal()}
+                  >
+         
+                    <MaterialCommunityIcons
+                      name="database-search" //table-search 
+                      style={{ color:'white',backgroundColor:colors.greenFlash }}
+                      size={25}
+                    />
+                    <Text style={{
+                    padding:5,
+                    fontSize:16,
+                    fontWeight:'bold',
+                    color:'white',
+                    }}>
+                    Identification par critères
+                  </Text>
+           
+                </TouchableOpacity>  
+
                 <TouchableOpacity 
                   style={{
                     marginBottom:10,
@@ -970,39 +1057,7 @@ export default class InsectForm extends Component {
                   onSubmitEditing = {(event) => this.storeInsect('taxon_extra_info', event.nativeEvent.text) }                        
                 />
 
-                <TouchableOpacity 
-                  style={{
-                    marginBottom:10,
-                    padding:1,
-                    flexDirection:'row',
-                    backgroundColor:'white', borderColor:'lightgrey', borderWidth:1}}
-                    onPress={()=>this.showTaxonModal()}
-                  >
-                  <View
-                    style={{ justifyContent:'center', alignItems:'center',
-                      backgroundColor:colors.greenFlash,
-                       padding:5, marginRight:5,
-                      }}
-                    >
-                    <MaterialCommunityIcons
-                      name="bug" //table-search 
-                      style={{ color:'white',backgroundColor:colors.greenFlash }}
-                      size={22}
-                    />
-                  </View>
-                  <Text style={{
-                    flex:1,
-                    padding:5,
-                    fontSize:14,
-                    backgroundColor:'white',
-                    color:this.state.insect.taxon_list_id_list?colors.greenFlash:'grey'
-                    }}>
-                    { this.state.insect.taxon_list_id_list
-                      ? this.state.insect.taxon_name
-                      : "Outil d'ident." 
-                    }
-                  </Text>
-                </TouchableOpacity>  
+
                 { !this.state.taxonModalVisible ? null :
                   <TaxonModal 
                     ref={"modal-taxon-search"}
