@@ -23,7 +23,6 @@ import {
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import RNFS  from'react-native-fs';
 import FooterImage from './footerimage';
-// import ImageView from './imageView';
 import ModalFilterPicker from './filterSelect';
 
 import RNFetchBlob from 'rn-fetch-blob';
@@ -40,7 +39,8 @@ import { insectList } from './insects.js';
 import { criteria } from './criteres.js';
 import { colors } from './colors';
 
-const screenWidth = Dimensions.get('window').width;
+const screenWidth = Dimensions.get('window').width,
+      screenHeight = Dimensions.get('window').height;
 //=========================================================================================
 class TaxonModal extends Component {
 //-----------------------------------------------------------------------------------------
@@ -52,6 +52,8 @@ class TaxonModal extends Component {
       detailsVisible:false,
       historyVisible:false,
       currentCriteriaDescriptionVisible:false,
+      remainingsThumbsVisible:false,
+
       detailsIndex:0,
 
       sources:false, // photos of insect to be indentified.
@@ -87,38 +89,43 @@ class TaxonModal extends Component {
     });      
   }
 
-  async selectCrit(id){
+/*  async*/ selectCrit(id){
 
-    // Get current criteria photos.
-    const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
-    files.sort();
-    const critPhotos = {};
-    files.forEach((f)=>{
-      if(f.isFile){
-        // Get crit values.
-        let sub = f.name.substring(0,11).split('_');
-        sub = ''+(parseInt(sub[2],10)-1); // remove leading 0.
-        if(typeof critPhotos[sub] == 'undefined'){
-         critPhotos[sub] = [];
-        }
-       critPhotos[sub].push(f.path);
-      }
-              // {
-              //   name: string;     // The name of the item
-              //   path: string;     // The absolute path to the item
-              //   size: string;     // Size in bytes.
-              //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
-              //               // `size` will be set to -1 in this case.
-              //   isFile: () => boolean;        // Is the file just a file?
-              //   isDirectory: () => boolean;   // Is the file a directory?
-              // };
-    });
-      
+    // // Get current criteria photos.
+    // const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
+    // files.sort();
+    // const critPhotos = {};
+    // files.forEach((f)=>{
+    //   if(f.isFile){
+    //     // Get crit values.
+    //     let sub = f.name.substring(0,11).split('_');
+    //     sub = ''+(parseInt(sub[2],10)-1); // remove leading 0.
+    //     if(typeof critPhotos[sub] == 'undefined'){
+    //      critPhotos[sub] = [];
+    //     }
+    //    critPhotos[sub].push(f.path);
+    //   }
+    //           // {
+    //           //   name: string;     // The name of the item
+    //           //   path: string;     // The absolute path to the item
+    //           //   size: string;     // Size in bytes.
+    //           //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
+    //           //               // `size` will be set to -1 in this case.
+    //           //   isFile: () => boolean;        // Is the file just a file?
+    //           //   isDirectory: () => boolean;   // Is the file a directory?
+    //           // };
+    // });
+
+
     this.setState({
       curCrit_id:id,
       curCrit:{...criteria[id],
-        photos:critPhotos,
+        // photos:critPhotos,
       },
+    }, function(){
+        if(!this.state.curCrit.photos){
+          this.loadRCritPhotos(id);
+        }
     });
   }
 
@@ -231,7 +238,7 @@ class TaxonModal extends Component {
       remainings:remainings.insects,
       remainingsCrit:remainingsCrit,
     }, function(){
-      if(remainings.insects.length){
+      if(remainings.insects.length && this.refs['remaining-insects']){
         this.refs['remaining-insects'].scrollToIndex({'index':0});
       }
     });
@@ -259,10 +266,51 @@ class TaxonModal extends Component {
     }
 
     this.setState({
+      upd:new Date().getTime(),
       remainingInsectPhotos:{
         ...this.state.remainingInsectPhotos,
         [id]: photos
     }});
+  }
+
+  async loadRCritPhotos(id){
+ 
+    // Get current criteria photos.
+    const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
+    files.sort();
+    const critPhotos = {};
+    files.forEach((f)=>{
+      if(f.isFile){
+        // Get crit values.
+        let sub = f.name.substring(0,11).split('_');
+        sub = ''+(parseInt(sub[2],10)-1); // remove leading 0.
+        if(typeof critPhotos[sub] == 'undefined'){
+         critPhotos[sub] = [];
+        }
+       critPhotos[sub].push(f.path);
+      }
+              // {
+              //   name: string;     // The name of the item
+              //   path: string;     // The absolute path to the item
+              //   size: string;     // Size in bytes.
+              //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
+              //               // `size` will be set to -1 in this case.
+              //   isFile: () => boolean;        // Is the file just a file?
+              //   isDirectory: () => boolean;   // Is the file a directory?
+              // };
+    });
+      
+    criteria[id].photos=critPhotos;
+    this.setState({
+      curCrit:{
+        ...this.state.curCrit,
+        photos:critPhotos
+    }});
+  }
+
+
+  toggleRemainingsThumbs(){
+    this.setState({remainingsThumbsVisible:!this.state.remainingsThumbsVisible});
   }
 
   toggleCurrentCriteriaDetails(){
@@ -300,7 +348,7 @@ class TaxonModal extends Component {
     this.setState({ detailsVisible:listIndex }, function(){
       console.log( this.state.detailsVisible);
       // TODO !!! or make own slider :((
-      //  console.log('showDetailsModal',this.state.detailsVisible) ioio
+      //  console.log('showDetailsModal',this.state.detailsVisible) 
       // this.scrollDetailsToIndex();
     });
   }
@@ -311,21 +359,32 @@ class TaxonModal extends Component {
 
   scrollDetailsToIndex() {
     console.log(this.state.detailsVisible)
-    this.refs['remaining-insects-list'].scrollToIndex({
+    // this.refs['remaining-insects-list'].scrollToEnd({
+    //   animated: true
+    // })io
+    this.remainingDetailedList.scrollToIndex({
       index:this.state.detailsVisible, 
-      animated: false
+      animated: true
     })
   }
 
   onViewableItemsChanged = (viewableItems) => {
     console.log(viewableItems);
     if(viewableItems.viewableItems && viewableItems.viewableItems.length){
-      this.setState({detailsIndex:viewableItems.viewableItems[0].index });
+      this.setState({
+        detailsIndex:viewableItems.viewableItems[0].index,
+      });
     }
+    else{
+      this.setState({
+        detailsIndex:'?',
+        upd:new Date().getTime()
+      });
+    }
+
   }
 
   renderTaxonDetails = ({item}) => {
-        
     if(!this.state.remainingInsectPhotos[item.id]){
       this.loadRemainingInsectPhotos(item.id);
     }
@@ -363,9 +422,7 @@ class TaxonModal extends Component {
               /> 
             )
           : <Text> CHARGEMENT PAS D'IMAGE </Text>
-          
         }
-        
       </ScrollView>
     </View>
     );
@@ -374,7 +431,7 @@ class TaxonModal extends Component {
   renderDetailsModal(){
     console.log(this.state.detailsIndex)
     return(
-      <Modal 
+      <Modal
         ref={'remaining-insects-modal'}
         visible={this.state.detailsVisible!==false}
         onRequestClose={() => this.closeDetailsModal()}
@@ -417,18 +474,27 @@ class TaxonModal extends Component {
           </View>
         </View>
 
-        <FlatList horizontal pagingEnabled
+        <FlatList horizontal={true} pagingEnabled={true}
           // Remaining insects Photos.
-          ref={'remaining-insects-list'}
+          ref={(ref) => { this.remainingDetailedList = ref; }}
           keyExtractor ={(item, index) => ''+index}
           data={this.state.remainings}
           extraData={this.state.remainingInsectPhotos}
+          // extraData={this.state.upd}
           onViewableItemsChanged={this.onViewableItemsChanged} //Update header.
           onLayout={() => this.scrollDetailsToIndex()}  // Initial scroll.
           // instead of
           // initialNumToRender={this.state.detailsVisible+1}
           // initialScrollIndex={this.state.detailsVisible}
-          // getItemLayout={(data, index) => ({length:screenWidth, offset:screenWidth * index, index})}
+refreshing={true}
+
+          getItemLayout={(data, index) => {
+            console.log(index, data[index]);
+            return ({length:screenWidth, offset:screenWidth * index, index});
+          }}
+    
+
+           
     
           renderItem={this.renderTaxonDetails}
         />
@@ -436,16 +502,25 @@ class TaxonModal extends Component {
     );
   }
 
+                   
+  setThumbTitleHeight(e){
+    console.log(e)
+    this.setState({
+      thumbTitleHeight:e.nativeEvent.layout.height,
+    });
+  }  
+         
+
   render(){
     const 
       critColWidth =  this.state.curCrit
                           && Object.keys(this.state.curCrit.values).length < 3
                           ? screenWidth/2
-                          : screenWidth/2.5,
+                          : screenWidth/2.1,
       critChoiceColWidth =  this.state.remainingsCrit
                             && this.state.remainingsCrit.length < 3
                             ? screenWidth/2
-                            : screenWidth/2.5;
+                            : screenWidth/2.1;
 
 
     return (
@@ -479,18 +554,31 @@ class TaxonModal extends Component {
               />
             </TouchableOpacity>
 
-            <View 
+
+            <TouchableOpacity 
               // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
               style={{flex:1,
                alignItems:'center', justifyContent:'center',
-              }}>
+              }}
+              onPress={() => this.toggleRemainingsThumbs()}
+              >
+
+
               <Text style={{
                 fontSize:18, fontWeight:'bold', textAlign:'center', 
                 color:this.state.remainings.length ? 'white' : colors.purple, 
               }}>
-              { this.state.remainings.length} taxons restants
+
+              { this.state.remainings.length} taxons restants {'  '}
+
+              <MaterialCommunityIcons
+                name="eye-settings-outline" 
+                style={[{ color:'white',}]}
+                size={25}
+              />
+
               </Text>
-            </View>
+            </TouchableOpacity>
 
             { // History button
             this.pastCrit_ids.length < 1 ? null :
@@ -513,7 +601,7 @@ class TaxonModal extends Component {
           </View>
 
 
-          <ScrollView style={{ flex:1}} >
+          <View style={{ flex:1}} >
           { this.pastCrit_ids.length && this.state.historyVisible
           
           ? // History
@@ -570,9 +658,10 @@ class TaxonModal extends Component {
                 !this.state.sources ? null :
                 <ImageViewer
                   backgroundColor={'black'}
-                  style={{flex:1, backgroundColor:'black',
-                        width: screenWidth*2/3, 
-                        height: screenWidth*2/3}}
+                  style={{flex:0.5, backgroundColor:'black',
+                        // width: screenWidth*2/3, 
+                        // height: screenWidth*2/3
+                      }}
                   imageUrls={this.state.sources}
                   enablePreload={true}
                   renderIndicator ={()=> null}
@@ -582,11 +671,30 @@ class TaxonModal extends Component {
                   />
               }
 
+              <View style={{flex:0.5}}>
+
+              { this.state.remainingsThumbsVisible ?
+              <View style={{flex:1}}>
+                <TouchableOpacity 
+                  style={{height:50, backgroundColor:colors.greenFlash,
+                   alignItems:'center', justifyContent:'center',
+                  }}
+                  onPress={() => this.toggleRemainingsThumbs()}
+                  >
+                  <Text style={{
+                    color:'white',
+                    textAlign:'center',
+                    fontWeight:'bold', 
+                    fontSize:16,
+                    }}>
+                    {this.state.remainings.length} taxons restants
+                  </Text>
+                  </TouchableOpacity>
               <FlatList
                 // Remaining Insects.
                 ref={'remaining-insects'}
                 horizontal
-                style={{}}
+                style={{flex:1,}}
                 keyExtractor ={(item, index) => ''+item.value}
                 data={this.state.remainings}
                 extraData={this.state.remainingInsectPhotos}
@@ -600,7 +708,7 @@ class TaxonModal extends Component {
                         style={{
                             width:150
                       }}>
-                        <Text style={{textAlign:'center', padding:1}}>
+                        <Text style={{textAlign:'center', padding:2}}>
                           {value.name} 
                           {/*<Text style={{fontWeight:'normal'}}>
                             {value.label} {value.id}
@@ -611,13 +719,13 @@ class TaxonModal extends Component {
                   }
                   else{
                     return(
+                      <ScrollView>
                       <TouchableOpacity 
                         key={value.id} 
-                        style={{width:150, height:150}}
+                        style={{width:150}}
                         onPress={()=>this.showDetailsModal( row.item.id, row.index)}
                         >
-
-                        { // Insect photo sample.
+                        {/* // Insect photo sample.
                           // TODO: zoom & detailed info.
                           this.state.remainingInsectPhotos[value.id][0]
                           ? <Image
@@ -626,8 +734,8 @@ class TaxonModal extends Component {
                               resizeMode="contain"
                             /> 
                           : null
-                        }
-                        {/*
+                        */}
+                        { // Remaining insects photo samples.
                            this.state.remainingInsectPhotos[value.id].map((path, pathindex)=>{
                             if(this.state.remainings.length > 20){
                               if(pathindex==0){
@@ -651,28 +759,26 @@ class TaxonModal extends Component {
                                   /> 
                               );
                             }
-
                           })
-                        */}
+                        }
                       
-                        <Text style={{textAlign:'center'}}>
+                        <Text 
+                          style={{textAlign:'center'}}>
                           {value.name} 
-                          {/*<Text style={{fontWeight:'normal'}}>
-                            {value.label} {value.id}
-                          </Text>*/}
                         </Text>
                       </TouchableOpacity>
+                      </ScrollView>
                     );
                   }
                 }}
-              />
-
-
-              { // Current criteria.
+              /></View>
+        
+              :
+               // Current criteria.
               this.state.curCrit !== false
               ? <View style={{flex:1}}>
                   <TouchableOpacity
-                    style={{backgroundColor:colors.greenFlash, marginBottom:1,}}
+                    style={{backgroundColor:colors.greenFlash, marginBottom:0,}}
                     onPress = {() => this.toggleCurrentCriteriaDetails()} 
                     >
                     {/*
@@ -685,7 +791,7 @@ class TaxonModal extends Component {
                       resizeMode="contain"
                     />
                     */}
-                    <Text // Current criteria name &description
+                    <Text // Current criteria name.
                       style={{
                         color:'white',
                         textAlign:'center',
@@ -708,7 +814,7 @@ class TaxonModal extends Component {
                     </Text>
 
                     { !this.state.currentCriteriaDescriptionVisible || !this.state.curCrit.detail ? null :
-                    <Text 
+                    <Text // Current criteria description.
                       style={{
                         color:'white',
                         textAlign:'center',
@@ -732,11 +838,14 @@ class TaxonModal extends Component {
                       // console.log(this.state.curCrit.photos);
 
                       return (
+                        <ScrollView>
                         <TouchableOpacity 
                           key={key}
                           style={{
-                           width:critColWidth, alignItems:'center', marginLeft:1,
-                            // borderRightWidth:2, borderRightColor:'white',
+                          marginBottom:20,
+                          marginLeft:key>0?1:0,
+                          width:critColWidth, 
+                          alignItems:'center',
                           }}
                           onPress={()=>this.setCriteria(value.id, key)}
                           >
@@ -753,15 +862,16 @@ class TaxonModal extends Component {
                             // resizeMode="contain"
                           />
                           </View>
-                          <Text style={{marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center'}}>
+                          <Text style={{padding:2, marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center'}}>
                           {value.name} 
                           </Text>
-                          <Text style={{textAlign:'center'}}>
+                          <Text style={{padding:2, textAlign:'center'}}>
                             {value.detail}
                           </Text>
 
                           { // Criteria value photo sample.
                             // TODO: zoom.
+                           
                             this.state.curCrit.photos && this.state.curCrit.photos[key]
                             ? this.state.curCrit.photos[key].map((path, pathindex)=>
                                 <Image
@@ -776,34 +886,57 @@ class TaxonModal extends Component {
                                   resizeMode="contain"
                                 /> 
                               )
-                            : null
+                            : <Text style={{textAlign:'center'}}>
+                                Chargement...
+                              </Text>
                           }  
 
                         </TouchableOpacity>
+                        </ScrollView>
                       );
                     })}
                   </ScrollView>
                 </View>
 
-              : <View // Choose a criteria.
+              : <View style={{flex:1}} // Choose a criteria.
+                  >
+
+                <TouchableOpacity 
+                  style={{height:50, backgroundColor:colors.greenFlash,
+                   alignItems:'center', justifyContent:'center',
+                  }}
+                  onPress={() => this.toggleRemainingsThumbs()}
                   >
                   <Text style={{
-                    padding:5,
-                    backgroundColor:colors.greenFlash,
                     color:'white',
                     textAlign:'center',
                     fontWeight:'bold', 
                     fontSize:16,
                     }}>
-                    Sélectionnez un critère:
+                    {this.state.remainings.length} taxons restants
                   </Text>
-                  <ScrollView horizontal>
+                  </TouchableOpacity>
+
+                  <Text style={{
+                    padding:5,
+                    backgroundColor:colors.greenFlash,
+                    color:'white',
+                    textAlign:'center',
+                    fontWeight:'normal', 
+                    fontSize:16,
+                    }}>
+                    Sélectionnez un critère
+                  </Text>
+                  <ScrollView horizontal style={{flex:1}}>
                     { this.state.remainingsCrit.map((value, key)=>
+                      <ScrollView>
                       <TouchableOpacity 
                         key={key}
                         style={{
-                          width:critChoiceColWidth, alignItems:'center', marginLeft:1,
-                          // borderRightWidth:1, borderRightColor:'white',
+                          marginBottom:20,
+                          marginLeft:key>0?1:0,
+                          width:critChoiceColWidth, 
+                          alignItems:'center',
                         }}
                         onPress={()=> this.selectCrit(value.id)}
                         >
@@ -820,29 +953,26 @@ class TaxonModal extends Component {
                         />
                         </View>
 
-                        <Text style={{fontWeight:'bold',textAlign:'center', marginBottom:10,}}>
+                        <Text style={{padding:2, fontWeight:'bold',textAlign:'center', marginBottom:10,}}>
                         {value.name}
                         </Text>
-                        <Text style={{fontWeight:'normal',textAlign:'center'}}>
+                        <Text style={{padding:2, fontWeight:'normal',textAlign:'center'}}>
                         {value.detail}
                         </Text>
 
                       </TouchableOpacity>
+                      </ScrollView>
                     )}
                   </ScrollView>
                 </View>
                 }
 
-
-        </View>
-      }
-
-
-          </ScrollView>
-
-          
+                </View>
+              </View>
+            }
 
 
+          </View>
       </Modal>
     );
   }

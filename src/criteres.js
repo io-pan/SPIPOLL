@@ -171,7 +171,7 @@ export const criteria ={
 				}
 		},
 	'11':{	name:"Couleurs principales des élytres ou demi-élytres",
-			condition:{'1':[0], '10':[0,1]},
+			condition:{'1':[0], '10':[0]},
 			detail:"Les élytres sont les ailes coriaces des Coléoptères (scarabés, coccinelles...). Les demi-élytres sont des ailes mi-coriace mi-membraneuse de certains Hémiptères (punaises). \nIl est parfois difficile de discerner la couleur des demi-élytres, dans ce cas, ne renseignez pas ce caractère.",
 			photo_etat:410,
 			values:{
@@ -524,7 +524,7 @@ export const criteria ={
 	},
 		//coleo
 	'43':{	name:"Couleur principale des élytres ou demi-élytres",
-			condition:{'1':[0],'10':[0,1]},
+			condition:{'1':[0],'10':[1]},
 			detail:"Les élytres sont les ailes coriaces des coléoptères de type \"scarabé\" et certaines punaises, les demi-élytres sont des ailes mi-coriace mi-membraneuses de certaines punaises. Il est parfois difficile de voir la couleur des demi-élytres.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 			photo_etat:860,
 			values:{
@@ -704,7 +704,7 @@ export const criteria ={
 				'0': {id:227, name:"Présence"},
 				'1': {id:228, name:"Absence"},
 			}
-	},
+	},// ioio 57-58 more condition  52?
 	'58':{	name:"Bande blanche sur le dessous des ailes postérieures",
 			condition:{'1':[1], '2':[0], '3':[1,2]},
 			detail:"Renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",

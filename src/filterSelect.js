@@ -159,7 +159,7 @@ export default class ModalFilterPicker extends Component {
         </View>
       );
     } else {
-
+// TODO highlight pas Ab(eille) quand on tape ab =>  filtré alors qu'il doit pas (autre ex: coqueli)
       return (
         <View style={{flex:1, backgroundColor:'#fafaff'}} >
           <Text style={{textAlign:'center', marginTop:10, marginBottom:10}}>
