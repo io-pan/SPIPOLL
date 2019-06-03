@@ -59,6 +59,7 @@ class TaxonModal extends Component {
       sources:false, // photos of insect to be indentified.
       curCrit_id:false,
       curCrit:false,
+      curCritSelectedValues:[],
       remainings:insectList,
       remainingsCrit:[],
       remainingInsectPhotos:[],
@@ -222,16 +223,29 @@ class TaxonModal extends Component {
     return remainingsCrit;
   }
 
-  setCriteria(crit_val_id, crit_val_key) {
+
+  addCurCritValue(crit_val_id, crit_val_key){
+    const curCritSelectedValues = this.state.curCritSelectedValues;
+    if(typeof curCritSelectedValues[crit_val_key] != 'undefined'){
+      delete curCritSelectedValues[crit_val_key];
+    }
+    else{
+      curCritSelectedValues[crit_val_key] = crit_val_id;
+    }
+    this.setState({curCritSelectedValues: curCritSelectedValues})
+  }
+
+  setCriteria() {
 
     this.pastCrit_ids.push(this.state.curCrit_id);
-    this.pastCrit[this.state.curCrit_id] = [crit_val_id];// to check insect //TODO: possible multi select
-    this.pastCrit_valkey[this.state.curCrit_id] = [crit_val_key];// to check crits
+    this.pastCrit[this.state.curCrit_id] = this.state.curCritSelectedValues; //[crit_val_id];// to check insect //TODO: possible multi select
+    this.pastCrit_valkey[this.state.curCrit_id] = Object.keys(this.state.curCritSelectedValues);// to check crits
 
     const remainings = this.filterInsects(),
           remainingsCrit = this.filterCiteria(remainings.criteria);
 
     this.setState({
+      curCritSelectedValues:[],
       currentCriteriaDescriptionVisible:false,
       curCrit_id:false,
       curCrit: false,
@@ -575,26 +589,25 @@ refreshing={true}
                 </Text>
               </View>
 
-              { this.pastCrit_ids.map((value, key)=>
-
-              <TouchableOpacity 
-                key={key}
-                style={{padding:10,
-                  borderBottomWidth:1, borderBottomColor:'lightgrey'}}
-                onPress={()=> this.deleteHistory(key, value)}
-                >
-                <Text style={{fontSize:16, fontWeight:'bold'}}>
-                  {criteria[value].name + ' '} 
+              { this.pastCrit_ids.map((value, key)=>     
+                <TouchableOpacity 
+                  key={key}
+                  style={{padding:10,
+                    borderBottomWidth:1, borderBottomColor:'lightgrey'}}
+                  onPress={()=> this.deleteHistory(key, value)}
+                  >
+                  <Text style={{fontSize:16, fontWeight:'bold'}}>
+                    {criteria[value].name + ' '} 
+                  </Text>
                   { // loop selected values.
-                    this.pastCrit_valkey[value].map((v,k)=>
-                      <Text key={k} style={{fontWeight:'normal'}}>
-                      { criteria[value].values[v].name }</Text>
-                    )
-                  }
-                  
-                </Text>
-              </TouchableOpacity>
-            )}
+                      this.pastCrit_valkey[value].map((v,k)=>
+                        <Text key={k} style={{fontWeight:'normal', marginTop:5,}}>
+                        <Text style={{fontWeight:'bold'}}>{k+1}) </Text>
+                        { criteria[value].values[v].name }</Text>
+                      )
+                    }
+                </TouchableOpacity>
+              )}
             </View>
           : // Indentifiction tool.
             <View style={{flex:1}}>
@@ -663,7 +676,7 @@ refreshing={true}
                     </Text>
 
                       <MaterialCommunityIcons
-                        name="chevron-down"
+                        name={this.state.remainingsThumbsVisible?"chevron-up":"chevron-down"}
                         style={{ width:55, color:'white', paddingLeft:10,}}
                         size={30}
                       />
@@ -741,56 +754,73 @@ refreshing={true}
                // Current criteria.
               this.state.curCrit !== false
               ? <View style={{flex:1}}>
-                  <TouchableOpacity
-                    style={{backgroundColor:colors.greenFlash, marginBottom:0,}}
-                    onPress = {() => this.toggleCurrentCriteriaDetails()} 
-                    >
-                    {/*
-                    <Image
-                      source={{uri:'asset:/img/criteres/pictos/'
-                        + this.state.curCrit_id + '.png'}}
-                      style={{
-                        width: screenWidth/4,
-                        height: screenWidth/4 }} 
-                      resizeMode="contain"
-                    />
-                    */}
-                    <Text // Current criteria name.
-                      style={{
-                        color:'white',
-                        textAlign:'center',
-                        fontWeight:'bold', 
-                        fontSize:16,
-                        padding:10, 
-                      }}
+                  <View style={{flexDirection:'row'}}>
+                    <TouchableOpacity
+                      style={{flex:1,backgroundColor:colors.greenFlash, marginBottom:0,}}
+                      onPress = {() => this.toggleCurrentCriteriaDetails()} 
                       >
+                      {/*
+                      <Image
+                        source={{uri:'asset:/img/criteres/pictos/'
+                          + this.state.curCrit_id + '.png'}}
+                        style={{
+                          width: screenWidth/4,
+                          height: screenWidth/4 }} 
+                        resizeMode="contain"
+                      />
+                      */}
+                      <Text // Current criteria name.
+                        style={{
+                          color:'white',
+                          textAlign:'center',
+                          fontWeight:'normal',//bold', 
+                          fontSize:16,
+                          padding:10, 
+                        }}
+                        >
 
-                      {this.state.curCrit.name + ' '}
+                        {this.state.curCrit.name + ' '}
 
-                      { !this.state.curCrit.detail ? null :
-                        <MaterialCommunityIcons
-                          name="help-circle-outline" 
-                          style={{color:'white', backgroundColor:'transparent'}}
-                          size={15}
-                          backgroundColor = 'transparent'
-                        />
+                        { !this.state.curCrit.detail ? null :
+                          <MaterialCommunityIcons
+                            name="help-circle-outline" 
+                            style={{color:'white', backgroundColor:'transparent'}}
+                            size={15}
+                            backgroundColor = 'transparent'
+                          />
+                        }
+                      </Text>
+
+                      { !this.state.currentCriteriaDescriptionVisible || !this.state.curCrit.detail ? null :
+                      <Text // Current criteria description.
+                        style={{
+                          color:'white',
+                          textAlign:'center',
+                          fontWeight:'normal', 
+                          fontSize:16,
+                          padding:10, 
+                        }}>
+                        { this.state.curCrit.detail }
+                      </Text>
                       }
-                    </Text>
-
-                    { !this.state.currentCriteriaDescriptionVisible || !this.state.curCrit.detail ? null :
-                    <Text // Current criteria description.
+                    </TouchableOpacity>
+                    { !Object.keys(this.state.curCritSelectedValues).length ? null :
+                    <TouchableOpacity
                       style={{
-                        color:'white',
-                        textAlign:'center',
-                        fontWeight:'normal', 
-                        fontSize:16,
-                        padding:10, 
-                      }}>
-                      { this.state.curCrit.detail }
-                    </Text>
+                        width:55,
+                        margin:3,
+                        padding:2,
+                        borderColor:colors.greenFlash,
+                        borderWidth:1,
+                         backgroundColor:'white',
+                         alignItems:'center', justifyContent:'center',
+                      }}
+                      onPress={()=>this.setCriteria()}
+                      >
+                      <Text style={{color:colors.greenFlash,fontWeight:'bold'}}>OK</Text>
+                    </TouchableOpacity>
                     }
-                  </TouchableOpacity>
-
+                  </View>
                   <ScrollView horizontal>
                     { // Current criteria choices.
                     Object.entries(this.state.curCrit.values).map((value, key) => {
@@ -802,7 +832,8 @@ refreshing={true}
                       // console.log(this.state.curCrit.photos);
 
                       return (
-                        <ScrollView key={'crit_choices_' + this.state.curCrit.id + '_' + key}>
+                        <ScrollView 
+                          key={'crit_choices_' + this.state.curCrit.id + '_' + key}>
                         <TouchableOpacity 
                           style={{
                           marginBottom:20,
@@ -810,10 +841,13 @@ refreshing={true}
                           width:critColWidth, 
                           alignItems:'center',
                           }}
-                          onPress={()=>this.setCriteria(value.id, key)}
-                          >
+                          // onPress={()=>this.setCriteria(value.id, key)}
                           
-                          <View style={{alignItems:'center', width:critColWidth, backgroundColor:colors.greenFlash }}>
+                          
+                          onPress={()=> this.addCurCritValue(value.id, key)}
+                          >
+                          <View style={{
+                                  alignItems:'center', width:critColWidth, backgroundColor:colors.greenFlash }}>
                           <Image
                             source={{uri:'asset:/img/'
                               +'criteres/pictos/'
@@ -821,11 +855,19 @@ refreshing={true}
                               +'-'
                               + key //value.id
                               +'.png'}}
-                            style={{width:100, height:100, backgroundColor:colors.greenFlash}} 
+                            style={{width:100, height:100, backgroundColor:colors.greenFlash,
+                                opacity: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                  ? 0.5
+                                  : 1,
+                                }} 
                             // resizeMode="contain"
                           />
                           </View>
-                          <Text style={{padding:2, marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center'}}>
+                          <Text style={{padding:2, marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center',
+                                     color: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                  ? colors.greenFlash
+                                  : 'grey'
+                                }}>
                           {value.name} 
                           </Text>
                           { !value.detail ? null :
@@ -843,6 +885,9 @@ refreshing={true}
                                   key={pathindex}
                                   source={{uri:'asset:/'+path}}
                                   style={{
+                                    opacity: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                      ? 0.3
+                                      : 1,
                                     marginTop:10, 
                                     width:critColWidth, 
                                     height:critColWidth, 
@@ -855,6 +900,24 @@ refreshing={true}
                                 ...
                               </Text>
                           }  
+
+
+                            <View // Radio button.
+                              style={{
+                              position:'absolute', top:0, left:0,
+                              borderRadius:10,
+                              margin:10, marginLeft:20,
+                              backgroundColor:'white',
+                              height:20, width:20, borderWidth:2, borderColor:colors.greenDark, padding:2, 
+                            }}>
+                               <View style={{
+                                borderRadius:6,
+                                height:12, width:12,
+                                backgroundColor: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                  ? colors.greenFlash
+                                  : 'transparent'
+                              }}></View>
+                            </View>
 
                         </TouchableOpacity>
                         </ScrollView>
@@ -887,7 +950,6 @@ refreshing={true}
                         }}
                         onPress={()=> this.selectCrit(value.id)}
                         >
-
                         <View style={{alignItems:'center', width:critChoiceColWidth, backgroundColor:colors.greenFlash }}>
                         <Image
                           source={{uri:'asset:/img/'
@@ -908,7 +970,6 @@ refreshing={true}
                           {value.detail}
                           </Text>
                         }
-
                       </TouchableOpacity>
                       </ScrollView>
                     )}
@@ -919,31 +980,23 @@ refreshing={true}
 
                 </View>
 
-
-
-                <View 
+                <TouchableOpacity 
+                  // Top left corner back button.
                   style={{
-                    width:55, height:55, flexDirection:'row',  position:'absolute', top:0, left:0,
+                    width:50, height:50,
+                    position:'absolute', top:0, left:0,
                     justifyContent:'center', alignItems:'center',
                     backgroundColor:colors.greenFlash,
-                    }}
+                  }}
+                  onPress={() => this.props.close()}
                   >
-                  <TouchableOpacity 
-                    style={[{
-                      height:55,
-                      width:55,
-                      justifyContent:'center', alignItems:'center',
-                    }]}
-                    onPress={() => this.props.close()}
-                    >
-                    <MaterialCommunityIcons
-                      name="chevron-left" 
-                      style={[{ color:'white' }]}
-                      size={30}
-                    />
-                  </TouchableOpacity>
+                  <MaterialCommunityIcons
+                    name="chevron-left" 
+                    style={[{ color:'white' }]}
+                    size={30}
+                  />
+                </TouchableOpacity>
 
-                </View>
                 
               </View>
             }
