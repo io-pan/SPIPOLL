@@ -329,7 +329,7 @@ class TaxonModal extends Component {
     }
     this.pastCrit_ids.splice(key);
 
-    // Compute remainigs insects & criteria.
+    // Compute remainings insects & criteria.
     const remainings = this.filterInsects(),
           remainingsCrit = this.filterCiteria(remainings.criteria);
 
@@ -516,13 +516,16 @@ refreshing={true}
       critColWidth =  this.state.curCrit
                           && Object.keys(this.state.curCrit.values).length < 3
                           ? screenWidth/2
-                          : screenWidth/2.1,
+                          : screenWidth/2.2,
       critChoiceColWidth =  this.state.remainingsCrit
                             && this.state.remainingsCrit.length < 3
                             ? screenWidth/2
-                            : screenWidth/2.1;
+                            : screenWidth/2.2,
 
-
+      remainingsColWidth =  this.state.remainings
+                            && this.state.remainings.length < 3
+                            ? screenWidth/2
+                            : screenWidth/2.2;
     return (
       this.state.detailsVisible !== false
       ? this.renderDetailsModal()
@@ -531,126 +534,68 @@ refreshing={true}
         onRequestClose={() => this.props.close()}
         visible={true}
         >
-          <View 
-            style={{
-              height:55, flexDirection:'row', 
-              justifyContent:'center', alignItems:'center',
-              backgroundColor:colors.greenFlash,
-              }}
-            >
-            <TouchableOpacity 
-              style={[{
-                height:55,
-                width:55,
-                justifyContent:'center', alignItems:'center', 
-                borderRightWidth:1, borderRightColor:'white', 
-              }]}
-              onPress={() => this.props.close()}
-              >
-              <MaterialCommunityIcons
-                name="chevron-left" 
-                style={[{ color:'white' }]}
-                size={30}
-              />
-            </TouchableOpacity>
-
-
-            <TouchableOpacity 
-              // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
-              style={{flex:1,
-               alignItems:'center', justifyContent:'center',
-              }}
-              onPress={() => this.toggleRemainingsThumbs()}
-              >
-
-
-              <Text style={{
-                fontSize:18, fontWeight:'bold', textAlign:'center', 
-                color:this.state.remainings.length ? 'white' : colors.purple, 
-              }}>
-
-              { this.state.remainings.length} taxons restants {'  '}
-
-              <MaterialCommunityIcons
-                name="eye-settings-outline" 
-                style={[{ color:'white',}]}
-                size={25}
-              />
-
-              </Text>
-            </TouchableOpacity>
-
-            { // History button
-            this.pastCrit_ids.length < 1 ? null :
-              <TouchableOpacity 
-                style={[{
-                  height:55,
-                  width:55,
-                  justifyContent:'center', alignItems:'center', 
-                  borderLeftWidth:1, borderLeftColor:'white', 
-                }]}
-                onPress={() => this.toggleHistory()}
-                >
-                <MaterialCommunityIcons
-                  name="undo-variant" 
-                  style={[{ color:'white' }]}
-                  size={30}
-                />
-              </TouchableOpacity>
-            }
-          </View>
-
-
           <View style={{ flex:1}} >
           { this.pastCrit_ids.length && this.state.historyVisible
           
           ? // History
-            this.pastCrit_ids.map((value, key)=> //{
-                // console.log(value);
-                // console.log(criteria[value].name);
-                // console.log(criteria[value].values);
+            <View style={{flex:1}}>
+              <View 
+                style={{
+                  height:55,
+                  flexDirection:'row',
+                  marginBottom:10,
+                  justifyContent:'center', alignItems:'center',
+                  backgroundColor:colors.greenFlash,
+                  }}
+                >
+                <TouchableOpacity 
+                  style={[{
+                    height:55,
+                    width:55,
+                    justifyContent:'center', alignItems:'center',
+                    borderRightWidth:1, borderRightColor:'white',
+                  }]}
+                  onPress={() => this.toggleHistory()}
+                  >
+                  <MaterialCommunityIcons
+                    name="chevron-left" 
+                    style={[{ color:'white' }]}
+                    size={30}
+                  />
+                </TouchableOpacity>
 
-                // console.log(this.pastCrit_valkey);
-                // console.log(this.pastCrit_valkey[value]);
-                // this.pastCrit_valkey[value].map((v,k)=>{
-                //   console.log(v);
-                //   console.log(criteria[value].values[v].name)
-                // })
+                <Text style={{ 
+                  flex:1,
+                  color:'white',
+                  textAlign:'center',
+                  fontWeight:'bold', 
+                  fontSize:18,
+                  }}>
+                  Historique
+                </Text>
+              </View>
 
-                // console.log(criteria[value].values[this.pastCrit_valkey[value]])
-                // console.log(criteria[value].values[this.pastCrit_valkey[value]].name)
-                // return(
-                
-                // <Text style={{
-                //   marginTop:1,
-                //   color:'white',
-                //   backgroundColor:colors.greenFlash,
-                //   fontWeight:'bold', fontSize:16,
-                //   color:'white', textAlign:'center', padding:5,
-                //   }}>
-                //   Historique
-                // </Text> 
-                  <TouchableOpacity 
-                    key={key}
-                    style={{padding:10,
-                      borderBottomWidth:1, borderBottomColor:'lightgrey'}}
-                    onPress={()=> this.deleteHistory(key, value)}
-                    >
-                    <Text style={{fontSize:16, fontWeight:'bold'}}>
-                      {criteria[value].name + ' '} 
-                      { // loop selected values.
-                        this.pastCrit_valkey[value].map((v,k)=>
-                          <Text key={k} style={{fontWeight:'normal'}}>
-                          { criteria[value].values[v].name }</Text>
-                        )
-                      }
-                      
-                    </Text>
-                  </TouchableOpacity>
-                // );
-                // }    
-              )
+              { this.pastCrit_ids.map((value, key)=>
 
+              <TouchableOpacity 
+                key={key}
+                style={{padding:10,
+                  borderBottomWidth:1, borderBottomColor:'lightgrey'}}
+                onPress={()=> this.deleteHistory(key, value)}
+                >
+                <Text style={{fontSize:16, fontWeight:'bold'}}>
+                  {criteria[value].name + ' '} 
+                  { // loop selected values.
+                    this.pastCrit_valkey[value].map((v,k)=>
+                      <Text key={k} style={{fontWeight:'normal'}}>
+                      { criteria[value].values[v].name }</Text>
+                    )
+                  }
+                  
+                </Text>
+              </TouchableOpacity>
+            )}
+            </View>
           : // Indentifiction tool.
             <View style={{flex:1}}>
 
@@ -658,7 +603,7 @@ refreshing={true}
                 !this.state.sources ? null :
                 <ImageViewer
                   backgroundColor={'black'}
-                  style={{flex:0.5, backgroundColor:'black',
+                  style={{flex:0.45, backgroundColor:'black',
                         // width: screenWidth*2/3, 
                         // height: screenWidth*2/3
                       }}
@@ -671,25 +616,61 @@ refreshing={true}
                   />
               }
 
-              <View style={{flex:0.5}}>
+              <View style={{flex:0.55}}>
+
+                <View 
+                  style={{
+                    height:50, flexDirection:'row',
+                    marginBottom:1,
+                    justifyContent:'center', alignItems:'center',
+                    backgroundColor:colors.greenFlash,
+                    }}
+                  >
+                  { // History button
+                  this.pastCrit_ids.length < 1 ? null :
+                    <TouchableOpacity 
+                      style={[{
+                        height:50,
+                        width:55,
+                        justifyContent:'center', alignItems:'center', 
+                        borderRightWidth:1, borderRightColor:'white', 
+                      }]}
+                      onPress={() => this.toggleHistory()}
+                      >
+                      <MaterialCommunityIcons
+                        name="undo-variant" 
+                        style={[{ color:'white' }]}
+                        size={30}
+                      />
+                    </TouchableOpacity>
+                  }
+
+                  <TouchableOpacity 
+                    style={{flex:1, flexDirection:'row', height:50, backgroundColor:colors.greenFlash,
+                     alignItems:'center', justifyContent:'center',
+                    }}
+                    onPress={() => this.toggleRemainingsThumbs()}
+                    >
+                    <Text style={{
+                      flex:1,
+                      color:'white',
+                      textAlign:'center',
+                      fontWeight:'bold', 
+                      fontSize:16,
+                      }}>
+                      {this.state.remainings.length} taxons restants
+
+                    </Text>
+
+                      <MaterialCommunityIcons
+                        name="chevron-down"
+                        style={{ width:55, color:'white', paddingLeft:10,}}
+                        size={30}
+                      />
+                  </TouchableOpacity>
+                </View>
 
               { this.state.remainingsThumbsVisible ?
-              <View style={{flex:1}}>
-                <TouchableOpacity 
-                  style={{height:50, backgroundColor:colors.greenFlash,
-                   alignItems:'center', justifyContent:'center',
-                  }}
-                  onPress={() => this.toggleRemainingsThumbs()}
-                  >
-                  <Text style={{
-                    color:'white',
-                    textAlign:'center',
-                    fontWeight:'bold', 
-                    fontSize:16,
-                    }}>
-                    {this.state.remainings.length} taxons restants
-                  </Text>
-                  </TouchableOpacity>
               <FlatList
                 // Remaining Insects.
                 ref={'remaining-insects'}
@@ -706,72 +687,55 @@ refreshing={true}
                       <View 
                         key={value.id} 
                         style={{
-                            width:150
+                            width:remainingsColWidth,
+                            paddingBottom:10,
                       }}>
                         <Text style={{textAlign:'center', padding:2}}>
                           {value.name} 
-                          {/*<Text style={{fontWeight:'normal'}}>
-                            {value.label} {value.id}
-                          </Text>*/}
                         </Text>
                       </View>
                     );
                   }
                   else{
                     return(
-                      <ScrollView>
-                      <TouchableOpacity 
-                        key={value.id} 
-                        style={{width:150}}
+                      <ScrollView key={value.id} >
+                      <TouchableOpacity // Remaining insects photo samples.
+                        style={{width:remainingsColWidth, paddingBottom:10}}
                         onPress={()=>this.showDetailsModal( row.item.id, row.index)}
                         >
-                        {/* // Insect photo sample.
-                          // TODO: zoom & detailed info.
-                          this.state.remainingInsectPhotos[value.id][0]
-                          ? <Image
-                              source={{uri:'asset:/'+this.state.remainingInsectPhotos[value.id][0]}}
-                              style={{width:150, height:150, backgroundColor:colors.greenFlash}} 
+
+                        { this.state.remainings.length < 10
+                        ? <View>
+                          <Text 
+                            style={{textAlign:'center', marginTop:10, marginBottom:10}}>
+                            {value.name} 
+                          </Text>
+                          {this.state.remainingInsectPhotos[value.id].map((path, pathindex)=>
+                              <Image
+                                key={pathindex}
+                                source={{uri:'asset:/' + path}}
+                                style={{width:remainingsColWidth, height:remainingsColWidth, backgroundColor:colors.greenFlash}} 
+                                resizeMode="contain"
+                              />
+                            )}
+                          </View>
+                        : <View><Image 
+                              source={{uri:'asset:/' + this.state.remainingInsectPhotos[value.id][0]}}
+                              style={{width:remainingsColWidth, height:remainingsColWidth, backgroundColor:colors.greenFlash}} 
                               resizeMode="contain"
                             /> 
-                          : null
-                        */}
-                        { // Remaining insects photo samples.
-                           this.state.remainingInsectPhotos[value.id].map((path, pathindex)=>{
-                            if(this.state.remainings.length > 20){
-                              if(pathindex==0){
-                                return(
-                                  <Image
-                                    key={pathindex}
-                                    source={{uri:'asset:/'+path}}
-                                    style={{width:150, height:150, backgroundColor:colors.greenFlash}} 
-                                    resizeMode="contain"
-                                  /> 
-                                );
-                              }
-                            }
-                            else{
-                              return(
-                                  <Image
-                                    key={pathindex}
-                                    source={{uri:'asset:/'+path}}
-                                    style={{width:150, height:150, backgroundColor:colors.greenFlash}} 
-                                    resizeMode="contain"
-                                  /> 
-                              );
-                            }
-                          })
+                          <Text 
+                            style={{textAlign:'center', paddingTop:10, paddingBottom:10}}>
+                            {value.name} 
+                          </Text>
+                          </View>
                         }
-                      
-                        <Text 
-                          style={{textAlign:'center'}}>
-                          {value.name} 
-                        </Text>
                       </TouchableOpacity>
                       </ScrollView>
                     );
                   }
                 }}
-              /></View>
+              />
         
               :
                // Current criteria.
@@ -838,9 +802,8 @@ refreshing={true}
                       // console.log(this.state.curCrit.photos);
 
                       return (
-                        <ScrollView>
+                        <ScrollView key={'crit_choices_' + this.state.curCrit.id + '_' + key}>
                         <TouchableOpacity 
-                          key={key}
                           style={{
                           marginBottom:20,
                           marginLeft:key>0?1:0,
@@ -865,9 +828,11 @@ refreshing={true}
                           <Text style={{padding:2, marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center'}}>
                           {value.name} 
                           </Text>
-                          <Text style={{padding:2, textAlign:'center'}}>
-                            {value.detail}
-                          </Text>
+                          { !value.detail ? null :
+                            <Text style={{padding:2, textAlign:'center'}}>
+                              {value.detail}
+                            </Text>
+                          }
 
                           { // Criteria value photo sample.
                             // TODO: zoom.
@@ -887,7 +852,7 @@ refreshing={true}
                                 /> 
                               )
                             : <Text style={{textAlign:'center'}}>
-                                Chargement...
+                                ...
                               </Text>
                           }  
 
@@ -898,25 +863,8 @@ refreshing={true}
                   </ScrollView>
                 </View>
 
-              : <View style={{flex:1}} // Choose a criteria.
-                  >
-
-                <TouchableOpacity 
-                  style={{height:50, backgroundColor:colors.greenFlash,
-                   alignItems:'center', justifyContent:'center',
-                  }}
-                  onPress={() => this.toggleRemainingsThumbs()}
-                  >
-                  <Text style={{
-                    color:'white',
-                    textAlign:'center',
-                    fontWeight:'bold', 
-                    fontSize:16,
-                    }}>
-                    {this.state.remainings.length} taxons restants
-                  </Text>
-                  </TouchableOpacity>
-
+              : <View // Choose a criteria.
+                  style={{flex:1}} >
                   <Text style={{
                     padding:5,
                     backgroundColor:colors.greenFlash,
@@ -929,9 +877,8 @@ refreshing={true}
                   </Text>
                   <ScrollView horizontal style={{flex:1}}>
                     { this.state.remainingsCrit.map((value, key)=>
-                      <ScrollView>
+                      <ScrollView key={'remainingsCrit_' + key}>
                       <TouchableOpacity 
-                        key={key}
                         style={{
                           marginBottom:20,
                           marginLeft:key>0?1:0,
@@ -956,9 +903,11 @@ refreshing={true}
                         <Text style={{padding:2, fontWeight:'bold',textAlign:'center', marginBottom:10,}}>
                         {value.name}
                         </Text>
-                        <Text style={{padding:2, fontWeight:'normal',textAlign:'center'}}>
-                        {value.detail}
-                        </Text>
+                        { !value.detail ? null :
+                          <Text style={{padding:2, fontWeight:'normal',textAlign:'center'}}>
+                          {value.detail}
+                          </Text>
+                        }
 
                       </TouchableOpacity>
                       </ScrollView>
@@ -967,12 +916,42 @@ refreshing={true}
                 </View>
                 }
 
+
                 </View>
+
+
+
+                <View 
+                  style={{
+                    width:55, height:55, flexDirection:'row',  position:'absolute', top:0, left:0,
+                    justifyContent:'center', alignItems:'center',
+                    backgroundColor:colors.greenFlash,
+                    }}
+                  >
+                  <TouchableOpacity 
+                    style={[{
+                      height:55,
+                      width:55,
+                      justifyContent:'center', alignItems:'center',
+                    }]}
+                    onPress={() => this.props.close()}
+                    >
+                    <MaterialCommunityIcons
+                      name="chevron-left" 
+                      style={[{ color:'white' }]}
+                      size={30}
+                    />
+                  </TouchableOpacity>
+
+                </View>
+                
               </View>
             }
 
 
           </View>
+
+
       </Modal>
     );
   }
