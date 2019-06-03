@@ -54,12 +54,12 @@ class TaxonModal extends Component {
       currentCriteriaDescriptionVisible:false,
       remainingsThumbsVisible:false,
 
-      detailsIndex:0,
 
       sources:false, // photos of insect to be indentified.
       curCrit_id:false,
       curCrit:false,
-      curCritSelectedValues:[],
+      curCritSelectedKeys:[],
+      curCritSelectedIds:[],
       remainings:insectList,
       remainingsCrit:[],
       remainingInsectPhotos:[],
@@ -90,34 +90,7 @@ class TaxonModal extends Component {
     });      
   }
 
-/*  async*/ selectCrit(id){
-
-    // // Get current criteria photos.
-    // const files = await RNFS.readDirAssets('img/criteres/photos/' + criteria[id].photo_etat);
-    // files.sort();
-    // const critPhotos = {};
-    // files.forEach((f)=>{
-    //   if(f.isFile){
-    //     // Get crit values.
-    //     let sub = f.name.substring(0,11).split('_');
-    //     sub = ''+(parseInt(sub[2],10)-1); // remove leading 0.
-    //     if(typeof critPhotos[sub] == 'undefined'){
-    //      critPhotos[sub] = [];
-    //     }
-    //    critPhotos[sub].push(f.path);
-    //   }
-    //           // {
-    //           //   name: string;     // The name of the item
-    //           //   path: string;     // The absolute path to the item
-    //           //   size: string;     // Size in bytes.
-    //           //               // Note that the size of files compressed during the creation of the APK (such as JSON files) cannot be determined.
-    //           //               // `size` will be set to -1 in this case.
-    //           //   isFile: () => boolean;        // Is the file just a file?
-    //           //   isDirectory: () => boolean;   // Is the file a directory?
-    //           // };
-    // });
-
-
+  selectCrit(id){
     this.setState({
       curCrit_id:id,
       curCrit:{...criteria[id],
@@ -225,27 +198,40 @@ class TaxonModal extends Component {
 
 
   addCurCritValue(crit_val_id, crit_val_key){
-    const curCritSelectedValues = this.state.curCritSelectedValues;
-    if(typeof curCritSelectedValues[crit_val_key] != 'undefined'){
-      delete curCritSelectedValues[crit_val_key];
+    const curCritSelectedKeys = this.state.curCritSelectedKeys,
+          curCritSelectedIds = this.state.curCritSelectedIds,
+          pos = curCritSelectedIds.indexOf(crit_val_id);
+    
+
+    if(pos != -1){
+      curCritSelectedIds.splice(pos, 1);
+      curCritSelectedKeys.splice(pos, 1);
     }
     else{
-      curCritSelectedValues[crit_val_key] = crit_val_id;
+      curCritSelectedKeys.push(crit_val_key);
+      curCritSelectedIds.push(crit_val_id);
     }
-    this.setState({curCritSelectedValues: curCritSelectedValues})
+    this.setState({
+      curCritSelectedKeys: curCritSelectedKeys,
+      curCritSelectedIds: curCritSelectedIds,
+    })
   }
 
-  setCriteria() {
-
+  setCriteria(crit_val_id, crit_val_key) {
+    // console.log([crit_val_id]) 
+    //  console.log([crit_val_key])
+    // console.log( Object.key(this.state.curCritSelectedKeys));
+    // console.log( Object.values(this.state.curCritSelectedKeys));
     this.pastCrit_ids.push(this.state.curCrit_id);
-    this.pastCrit[this.state.curCrit_id] = this.state.curCritSelectedValues; //[crit_val_id];// to check insect //TODO: possible multi select
-    this.pastCrit_valkey[this.state.curCrit_id] = Object.keys(this.state.curCritSelectedValues);// to check crits
+    this.pastCrit[this.state.curCrit_id] = this.state.curCritSelectedIds; //// to check insect //TODO: possible multi select
+    this.pastCrit_valkey[this.state.curCrit_id] = this.state.curCritSelectedKeys;// to check crits
 
     const remainings = this.filterInsects(),
           remainingsCrit = this.filterCiteria(remainings.criteria);
 
     this.setState({
-      curCritSelectedValues:[],
+      curCritSelectedKeys:[],
+      curCritSelectedIds:[],
       currentCriteriaDescriptionVisible:false,
       curCrit_id:false,
       curCrit: false,
@@ -371,79 +357,13 @@ class TaxonModal extends Component {
     this.setState({ detailsVisible:false });
   }
 
-  scrollDetailsToIndex() {
-    console.log(this.state.detailsVisible)
-    // this.refs['remaining-insects-list'].scrollToEnd({
-    //   animated: true
-    // })io
-    this.remainingDetailedList.scrollToIndex({
-      index:this.state.detailsVisible, 
-      animated: true
-    })
-  }
+  renderDetailsModal(){
+    const item = this.state.remainings[this.state.detailsVisible];
 
-  onViewableItemsChanged = (viewableItems) => {
-    console.log(viewableItems);
-    if(viewableItems.viewableItems && viewableItems.viewableItems.length){
-      this.setState({
-        detailsIndex:viewableItems.viewableItems[0].index,
-      });
-    }
-    else{
-      this.setState({
-        detailsIndex:'?',
-        upd:new Date().getTime()
-      });
-    }
-
-  }
-
-  renderTaxonDetails = ({item}) => {
     if(!this.state.remainingInsectPhotos[item.id]){
       this.loadRemainingInsectPhotos(item.id);
     }
 
-    return(
-    <View 
-      style={{
-        width:screenWidth,
-        flex:1, 
-        justifyContent:'center', alignItems:'center',
-        }}
-      >
-
-      <ScrollView>
-        <Text style={{
-          fontSize:18, fontWeight:'bold', textAlign:'center', 
-          // color:'white', 
-        }}>
-        { item.name}
-        </Text>
-        <Text style={{
-          fontSize:18, fontWeight:'normal', textAlign:'center', 
-          // color:'white', 
-        }}>
-        { item.label}
-        </Text>
-
-        { this.state.remainingInsectPhotos[item.id]
-          ? this.state.remainingInsectPhotos[item.id].map((path, pathindex)=>
-              <Image
-                key={pathindex}
-                source={{uri:'asset:/'+path}}
-                style={{width:screenWidth, height:screenWidth, backgroundColor:colors.greenFlash}} 
-                resizeMode="contain"
-              /> 
-            )
-          : <Text> CHARGEMENT PAS D'IMAGE </Text>
-        }
-      </ScrollView>
-    </View>
-    );
-  }
-
-  renderDetailsModal(){
-    console.log(this.state.detailsIndex)
     return(
       <Modal
         ref={'remaining-insects-modal'}
@@ -483,35 +403,37 @@ class TaxonModal extends Component {
               fontSize:18, fontWeight:'bold', textAlign:'center', 
               color:'white', 
             }}>
-            Taxons restant {this.state.detailsIndex + 1} / {this.state.remainings.length}
+            Fiche Détaillée
             </Text>
           </View>
         </View>
 
-        <FlatList horizontal={true} pagingEnabled={true}
-          // Remaining insects Photos.
-          ref={(ref) => { this.remainingDetailedList = ref; }}
-          keyExtractor ={(item, index) => ''+index}
-          data={this.state.remainings}
-          extraData={this.state.remainingInsectPhotos}
-          // extraData={this.state.upd}
-          onViewableItemsChanged={this.onViewableItemsChanged} //Update header.
-          onLayout={() => this.scrollDetailsToIndex()}  // Initial scroll.
-          // instead of
-          // initialNumToRender={this.state.detailsVisible+1}
-          // initialScrollIndex={this.state.detailsVisible}
-refreshing={true}
+        <ScrollView>
+          <Text style={{
+            fontSize:18, fontWeight:'bold', textAlign:'center', 
+            // color:'white', 
+          }}>
+          { item.name}
+          </Text>
+          <Text style={{
+            fontSize:18, fontWeight:'normal', textAlign:'center', 
+            // color:'white', 
+          }}>
+          { item.label}
+          </Text>
 
-          getItemLayout={(data, index) => {
-            console.log(index, data[index]);
-            return ({length:screenWidth, offset:screenWidth * index, index});
-          }}
-    
-
-           
-    
-          renderItem={this.renderTaxonDetails}
-        />
+          { this.state.remainingInsectPhotos[item.id]
+            ? this.state.remainingInsectPhotos[item.id].map((path, pathindex)=>
+                <Image
+                  key={pathindex}
+                  source={{uri:'asset:/'+path}}
+                  style={{width:screenWidth, height:screenWidth, backgroundColor:colors.greenFlash}} 
+                  resizeMode="contain"
+                /> 
+              )
+            : <Text> CHARGEMENT PAS D'IMAGE </Text>
+          }
+        </ScrollView>
       </Modal>
     );
   }
@@ -804,10 +726,10 @@ refreshing={true}
                       </Text>
                       }
                     </TouchableOpacity>
-                    { !Object.keys(this.state.curCritSelectedValues).length ? null :
+                    { !this.state.curCritSelectedKeys.length ? null :
                     <TouchableOpacity
                       style={{
-                        width:55,
+                        width:65,
                         margin:3,
                         padding:2,
                         borderColor:colors.greenFlash,
@@ -856,7 +778,7 @@ refreshing={true}
                               + key //value.id
                               +'.png'}}
                             style={{width:100, height:100, backgroundColor:colors.greenFlash,
-                                opacity: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                opacity: this.state.curCritSelectedIds.indexOf(value.id)>=0
                                   ? 0.5
                                   : 1,
                                 }} 
@@ -864,7 +786,7 @@ refreshing={true}
                           />
                           </View>
                           <Text style={{padding:2, marginTop:5, marginBottom:10,fontWeight:'bold',textAlign:'center',
-                                     color: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                     color: this.state.curCritSelectedIds.indexOf(value.id)>=0
                                   ? colors.greenFlash
                                   : 'grey'
                                 }}>
@@ -885,7 +807,7 @@ refreshing={true}
                                   key={pathindex}
                                   source={{uri:'asset:/'+path}}
                                   style={{
-                                    opacity: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                    opacity: this.state.curCritSelectedIds.indexOf(value.id)>=0
                                       ? 0.3
                                       : 1,
                                     marginTop:10, 
@@ -913,7 +835,7 @@ refreshing={true}
                                <View style={{
                                 borderRadius:6,
                                 height:12, width:12,
-                                backgroundColor: this.state.curCritSelectedValues.indexOf(value.id)>=0
+                                backgroundColor: this.state.curCritSelectedIds.indexOf(value.id)>=0
                                   ? colors.greenFlash
                                   : 'transparent'
                               }}></View>
