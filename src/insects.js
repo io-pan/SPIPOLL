@@ -1694,7 +1694,7 @@ export const insectList =
     classification: {
         niveau_determin: "espèce",
         nb_especes: "1",
-        ordre: "Lépidoptères\nLes Lépidoptères ou papillons se caractérisent par leurs ailes couvertes de minuscules écailles souvent très colorées.\nOn les divise généralement en deux grands groupes : les papillons dits \"de jour\" ou Rhopalocères aux antennes en massue et les papillons dits \"de nuit\" (même si certains volent le jour) ou Hétérocères. Les dessins sur les ailes sont souvent utilisés pour leur identification.\nIls possèdent pour la plupart une trompe qui leur sert à aspirer le nectar.\nOn compte environ 5 000 espèces en France.",
+        ordre: "Lépidoptères",
         famille: "Geometridae\nLes Géomètres ou Phalènes sont une grande famille d'Hétérocères. On les reconnaît à leur corps grêle et à leurs ailes assez larges disposées à plat au repos (évoquant souvent un deltaplane), qui peuvent parfois les faire ressembler à des papillons de jours.\nLes chenilles se déplacent en rapprochant leurs pattes antérieures et postérieures en courbant le corps en forme de boucle d'où leur nom d'\"arpenteuses\". Leurs couleurs sont très variées.\nLa famille compte 617 espèces en France (toutes les espèces n'étant pas floricoles).",
         genre: "Angerona: Corselet étroit et peu velu, les ailes inférieures seules légèrement dentelées, trompe longue, antennes très pectinées chez le mâle et simple chez la femelle.\nUne seule espèce dans le genre en France.",
         especes: "Angerona prunaria (Linnaeus, 1758)",
@@ -5654,7 +5654,7 @@ export const insectList =
     classification: {
         niveau_determin: "espèce",
         nb_especes: "1",
-        ordre: "Lépidoptères\nLes Lépidoptères ou papillons se caractérisent par leurs ailes couvertes de minuscules écailles souvent très colorées.\nOn les divise généralement en deux grands groupes : les papillons dits \"de jour\" ou Rhopalocères aux antennes en massue et les papillons dits \"de nuit\" (même si certains volent le jour) ou Hétérocères. Les dessins sur les ailes sont souvent utilisés pour leur identification.\nIls possèdent pour la plupart une trompe qui leur sert à aspirer le nectar.\nOn compte environ 5 000 espèces en France.",
+        ordre: "Lépidoptères",
         famille: "Nymphalidae\nDamiers, Mélitées, Nacrés, Satyres et Vanesses font partie de cette grande famille de Rhopalocères.\nLe dessus des ailes est souvent orange avec des motifs noirs ou brun avec des ocelles bien visibles. Le dessous des ailes est souvent beaucoup plus terne.\nLes pattes antérieures sont presque toujours réduites donnant l'impression que le papillon n'a que 4 pattes au lieu de 6.\nLa famille compte 130 espèces en France.",
         genre: "Araschnia\nLes espèces sont de petite taille, de couleur noire et blanche, ou noire et brune, avec un dimorphisme saisonnier très marqué. Yeux et palpes velus, antennes ayant à peu près la moitié de la longueur de l'aile, leur extrémité en massue plate. Ailes antérieures en triangle rectangle, aile postérieure largement ovale. Chenilles avec des épines ramifiées. Chrysalides suspendues. Vol gracieux, balancé.\nUne seule espèce dans le genre en France.",
         especes: "Araschnia levana (Linnaeus, 1758)",
@@ -5694,7 +5694,7 @@ export const insectList =
     classification: {
         niveau_determin: "espèce",
         nb_especes: "1",
-        ordre: "Lépidoptères\nLes Lépidoptères ou papillons se caractérisent par leurs ailes couvertes de minuscules écailles souvent très colorées.\nOn les divise généralement en deux grands groupes : les papillons dits \"de jour\" ou Rhopalocères aux antennes en massue et les papillons dits \"de nuit\" (même si certains volent le jour) ou Hétérocères. Les dessins sur les ailes sont souvent utilisés pour leur identification.\nIls possèdent pour la plupart une trompe qui leur sert à aspirer le nectar.\nOn compte environ 5 000 espèces en France.",
+        ordre: "Lépidoptères",
         famille: "Nymphalidae\nDamiers, Mélitées, Nacrés, Satyres et Vanesses font partie de cette grande famille de Rhopalocères.\nLe dessus des ailes est souvent orange avec des motifs noirs ou brun avec des ocelles bien visibles. Le dessous des ailes est souvent beaucoup plus terne.\nLes pattes antérieures sont presque toujours réduites donnant l'impression que le papillon n'a que 4 pattes au lieu de 6.\nLa famille compte 130 espèces en France.",
         genre: "Araschnia\nLes espèces sont de petite taille, de couleur noire et blanche, ou noire et brune, avec un dimorphisme saisonnier très marqué. Yeux et palpes velus, antennes ayant à peu près la moitié de la longueur de l'aile, leur extrémité en massue plate. Ailes antérieures en triangle rectangle, aile postérieure largement ovale. Chenilles avec des épines ramifiées. Chrysalides suspendues. Vol gracieux, balancé.\nUne seule espèce dans le genre en France.",
         especes: "Araschnia levana (Linnaeus, 1758)",
@@ -9549,7 +9549,7 @@ export const insectList =
     classification: {
         niveau_determin: "espèce",
         nb_especes: "1",
-        ordre: "Lépidoptères\nLes Lépidoptères ou papillons se caractérisent par leurs ailes couvertes de minuscules écailles souvent très colorées.\nOn les divise généralement en deux grands groupes : les papillons dits \"de jour\" ou Rhopalocères aux antennes en massue et les papillons dits \"de nuit\" (même si certains volent le jour) ou Hétérocères. Les dessins sur les ailes sont souvent utilisés pour leur identification.\nIls possèdent pour la plupart une trompe qui leur sert à aspirer le nectar.\nOn compte environ 5 000 espèces en France.",
+        ordre: "Lépidoptères",
         famille: "Noctuidae\nLes Noctuelles sont des Hétérocères à l'aspect souvent \"bossu\". Ils présentent pour la plupart des couleurs sombres rappelant l'écorce des arbres. Chez certaines espèces, les ailes postérieures dissimulées au repos, sont de couleurs vives.\nLa famille compte 791 espèces en France (toutes les espèces n'étant pas floricoles).",
         genre: "Euclidia\nCorselet lisse, sub-globuleux, trompe assez longue et antennes courtes. Ailes larges et en toit écrasé au repos, inférieures aux couleurs plus vives et tranchées que les supérieures.\nChez les mâles, abdomen cylindrique et antennes légèrement crénelées, pour les femelles abdomen conique et antennes sétacées.\nLe genre comprend une vingtaine d'espèces.",
         especes: "Euclidia glyphica (Linnaeus, 1758)\nSeule espèce du genre qui vit en Europe.",

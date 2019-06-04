@@ -36,6 +36,7 @@ import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 
 // Spipoll data.
 import { insectList } from './insects.js';
+import { ordres } from './ordres.js';
 import { criteria } from './criteres.js';
 import { colors } from './colors';
 
@@ -50,6 +51,7 @@ class TaxonModal extends Component {
 
     this.state = {
       detailsVisible:false,
+      detailsOrdreVisible:false,
       historyVisible:false,
       currentCriteriaDescriptionVisible:false,
       remainingsThumbsVisible:false,
@@ -63,12 +65,15 @@ class TaxonModal extends Component {
       remainings:insectList,
       remainingsCrit:[],
       remainingInsectPhotos:[],
+
     }
 
     this.pastCrit_ids=[];
     this.pastCrit={};
     this.pastCrit_valkey={};
-    // this.pastCrit_valkey=[];
+
+
+      this.tabIndicatorX = new Animated.Value(0);
   }
 
   componentDidMount(){
@@ -245,7 +250,7 @@ class TaxonModal extends Component {
   }
 
   async loadRemainingInsectPhotos(id){
-    console.log('loading' + 'img/taxons_photos/' + id)
+    // console.log('loading' + 'img/taxons_photos/' + id)
     const photos = [];
     let firstPhoto = false;
       
@@ -357,8 +362,26 @@ class TaxonModal extends Component {
     this.setState({ detailsVisible:false });
   }
 
+
+  toggleDetailOrdres(){
+    this.setState({detailsOrdreVisible: !this.state.detailsOrdreVisible})
+  }
+
   renderDetailsModal(){
     const item = this.state.remainings[this.state.detailsVisible];
+    const tabs = [{
+        icon:'account-card-details-outline',
+        text:'Classification',
+        // TODO: on new collection, protocole is not set yes so we always have sessionS.
+      },{
+        icon:'account-card-details-outline',
+        text:'Description',
+      },{
+        icon:'camera',
+        text:'Photos',
+    }];
+
+
 
     if(!this.state.remainingInsectPhotos[item.id]){
       this.loadRemainingInsectPhotos(item.id);
@@ -373,7 +396,7 @@ class TaxonModal extends Component {
 
         <View 
           style={{
-            height:55, flexDirection:'row', 
+            flexDirection:'row', 
             justifyContent:'center', alignItems:'center',
             backgroundColor:colors.greenFlash,
             }}
@@ -393,58 +416,283 @@ class TaxonModal extends Component {
               size={30}
             />
           </TouchableOpacity>
-
-          <View 
-            // <ScrollView horizontal={true} style={{marginLeft:10, marginRight:10}}>
-            style={{flex:1,
-             alignItems:'center', justifyContent:'center',
-            }}>
+   
+          <View style={{flex:1, justifyContent:'center', alignItems:'center', padding:10}}>
             <Text style={{
-              fontSize:18, fontWeight:'bold', textAlign:'center', 
+              fontSize:18, fontWeight:'bold',  textAlign:'center', 
               color:'white', 
             }}>
-            Fiche Détaillée
+            { item.name} <Text style={{fontWeight:'normal'}}>
+            { item.label}</Text>
             </Text>
+
           </View>
         </View>
 
-        <ScrollView>
-          <Text style={{
-            fontSize:18, fontWeight:'bold', textAlign:'center', 
-            // color:'white', 
-          }}>
-          { item.name}
-          </Text>
-          <Text style={{
-            fontSize:18, fontWeight:'normal', textAlign:'center', 
-            // color:'white', 
-          }}>
-          { item.label}
-          </Text>
+        <View // Tabs.
+          style={{margin:0, flexDirection:'row', alignItems:'center', justifyContent:'space-around'}}
+          >
+          { tabs.map((tab, index) =>
+           <TouchableOpacity 
+            key={index}
+            style={{ marginTop:10, marginLeft:5, marginRight:5,
+              width:screenWidth/tabs.length,
+              flexDirection:'row', justifyContent:'center', alignItems:'center', 
+              // borderRightWidth:1, borderRightColor:'lightgrey',
+            }}
+            onPress = {() => this.refs['bigscroll'].scrollTo({x: index*screenWidth, y: 0, animated: true}) } 
+            >
+{/*            <MaterialCommunityIcons
+              name={tab.icon}
+              style={{
+                backgroundColor:'transparent',
+                // color:colors.greenFlash,
+                // color: this.state.status[tab.icon] ? colors.greenFlash :  colors.purple 
+              }}
+              size={25}
+            />*/}
+            <Text style={{ fontSize:16, marginLeft:5, }}>
+            {tab.text}</Text>
+          </TouchableOpacity>
+          )}
+        </View>
 
-          { this.state.remainingInsectPhotos[item.id]
-            ? this.state.remainingInsectPhotos[item.id].map((path, pathindex)=>
-                <Image
-                  key={pathindex}
-                  source={{uri:'asset:/'+path}}
-                  style={{width:screenWidth, height:screenWidth, backgroundColor:colors.greenFlash}} 
-                  resizeMode="contain"
-                /> 
-              )
-            : <Text> CHARGEMENT PAS D'IMAGE </Text>
-          }
+        <View // Tabs indicator.
+          style={{marginTop:5, height:12, marginBottom:10,}}>
+          <Animated.View
+            style={{
+              position: 'absolute', top: 0, left:0,
+              transform: [{ translateX: 
+                this.tabIndicatorX.interpolate({
+                  inputRange: [0,screenWidth],
+                  outputRange: [0,screenWidth/tabs.length],
+                }) 
+              }],
+              margin:10,marginTop:0,
+              width:screenWidth/tabs.length - 20,
+              height:2,backgroundColor: colors.greenFlash
+            }}
+          />
+        </View>
+
+        { item.warn
+          ? <Text style={{textAlign:'center', color:colors.purple, fontSize:16}} >
+            {item.warn}
+            </Text>
+          : null
+        }
+
+        <ScrollView horizontal={true}  pagingEnabled={true}
+          ref={"bigscroll"}
+          onScroll={Animated.event(
+            [{nativeEvent: {contentOffset: {x: this.tabIndicatorX}}}],
+            {listener: (event) => {}}
+          )}
+          >
+
+          <ScrollView  style={{flex:1, width:screenWidth}}>
+
+            <Text style={styles.detailTitle}>
+              Niveau de détermination
+            </Text>
+            <Text style={styles.detailSubTitle}>
+              {item.classification.niveau_determin}
+             
+              { !item.classification.nb_especes
+                ? '.'
+                : ' (' + item.classification.nb_especes + ' espèce' + (item.classification.nb_especes>1?'s':'') + ').'
+              }
+              </Text>
+
+              {!item.classification.ordre ? null :
+
+              <TouchableOpacity
+                style={{flex:1}}
+                onPress = { 
+                  !ordres[item.classification.ordre] 
+                  ? null 
+                  : () => this.toggleDetailOrdres()
+                } 
+                >
+
+                <View><Text style={styles.detailTitle}>
+                Ordre </Text>
+                  { !ordres[item.classification.ordre] ? null :
+                    <Text style={styles.detailSubTitle}>{item.classification.ordre}
+                      <MaterialCommunityIcons
+                      name="help-circle-outline" 
+                      style={{color:colors.greenFlash, backgroundColor:'transparent'}}
+                      size={15}
+                      backgroundColor = 'transparent'
+                    /></Text>
+                  }
+                  </View>
+
+                  { ordres[item.classification.ordre] && this.state.detailsOrdreVisible
+                    ? <Text style={styles.detailText}>
+                      {ordres[item.classification.ordre]}
+                      </Text>
+                    : null
+                  }
+                </TouchableOpacity>
+              }
+
+              {!item.classification.famille ? null :
+              <View><Text style={styles.detailTitle}>
+                Famille 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.classification.famille}</Text></View>
+              }
+
+              {!item.classification.genre ? null :
+              <View><Text style={styles.detailTitle}>
+                Genre 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.classification.genre}</Text></View>
+              }
+
+              {!item.classification.especes ? null :
+              <View><Text style={styles.detailTitle}>
+                Espèce{item.classification.nb_especes>1?'s ':' '}
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.classification.especes}</Text></View>
+              }
+              <FooterImage/>
+          </ScrollView>
+
+          
+          <ScrollView  style={{flex:1, width:screenWidth}}>
+              {!item.presentation_taxon.description ? null :
+              <View><Text style={styles.detailTitle}>
+                Description 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.description}</Text></View>
+              }
+              {!item.presentation_taxon.fleurs_frequ ? null :
+              <View><Text style={styles.detailTitle}>
+                Plantes hôtes 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.fleurs_frequ}</Text></View>
+              }
+              {!item.presentation_taxon.bio_partic ? null :
+              <View><Text style={styles.detailTitle}>
+                Biologie et particularités 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.bio_partic}</Text></View>
+              }
+              {!item.presentation_taxon.long_corps_mm ? null :
+              <View><Text style={styles.detailTitle}>
+                Longueur du corps en mm 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.long_corps_mm}</Text></View>
+              }
+              {!item.presentation_taxon.envergure ? null :
+              <View><Text style={styles.detailTitle}>
+                Envergure en mm 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.envergure}</Text></View>
+              }
+              {!item.presentation_taxon.periode_obs ? null :
+              <View><Text style={styles.detailTitle}>
+                Période d'observation 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.periode_obs}</Text></View>
+              }
+              {!item.presentation_taxon.habitat ? null :
+              <View><Text style={styles.detailTitle}>
+                Répartition / Habitat 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.habitat}</Text></View>
+              }
+              {!item.presentation_taxon.status_protection ? null :
+              <View><Text style={styles.detailTitle}>
+                Statut de protection 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.status_protection}</Text></View>
+              }
+              {!item.presentation_taxon.valeur_ind ? null :
+              <View><Text style={styles.detailTitle}>
+                Valeur d'indicateur 
+              </Text>
+              <Text style={styles.detailSubTitle}>{item.presentation_taxon.valeur_ind}</Text></View>
+              }
+              
+              <Text style={{marginTop:30, backgroundColor:colors.greenFlash,
+                  padding:5, fontSize:16, fontWeight:'bold', textAlign:'center', color:'white'}}>
+              Description détaillée
+              </Text>
+
+              { item.crit.map((value, index)=>
+                value.stat.map((cvalue, cindex)=>{
+                  // TODO: >:( *!#v*!!
+                  // get crtit value name.
+                  const valuenames = []
+                  for (var v in criteria[value.cid].values) {
+                    if (!criteria.hasOwnProperty(v)) continue;
+                    if(criteria[value.cid].values[v].id == cvalue){
+                      valuenames.push(criteria[value.cid].values[v].name);
+                    }
+                  }
+
+                  return(
+                    <View key={index + '_' + cindex}>
+                      {cindex != 0 
+                        ? null
+                        : <Text style={styles.detailTitle}>{criteria[value.cid].name}</Text>
+                      }
+                      {valuenames.map((value, index)=>
+                          <Text key={index} style={styles.detailSubTitle}>
+                          {'- ' + value}
+                          </Text>
+                      )}
+                    </View>  
+                  );
+                })
+              )}
+              <FooterImage/>
+          </ScrollView>
+
+          <ScrollView  style={{flex:1, width:screenWidth}}>
+            { this.state.remainingInsectPhotos[item.id]
+              ? this.state.remainingInsectPhotos[item.id].map((path, pathindex)=>
+                  <Image
+                    key={pathindex}
+                    source={{uri:'asset:/'+path}}
+                    style={{width:screenWidth, height:screenWidth, backgroundColor:colors.greenFlash}} 
+                    resizeMode="contain"
+                  /> 
+                )
+              : <Text> CHARGEMENT PAS D'IMAGE </Text>
+            }
+            <FooterImage/>
+          </ScrollView>
         </ScrollView>
+
+            <TouchableOpacity 
+              style={{
+                backgroundColor:colors.greenFlash, marginTop:1,
+                flexDirection:'row', alignItems:'center', justifyContent:'center', height:55
+              }}
+              onPress={()=> this.props.selectTaxon({value:item.value, name:item.name}) }
+              >
+              <MaterialCommunityIcons   
+                name='pin' // 'plus-circle-outline'
+                style={{fontSize:25, paddingRight:10, color:'white'}}
+              />
+              <Text style={{color: 'white', fontSize:18, fontWeight:'bold'}}>
+               Sélectionner ce taxon</Text>
+            </TouchableOpacity>
       </Modal>
     );
   }
 
                    
-  setThumbTitleHeight(e){
-    console.log(e)
-    this.setState({
-      thumbTitleHeight:e.nativeEvent.layout.height,
-    });
-  }  
+  // setThumbTitleHeight(e){
+  //   console.log(e)
+  //   this.setState({
+  //     thumbTitleHeight:e.nativeEvent.layout.height,
+  //   });
+  // }  
          
 
   render(){
@@ -519,13 +767,12 @@ class TaxonModal extends Component {
                   onPress={()=> this.deleteHistory(key, value)}
                   >
                   <Text style={{fontSize:16, fontWeight:'bold'}}>
-                    {criteria[value].name + ' '} 
+                    {criteria[value].name} 
                   </Text>
                   { // loop selected values.
                       this.pastCrit_valkey[value].map((v,k)=>
                         <Text key={k} style={{fontWeight:'normal', marginTop:5,}}>
-                        <Text style={{fontWeight:'bold'}}>{k+1}) </Text>
-                        { criteria[value].values[v].name }</Text>
+                        { '- ' + criteria[value].values[v].name }</Text>
                       )
                     }
                 </TouchableOpacity>
@@ -986,6 +1233,7 @@ export default class InsectForm extends Component {
 
   storeInsect(field,value){
     if(field=='taxon'){
+      console.log(value);
       this.setState({
         // insect:{
         //   ...this.state.insect,
@@ -1017,6 +1265,7 @@ export default class InsectForm extends Component {
   hideTaxonModal(){
     this.setState({taxonModalVisible:false});
   }
+
 
   render(){
     console.log('render InsectForm', this.state);
@@ -1065,7 +1314,7 @@ export default class InsectForm extends Component {
                       size={30}
                     />
                     <Text style={{
-                    padding:7,
+                    padding:6,
                     fontSize:16,
                     fontWeight:'bold',
                     color:'white',
@@ -1074,6 +1323,23 @@ export default class InsectForm extends Component {
                   </Text>
            
                 </TouchableOpacity>  
+                { !this.state.taxonModalVisible ? null :
+                  <TaxonModal 
+                    ref={"modal-taxon-search"}
+                    close={()=>this.hideTaxonModal()}
+                    selectTaxon={(picked) => {
+                      console.log(picked);
+                      this.hideTaxonModal();
+                      this.storeInsect('taxon', picked);
+                    }}
+                    sourcesPath={ this.props.collection_storage + '/insects/' + this.props.data.date }
+                    source= {{uri:'file://'
+                        +this.props.collection_storage + '/insects/'
+                        + this.props.data.date 
+                        + '/' + this.state.insect.photo}}
+                  />
+                } 
+
 
                 <TouchableOpacity 
                   style={{
@@ -1121,19 +1387,6 @@ export default class InsectForm extends Component {
                   onEndEditing = {(event) => this.storeInsect('taxon_extra_info',event.nativeEvent.text) } 
                   onSubmitEditing = {(event) => this.storeInsect('taxon_extra_info', event.nativeEvent.text) }                        
                 />
-
-
-                { !this.state.taxonModalVisible ? null :
-                  <TaxonModal 
-                    ref={"modal-taxon-search"}
-                    close={()=>this.hideTaxonModal()}
-                    sourcesPath={ this.props.collection_storage + '/insects/' + this.props.data.date }
-                    source= {{uri:'file://'
-                        +this.props.collection_storage + '/insects/'
-                        + this.props.data.date 
-                        + '/' + this.state.insect.photo}}
-                  />
-                } 
 
                 <TextInput
                   placeholder='Commentaire'
@@ -1219,4 +1472,8 @@ const styles = StyleSheet.create({
     textAlign:'center', 
     padding:10,
   },
+
+  detailTitle:{fontSize:16, fontWeight:'bold',marginLeft:20,marginRight:20, paddingTop:10,},
+  detailSubTitle:{fontSize:16, fontWeight:'normal',marginLeft:20,marginRight:20, paddingLeft:20,},
+  detailText:{fontSize:14, fontWeight:'normal', marginLeft:20,marginRight:20, paddingLeft:20,},
 });
