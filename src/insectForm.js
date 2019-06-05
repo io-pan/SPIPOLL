@@ -222,7 +222,7 @@ class TaxonModal extends Component {
     })
   }
 
-  setCriteria(crit_val_id, crit_val_key) {
+  setCriteria() {
     // console.log([crit_val_id]) 
     //  console.log([crit_val_key])
     // console.log( Object.key(this.state.curCritSelectedKeys));
@@ -992,10 +992,11 @@ class TaxonModal extends Component {
                   </View>
                   <ScrollView horizontal>
                     { // Current criteria choices.
-                    Object.entries(this.state.curCrit.values).map((value, key) => {
-                    // this.state.curCrit.values((value, index) => {
 
-                      value=value[1];
+                    Object.keys(this.state.curCrit.values).map((value, key) => {
+                
+                      key = parseInt(value);
+                      value=this.state.curCrit.values[value];
                       // console.log(key)
                       // console.log(value)
                       // console.log(this.state.curCrit.photos);
@@ -1010,9 +1011,6 @@ class TaxonModal extends Component {
                           width:critColWidth, 
                           alignItems:'center',
                           }}
-                          // onPress={()=>this.setCriteria(value.id, key)}
-                          
-                          
                           onPress={()=> this.addCurCritValue(value.id, key)}
                           >
                           <View style={{

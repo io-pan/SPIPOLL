@@ -652,7 +652,7 @@ export const criteria ={
 				'5': {id:211, name:"Rouge"},
 			}
 	},
-		'53':{	name:"Motifs du dessous des ailes",
+		'53':{	name:"Motifs du dessous des ailes", // blanches
 				condition:{'1':[1], '2':[0], '3':[1,2], '52':[0]},
 				detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
 				photo_etat:230,
@@ -665,7 +665,7 @@ export const criteria ={
 					'5': {id:217, name:"Sans motif"},
 				}
 		},
-		'54':{	name:"Couleurs et motifs sur le dessous des ailes",
+		'54':{	name:"Couleurs et motifs sur le dessous des ailes", // oranges
 				condition:{'1':[1], '2':[0], '3':[1,2], '52':[3]},
 				detail:"La couleur principale est la couleur de fond sur laquelle peuvent se superposer des motifs. Les motifs sont des ornements qui peuvent être de différentes formes et couleurs.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
 				photo_etat:170,
@@ -676,56 +676,55 @@ export const criteria ={
 					'3': {id:221, name:"Marron, orange et/ou gris avec des ocelles"},
 					'4': {id:222, name:"Autres couleurs et/ou motifs"},
 				}
-	},
-	'55':{	name:"Couleur du dessous des ailes antérieures",
-			condition:{'1':[1], '2':[0], '3':[1,2]},
-			detail:"Chez certains papillons, l'aile antérieure est recouverte par l'aile postérieure, il est alors difficile de discerner la couleur principale (couleur de fond) du dessous des ailes antérieures.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
-			photo_etat:180,
-			values:{
-				'0': {id:223, name:"Orange"},
-				'1': {id:224, name:"Gris, bleu ou marron"},
-			}
-	},
-	'56':{	name:"Taches oranges sur le dessous des ailes antérieures",
-			condition:{'1':[1], '2':[0], '3':[1,2]},
-			detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
-			photo_etat:190,
-			values:{
-				'0': {id:225, name:"Présence"},
-				'1': {id:226, name:"Absence"},
-			}
-	},
-	// ioio 57-58 more condition
-	'57':{	name:"Trait blanc sur le dessous des ailes postérieures",
-			condition:{'1':[1], '2':[0], '3':[1,2]},
-			detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
-			photo_etat:200,
-			values:{
-				'0': {id:227, name:"Présence"},
-				'1': {id:228, name:"Absence"},
-			}
-	},// ioio 57-58 more condition  52?
-	'58':{	name:"Bande blanche sur le dessous des ailes postérieures",
-			condition:{'1':[1], '2':[0], '3':[1,2]},
-			detail:"Renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
-			photo_etat:210,
-			values:{
-				'0': {id:229, name:"Présence", detail:"Une large bande blanche visible sur le dessous de l'aile postérieure."},
-				'1': {id:230, name:"Absence", detail:"Pas de bande blanche sur le dessous de l'aile postérieure."},
-			}
-	},
-	'59':{	name:"Motifs sur le dessous des ailes postérieures",
-			condition:{'1':[1], '2':[0], '3':[1,2]},
-			detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
-			photo_etat:220,
-			values:{
-				'0': {id:231, name:"Vert ou marbré de vert"},
-				'1': {id:232, name:"Orange avec des taches blanches"},
-				'2': {id:233, name:"Blanc avec des motifs noirs et oranges"},
-				'3': {id:234, name:"Pourpre avec des taches blanches"},
-				'4': {id:235, name:"Autres motifs"},
-			}
-	},
+			},
+			'55':{	name:"Couleur du dessous des ailes antérieures", // ailes orange motifs tâch
+					condition:{'1':[1], '2':[0], '3':[1,2], '52':[3], '54':[2]},
+					detail:"Chez certains papillons, l'aile antérieure est recouverte par l'aile postérieure, il est alors difficile de discerner la couleur principale (couleur de fond) du dessous des ailes antérieures.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
+					photo_etat:180,
+					values:{
+						'0': {id:223, name:"Orange"},
+						'1': {id:224, name:"Gris, bleu ou marron"},
+					}
+			},
+				'56':{	name:"Taches oranges sur le dessous des ailes antérieures", 
+						condition:{'1':[1], '2':[0], '3':[1,2], '52':[3], '54':[2], '55':[1]},
+						detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
+						photo_etat:190,
+						values:{
+							'0': {id:225, name:"Présence"},
+							'1': {id:226, name:"Absence"},
+						}
+				},
+				'57':{	name:"Trait blanc sur le dessous des ailes postérieures",
+						condition:{'1':[1], '2':[0], '3':[1,2], '52':[3], '54':[2], '55':[1]},
+						detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
+						photo_etat:200,
+						values:{
+							'0': {id:227, name:"Présence"},
+							'1': {id:228, name:"Absence"},
+						}
+				},
+			'58':{	name:"Bande blanche sur le dessous des ailes postérieures", // ailes orange motifs ocell
+					condition:{'1':[1], '2':[0], '3':[1,2], '52':[3], '54':[3]}, 
+					detail:"Renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
+					photo_etat:210,
+					values:{
+						'0': {id:229, name:"Présence", detail:"Une large bande blanche visible sur le dessous de l'aile postérieure."},
+						'1': {id:230, name:"Absence", detail:"Pas de bande blanche sur le dessous de l'aile postérieure."},
+					}
+			},
+			'59':{	name:"Motifs sur le dessous des ailes postérieures", //ailes orange motifs blancs
+					condition:{'1':[1], '2':[0], '3':[1,2], '52':[3], '54':[0]},
+					detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes ouvertes en permanence lorsqu'ils sont posés, il est alors difficile de voir le dessous des ailes.",
+					photo_etat:220,
+					values:{
+						'0': {id:231, name:"Vert ou marbré de vert"},
+						'1': {id:232, name:"Orange avec des taches blanches"},
+						'2': {id:233, name:"Blanc avec des motifs noirs et oranges"},
+						'3': {id:234, name:"Pourpre avec des taches blanches"},
+						'4': {id:235, name:"Autres motifs"},
+					}
+			},
 	'60':{	name:"Taille de votre papillon \"de nuit\"",
 			condition:{'1':[1], '2':[1]},
 			detail:"Les papillons peuvent également se distinguer par leur taille, du bout de la tête au bout de l'abdomen. Les papillons de petite taille (moins d'1 centimètre) appelés Microlépidoptères sont souvent difficiles à déterminer.",
@@ -750,55 +749,54 @@ export const criteria ={
 				'7': {id:245, name:"Autre", detail:"Aspects différents de ceux cités précédemment."},
 			}
 	},
-	'62':{	name:"Aspect de la bordure des ailes",
-			condition:{'1':[1], '2':[1], '61':[1,7]}, // pap nuit, Silhouette grand sphinx et autres.
-			detail:"Certains papillons ont les ailes bien plus découpées que d'autres.\nAttention cependant à ne pas confondre avec un papillon abîmé.",
-			photo_etat:270,
-			values:{
-				'0': {id:246, name:"Bordure des ailes découpée", detail:"La bordure des ailes antérieures ou postérieures est découpée.\nAttention à ne pas confondre avec un papillon abîmé."},
-				'1': {id:247, name:"Bordure des ailes non découpée", detail:"La bordure des ailes antérieures et postérieures est arrondie ou droite."},
-			}
-	},
+		'62':{	name:"Aspect de la bordure des ailes",
+				condition:{'1':[1], '2':[1], '61':[1,7]}, // pap nuit, Silhouette grand sphinx et autres.
+				detail:"Certains papillons ont les ailes bien plus découpées que d'autres.\nAttention cependant à ne pas confondre avec un papillon abîmé.",
+				photo_etat:270,
+				values:{
+					'0': {id:246, name:"Bordure des ailes découpée", detail:"La bordure des ailes antérieures ou postérieures est découpée.\nAttention à ne pas confondre avec un papillon abîmé."},
+					'1': {id:247, name:"Bordure des ailes non découpée", detail:"La bordure des ailes antérieures et postérieures est arrondie ou droite."},
+				}
+		},
+		'63':{	name:"Couleur principale du dessus des ailes antérieures", // pap nuit, Silhouette allongée et autres
+				condition:{'1':[1], '2':[1], '61':[5,7]},
+				detail:"La couleur principale est la couleur de fond sur laquelle peuvent se superposer les motifs.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
+				photo_etat:280,
+				values:{
+					'0': {id:248, name:"Noir"},
+					'1': {id:249, name:"Blanc"},
+					'2': {id:250, name:"Bleu"},
+					'3': {id:251, name:"Jaune à orange"},
+					'4': {id:252, name:"Gris clair"},
+					'5': {id:253, name:"Rose à violet"},
+					'6': {id:254, name:"Vert"},
+					'7': {id:255, name:"Autres couleurs"},
+				}
+		},
+		'64':{	name:"Motifs sur le dessus des ailes antérieures",
+				condition:{'1':[1], '2':[1], '61':[5,7]}, 
+				detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes fermées en permanence lorsqu'ils sont posés, il n'est alors pas possible de voir les motifs du dessus des ailes.",
+				photo_etat:250,
+				values:{
+					'0': {id:256, name:"Points et/ou taches"},
+					'1': {id:257, name:"Bandes, rayures et/ou nervures"},
+					'2': {id:258, name:"Sans motif"},
+				}
+		},
+				'65':{	name:"Couleur des principaux motifs sur le dessus des ailes antérieures",
+						condition:{'1':[1], '2':[1], '61':[5,7], '64':[0,1]}, 
+						detail:"Attention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
+						photo_etat:260,
+						values:{
+							'0': {id:259, name:"Noir"},
+							'1': {id:260, name:"Blanc, beige"},
+							'2': {id:261, name:"Rouge"},
+							'3': {id:262, name:"Rose"},
+							'4': {id:263, name:"Jaune"},
+							'5': {id:264, name:"Autres"},
+						}
+				},
 
-	// ioio jour et nuit ?
-	'63':{	name:"Couleur principale du dessus des ailes antérieures",
-			condition:{'1':[1], '2':[1], '61':[1,7]}, //ioio  '2':[0], 3':[0,2]},
-			detail:"La couleur principale est la couleur de fond sur laquelle peuvent se superposer les motifs.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
-			photo_etat:280,
-			values:{
-				'0': {id:248, name:"Noir"},
-				'1': {id:249, name:"Blanc"},
-				'2': {id:250, name:"Bleu"},
-				'3': {id:251, name:"Jaune à orange"},
-				'4': {id:252, name:"Gris clair"},
-				'5': {id:253, name:"Rose à violet"},
-				'6': {id:254, name:"Vert"},
-				'7': {id:255, name:"Autres couleurs"},
-			}
-	},
-	'64':{	name:"Motifs sur le dessus des ailes antérieures",
-			condition:{'1':[1], '2':[1], '61':[1,7]}, //ioio  '2':[0], 3':[0,2]}, 
-			detail:"Ne renseignez ce caractère uniquement si vos photographies le permettent. Certains papillons ont tendance à garder leurs ailes fermées en permanence lorsqu'ils sont posés, il n'est alors pas possible de voir les motifs du dessus des ailes.",
-			photo_etat:250,
-			values:{
-				'0': {id:256, name:"Points et/ou taches"},
-				'1': {id:257, name:"Bandes, rayures et/ou nervures"},
-				'2': {id:258, name:"Sans motif"},
-			}
-	},
-	'65':{	name:"Couleur des principaux motifs sur le dessus des ailes antérieures",
-			condition:{'1':[1], '2':[1], '61':[1,7], '64':[0,1]}, //'1':[1], '2':[0], '3':[0,2]}, 
-			detail:"Attention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
-			photo_etat:260,
-			values:{
-				'0': {id:259, name:"Noir"},
-				'1': {id:260, name:"Blanc, beige"},
-				'2': {id:261, name:"Rouge"},
-				'3': {id:262, name:"Rose"},
-				'4': {id:263, name:"Jaune"},
-				'5': {id:264, name:"Autres"},
-			}
-	},
 	'66':{	name:"Le dessus des ailes antérieures et postérieures sont-ils de couleurs semblables ?",
 			condition:{'1':[1], '2':[1]}, // pap nuit
 			detail:"Attention, les ailes postérieures ne sont pas toujours visibles. En effet, elles sont parfois recouvertes par les ailes antérieures.",
@@ -808,19 +806,18 @@ export const criteria ={
 				'1': {id:266, name:"Non"},
 			}
 	},
-
-	'67':{	name:"Couleur principale du dessus des ailes postérieures",	
-			condition:{'1':[1], '2':[1], '66':[0]},
-			detail:"La couleur principale est la couleur de fond sur laquelle se superposent les motifs. Les ailes postérieures ne sont pas toujours visibles. En effet, elles sont parfois recouvertes par les ailes antérieures.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
-			photo_etat:300,
-			values:{
-				'0': {id:267, name:"Rouge"},
-				'1': {id:268, name:"Rose"},
-				'2': {id:269, name:"Jaune à orange"},
-				'3': {id:270, name:"Blanc"},
-				'4': {id:271, name:"Autres"},		
-			}
-	},
+		'67':{	name:"Couleur principale du dessus des ailes postérieures",	
+				condition:{'1':[1], '2':[1], '66':[1]},
+				detail:"La couleur principale est la couleur de fond sur laquelle se superposent les motifs. Les ailes postérieures ne sont pas toujours visibles. En effet, elles sont parfois recouvertes par les ailes antérieures.\nAttention ! Si vous hésitez entre différentes couleurs, vous pouvez en cocher plusieurs.",
+				photo_etat:300,
+				values:{
+					'0': {id:267, name:"Rouge"},
+					'1': {id:268, name:"Rose"},
+					'2': {id:269, name:"Jaune à orange"},
+					'3': {id:270, name:"Blanc"},
+					'4': {id:271, name:"Autres"},		
+				}
+		},
 
 	// Tous.
 	'68':{	name:"Positionnement géographique",
