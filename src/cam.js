@@ -411,16 +411,17 @@ export default class Cam extends Component<Props> {
 
           // Store video thumb.
           RNThumbnail.get(filename).then((result) => {
-            const thumbDest = filename.replace('.mp4', '.jpg');
-            
-            RNFetchBlob.fs.mv(
-              result.path.replace('file://',''),
-              thumbDest
-            ).then(() => {
-              console.log(thumbDest);
-            }).catch((err) => { 
-              console.log('error move video thumb', err);
-            });
+            if(result && result.path){
+              const thumbDest = filename.replace('.mp4', '.jpg');
+             RNFetchBlob.fs.mv(
+                result.path.replace('file://',''),
+                thumbDest
+              ).then(() => {
+                // console.log(thumbDest);
+              }).catch((err) => { 
+                // console.log('error move video thumb', err);
+              });
+            }
           });
         }
       }
