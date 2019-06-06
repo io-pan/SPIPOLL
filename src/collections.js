@@ -563,11 +563,12 @@ class Collection extends Component {
 
   isValidItem(item){
     for(var index in item) { 
-     if (item.hasOwnProperty(index)) {
-        if(item[index] === null){
-          return false;
-        };
-     }
+      if (index=='comment' || !item.hasOwnProperty(index)){
+        continue;
+      }
+      if(item[index] === null){
+        return false;
+      }
     }
     return true;
   }
