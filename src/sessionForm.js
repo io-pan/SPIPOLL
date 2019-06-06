@@ -321,6 +321,10 @@ export default class SessionForm extends Component {
         end = now + flashSessionDuration * 1000;
       }
 
+      if(scheduled){
+        this.scheduled_insect = this.newInsect();
+      }
+
       this.setState({
         session:{
           ...this.state.session,
@@ -328,12 +332,15 @@ export default class SessionForm extends Component {
           time_start:now,
           time_end:end,
 
-          scheduled:scheduled||false,
+          // scheduled_insect:newInsect.date,//scheduled||false,
         }
       }, function(){
         this.props.valueChanged('date', now);
         this.props.valueChanged('time_start', now);
         this.props.valueChanged('time_end', end);
+        if(scheduled){ //TODO:
+          this.refs['cam-scheduled'].takeMotion();
+        }
       });
     // }
   }
@@ -466,18 +473,24 @@ export default class SessionForm extends Component {
     const now = date2folderName(),
           folderName = this.props.collection_storage + '/insects/' + now;
 
-    // Create insect photos folder.
-    RNFetchBlob.fs.mkdir(folderName)
-    .then(() => { 
-      // console.log('insct folder created ' + folderName ) 
-    })
-    .catch((err) => { 
-      Alert.alert(
-        'Erreur',
-        'Le dossier de stockage des photos n\'a pu être créé.\n'
-        + folderName
-      );
-    })
+    // Create insect photos folder...
+    RNFetchBlob.fs.isDir(folderName)
+    .then((isDir) => {
+      if(isDir){ // ... if not exists.
+        RNFetchBlob.fs.mkdir(folderName)
+        .then(() => { 
+          // console.log('insct folder created ' + folderName ) 
+        })
+        .catch((err) => { 
+          console.log(err);
+          Alert.alert(
+            'Erreur',
+            'Le dossier de stockage des photos n\'a pu être créé.\n'
+            + folderName
+          );
+        })
+      }
+    });
 
     // Return default data.
     return {
@@ -872,10 +885,6 @@ export default class SessionForm extends Component {
 
                     <ScrollView style={[styles.collection_subgrp, {
                        flex:1,marginTop:0,marginBottom:0, borderTopWidth:0}]}>
-                      {/*
-                      <Text style={styles.coll_subtitle}>
-                      Date, Heure de début { this.props.protocole=='flash' ? '' : 'et de fin'}</Text>
-                      */}
                       <TouchableOpacity
                         onPress = {() => this.toggleexperimentaldetailsVisible()} 
                         >
@@ -894,7 +903,7 @@ export default class SessionForm extends Component {
                           <Text style={{fontWeight:'normal', textAlign:'center', marginTop:10,}}>
                           A l'heure de planifiée, le détecteur de mouvement de lancera.
                           Toutes les photos de tous les mouvements seront enregister sous un seul taxon.
-                          Il vous faudra les trier et regrouper à l'aide des option "Extraire" disponible dans la gallerie de photos.</Text>
+                          Il vous faudra les trier et regrouper à l'aide de l'option "Extraire" disponible dans la galerie de photos.</Text>
                           <Text></Text>
 
                           <Text style={{fontWeight:'normal', textAlign:'center'}}>Le détecteur de mouvement permet d'enregister des vidéos ou des photos.
@@ -1026,7 +1035,7 @@ export default class SessionForm extends Component {
                         </TouchableOpacity>
                         <TouchableOpacity
                           style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                            borderColor:colors.greenFlash, flex: 0.2,
+                            borderColor:colors.greenFlash, flex:this.props.protocole=='flash' ? 0.4 : 0.2,
                           }}
                           onPress = {() => this._showTimePicker('start')}
                           >
@@ -1081,6 +1090,103 @@ export default class SessionForm extends Component {
     );
   }
 
+  renderRunningScheduledForm(){
+    // const newInsect = this.newInsect(); // TODO not at each render !!!
+
+     // this.refs['cam-scheduled'].takeMotion();
+
+console.log('renderRunningScheduledForm');
+console.log(this.props.collection_storage + '/insects/' + this.scheduled_insect.date);
+
+    if(!this.scheduled_insect || !this.scheduled_insect.date){
+      this.scheduled_insect={date:date2folderName()};
+     //TODO:
+      this.refs['cam-scheduled'].takeMotion();
+    }
+
+    return(
+                        <Modal
+                          visible={true}
+                          onRequestClose={() => this.cancelSession()} 
+                          >
+                          
+              <View style={[{height:55, margin:0, 
+                  // borderTopWidth:1, borderTopColor:'white'
+                  }]}>
+                  <View style={{height:55, backgroundColor:colors.greenFlash, flexDirection:'row',
+                            justifyContent:'center', alignItems:'center',}}>
+                    <View
+                      style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
+                        justifyContent:'center', alignItems:'center',
+                        borderRightWidth:1, borderRightColor:'white',
+                        flex:1,
+                      }}
+                      >
+                      <MaterialCommunityIcons
+                        name="play-circle-outline" 
+                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
+                        size={25}
+                        backgroundColor = 'transparent'
+                      />
+                      <Timer
+                        key="running-timer"
+                        ref="running-timer"
+                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:18, color:'white'}}
+                        onTimeout={()=>{alert('Session over TODO:setstate to refresh')}}
+                        time={
+                          this.state.session.time_end
+                          ? this.state.session.time_end // has been set to start + 20min for flash protocole.
+                          : this.state.session.time_start
+                        }
+                      />
+                    </View>
+
+                    <TouchableOpacity
+                      style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
+                        backgroundColor:  colors.greenFlash,
+                        borderWidth: 1, borderColor: colors.greenFlash,
+                      }}
+                      onPress = {this.props.protocole=="flash"
+                        ? () => this.cancelSession()
+                        // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+                        //   ? () => this.cancelSession()
+                          : () => this.stopSession()
+                      }
+                      >
+
+                      <MaterialCommunityIcons
+                        name={ 
+                          this.props.protocole=="flash"
+                          ? "close-circle" 
+                          // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+                          //   ? "close-circle"
+                            : "stop-circle"
+                        }
+                        style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
+                          color: 'white',}}
+                        size={30}
+                        backgroundColor = 'transparent'
+                      />
+                    </TouchableOpacity>
+                  </View>
+              </View>
+
+                          <View style={{flex:1}}>
+                          <Cam
+                            ref={'cam-scheduled'}
+                            path={this.props.collection_storage + '/insects/' + this.scheduled_insect.date }
+                            // path={this.props.path}
+                            // photoPicked={(path) => this.photoPicked(path)}
+                              mode={'motion-running'}
+                              mode_={0} // MODE_RUN
+                          />
+                          </View>
+
+
+      </Modal>
+    );
+  }
+
   render(){
     console.log('render SessionForm', this.state);
 
@@ -1092,7 +1198,10 @@ export default class SessionForm extends Component {
       <View  style={{flex:1}}>
 
       { sessionStatus == 'running' && !this.state.isTimePickerVisible
-      ? this.renderRunningForm(sessionStatus)
+      ? this.state.session.time_end
+        ? this.renderRunningScheduledForm()
+
+        : this.renderRunningForm(sessionStatus)
       : <View style={{flex:1}}>
           <View  style={{flex:1}}>
             <ScrollView>
