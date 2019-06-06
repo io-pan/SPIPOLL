@@ -1005,16 +1005,15 @@ export default class Cam extends Component<Props> {
     return(  
       <View key="renderMotionSetupButtons" style={{flex: 1, justifyContent:'space-between'}}>
 
-        {this.renderMotionSetupItems()}
+        { this.renderMotionSetupItems() }
 
         <View></View>
 
-        <View>
         <ScrollView horizontal={true} >
 
           <TouchableOpacity 
             style={{
-              borderRightWidth:1, borderRightColor:'#dddddd',
+              // borderRightWidth:1, borderRightColor:'#dddddd',
               alignItems: 'center', justifyContent:'center',
               paddingLeft:10, paddingRight:10,
             }}
@@ -1042,7 +1041,7 @@ export default class Cam extends Component<Props> {
 
           <TouchableOpacity 
             style={{
-              borderRightWidth:1, borderRightColor:'#dddddd',
+              // borderRightWidth:1, borderRightColor:'#dddddd',
               alignItems: 'center', justifyContent:'center',
               paddingLeft:10, paddingRight:10,
             }}
@@ -1064,7 +1063,7 @@ export default class Cam extends Component<Props> {
 
           <TouchableOpacity 
             style={{
-              borderRightWidth:1, borderRightColor:'#dddddd',
+              // borderRightWidth:1, borderRightColor:'#dddddd',
               alignItems: 'center', justifyContent:'center',
               paddingLeft:10, paddingRight:10,
             }}
@@ -1086,7 +1085,7 @@ export default class Cam extends Component<Props> {
 
           <TouchableOpacity 
             style={{
-              borderRightWidth:1, borderRightColor:'#dddddd',
+              // borderRightWidth:1, borderRightColor:'#dddddd',
               alignItems: 'center', justifyContent:'center',
               paddingLeft:10, paddingRight:10,
             }}
@@ -1130,54 +1129,59 @@ export default class Cam extends Component<Props> {
               >Antibruit</Text>
           </TouchableOpacity>
         </ScrollView>
-        </View>
+      
+        <View></View>
 
-        <View style={{ 
-          flexDirection:'row', 
-          backgroundColor:colors.greenFlash}}
-          >
-          <TouchableOpacity 
-            onPress = {() => this.closeSetupMotion()}
-            style={{padding:10, 
-              flex:this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)?0.5:1,
-              flexDirection:'row',
-              justifyContent:'center',
-              borderRightColor:'white', borderRightWidth:1,
-            }}>
-            <MaterialCommunityIcons   
-              name='close'
-              size={30}
-              padding={0}
-              margin={0}
-              color='white'
-            />
-            <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
-            Fermer</Text>
-          </TouchableOpacity>
-
-          { this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)
-            ? <TouchableOpacity 
-              onPress = {() => this.takeMotion()}
+        { // Do not show Launch / Close buttons if we open cam to setup motion detector.
+        this.props.mode == 'motion-setup' && this.props.mode_ == MODE_SET
+        ? null
+        : <View 
+            style={{ 
+            flexDirection:'row', 
+            backgroundColor:colors.greenFlash}}
+            >
+            <TouchableOpacity 
+              onPress = {() => this.closeSetupMotion()}
               style={{padding:10, 
-                flex:0.5,
+                flex:this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)?0.5:1,
                 flexDirection:'row',
                 justifyContent:'center',
+                borderRightColor:'white', borderRightWidth:1,
               }}>
-              <MaterialCommunityIcons
-                style={{
-                  borderRadius:30,
-                  backgroundColor:'white'}}
-                name='cctv'
+              <MaterialCommunityIcons   
+                name='close'
                 size={30}
-                color ={colors.greenFlash}
+                padding={0}
+                margin={0}
+                color='white'
               />
               <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
-              Lancer</Text>
+              Fermer</Text>
             </TouchableOpacity>
-            : null
-          }
-        </View>
-     
+
+            { this.state.motionAction.type && (this.state.motionAction.photoNumber || this.state.motionAction.videoLength)
+              ? <TouchableOpacity 
+                onPress = {() => this.takeMotion()}
+                style={{padding:10, 
+                  flex:0.5,
+                  flexDirection:'row',
+                  justifyContent:'center',
+                }}>
+                <MaterialCommunityIcons
+                  style={{
+                    borderRadius:30,
+                    backgroundColor:'white'}}
+                  name='cctv'
+                  size={30}
+                  color ={colors.greenFlash}
+                />
+                <Text style={{marginLeft:10, fontWeight:'bold', color:'white', fontSize: 18 }}>
+                Lancer</Text>
+              </TouchableOpacity>
+              : null
+            }
+          </View>
+        }
       </View>
     );
   }
