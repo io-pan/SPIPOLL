@@ -27,6 +27,7 @@ import { Form, checkForm, Timer, ImagePicker} from './widgets.js';
 import { colors } from './colors';
 import { formatDate, formatTime, date2folderName} from './formatHelpers.js';
 import Cam from './cam';
+
 const  flashSessionDuration = 20*60;
 
 //-----------------------------------------------------------------------------------------
@@ -83,6 +84,9 @@ export default class SessionForm extends Component {
     };
 
     this.state = {
+      experimentaldetailsVisible:false,
+      motionSetupVisible:false,
+
       remainingTime:false,
       isDateTimeVisible:false,
       isTimePickerVisible:false,
@@ -218,7 +222,9 @@ export default class SessionForm extends Component {
         this.initialTimeStart =  new Date(start.getTime() + 60000);
       }
       else {
-        this.initialTimeEnd = new Date( this.state.session.time_start + ((flashSessionDuration+1)*1000));
+        this.initialTimeEnd = this.props.protocole =='flash'
+          ? new Date( this.state.session.time_start + ((flashSessionDuration+1)*1000))
+          : new Date( this.state.session.time_start + ((flashSessionDuration+61)*1000));
       }
       this.setState({ isTimePickerVisible: field });
     }
@@ -601,6 +607,10 @@ export default class SessionForm extends Component {
     }); 
   }
 
+  toggleexperimentaldetailsVisible(){
+    this.setState({experimentaldetailsVisible: !this.state.experimentaldetailsVisible})
+  }
+
   renderRunningForm(sessionStatus){
     return(
       <Modal
@@ -643,6 +653,9 @@ export default class SessionForm extends Component {
     );
   }
 
+  showMotionSetup(visible){
+    this.setState({motionSetupVisible:visible})
+  }
 
   renderLaunchButton(sessionStatus){
 
@@ -797,15 +810,12 @@ export default class SessionForm extends Component {
 
                     {/*
                         TODO: scheduled session:
-                        . Warn that it is to be used we motion detector.
-                        . Warn this is experimental.
-                        . Warn only pictures are accept by Spipoll (not videos).
-
-                        . show motion setup button under datetime picker.
+               
                         . launch motion detector instead of normal running-session form
                         . Group pictures/vidéos: one species per detected motion.
+                          OR easeer let user do this shit ... store all in 1 insect.
                         
-
+                    */}
                     <TouchableOpacity
                       style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
                         backgroundColor:  colors.greenFlash,
@@ -821,10 +831,10 @@ export default class SessionForm extends Component {
                         backgroundColor = 'transparent'
                       />
                     </TouchableOpacity>
-                    */}
+                   
                   </View>
                 : 
-                  <View>
+                  <View style={{flex:1}}>
                     <View style={{flexDirection:'row'}}>
                       <View
                         style={{backgroundColor:colors.greenFlash, padding:0, 
@@ -860,16 +870,143 @@ export default class SessionForm extends Component {
                     
                     </View>
 
-                    <View style={[styles.collection_subgrp, {
-                      marginTop:0,marginBottom:0, borderTopWidth:0}]}>
+                    <ScrollView style={[styles.collection_subgrp, {
+                       flex:1,marginTop:0,marginBottom:0, borderTopWidth:0}]}>
                       {/*
                       <Text style={styles.coll_subtitle}>
                       Date, Heure de début { this.props.protocole=='flash' ? '' : 'et de fin'}</Text>
                       */}
+                      <TouchableOpacity
+                        onPress = {() => this.toggleexperimentaldetailsVisible()} 
+                        >
+                        <Text style={{fontSize:16, fontWeight:'bold', textAlign:'center', color:colors.purple}}>
+                          Fonctionnalité expérimentale{' '}
+                          <MaterialCommunityIcons
+                            name="help-circle-outline" 
+                            style={{color:colors.greenFlash, backgroundColor:'transparent'}}
+                            size={15}
+                            backgroundColor = 'transparent'
+                          />
+                        </Text>
+
+                        { !this.state.experimentaldetailsVisible ? null :
+                        <View>
+                          <Text style={{fontWeight:'normal', textAlign:'center', marginTop:10,}}>
+                          A l'heure de planifiée, le détecteur de mouvement de lancera.
+                          Toutes les photos de tous les mouvements seront enregister sous un seul taxon.
+                          Il vous faudra les trier et regrouper à l'aide des option "Extraire" disponible dans la gallerie de photos.</Text>
+                          <Text></Text>
+
+                          <Text style={{fontWeight:'normal', textAlign:'center'}}>Le détecteur de mouvement permet d'enregister des vidéos ou des photos.
+                          Gardez en tête que seules les photos sont acceptées par Spipoll.</Text>
+                          <Text></Text>
+
+                          <Text style={{fontWeight:'normal', textAlign:'center'}}>
+                          Il arrivera immanquablement que des insectes ne soient pas détectés, pour diverses raisons:
+                          ils sont trop lents, d'une couleur trop semblable à la fleur... Il arrivera aussi que des mouvements
+                          soient détectés sans insecte, par exemple lorsque le vent fera balancer la fleur.</Text>
+                          <Text></Text>
+
+                          <Text style={{fontWeight:'normal', textAlign:'center'}}>
+                          L'application ne vérifie pas si plusieurs planifications se chevauchent,
+                          de plus, les paramètres du détecteur de mouvement sont généraux;
+                          Un seul paramètrage pour toutes les planifications.  
+                          </Text>
+                          <Text></Text>
+                        </View>
+                        }
+
+                      </TouchableOpacity>
+                      
+                      <TouchableOpacity
+                        // motion detector setup button.
+                        style={{
+                          flexDirection:'row', 
+                          alignItems:'center', justifyContent:'center',
+                          margin:5, marginTop:20, marginBottom:20, padding:3,
+                           // borderWidth:1, borderColor:colors.greenFlash,
+                           backgroundColor:colors.greenFlash,
+                         }}
+                         onPress={()=> this.showMotionSetup(true)}
+                        >
+                          <MaterialCommunityIcons
+                            name='cctv'
+                            style={{color:'white', backgroundColor:'transparent', marginRight:10,}}
+                            size={30}
+                            backgroundColor = 'transparent'
+                          ></MaterialCommunityIcons>
+                          <Text style={{color:'white' ,fontSize:16, fontWeight:'bold'}}>
+                          Paramétrer le détecteur
+                          </Text>
+                      </TouchableOpacity>
+
+                      { !this.state.motionSetupVisible ? null :
+                        <Modal
+                          visible={this.state.motionSetupVisible}
+                          onRequestClose={() => this.showMotionSetup(false)}>
+                          
+                          <View 
+                            style={{
+                              height:55, flexDirection:'row', 
+                              justifyContent:'center', alignItems:'center',
+                              backgroundColor:colors.greenFlash
+                              }}
+                            >
+                            <TouchableOpacity 
+                              style={[{
+                                height:55,
+                                width:55,
+                                justifyContent:'center', alignItems:'center', 
+                                borderRightWidth:1, borderRightColor:'white', 
+                              }]}
+                              onPress={(path) => this.showMotionSetup(false)}
+                              >
+                              <MaterialCommunityIcons
+                                name="chevron-left" 
+                                style={[{ color:'white' }]}
+                                size={30}
+                              />
+                            </TouchableOpacity>
+
+                            <Text style={{ flex:1,
+                              fontSize:18, fontWeight:'bold', textAlign:'center', 
+                              color:'white', 
+                            }}>
+                            Détecteur de mouvement</Text>
+                          </View>
+
+                          <View style={{flex:1}}>
+                          <Cam
+                            // path={this.props.path}
+                            // photoPicked={(path) => this.photoPicked(path)}
+                              mode={'motion-setup'}
+                              mode_={1} // MODE_SET
+                            
+                          />
+                          </View>
+
+                          {/*
+                          <TouchableOpacity style={{
+                              backgroundColor:colors.greenFlash,
+                              height:55, justifyContent:'center', textAlign:'center',
+                            }}
+                            onPress={(path) => this.photoPicked('close')}
+                            >
+                            <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
+                            Retour à la collection</Text>
+                            </TouchableOpacity>
+                          */}
+
+                        </Modal>
+
+                      }
+
                       <View style={{
                         flexDirection:'row',
-                        alignItems:'space-between',
-                        justifyContent:'center',
+                        // alignItems:'space-between',
+                        // justifyContent:'center',
+                        flex:1,
+                        marginBottom:20,
                       }}>
                         <TouchableOpacity
                           style={{alignSelf:'flex-start',
@@ -921,7 +1058,7 @@ export default class SessionForm extends Component {
                         </TouchableOpacity>
                         }
                       </View>
-                    </View>
+                    </ScrollView>
       
                     <DateTimePicker
                       date = { this.initialDate }
@@ -954,10 +1091,9 @@ export default class SessionForm extends Component {
     return(
       <View  style={{flex:1}}>
 
-      { sessionStatus == 'running'
+      { sessionStatus == 'running' && !this.state.isTimePickerVisible
       ? this.renderRunningForm(sessionStatus)
-      :
-        <View style={{flex:1}}>
+      : <View style={{flex:1}}>
           <View  style={{flex:1}}>
             <ScrollView>
               <View style={styles.collection_grp}>
