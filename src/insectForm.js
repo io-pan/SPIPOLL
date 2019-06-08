@@ -73,7 +73,7 @@ class TaxonModal extends Component {
     this.pastCrit_valkey={};
 
 
-      this.tabIndicatorX = new Animated.Value(0);
+    
   }
 
   componentDidMount(){
@@ -348,13 +348,9 @@ class TaxonModal extends Component {
   }
 
   showDetailsModal(taxonId, listIndex){
-    console.log(taxonId)
-      console.log(listIndex)
+    this.tabIndicatorX = new Animated.Value(0);
     this.setState({ detailsVisible:listIndex }, function(){
       console.log( this.state.detailsVisible);
-      // TODO !!! or make own slider :((
-      //  console.log('showDetailsModal',this.state.detailsVisible) 
-      // this.scrollDetailsToIndex();
     });
   }
 
@@ -1231,7 +1227,7 @@ export default class InsectForm extends Component {
 
   storeInsect(field,value){
     if(field=='taxon'){
-      console.log(value);
+      console.log('storeInsect ' + field  ,value);
       this.setState({
         // insect:{
         //   ...this.state.insect,

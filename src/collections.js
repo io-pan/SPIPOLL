@@ -222,7 +222,7 @@ class Collection extends Component {
       // 3. go to collection list
 
       if (this.tab == 'flower'){
-        this.collectionChanged('editing', false);
+        this.props.selectItem(false);
       }
 
       else if (this.tab == 'calendar-clock'){

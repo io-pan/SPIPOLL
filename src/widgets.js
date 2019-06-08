@@ -657,10 +657,6 @@ export class ImagePicker extends Component {
   }
 
   componentDidMount(){
-    // setTimeout(()=>{
-    //   alert(this.state.filename);
-    //   this.setState({index:0})
-    // }, 2000);
     this.checkFolder();
   }
 
@@ -669,16 +665,18 @@ export class ImagePicker extends Component {
       RNFetchBlob.fs.isDir(this.props.path)
       .then((isDir) => {
         if(false === isDir){
+          // TODO: check we need that. Folder are normaly created on collection/insect create.
           RNFetchBlob.fs.mkdir(this.props.path)
           .then(() => { 
             this.scanFolder();
           })
           .catch((err) => { 
-            Alert.alert(
-              'Erreur',
-              'Le dossier de stockage des photos n\'a pu être créé.\n'
-              + this.props.path
-            );
+            // Alert.alert(
+            //   'Erreur ...',
+            //   this.props.title
+            //   + 'Le dossier de stockage des photos n\'a pu être créé.\n'
+            //   + this.props.path
+            // );
           })
         }
         else{
