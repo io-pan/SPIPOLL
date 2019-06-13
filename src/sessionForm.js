@@ -87,7 +87,6 @@ export default class SessionForm extends Component {
       experimentaldetailsVisible:false,
       motionSetupVisible:false,
 
-      remainingTime:false,
       isDateTimeVisible:false,
       isTimePickerVisible:false,
       isDatePickerVisible:false,
@@ -106,6 +105,7 @@ export default class SessionForm extends Component {
       //   shadow:'',
       // },
     };
+    this.scheduled_insect = null;
   }
 
 
@@ -322,7 +322,19 @@ export default class SessionForm extends Component {
       }
 
       if(scheduled){
+        // Add insect item on list.
         this.scheduled_insect = this.newInsect();
+        this.scheduled_insect.session = now + '_' + now;
+        AsyncStorage.getItem(this.props.collection_id + "_insects", (err, items) => {
+          if (err) {
+            // Alert.alert('ERROR getting items ' + this.props.localStorage + ' ' + JSON.stringify(err));
+          }
+          else { //if(items){
+            items = JSON.parse(items);
+            items.push(this.scheduled_insect);
+            AsyncStorage.setItem(this.props.collection_id + "_insects", JSON.stringify( items ));
+          }
+        });
       }
 
       this.setState({
@@ -331,14 +343,12 @@ export default class SessionForm extends Component {
           date:now,
           time_start:now,
           time_end:end,
-
-          // scheduled_insect:newInsect.date,//scheduled||false,
         }
       }, function(){
         this.props.valueChanged('date', now);
         this.props.valueChanged('time_start', now);
         this.props.valueChanged('time_end', end);
-        if(scheduled){ //TODO:
+        if(scheduled){
           this.refs['cam-scheduled'].takeMotion();
         }
       });
@@ -380,6 +390,22 @@ export default class SessionForm extends Component {
       if(toBeDeleted.length){
         this.refs['running-insect-list'].deleteItems(toBeDeleted); 
       }
+    }
+    // Running scheduled session: we created a lonely insect. Deleted it.
+    else if(this.refs['cam-scheduled'] && this.scheduled_insect){ 
+      this.deleteInsectFolder(this.scheduled_insect);
+      this.scheduled_insect = null;
+      // Delete item on list.
+      AsyncStorage.getItem(this.props.collection_id + "_insects", (err, items) => {
+        if (err) {
+          // Alert.alert('ERROR getting items ' + this.props.localStorage + ' ' + JSON.stringify(err));
+        }
+        else if(items){
+          items = JSON.parse(items);
+          items.pop();
+          AsyncStorage.setItem(this.props.collection_id + "_insects", JSON.stringify( items ));
+        }
+      });
     }
 
     // Reset session.
@@ -473,15 +499,18 @@ export default class SessionForm extends Component {
     const now = date2folderName(),
           folderName = this.props.collection_storage + '/insects/' + now;
 
+    console.log('newInsect folderName' + folderName ) 
+
     // Create insect photos folder...
     RNFetchBlob.fs.isDir(folderName)
     .then((isDir) => {
-      if(isDir){ // ... if not exists.
+      if(!isDir){ // ... if not exists.
         RNFetchBlob.fs.mkdir(folderName)
         .then(() => { 
-          // console.log('insct folder created ' + folderName ) 
+          console.log('insect folder created ' + folderName );
         })
         .catch((err) => { 
+          console.log('insect folder creationerror' + folderName);
           console.log(err);
           Alert.alert(
             'Erreur',
@@ -490,14 +519,18 @@ export default class SessionForm extends Component {
           );
         })
       }
-    });
+      else{
+         console.log('insect folder already exists ' + folderName ) 
+      }
+    }); 
+
 
     // Return default data.
     return {
       taxon_list_id_list:null,
       taxon_name:null,
       comment:null,
-      session:this.props.data.date + '_' + this.props.data.time_start, // + '_' + this.props.data.time_end,
+      session:this.state.session.date + '_' + this.state.session.time_start,
       photo:null,
       date:now, // So we now in which folder photos are. 
 
@@ -515,7 +548,6 @@ export default class SessionForm extends Component {
     // RUNNING SESSION
     console.log('renderInsectListItem ' + index, value)
 
-// TODO do not remove lower until session ends.
     // For field "how many in insect did you see at once ?"
     //  behave a bit different here.
     const vals = [
@@ -557,8 +589,6 @@ export default class SessionForm extends Component {
             : 'Espèce ' + (index+1) + ' - Non identifiée' 
           }
           cam = {true}
-// TODO
-//           extractPhotos={(paths) => this.props.extractPhotos(paths, this.state.insect.session)}
           styles={{
             highlightColor:colors.greenFlash,
             badColor:colors.purple,
@@ -568,7 +598,6 @@ export default class SessionForm extends Component {
            }
           }}
 
-          // path={this.props.collection_storage + '/insects/' + this.props.data.date }
           path={this.props.collection_storage + '/insects/' + value.date}
           filename={value.photo}
           onSelect={(filename)=>{
@@ -624,6 +653,10 @@ export default class SessionForm extends Component {
     this.setState({experimentaldetailsVisible: !this.state.experimentaldetailsVisible})
   }
 
+  sheduledSessionFinished(){
+    this.setState({isDateTimeVisible:false}); // Dummy setState in order to refresh since date end is already set.
+  }
+
   renderRunningForm(sessionStatus){
     return(
       <Modal
@@ -673,514 +706,506 @@ export default class SessionForm extends Component {
   renderLaunchButton(sessionStatus){
 
     return(
-            sessionStatus == 'scheduled'
-            ? <View style={{
-                height:55,
-                flexDirection:'row',
-                justifyContent:'center', alignItems:'center',
-                backgroundColor:colors.greenFlash, 
-                borderTopWidth:1, borderTopColor:'white',
-                }}>
+  sessionStatus == 'scheduled'
+  ? <View style={{
+      height:55,
+      flexDirection:'row',
+      justifyContent:'center', alignItems:'center',
+      backgroundColor:colors.greenFlash, 
+      borderTopWidth:1, borderTopColor:'white',
+      }}>
 
-                <View
-                  style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
-                    justifyContent:'center', alignItems:'center',
-                    borderRightWidth:1, borderRightColor:'white',
-                    flex:1,
-                  }}
-                  >
-                  <MaterialCommunityIcons
-                    name="alarm" 
-                    style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                    size={25}
-                    backgroundColor = 'transparent'
-                  />
-                  <View>
-                    <Text style={{color:'white', fontSize:10}}>Lancement dans</Text>
-                    <Timer
-                      key="scheduling-timer"
-                      ref="scheduling-timer"
-                      style={{textAlign:'center', fontWeight:'bold', fontSize:18, color:'white'}}
-                      onTimeout={() => this.launchSession(true)}
-                      time={this.state.session.time_start}
-                    />
-                  </View>
-                </View>
+      <View
+        style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
+          justifyContent:'center', alignItems:'center',
+          borderRightWidth:1, borderRightColor:'white',
+          flex:1,
+        }}
+        >
+        <MaterialCommunityIcons
+          name="alarm" 
+          style={{color:'white', padding:10, backgroundColor:'transparent'}}
+          size={25}
+          backgroundColor = 'transparent'
+        />
+        <View>
+          <Text style={{color:'white', fontSize:10}}>Lancement dans</Text>
+          <Timer
+            key="scheduling-timer"
+            ref="scheduling-timer"
+            style={{textAlign:'center', fontWeight:'bold', fontSize:18, color:'white'}}
+            onTimeout={() => this.launchSession(true)}
+            time={this.state.session.time_start}
+          />
+        </View>
+      </View>
 
-                <TouchableOpacity
-                  style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
-                    backgroundColor:  colors.greenFlash,
-                    borderWidth: 1, borderColor: colors.greenFlash,
-                  }}
-                  onPress = {() => this.reallyCancelSession()}
-                  >
-                  <MaterialCommunityIcons
-                    name="close-circle" 
-                    style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
-                      color: 'white',}}
-                    size={30}
-                    backgroundColor = 'transparent'
-                  />
-                </TouchableOpacity>
-              </View>
+      <TouchableOpacity
+        style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
+          backgroundColor:  colors.greenFlash,
+          borderWidth: 1, borderColor: colors.greenFlash,
+        }}
+        onPress = {() => this.reallyCancelSession()}
+        >
+        <MaterialCommunityIcons
+          name="close-circle" 
+          style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
+            color: 'white',}}
+          size={30}
+          backgroundColor = 'transparent'
+        />
+      </TouchableOpacity>
+    </View>
 
 
-            : sessionStatus == 'running' ?
+  : sessionStatus == 'running' ?
 
-              <View style={[{height:55, margin:0, 
-                  // borderTopWidth:1, borderTopColor:'white'
-                  }]}>
-                  <View style={{height:55, backgroundColor:colors.greenFlash, flexDirection:'row',
-                            justifyContent:'center', alignItems:'center',}}>
-                    <View
-                      style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
-                        justifyContent:'center', alignItems:'center',
-                        borderRightWidth:1, borderRightColor:'white',
-                        flex:1,
-                      }}
-                      >
-                      <MaterialCommunityIcons
-                        name="play-circle-outline" 
-                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                        size={25}
-                        backgroundColor = 'transparent'
-                      />
-                      <Timer
-                        key="running-timer"
-                        ref="running-timer"
-                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:18, color:'white'}}
-                        onTimeout={()=>{alert('Session over TODO:setstate to refresh')}}
-                        time={
-                          this.state.session.time_end
-                          ? this.state.session.time_end // has been set to start + 20min for flash protocole.
-                          : this.state.session.time_start
-                        }
-                      />
-                    </View>
+    <View style={[{height:55, margin:0, 
+        // borderTopWidth:1, borderTopColor:'white'
+        }]}>
+        <View style={{height:55, backgroundColor:colors.greenFlash, flexDirection:'row',
+                  justifyContent:'center', alignItems:'center',}}>
+          <View
+            style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
+              justifyContent:'center', alignItems:'center',
+              borderRightWidth:1, borderRightColor:'white',
+              flex:1,
+            }}
+            >
+            <MaterialCommunityIcons
+              name="play-circle-outline" 
+              style={{color:'white', padding:10, backgroundColor:'transparent'}}
+              size={25}
+              backgroundColor = 'transparent'
+            />
+            <Timer
+              key="running-timer"
+              ref="running-timer"
+              style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:18, color:'white'}}
+              onTimeout={()=> this.sheduledSessionFinished()}
+              time={
+                this.state.session.time_end
+                ? this.state.session.time_end // has been set to start + 20min for flash protocole.
+                : this.state.session.time_start
+              }
+            />
+          </View>
 
-                    <TouchableOpacity
-                      style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
-                        backgroundColor:  colors.greenFlash,
-                        borderWidth: 1, borderColor: colors.greenFlash,
-                      }}
-                      onPress = {this.props.protocole=="flash"
-                        ? () => this.cancelSession()
-                        // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
-                        //   ? () => this.cancelSession()
-                          : () => this.stopSession()
-                      }
-                      >
+          <TouchableOpacity
+            style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
+              backgroundColor:  colors.greenFlash,
+              borderWidth: 1, borderColor: colors.greenFlash,
+            }}
+            onPress = {this.props.protocole=="flash"
+              ? () => this.cancelSession()
+              // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+              //   ? () => this.cancelSession()
+                : () => this.stopSession()
+            }
+            >
 
-                      <MaterialCommunityIcons
-                        name={ 
-                          this.props.protocole=="flash"
-                          ? "close-circle" 
-                          // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
-                          //   ? "close-circle"
-                            : "stop-circle"
-                        }
-                        style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
-                          color: 'white',}}
-                        size={30}
-                        backgroundColor = 'transparent'
-                      />
-                    </TouchableOpacity>
-                  </View>
-              </View>
+            <MaterialCommunityIcons
+              name={ 
+                this.props.protocole=="flash"
+                ? "close-circle" 
+                // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+                //   ? "close-circle"
+                  : "stop-circle"
+              }
+              style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
+                color: 'white',}}
+              size={30}
+              backgroundColor = 'transparent'
+            />
+          </TouchableOpacity>
+        </View>
+    </View>
 
-            : sessionStatus == 'over' ? null
+  : sessionStatus == 'over' ? null
 
-            : sessionStatus != 'unset' 
-              ? null 
-              : !this.state.isDateTimeVisible
-                ?
-                  <View style={{
-                    flexDirection:'row',
-                    justifyContent:'center', alignItems:'center',
-                    backgroundColor:colors.greenFlash, 
-                    borderTopWidth:1, borderTopColor:'white',
-                    }}>
+  : sessionStatus != 'unset' 
+    ? null 
+    : !this.state.isDateTimeVisible
+      ?
+        <View style={{
+          flexDirection:'row',
+          justifyContent:'center', alignItems:'center',
+          backgroundColor:colors.greenFlash, 
+          borderTopWidth:1, borderTopColor:'white',
+          }}>
 
-                    <TouchableOpacity
-                      style={{padding:0, flexDirection:'row', 
-                        height:55,
-                        justifyContent:'center', alignItems:'center',
-                        borderRightWidth:1, borderRightColor:'white',
-                        flex:1,
-                      }}
-                      onPress = {() => this.launchSession()}
-                      >
-                      <MaterialCommunityIcons
-                        name="play-circle-outline" 
-                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                        size={30}
-                        backgroundColor = 'transparent'
-                      />
-                      <Text style={{textAlign:'center', padding:10, fontWeight:'bold', 
-                        fontSize:18, color:'white'}}>
-                      Lancer la session</Text>
-                    </TouchableOpacity>
+          <TouchableOpacity
+            style={{padding:0, flexDirection:'row', 
+              height:55,
+              justifyContent:'center', alignItems:'center',
+              borderRightWidth:1, borderRightColor:'white',
+              flex:1,
+            }}
+            onPress = {() => this.launchSession()}
+            >
+            <MaterialCommunityIcons
+              name="play-circle-outline" 
+              style={{color:'white', padding:10, backgroundColor:'transparent'}}
+              size={30}
+              backgroundColor = 'transparent'
+            />
+            <Text style={{textAlign:'center', padding:10, fontWeight:'bold', 
+              fontSize:18, color:'white'}}>
+            Lancer la session</Text>
+          </TouchableOpacity>
 
-                    {/*
-                        TODO: scheduled session:
-               
-                        . launch motion detector instead of normal running-session form
-                        . Group pictures/vidéos: one species per detected motion.
-                          OR easeer let user do this shit ... store all in 1 insect.
-                        
-                    */}
-                    <TouchableOpacity
-                      style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
-                        backgroundColor:  colors.greenFlash,
-                        borderWidth: 1, borderColor: colors.greenFlash,
-                      }}
-                      onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
-                      >
-                      <MaterialCommunityIcons
-                        name="alarm" 
-                        style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
-                          color: 'white',}}
-                        size={30}
-                        backgroundColor = 'transparent'
-                      />
-                    </TouchableOpacity>
-                   
-                  </View>
-                : 
-                  <View style={{flex:1}}>
-                    <View style={{flexDirection:'row'}}>
-                      <View
-                        style={{backgroundColor:colors.greenFlash, padding:0, 
-                          flexDirection:'row', 
-                          justifyContent:'center', alignItems:'center',
-                          borderRightWidth:1, borderRightColor:'white',
-                          flex:1,
-                          height:55,
-                        }}
-                        >
-                        <Text style={{textAlign:'center', padding:10, 
-                          fontWeight:'bold', fontSize:18, color:'white'}}>
-                        Lancement planifié 
-                        </Text>
-                      </View>
-
-                      <TouchableOpacity
-                        style={{padding:0, flexDirection:'row', 
-                          justifyContent:'center', alignItems:'center',
-                          backgroundColor:  colors.greenFlash,
-                          borderWidth: 1, borderColor: colors.greenFlash,
-                        }}
-                        onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
-                        >
-                        <MaterialCommunityIcons
-                          name="close-circle" 
-                          style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
-                            color: 'white',}}
-                          size={30}
-                          backgroundColor = 'transparent'
-                        />
-                      </TouchableOpacity>
-                    
-                    </View>
-
-                    <ScrollView style={[styles.collection_subgrp, {
-                       flex:1,marginTop:0,marginBottom:0, borderTopWidth:0}]}>
-                      <TouchableOpacity
-                        onPress = {() => this.toggleexperimentaldetailsVisible()} 
-                        >
-                        <Text style={{fontSize:16, fontWeight:'bold', textAlign:'center', color:colors.purple}}>
-                          Fonctionnalité expérimentale{' '}
-                          <MaterialCommunityIcons
-                            name="help-circle-outline" 
-                            style={{color:colors.greenFlash, backgroundColor:'transparent'}}
-                            size={15}
-                            backgroundColor = 'transparent'
-                          />
-                        </Text>
-
-                        { !this.state.experimentaldetailsVisible ? null :
-                        <View>
-                          <Text style={{fontWeight:'normal', textAlign:'center', marginTop:10,}}>
-                          A l'heure de planifiée, le détecteur de mouvement de lancera.
-                          Toutes les photos de tous les mouvements seront enregister sous un seul taxon.
-                          Il vous faudra les trier et regrouper à l'aide de l'option "Extraire" disponible dans la galerie de photos.</Text>
-                          <Text></Text>
-
-                          <Text style={{fontWeight:'normal', textAlign:'center'}}>Le détecteur de mouvement permet d'enregister des vidéos ou des photos.
-                          Gardez en tête que seules les photos sont acceptées par Spipoll.</Text>
-                          <Text></Text>
-
-                          <Text style={{fontWeight:'normal', textAlign:'center'}}>
-                          Il arrivera immanquablement que des insectes ne soient pas détectés, pour diverses raisons:
-                          ils sont trop lents, d'une couleur trop semblable à la fleur... Il arrivera aussi que des mouvements
-                          soient détectés sans insecte, par exemple lorsque le vent fera balancer la fleur.</Text>
-                          <Text></Text>
-
-                          <Text style={{fontWeight:'normal', textAlign:'center'}}>
-                          L'application ne vérifie pas si plusieurs planifications se chevauchent,
-                          de plus, les paramètres du détecteur de mouvement sont généraux;
-                          Un seul paramètrage pour toutes les planifications.  
-                          </Text>
-                          <Text></Text>
-                        </View>
-                        }
-
-                      </TouchableOpacity>
-                      
-                      <TouchableOpacity
-                        // motion detector setup button.
-                        style={{
-                          flexDirection:'row', 
-                          alignItems:'center', justifyContent:'center',
-                          margin:5, marginTop:20, marginBottom:20, padding:3,
-                           // borderWidth:1, borderColor:colors.greenFlash,
-                           backgroundColor:colors.greenFlash,
-                         }}
-                         onPress={()=> this.showMotionSetup(true)}
-                        >
-                          <MaterialCommunityIcons
-                            name='cctv'
-                            style={{color:'white', backgroundColor:'transparent', marginRight:10,}}
-                            size={30}
-                            backgroundColor = 'transparent'
-                          ></MaterialCommunityIcons>
-                          <Text style={{color:'white' ,fontSize:16, fontWeight:'bold'}}>
-                          Paramétrer le détecteur
-                          </Text>
-                      </TouchableOpacity>
-
-                      { !this.state.motionSetupVisible ? null :
-                        <Modal
-                          visible={this.state.motionSetupVisible}
-                          onRequestClose={() => this.showMotionSetup(false)}>
-                          
-                          <View 
-                            style={{
-                              height:55, flexDirection:'row', 
-                              justifyContent:'center', alignItems:'center',
-                              backgroundColor:colors.greenFlash
-                              }}
-                            >
-                            <TouchableOpacity 
-                              style={[{
-                                height:55,
-                                width:55,
-                                justifyContent:'center', alignItems:'center', 
-                                borderRightWidth:1, borderRightColor:'white', 
-                              }]}
-                              onPress={(path) => this.showMotionSetup(false)}
-                              >
-                              <MaterialCommunityIcons
-                                name="chevron-left" 
-                                style={[{ color:'white' }]}
-                                size={30}
-                              />
-                            </TouchableOpacity>
-
-                            <Text style={{ flex:1,
-                              fontSize:18, fontWeight:'bold', textAlign:'center', 
-                              color:'white', 
-                            }}>
-                            Détecteur de mouvement</Text>
-                          </View>
-
-                          <View style={{flex:1}}>
-                          <Cam
-                            // path={this.props.path}
-                            // photoPicked={(path) => this.photoPicked(path)}
-                              mode={'motion-setup'}
-                              mode_={1} // MODE_SET
-                            
-                          />
-                          </View>
-
-                          {/*
-                          <TouchableOpacity style={{
-                              backgroundColor:colors.greenFlash,
-                              height:55, justifyContent:'center', textAlign:'center',
-                            }}
-                            onPress={(path) => this.photoPicked('close')}
-                            >
-                            <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
-                            Retour à la collection</Text>
-                            </TouchableOpacity>
-                          */}
-
-                        </Modal>
-
-                      }
-
-                      <View style={{
-                        flexDirection:'row',
-                        // alignItems:'space-between',
-                        // justifyContent:'center',
-                        flex:1,
-                        marginBottom:20,
-                      }}>
-                        <TouchableOpacity
-                          style={{alignSelf:'flex-start',
-                          backgroundColor:'white', borderWidth:1, margin:5, padding:5,
-                            borderColor:colors.greenFlash, flex:0.6,
-                          }}
-                          onPress={this._showDatePicker}
-                          >
-                          <Text style={{fontSize:14,backgroundColor:'white', textAlign:'center',
-                            // color: this.state.collection.environment.occAttr_3_1528533==108 ? colors.greenFlash : 'grey',
-                            }}>
-                            { this.state.session.date
-                              ? formatDate(this.state.session.date)
-                              : 'Date'
-                            }
-                          </Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                          style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                            borderColor:colors.greenFlash, flex:this.props.protocole=='flash' ? 0.4 : 0.2,
-                          }}
-                          onPress = {() => this._showTimePicker('start')}
-                          >
-                          <Text style={{fontSize:14, textAlign:'center',
-                            // color: this.state.collection.environment.occAttr_3_1528533==109 ? colors.greenFlash : 'grey',
-                          }}>
-                          { this.state.session.time_start
-                            ? formatTime(this.state.session.time_start) 
-                            : 'Début'
-                          }
-                          </Text>
-                        </TouchableOpacity>
-
-                        { this.props.protocole=='flash' ? null :
-                        <TouchableOpacity
-                          style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
-                            borderColor:colors.greenFlash, flex:0.2,
-                          }}
-                          onPress = {() => this._showTimePicker('end')}
-                          >
-                          <Text style={{fontSize:14, textAlign:'center',
-                            // color: this.state.collection.environment.occAttr_3_1528533==110 ? colors.greenFlash : 'grey',
-                          }}>
-                            { this.state.session.time_end
-                              ? formatTime(this.state.session.time_end) 
-                              : 'Fin'
-                            }
-                          </Text>
-                        </TouchableOpacity>
-                        }
-                      </View>
-                    </ScrollView>
-      
-                    <DateTimePicker
-                      date = { this.initialDate }
-                      isVisible={this.state.isDatePickerVisible}
-                      onConfirm={(date) => this._handleDatePicked(date)}
-                      onCancel={this._hideDateTimePicker}
-                    />
-
-                    <DateTimePicker
-                      mode="time"
-                      date = { this.state.isTimePickerVisible == 'start'
-                        ? this.initialTimeStart : this.initialTimeEnd
-                      }
-                      isVisible={this.state.isTimePickerVisible!=false}
-                      onConfirm={this._handleTimePicked}
-                      onCancel={this._hideDateTimePicker}
-                    />
-                </View>
+          {/*
+              TODO: scheduled session:
+     
+              . launch motion detector instead of normal running-session form
+              . Group pictures/vidéos: one species per detected motion.
+                OR easeer let user do this shit ... store all in 1 insect.
               
+          */}
+          <TouchableOpacity
+            style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
+              backgroundColor:  colors.greenFlash,
+              borderWidth: 1, borderColor: colors.greenFlash,
+            }}
+            onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
+            >
+            <MaterialCommunityIcons
+              name="alarm" 
+              style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
+                color: 'white',}}
+              size={30}
+              backgroundColor = 'transparent'
+            />
+          </TouchableOpacity>
+         
+        </View>
+      : 
+        <View style={{flex:1}}>
+          <View style={{flexDirection:'row'}}>
+            <View
+              style={{backgroundColor:colors.greenFlash, padding:0, 
+                flexDirection:'row', 
+                justifyContent:'center', alignItems:'center',
+                borderRightWidth:1, borderRightColor:'white',
+                flex:1,
+                height:55,
+              }}
+              >
+              <Text style={{textAlign:'center', padding:10, 
+                fontWeight:'bold', fontSize:18, color:'white'}}>
+              Lancement planifié 
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={{padding:0, flexDirection:'row', 
+                justifyContent:'center', alignItems:'center',
+                backgroundColor:  colors.greenFlash,
+                borderWidth: 1, borderColor: colors.greenFlash,
+              }}
+              onPress = {() => this._showDateTime(!this.state.isDateTimeVisible)}
+              >
+              <MaterialCommunityIcons
+                name="close-circle" 
+                style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
+                  color: 'white',}}
+                size={30}
+                backgroundColor = 'transparent'
+              />
+            </TouchableOpacity>
+          
+          </View>
+
+          <ScrollView style={[styles.collection_subgrp, {
+             flex:1,marginTop:0,marginBottom:0, borderTopWidth:0}]}>
+            <TouchableOpacity
+              onPress = {() => this.toggleexperimentaldetailsVisible()} 
+              >
+              <Text style={{fontSize:16, fontWeight:'bold', textAlign:'center', color:colors.purple}}>
+                Fonctionnalité expérimentale{' '}
+                <MaterialCommunityIcons
+                  name="help-circle-outline" 
+                  style={{color:colors.greenFlash, backgroundColor:'transparent'}}
+                  size={15}
+                  backgroundColor = 'transparent'
+                />
+              </Text>
+
+              { !this.state.experimentaldetailsVisible ? null :
+              <View>
+                <Text style={{fontWeight:'normal', textAlign:'center', marginTop:10,}}>
+                A l'heure de planifiée, le détecteur de mouvement de lancera.
+                Toutes les photos de tous les mouvements seront enregister sous un seul taxon.
+                Il vous faudra les trier et regrouper à l'aide de l'option "Extraire" disponible dans la galerie de photos.</Text>
+                <Text></Text>
+
+                <Text style={{fontWeight:'normal', textAlign:'center'}}>Le détecteur de mouvement permet d'enregister des vidéos ou des photos.
+                Gardez en tête que seules les photos sont acceptées par Spipoll.</Text>
+                <Text></Text>
+
+                <Text style={{fontWeight:'normal', textAlign:'center'}}>
+                Il arrivera immanquablement que des insectes ne soient pas détectés, pour diverses raisons:
+                ils sont trop lents, d'une couleur trop semblable à la fleur... Il arrivera aussi que des mouvements
+                soient détectés sans insecte, par exemple lorsque le vent fera balancer la fleur.</Text>
+                <Text></Text>
+
+                <Text style={{fontWeight:'normal', textAlign:'center'}}>
+                L'application ne vérifie pas si plusieurs planifications se chevauchent,
+                de plus, les paramètres du détecteur de mouvement sont généraux;
+                Un seul paramètrage pour toutes les planifications.  
+                </Text>
+                <Text></Text>
+              </View>
+              }
+
+            </TouchableOpacity>
+            
+            <TouchableOpacity
+              // motion detector setup button.
+              style={{
+                flexDirection:'row', 
+                alignItems:'center', justifyContent:'center',
+                margin:5, marginTop:20, marginBottom:20, padding:3,
+                 // borderWidth:1, borderColor:colors.greenFlash,
+                 backgroundColor:colors.greenFlash,
+               }}
+               onPress={()=> this.showMotionSetup(true)}
+              >
+                <MaterialCommunityIcons
+                  name='cctv'
+                  style={{color:'white', backgroundColor:'transparent', marginRight:10,}}
+                  size={30}
+                  backgroundColor = 'transparent'
+                ></MaterialCommunityIcons>
+                <Text style={{color:'white' ,fontSize:16, fontWeight:'bold'}}>
+                Paramétrer le détecteur
+                </Text>
+            </TouchableOpacity>
+
+            { !this.state.motionSetupVisible ? null :
+              <Modal
+                visible={this.state.motionSetupVisible}
+                onRequestClose={() => this.showMotionSetup(false)}>
+                
+                <View 
+                  style={{
+                    height:55, flexDirection:'row', 
+                    justifyContent:'center', alignItems:'center',
+                    backgroundColor:colors.greenFlash
+                    }}
+                  >
+                  <TouchableOpacity 
+                    style={[{
+                      height:55,
+                      width:55,
+                      justifyContent:'center', alignItems:'center', 
+                      borderRightWidth:1, borderRightColor:'white', 
+                    }]}
+                    onPress={(path) => this.showMotionSetup(false)}
+                    >
+                    <MaterialCommunityIcons
+                      name="chevron-left" 
+                      style={[{ color:'white' }]}
+                      size={30}
+                    />
+                  </TouchableOpacity>
+
+                  <Text style={{ flex:1,
+                    fontSize:18, fontWeight:'bold', textAlign:'center', 
+                    color:'white', 
+                  }}>
+                  Détecteur de mouvement</Text>
+                </View>
+
+                <View style={{flex:1}}>
+                <Cam
+                  // path={this.props.path}
+                  // photoPicked={(path) => this.photoPicked(path)}
+                    mode={'motion-setup'}
+                    mode_={1} // MODE_SET
+                  
+                />
+                </View>
+
+                {/*
+                <TouchableOpacity style={{
+                    backgroundColor:colors.greenFlash,
+                    height:55, justifyContent:'center', textAlign:'center',
+                  }}
+                  onPress={(path) => this.photoPicked('close')}
+                  >
+                  <Text style={{textAlign:'center', fontSize:18, fontWeight:'bold', color:'white',}}>
+                  Retour à la collection</Text>
+                  </TouchableOpacity>
+                */}
+
+              </Modal>
+
+            }
+
+            <View style={{
+              flexDirection:'row',
+              // alignItems:'space-between',
+              // justifyContent:'center',
+              flex:1,
+              marginBottom:20,
+            }}>
+              <TouchableOpacity
+                style={{alignSelf:'flex-start',
+                backgroundColor:'white', borderWidth:1, margin:5, padding:5,
+                  borderColor:colors.greenFlash, flex:0.6,
+                }}
+                onPress={this._showDatePicker}
+                >
+                <Text style={{fontSize:14,backgroundColor:'white', textAlign:'center',
+                  // color: this.state.collection.environment.occAttr_3_1528533==108 ? colors.greenFlash : 'grey',
+                  }}>
+                  { this.state.session.date
+                    ? formatDate(this.state.session.date)
+                    : 'Date'
+                  }
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
+                  borderColor:colors.greenFlash, flex:this.props.protocole=='flash' ? 0.4 : 0.2,
+                }}
+                onPress = {() => this._showTimePicker('start')}
+                >
+                <Text style={{fontSize:14, textAlign:'center',
+                  // color: this.state.collection.environment.occAttr_3_1528533==109 ? colors.greenFlash : 'grey',
+                }}>
+                { this.state.session.time_start
+                  ? formatTime(this.state.session.time_start) 
+                  : 'Début'
+                }
+                </Text>
+              </TouchableOpacity>
+
+              { this.props.protocole=='flash' ? null :
+              <TouchableOpacity
+                style={{backgroundColor:'white', borderWidth:1,margin:5, padding:5,
+                  borderColor:colors.greenFlash, flex:0.2,
+                }}
+                onPress = {() => this._showTimePicker('end')}
+                >
+                <Text style={{fontSize:14, textAlign:'center',
+                  // color: this.state.collection.environment.occAttr_3_1528533==110 ? colors.greenFlash : 'grey',
+                }}>
+                  { this.state.session.time_end
+                    ? formatTime(this.state.session.time_end) 
+                    : 'Fin'
+                  }
+                </Text>
+              </TouchableOpacity>
+              }
+            </View>
+          </ScrollView>
+
+          <DateTimePicker
+            date = { this.initialDate }
+            isVisible={this.state.isDatePickerVisible}
+            onConfirm={(date) => this._handleDatePicked(date)}
+            onCancel={this._hideDateTimePicker}
+          />
+
+          <DateTimePicker
+            mode="time"
+            date = { this.state.isTimePickerVisible == 'start'
+              ? this.initialTimeStart : this.initialTimeEnd
+            }
+            isVisible={this.state.isTimePickerVisible!=false}
+            onConfirm={this._handleTimePicked}
+            onCancel={this._hideDateTimePicker}
+          />
+      </View>     
     );
   }
 
   renderRunningScheduledForm(){
-    // const newInsect = this.newInsect(); // TODO not at each render !!!
-
-     // this.refs['cam-scheduled'].takeMotion();
-
-console.log('renderRunningScheduledForm');
-console.log(this.props.collection_storage + '/insects/' + this.scheduled_insect.date);
-
+    // this.scheduled_insect is created on lunchSession().
+    // so here it should exists, unless app crashed or has been closed.
     if(!this.scheduled_insect || !this.scheduled_insect.date){
-      this.scheduled_insect={date:date2folderName()};
-     //TODO:
-      this.refs['cam-scheduled'].takeMotion();
+      return null;
     }
 
     return(
-                        <Modal
-                          visible={true}
-                          onRequestClose={() => this.cancelSession()} 
-                          >
-                          
-              <View style={[{height:55, margin:0, 
-                  // borderTopWidth:1, borderTopColor:'white'
-                  }]}>
-                  <View style={{height:55, backgroundColor:colors.greenFlash, flexDirection:'row',
-                            justifyContent:'center', alignItems:'center',}}>
-                    <View
-                      style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
-                        justifyContent:'center', alignItems:'center',
-                        borderRightWidth:1, borderRightColor:'white',
-                        flex:1,
-                      }}
-                      >
-                      <MaterialCommunityIcons
-                        name="play-circle-outline" 
-                        style={{color:'white', padding:10, backgroundColor:'transparent'}}
-                        size={25}
-                        backgroundColor = 'transparent'
-                      />
-                      <Timer
-                        key="running-timer"
-                        ref="running-timer"
-                        style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:18, color:'white'}}
-                        onTimeout={()=>{alert('Session over TODO:setstate to refresh')}}
-                        time={
-                          this.state.session.time_end
-                          ? this.state.session.time_end // has been set to start + 20min for flash protocole.
-                          : this.state.session.time_start
-                        }
-                      />
-                    </View>
-
-                    <TouchableOpacity
-                      style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
-                        backgroundColor:  colors.greenFlash,
-                        borderWidth: 1, borderColor: colors.greenFlash,
-                      }}
-                      onPress = {this.props.protocole=="flash"
-                        ? () => this.cancelSession()
-                        // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
-                        //   ? () => this.cancelSession()
-                          : () => this.stopSession()
-                      }
-                      >
-
-                      <MaterialCommunityIcons
-                        name={ 
-                          this.props.protocole=="flash"
-                          ? "close-circle" 
-                          // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
-                          //   ? "close-circle"
-                            : "stop-circle"
-                        }
-                        style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
-                          color: 'white',}}
-                        size={30}
-                        backgroundColor = 'transparent'
-                      />
-                    </TouchableOpacity>
-                  </View>
+      <Modal
+        visible={true}
+        onRequestClose={() => this.cancelSession()} 
+        >
+                    
+        <View style={[{height:55, margin:0, 
+            // borderTopWidth:1, borderTopColor:'white'
+            }]}>
+            <View style={{height:55, backgroundColor:colors.greenFlash, flexDirection:'row',
+                      justifyContent:'center', alignItems:'center',}}>
+              <View
+                style={{backgroundColor:colors.greenFlash, padding:0, flexDirection:'row', 
+                  justifyContent:'center', alignItems:'center',
+                  borderRightWidth:1, borderRightColor:'white',
+                  flex:1,
+                }}
+                >
+                <MaterialCommunityIcons
+                  name="play-circle-outline" 
+                  style={{color:'white', padding:10, backgroundColor:'transparent'}}
+                  size={25}
+                  backgroundColor = 'transparent'
+                />
+                <Timer
+                  key="running-timer"
+                  ref="running-timer"
+                  style={{textAlign:'center', padding:10, fontWeight:'bold', fontSize:18, color:'white'}}
+                  onTimeout={()=> this.sheduledSessionFinished()}
+                  time={
+                    this.state.session.time_end
+                    ? this.state.session.time_end // has been set to start + 20min for flash protocole.
+                    : this.state.session.time_start
+                  }
+                />
               </View>
 
-                          <View style={{flex:1}}>
-                          <Cam
-                            ref={'cam-scheduled'}
-                            path={this.props.collection_storage + '/insects/' + this.scheduled_insect.date }
-                            // path={this.props.path}
-                            // photoPicked={(path) => this.photoPicked(path)}
-                              mode={'motion-running'}
-                              mode_={0} // MODE_RUN
-                          />
-                          </View>
+              <TouchableOpacity
+                style={{padding:0, flexDirection:'row', justifyContent:'center', alignItems:'center',
+                  backgroundColor:  colors.greenFlash,
+                  borderWidth: 1, borderColor: colors.greenFlash,
+                }}
+                onPress = {this.props.protocole=="flash"
+                  ? () => this.cancelSession()
+                  // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+                  //   ? () => this.cancelSession()
+                    : () => this.stopSession()
+                }
+                >
+
+                <MaterialCommunityIcons
+                  name={ 
+                    this.props.protocole=="flash"
+                    ? "close-circle" 
+                    // : now.getTime() < this.state.session.time_start + (flashSessionDuration+60)*1000
+                    //   ? "close-circle"
+                      : "stop-circle"
+                  }
+                  style={{paddingLeft:15, paddingRight:15, backgroundColor:'transparent',
+                    color: 'white',}}
+                  size={30}
+                  backgroundColor = 'transparent'
+                />
+              </TouchableOpacity>
+            </View>
+        </View>
+
+        <View style={{flex:1}}>
+        <Cam
+          ref={'cam-scheduled'}
+          path={this.props.collection_storage + '/insects/' + this.scheduled_insect.date }
+          // path={this.props.path}
+          // photoPicked={(path) => this.photoPicked(path)}
+            mode={'motion-running'}
+            mode_={0} // MODE_RUN
+        />
+        </View>
 
 
       </Modal>
@@ -1192,15 +1217,14 @@ console.log(this.props.collection_storage + '/insects/' + this.scheduled_insect.
 
     // Check form validity.
     const sessionValid = checkForm(this.form.session, this.state.session);
-
     const sessionStatus = this.sessionStatus();
+
     return(
       <View  style={{flex:1}}>
 
       { sessionStatus == 'running' && !this.state.isTimePickerVisible
       ? this.state.session.time_end
         ? this.renderRunningScheduledForm()
-
         : this.renderRunningForm(sessionStatus)
       : <View style={{flex:1}}>
           <View  style={{flex:1}}>

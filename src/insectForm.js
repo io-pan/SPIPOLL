@@ -1400,8 +1400,8 @@ export default class InsectForm extends Component {
                     >
                     <Text style={{fontSize:14}}>
                       Session: 
-                      {formatDate(parseInt(this.state.insect.session.split('_')[0]))}
-                      {formatTime(parseInt(this.state.insect.session.split('_')[1]),10)}
+                      {' ' + formatDate(parseInt(this.state.insect.session.split('_')[0]))}
+                      {' ' + formatTime(parseInt(this.state.insect.session.split('_')[1]),10)}
                     </Text>
                   </View>
                 }

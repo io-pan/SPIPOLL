@@ -437,7 +437,6 @@ export default class Cam extends Component<Props> {
 
   onMotionButton(){
     if(this.state.motionDetectionMode!=MODE_OFF){
-      // TODO: return to collection>session
       this.setState({
         motionDetectionMode:MODE_OFF,
         motionsCount:0,
